@@ -20,7 +20,7 @@ class SystemConfigRepositoryImpl @Inject constructor(
 }
 
 private fun SystemConfigEntity.toDomain() =
-    SystemConfig(id, defaultPenalty, targetSets, targetReps, matrixWeeks)
+    SystemConfig(id, defaultPenalty, targetSets, targetReps, matrixWeeks, cycleAnchorDateTimestamp)
 
 private fun SystemConfig.toEntity() =
-    SystemConfigEntity(id, defaultPenalty, targetSets, targetReps, matrixWeeks)
+    SystemConfigEntity(id, defaultPenalty, targetSets, targetReps, matrixWeeks, cycleAnchorDateTimestamp)

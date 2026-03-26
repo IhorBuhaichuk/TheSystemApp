@@ -34,7 +34,8 @@ data class SystemConfig(
     val defaultPenalty: Int,
     val targetSets: Int,
     val targetReps: Int,
-    val matrixWeeks: Int
+    val matrixWeeks: Int,
+    val cycleAnchorDateTimestamp: Long = 0L
 )
 
 data class DebuffConfig(

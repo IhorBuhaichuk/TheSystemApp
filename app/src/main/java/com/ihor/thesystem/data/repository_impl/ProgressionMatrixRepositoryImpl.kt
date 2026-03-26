@@ -3,8 +3,7 @@ package com.ihor.thesystem.data.repository_impl
 import com.ihor.thesystem.data.local.room.dao.ProgressionMatrixDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutAnalyticsDao
-import com.ihor.thesystem.data.local.room.entity.ProgressionMatrixEntity
-import com.ihor.thesystem.data.local.room.entity.ExerciseSetEntity
+import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
@@ -42,11 +41,11 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>) {
-        val sessionId = System.currentTimeMillis() // Спрощено: в реальному додатку прив'язка до активної сесії
+        val sessionId = System.currentTimeMillis() // Спрощено
         val entities = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }.map { input ->
-            ExerciseSetEntity(
+            ExerciseSetLogEntity(
                 sessionId = sessionId,
-                exerciseId = exerciseId.toString(),
+                exerciseId = exerciseId,
                 weight = input.weight.toDoubleOrNull() ?: 0.0,
                 reps = input.reps.toIntOrNull() ?: 0,
                 isCompleted = true
@@ -54,7 +53,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         }
         
         if (entities.isNotEmpty()) {
-            analyticsDao.insertSets(entities)
+            analyticsDao.insertSetLogs(entities)
             
             val maxWeight = sets.mapNotNull { it.weight.toFloatOrNull() }.maxOrNull()
             if (maxWeight != null) {

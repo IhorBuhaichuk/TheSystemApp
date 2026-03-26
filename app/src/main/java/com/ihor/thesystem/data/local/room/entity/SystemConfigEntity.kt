@@ -9,5 +9,6 @@ data class SystemConfigEntity(
     val defaultPenalty: Int = 20,
     val targetSets: Int     = 3,
     val targetReps: Int     = 12,
-    val matrixWeeks: Int    = 48
+    val matrixWeeks: Int    = 48,
+    val cycleAnchorDateTimestamp: Long = 0L // Таймстемп "Дня 1" циклу
 )

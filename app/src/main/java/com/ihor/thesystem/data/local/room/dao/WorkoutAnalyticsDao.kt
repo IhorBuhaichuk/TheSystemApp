@@ -5,9 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.ihor.thesystem.data.local.room.entity.ExerciseSetEntity
-import com.ihor.thesystem.data.local.room.entity.WorkoutDirectiveEntity
-import com.ihor.thesystem.data.local.room.entity.WorkoutSessionEntity
+import com.ihor.thesystem.data.local.room.entity.*
+import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
 import kotlinx.coroutines.flow.Flow
 
@@ -15,44 +14,55 @@ import kotlinx.coroutines.flow.Flow
 abstract class WorkoutAnalyticsDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertSession(session: WorkoutSessionEntity): Long
+    abstract suspend fun insertSessionLog(session: WorkoutSessionLogEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertSets(sets: List<ExerciseSetEntity>)
+    abstract suspend fun insertSetLogs(sets: List<ExerciseSetLogEntity>)
 
-    /**
-     * Зберігає нові директиви. Якщо для конкретної вправи вже є директива,
-     * вона буде замінена новою завдяки OnConflictStrategy.REPLACE.
-     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertOrReplaceDirectives(directives: List<WorkoutDirectiveEntity>)
 
-    /**
-     * Виконує збереження сесії та всіх її підходів як єдину неподільну операцію (транзакцію).
-     * Якщо щось піде не так під час збереження підходів, сесія теж не збережеться,
-     * що захищає базу від "битих" або неповних даних.
-     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertMilestone(milestone: ExerciseMilestoneEntity)
+
     @Transaction
-    open suspend fun saveSessionWithSets(session: WorkoutSessionEntity, sets: List<ExerciseSetEntity>): Long {
-        val sessionId = insertSession(session)
-        // Прив'язуємо кожен підхід до щойно створеної сесії
-        val setsWithSessionId = sets.map { it.copy(sessionId = sessionId) }
-        insertSets(setsWithSessionId)
+    open suspend fun saveFullSessionLog(session: WorkoutSessionLogEntity, sets: List<ExerciseSetLogEntity>): Long {
+        val sessionId = insertSessionLog(session)
+        val setsWithId = sets.map { it.copy(sessionId = sessionId) }
+        insertSetLogs(setsWithId)
         return sessionId
     }
 
+    @Transaction
+    @Query("SELECT * FROM workout_session_logs ORDER BY timestamp DESC")
+    abstract fun getAllSessionLogs(): Flow<List<SessionWithSets>>
+
     /**
-     * Отримує статистику тоннажу за вказаний період.
-     * Групує всі сесії по днях і рахує сумарний тоннаж за кожен день.
+     * Статистика тоннажу по днях для графіка
      */
     @Query("""
         SELECT 
             MIN(timestamp) AS dateUnixTimestamp, 
             SUM(totalTonnage) AS totalTonnage
-        FROM workout_sessions
-        WHERE timestamp BETWEEN :monthStart AND :monthEnd
+        FROM workout_session_logs
+        WHERE timestamp BETWEEN :start AND :end
         GROUP BY date(timestamp / 1000, 'unixepoch')
         ORDER BY dateUnixTimestamp ASC
     """)
-    abstract fun getDailyTonnageStatsForMonth(monthStart: Long, monthEnd: Long): Flow<List<DailyTonnageStats>>
+    abstract fun getDailyTonnageStats(start: Long, end: Long): Flow<List<DailyTonnageStats>>
+
+    /**
+     * Розрахунок пікового тоннажу за весь час
+     */
+    @Query("SELECT MAX(totalTonnage) FROM workout_session_logs")
+    abstract suspend fun getPeakTonnage(): Double?
+
+    /**
+     * Отримання останніх директив для вправи
+     */
+    @Query("SELECT * FROM workout_directives WHERE exerciseId = :exerciseId")
+    abstract suspend fun getDirectiveForExercise(exerciseId: String): WorkoutDirectiveEntity?
+    
+    @Query("DELETE FROM workout_directives")
+    abstract suspend fun clearDirectives()
 }

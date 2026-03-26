@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import com.ihor.thesystem.core.theme.BackgroundDeep
 import com.ihor.thesystem.core.ui.components.SystemBottomNavBar
 import com.ihor.thesystem.feature.architect.ui.ArchitectScreen
+import com.ihor.thesystem.feature.calendar.ui.CalendarScreen
 import com.ihor.thesystem.feature.mode.ui.ModeScreen
 import com.ihor.thesystem.feature.statistics.ui.StatisticsScreen
 import com.ihor.thesystem.feature.status.ui.StatusScreen
@@ -31,13 +32,15 @@ fun AppNavGraph(navController: NavHostController) {
             composable(Routes.Mode.route) {
                 ModeScreen(navController = navController)
             }
+            composable(Routes.Calendar.route) {
+                CalendarScreen()
+            }
             composable(Routes.Statistics.route) {
                 StatisticsScreen(navController = navController)
             }
             composable(Routes.Architect.route) {
                 ArchitectScreen(
                     onAcknowledge = {
-                        // Після ознайомлення з директивами повертаємось на попередній екран
                         navController.popBackStack()
                     }
                 )

@@ -50,7 +50,8 @@ object DatabaseModule {
             "the_system_db"
         )
             .addCallback(callback)
-            .addMigrations(AppDatabase.MIGRATION_2_3)
+            .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
+            .fallbackToDestructiveMigration()
             .build()
 
         db = database

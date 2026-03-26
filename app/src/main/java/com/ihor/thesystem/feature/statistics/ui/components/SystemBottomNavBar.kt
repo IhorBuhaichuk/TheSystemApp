@@ -6,10 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,11 +30,11 @@ fun SystemBottomNavBar(navController: NavHostController) {
             .fillMaxWidth()
             .background(BackgroundDeep)
             .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .padding(horizontal = 8.dp, vertical = 10.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             NavIconButton(
                 icon       = Icons.Filled.Home,
@@ -56,6 +53,17 @@ fun SystemBottomNavBar(navController: NavHostController) {
                 modifier   = Modifier.weight(1f),
                 onClick    = {
                     navController.navigate(Routes.Mode.route) {
+                        popUpTo(Routes.Status.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
+            )
+            NavIconButton(
+                icon       = Icons.Filled.CalendarMonth,
+                isSelected = currentRoute == Routes.Calendar.route,
+                modifier   = Modifier.weight(1f),
+                onClick    = {
+                    navController.navigate(Routes.Calendar.route) {
                         popUpTo(Routes.Status.route) { inclusive = false }
                         launchSingleTop = true
                     }

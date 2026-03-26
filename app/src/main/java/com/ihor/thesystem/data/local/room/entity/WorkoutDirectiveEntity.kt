@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "workout_directives")
 data class WorkoutDirectiveEntity(
     @PrimaryKey
-    val exerciseId: String,
+    val exerciseId: Int,
     val targetWeight: Double,
     val targetSets: Int,
     val targetReps: Int

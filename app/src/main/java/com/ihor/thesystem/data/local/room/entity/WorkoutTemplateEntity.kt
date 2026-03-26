@@ -6,5 +6,6 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "workout_template")
 data class WorkoutTemplateEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val name: String
+    val name: String,
+    val timeLimitMinutes: Int = 75
 )

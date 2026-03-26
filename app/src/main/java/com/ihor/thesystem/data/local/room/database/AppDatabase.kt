@@ -8,6 +8,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ihor.thesystem.data.local.room.converters.Converters
 import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
+import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 
 @Database(
     entities = [
@@ -25,12 +26,14 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProgressionMatrixEntity::class,
         DebuffConfigEntity::class,
         QuestLogEntity::class,
-        // Додані таблиці для модуля AI Архітектор:
         WorkoutSessionEntity::class,
         ExerciseSetEntity::class,
-        WorkoutDirectiveEntity::class
+        WorkoutDirectiveEntity::class,
+        ExerciseMilestoneEntity::class,
+        WorkoutSessionLogEntity::class,
+        ExerciseSetLogEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -45,14 +48,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun progressionMatrixDao(): ProgressionMatrixDao
     abstract fun debuffConfigDao(): DebuffConfigDao
     abstract fun questLogDao(): QuestLogDao
-
-    // Доданий DAO для аналітики тренувань та AI
     abstract fun workoutAnalyticsDao(): WorkoutAnalyticsDao
 
     companion object {
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Створення таблиці workout_sessions
                 db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS `workout_sessions` (
@@ -65,7 +65,6 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // Створення таблиці exercise_sets з прив'язкою до workout_sessions
                 db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS `exercise_sets` (
@@ -79,14 +78,12 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                // Індекс для швидкого пошуку та видалення каскадом
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_sets_sessionId` ON `exercise_sets` (`sessionId`)")
 
-                // Створення таблиці workout_directives
                 db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS `workout_directives` (
-                        `exerciseId` TEXT NOT NULL, 
+                        `exerciseId` INTEGER NOT NULL, 
                         `targetWeight` REAL NOT NULL, 
                         `targetSets` INTEGER NOT NULL, 
                         `targetReps` INTEGER NOT NULL, 
@@ -94,6 +91,49 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Оновлення існуючих таблиць
+                db.execSQL("ALTER TABLE workout_template ADD COLUMN timeLimitMinutes INTEGER NOT NULL DEFAULT 75")
+                db.execSQL("ALTER TABLE system_config ADD COLUMN cycleAnchorDateTimestamp INTEGER NOT NULL DEFAULT 0")
+
+                // Створення нових таблиць логування та мілстоунів
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `exercise_milestones` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `exerciseId` INTEGER NOT NULL, 
+                        `milestoneWeight` REAL NOT NULL, 
+                        `achievedAt` INTEGER NOT NULL, 
+                        `note` TEXT
+                    )
+                """)
+
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `workout_session_logs` (
+                        `sessionId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `questId` INTEGER NOT NULL, 
+                        `timestamp` INTEGER NOT NULL, 
+                        `totalTonnage` REAL NOT NULL, 
+                        `cycleDay` INTEGER NOT NULL, 
+                        `durationMinutes` INTEGER NOT NULL DEFAULT 0
+                    )
+                """)
+
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `exercise_set_logs` (
+                        `setId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `sessionId` INTEGER NOT NULL, 
+                        `exerciseId` INTEGER NOT NULL, 
+                        `weight` REAL NOT NULL, 
+                        `reps` INTEGER NOT NULL, 
+                        `isCompleted` INTEGER NOT NULL DEFAULT 1, 
+                        FOREIGN KEY(`sessionId`) REFERENCES `workout_session_logs`(`sessionId`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_set_logs_sessionId` ON `exercise_set_logs` (`sessionId`)")
             }
         }
     }
