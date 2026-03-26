@@ -29,6 +29,7 @@ import com.ihor.thesystem.feature.statistics.ui.components.dialogs.QuestChecklis
 
 // --- ВИПРАВЛЕНИЙ ІМПОРТ: SystemHeader має пакет status всередині файлу ---
 import com.ihor.thesystem.feature.status.ui.components.SystemHeader
+import com.ihor.thesystem.feature.status.ui.components.CurrentDateBlock
 
 // --- Імпорти локальних діалогів із status ---
 import com.ihor.thesystem.feature.status.ui.components.dialogs.LevelUpDialog
@@ -89,12 +90,22 @@ fun StatusScreen(
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    PlayerLeftPanel(
-                        data         = data,
-                        modifier     = Modifier.weight(0.60f),
-                        onNameTap    = { viewModel.onNameTap() },
-                        onDebuffEdit = { viewModel.onDebuffTap() }
-                    )
+                    // ── Ліва колонка з PlayerLeftPanel та Датою ────────────
+                    Column(
+                        modifier = Modifier.weight(0.60f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        PlayerLeftPanel(
+                            data         = data,
+                            modifier     = Modifier.fillMaxWidth(),
+                            onNameTap    = { viewModel.onNameTap() },
+                            onDebuffEdit = { viewModel.onDebuffTap() }
+                        )
+                        
+                        // Поточна дата тепер займає ту ж ширину, що і статус гравця
+                        CurrentDateBlock(modifier = Modifier.fillMaxWidth())
+                    }
+
                     StatRightPanel(
                         month       = "${data.currentMonth}/${data.totalMonths}",
                         weight      = "${data.currentWeight.toInt()}",
