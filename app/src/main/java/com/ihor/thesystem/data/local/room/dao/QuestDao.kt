@@ -38,4 +38,14 @@ interface QuestDao {
 
     @Query("SELECT * FROM quest WHERE type = 'MAIN' ORDER BY date DESC LIMIT 2")
     suspend fun getLastTwoMainQuests(): List<QuestEntity>
+
+    @Query("DELETE FROM quest_task WHERE id = :taskId")
+    suspend fun deleteTask(taskId: Int)
+
+    @Transaction
+    @Query("""
+        SELECT * FROM quest 
+        WHERE date(date / 1000, 'unixepoch', 'localtime') = date(:dateMillis / 1000, 'unixepoch', 'localtime')
+    """)
+    fun getQuestsByDate(dateMillis: Long): Flow<List<QuestWithTasks>>
 }

@@ -13,11 +13,15 @@ import javax.inject.Singleton
 object UseCaseModule {
 
     @Provides @Singleton
+    fun provideCalculateCycleDayForDateUseCase() = CalculateCycleDayForDateUseCase()
+
+    @Provides @Singleton
     fun provideGenerateDailyQuestsUseCase(
-        playerRepo:   PlayerRepository,
+        configRepo:   SystemConfigRepository,
         questRepo:    QuestRepository,
-        scheduleRepo: ScheduleRepository
-    ) = GenerateDailyQuestsUseCase(playerRepo, questRepo, scheduleRepo)
+        scheduleRepo: ScheduleRepository,
+        calculateCycleDay: CalculateCycleDayForDateUseCase
+    ) = GenerateDailyQuestsUseCase(configRepo, questRepo, scheduleRepo, calculateCycleDay)
 
     @Provides @Singleton
     fun provideLevelUpUseCase(

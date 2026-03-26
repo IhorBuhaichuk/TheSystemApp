@@ -27,6 +27,8 @@ class QuestRepositoryImpl @Inject constructor(
         val allTasks = questDao.getTasksForQuestSync(questId)
         if (allTasks.isNotEmpty() && allTasks.all { it.isCompleted }) {
             questDao.updateQuestStatus(questId, EntityQuestStatus.COMPLETED)
+        } else {
+            questDao.updateQuestStatus(questId, EntityQuestStatus.ACTIVE)
         }
     }
 
@@ -55,8 +57,19 @@ class QuestRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun addTaskToQuest(questId: Int, taskName: String) {
+        questDao.insertQuestTask(QuestTaskEntity(questId = questId, name = taskName))
+    }
+
+    override suspend fun removeTask(taskId: Int) {
+        questDao.deleteTask(taskId)
+    }
+
     override suspend fun getLastTwoMainQuestsStatus(): List<DomainQuestStatus> =
         questDao.getLastTwoMainQuests().map { it.status.toDomain() }
+
+    override fun getQuestsByDate(dateMillis: Long): Flow<List<Quest>> =
+        questDao.getQuestsByDate(dateMillis).map { list -> list.map { it.toDomain() } }
 }
 
 // ── Type aliases to avoid naming clash ────────────────────────────────────────

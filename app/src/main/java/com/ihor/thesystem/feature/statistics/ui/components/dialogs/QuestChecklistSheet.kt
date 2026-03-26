@@ -3,16 +3,19 @@ package com.ihor.thesystem.feature.statistics.ui.components.dialogs
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,8 +30,13 @@ fun QuestChecklistSheet(
     quest: QuestUiModel,
     accentColor: Color,
     onTaskToggle: (TaskUiModel) -> Unit,
+    onAddTask: (String) -> Unit,
+    onRemoveTask: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
+    var newTaskName by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor   = PanelSurface,
@@ -62,14 +70,58 @@ fun QuestChecklistSheet(
                     letterSpacing = 1.sp
                 )
                 Text(
-                    text       = quest.subtitle,
+                    text       = "Daily Operations Protocol",
                     color      = TextSecondary,
                     fontFamily = FontFamily.Monospace,
                     fontSize   = 11.sp
                 )
             }
 
-            Divider(color = accentColor.copy(alpha = 0.25f), thickness = 1.dp)
+            HorizontalDivider(color = accentColor.copy(alpha = 0.25f), thickness = 1.dp)
+
+            // Add Task Input
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                TextField(
+                    value = newTaskName,
+                    onValueChange = { newTaskName = it },
+                    placeholder = { Text("Нова справа...", color = TextSecondary.copy(0.5f), fontSize = 13.sp) },
+                    modifier = Modifier.weight(1f),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = BackgroundDeep,
+                        unfocusedContainerColor = BackgroundDeep,
+                        focusedIndicatorColor = accentColor,
+                        unfocusedIndicatorColor = accentColor.copy(0.3f),
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    ),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        if (newTaskName.isNotBlank()) {
+                            onAddTask(newTaskName)
+                            newTaskName = ""
+                        }
+                        focusManager.clearFocus()
+                    }),
+                    maxLines = 1
+                )
+                IconButton(
+                    onClick = {
+                        if (newTaskName.isNotBlank()) {
+                            onAddTask(newTaskName)
+                            newTaskName = ""
+                        }
+                        focusManager.clearFocus()
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Filled.Add, "Add", tint = accentColor)
+                }
+            }
 
             if (quest.tasks.isEmpty()) {
                 Box(
@@ -77,25 +129,29 @@ fun QuestChecklistSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text       = "[ ЗАВДАННЯ ВІДСУТНІ ]",
+                        text       = "[ СПИСОК ПОРОЖНІЙ ]",
                         color      = TextSecondary,
                         fontFamily = FontFamily.Monospace,
-                        fontSize   = 12.sp
+                        fontSize = 12.sp
                     )
                 }
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
                     items(quest.tasks, key = { it.id }) { task ->
                         TaskRow(
                             task        = task,
                             accentColor = accentColor,
-                            onToggle    = { onTaskToggle(task) }
+                            onToggle    = { onTaskToggle(task) },
+                            onRemove    = { onRemoveTask(task.id) }
                         )
                     }
                 }
             }
 
-            if (quest.isCompleted) {
+            if (quest.isCompleted && quest.tasks.isNotEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -108,7 +164,7 @@ fun QuestChecklistSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text       = "✓ КВЕСТ ВИКОНАНО",
+                        text       = "✓ ВСІ ЗАВДАННЯ ВИКОНАНО",
                         color      = NeonGreen,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
@@ -124,7 +180,8 @@ fun QuestChecklistSheet(
 private fun TaskRow(
     task: TaskUiModel,
     accentColor: Color,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    onRemove: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -134,19 +191,21 @@ private fun TaskRow(
                 backgroundColor = if (task.isCompleted) NeonGreen.copy(0.07f) else PanelSurface,
                 cornerCut       = 6.dp
             )
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment     = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        IconButton(onClick = onToggle, modifier = Modifier.size(28.dp)) {
+        // Квадратик з галочкою
+        IconButton(onClick = onToggle, modifier = Modifier.size(32.dp)) {
             Icon(
-                imageVector = if (task.isCompleted) Icons.Filled.CheckCircle
-                else Icons.Filled.RadioButtonUnchecked,
+                imageVector = if (task.isCompleted) Icons.Filled.CheckBox
+                else Icons.Filled.CheckBoxOutlineBlank,
                 contentDescription = null,
-                tint     = if (task.isCompleted) NeonGreen else accentColor,
-                modifier = Modifier.size(22.dp)
+                tint     = if (task.isCompleted) NeonGreen else accentColor.copy(0.6f),
+                modifier = Modifier.size(24.dp)
             )
         }
+        
         Text(
             text           = task.name,
             color          = if (task.isCompleted) TextSecondary else TextPrimary,
@@ -156,5 +215,14 @@ private fun TaskRow(
             else TextDecoration.None,
             modifier       = Modifier.weight(1f)
         )
+
+        IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = "Delete",
+                tint = NeonRed.copy(0.5f),
+                modifier = Modifier.size(18.dp)
+            )
+        }
     }
 }

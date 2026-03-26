@@ -8,6 +8,7 @@ import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.DebuffRepository
 import com.ihor.thesystem.domain.repository.PlayerRepository
+import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import com.ihor.thesystem.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +36,7 @@ class StatusViewModel @Inject constructor(
     private val getSystemConfig:       GetSystemConfigUseCase,
     private val updateSystemConfig:    UpdateSystemConfigUseCase,
     private val playerRepo:            PlayerRepository,
+    private val questRepo:             QuestRepository,
     private val debuffRepo:            DebuffRepository,
     private val systemConfigRepo:      SystemConfigRepository
 ) : ViewModel() {
@@ -62,9 +64,6 @@ class StatusViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            playerRepo.getPlayer()
-                .filterNotNull()
-                .first()
             generateDailyQuests()
         }
 
@@ -124,6 +123,19 @@ class StatusViewModel @Inject constructor(
 
     fun onTaskToggled(task: TaskUiModel, questId: Int) {
         viewModelScope.launch { toggleQuestTask(task, questId) }
+    }
+
+    fun onAddTask(questId: Int, taskName: String) {
+        if (taskName.isBlank()) return
+        viewModelScope.launch {
+            questRepo.addTaskToQuest(questId, taskName)
+        }
+    }
+
+    fun onRemoveTask(taskId: Int) {
+        viewModelScope.launch {
+            questRepo.removeTask(taskId)
+        }
     }
 
     fun onDebuffToggled(debuff: DebuffConfig) {

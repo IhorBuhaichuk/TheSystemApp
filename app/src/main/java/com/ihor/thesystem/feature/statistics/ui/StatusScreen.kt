@@ -90,7 +90,6 @@ fun StatusScreen(
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // ── Ліва колонка з PlayerLeftPanel та Датою ────────────
                     Column(
                         modifier = Modifier.weight(0.60f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -101,8 +100,6 @@ fun StatusScreen(
                             onNameTap    = { viewModel.onNameTap() },
                             onDebuffEdit = { viewModel.onDebuffTap() }
                         )
-                        
-                        // Поточна дата тепер займає ту ж ширину, що і статус гравця
                         CurrentDateBlock(modifier = Modifier.fillMaxWidth())
                     }
 
@@ -175,12 +172,17 @@ fun StatusScreen(
                                 onTaskToggle = { task ->
                                     viewModel.onTaskToggled(task, dialog.questId)
                                 },
+                                onAddTask    = { taskName ->
+                                    viewModel.onAddTask(dialog.questId, taskName)
+                                },
+                                onRemoveTask = { taskId ->
+                                    viewModel.onRemoveTask(taskId)
+                                },
                                 onDismiss    = { viewModel.onDismissDialog() }
                             )
                         }
                     }
                     is StatusDialogState.EditSystemConfig -> {
-                        // Тимчасова заглушка для уникнення крашу
                         viewModel.onDismissDialog()
                     }
                     StatusDialogState.None -> Unit

@@ -11,18 +11,6 @@ interface PlayerRepository {
     suspend fun logWeight(weight: Float)
 }
 
-interface QuestRepository {
-    fun getActiveDailyQuest(): Flow<Quest?>
-    fun getActiveMainQuest(): Flow<Quest?>
-    suspend fun hasActiveQuests(): Boolean
-    suspend fun toggleTaskCompletion(taskId: Int, questId: Int, isCompleted: Boolean)
-    suspend fun updateQuestStatus(questId: Int, status: DomainQuestStatus)
-    suspend fun createDailyQuest(title: String, tasks: List<String>, scheduleId: Int?)
-    suspend fun createMainQuest(title: String, exercises: List<String>, scheduleId: Int?)
-
-    suspend fun getLastTwoMainQuestsStatus(): List<DomainQuestStatus>
-}
-
 interface SystemConfigRepository {
     fun getConfig(): Flow<SystemConfig?>
     suspend fun updateConfig(config: SystemConfig)
