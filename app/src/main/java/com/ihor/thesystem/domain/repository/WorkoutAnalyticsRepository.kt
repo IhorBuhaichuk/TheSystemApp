@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.repository
 
+import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutDirective
 import com.ihor.thesystem.domain.model.WorkoutSession
@@ -29,4 +30,9 @@ interface WorkoutAnalyticsRepository {
      * Отримує згруповану статистику тоннажу за вказаний період (по днях).
      */
     fun getDailyTonnageStatsForMonth(monthStart: Long, monthEnd: Long): Flow<List<DailyTonnageStats>>
+
+    /**
+     * Отримує логі тренувань для конкретної дати.
+     */
+    fun getSessionsByDate(dateMillis: Long): Flow<List<SessionWithSets>>
 }

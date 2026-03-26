@@ -1,21 +1,22 @@
 package com.ihor.thesystem.feature.mode.ui.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
-import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.mode.viewmodel.CycleDayUiModel
 import com.ihor.thesystem.feature.mode.viewmodel.DayType
 
@@ -43,6 +44,14 @@ private fun CycleDayHex(
     day: CycleDayUiModel,
     modifier: Modifier = Modifier
 ) {
+    val (icon: ImageVector, label: String) = when (day.dayNumber) {
+        1    -> Icons.Filled.WbSunny to "День"
+        2    -> Icons.Filled.NightsStay to "Ніч"
+        3    -> Icons.Filled.Bedtime to "Відсипний"
+        4    -> Icons.Filled.Weekend to "Вихідний"
+        else -> Icons.Filled.Circle to "День"
+    }
+
     val accentColor = when {
         day.isActive && day.type == DayType.WORKOUT -> NeonGold
         day.isActive                                -> NeonCyan
@@ -73,20 +82,20 @@ private fun CycleDayHex(
                     style = Stroke(width = if (day.isActive) 2.5.dp.toPx() else 1.5.dp.toPx())
                 )
             }
-            Text(
-                text       = "${day.dayNumber}",
-                color      = if (day.isActive) accentColor else TextSecondary,
-                fontSize   = if (day.isActive) 22.sp else 18.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (day.isActive) accentColor else TextSecondary,
+                modifier = Modifier.size(if (day.isActive) 24.dp else 20.dp)
             )
         }
 
         Text(
-            text       = if (day.type == DayType.WORKOUT) "▶ КВЕСТ" else "◎ ВІДПОЧИНОК",
+            text       = label,
             color      = if (day.isActive) accentColor else TextSecondary.copy(alpha = 0.5f),
             fontSize   = 8.sp,
-            fontFamily = FontFamily.Monospace
+            fontFamily = FontFamily.Monospace,
+            fontWeight = if (day.isActive) FontWeight.Bold else FontWeight.Normal
         )
     }
 }

@@ -21,13 +21,13 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         // Денний квест (якщо є завдання)
         if (schedule.dailyTaskNames.isNotEmpty()) {
             questRepo.createDailyQuest(
-                title      = "ДЕННИЙ РИТУАЛ | ДЕНЬ ${player.currentCycleDay}",
+                title      = "Рутина | День ${player.currentCycleDay}",
                 tasks      = schedule.dailyTaskNames,
                 scheduleId = schedule.id
             )
         }
 
-        // Основний квест (якщо є тренування)
+        // Основне тренування (якщо є тренування)
         schedule.workoutTemplateName?.let { templateName ->
             questRepo.createMainQuest(
                 title      = templateName.uppercase(),

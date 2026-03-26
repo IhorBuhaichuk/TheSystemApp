@@ -2,6 +2,7 @@ package com.ihor.thesystem.data.repository_impl
 
 import com.ihor.thesystem.data.local.room.dao.WorkoutAnalyticsDao
 import com.ihor.thesystem.data.local.room.entity.*
+import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutDirective
 import com.ihor.thesystem.domain.model.WorkoutSession
@@ -18,7 +19,6 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         session: WorkoutSession,
         sets: List<ExerciseSet>
     ): Long {
-        // Використовуємо новий метод логування сесії
         return dao.saveFullSessionLog(
             session = session.toLogEntity(),
             sets = sets.map { it.toLogEntity() }
@@ -33,8 +33,11 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         monthStart: Long,
         monthEnd: Long
     ): Flow<List<DailyTonnageStats>> {
-        // Використовуємо новий метод отримання статистики
         return dao.getDailyTonnageStats(monthStart, monthEnd)
+    }
+
+    override fun getSessionsByDate(dateMillis: Long): Flow<List<SessionWithSets>> {
+        return dao.getSessionLogsByDate(dateMillis)
     }
 
     // =========================================
@@ -56,7 +59,6 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         return ExerciseSetLogEntity(
             setId = this.setId,
             sessionId = this.sessionId,
-            // Перетворюємо String ID в Int для логів
             exerciseId = this.exerciseId.toIntOrNull() ?: 0,
             weight = this.weight,
             reps = this.reps,
@@ -66,7 +68,6 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
 
     private fun WorkoutDirective.toEntity(): WorkoutDirectiveEntity {
         return WorkoutDirectiveEntity(
-            // Перетворюємо String ID в Int для директив
             exerciseId = this.exerciseId.toIntOrNull() ?: 0,
             targetWeight = this.targetWeight,
             targetSets = this.targetSets,

@@ -37,6 +37,13 @@ abstract class WorkoutAnalyticsDao {
     @Query("SELECT * FROM workout_session_logs ORDER BY timestamp DESC")
     abstract fun getAllSessionLogs(): Flow<List<SessionWithSets>>
 
+    @Transaction
+    @Query("""
+        SELECT * FROM workout_session_logs 
+        WHERE date(timestamp / 1000, 'unixepoch', 'localtime') = date(:dateMillis / 1000, 'unixepoch', 'localtime')
+    """)
+    abstract fun getSessionLogsByDate(dateMillis: Long): Flow<List<SessionWithSets>>
+
     /**
      * Статистика тоннажу по днях для графіка
      */
@@ -61,7 +68,7 @@ abstract class WorkoutAnalyticsDao {
      * Отримання останніх директив для вправи
      */
     @Query("SELECT * FROM workout_directives WHERE exerciseId = :exerciseId")
-    abstract suspend fun getDirectiveForExercise(exerciseId: String): WorkoutDirectiveEntity?
+    abstract suspend fun getDirectiveForExercise(exerciseId: Int): WorkoutDirectiveEntity?
     
     @Query("DELETE FROM workout_directives")
     abstract suspend fun clearDirectives()

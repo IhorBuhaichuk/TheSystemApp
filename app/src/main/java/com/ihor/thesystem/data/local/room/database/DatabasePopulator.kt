@@ -43,8 +43,8 @@ object DatabasePopulator {
 
         // ── Workout Templates ─────────────────────────────────────────
         workoutDao.insertTemplate(WorkoutTemplateEntity(1, "Пре-квест"))
-        workoutDao.insertTemplate(WorkoutTemplateEntity(2, "Комплекс Б"))
-        workoutDao.insertTemplate(WorkoutTemplateEntity(3, "Комплекс А"))
+        workoutDao.insertTemplate(WorkoutTemplateEntity(2, "Тренування Б"))
+        workoutDao.insertTemplate(WorkoutTemplateEntity(3, "Тренування А"))
 
         // Пре-квест: 1,2,3,4
         listOf(1,2,3,4).forEachIndexed { i, exId ->

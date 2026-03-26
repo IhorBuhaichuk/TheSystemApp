@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -23,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarViewModel
+import com.ihor.thesystem.feature.calendar.viewmodel.WorkoutResultUiModel
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -35,7 +38,6 @@ fun CalendarScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentMonth = remember { YearMonth.now() }
     val daysInMonth = currentMonth.lengthOfMonth()
-    // java.time.DayOfWeek: 1 (Mon) to 7 (Sun)
     val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value
     
     val selectedDate = uiState.selectedDate
@@ -57,7 +59,6 @@ fun CalendarScreen(
         
         Spacer(Modifier.height(24.dp))
         
-        // Month Header
         Text(
             text = currentMonth.month.getDisplayName(TextStyle.FULL_STANDALONE, Locale("uk")).uppercase(),
             color = TextPrimary,
@@ -69,7 +70,6 @@ fun CalendarScreen(
         
         Spacer(Modifier.height(16.dp))
 
-        // Grid
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
             modifier = Modifier.fillMaxWidth(),
@@ -88,7 +88,6 @@ fun CalendarScreen(
                 )
             }
 
-            // Розрахунок порожніх клітинок (Пн = 1)
             items(firstDayOfWeek - 1) { Box(Modifier.size(40.dp)) }
 
             items(daysInMonth) { dayIndex ->
@@ -110,6 +109,7 @@ fun CalendarScreen(
             DailyScheduleSection(
                 date = selectedDate,
                 cycleDay = viewModel.getCycleDay(selectedDate),
+                results = uiState.workoutResults,
                 onDismiss = { viewModel.onDateSelected(null) },
                 viewModel = viewModel
             )
@@ -126,10 +126,10 @@ fun CalendarDayCell(
     onClick: () -> Unit
 ) {
     val indicatorColor = when(cycleDay) {
-        1 -> NeonRed   // Робота День
-        2 -> NeonGold  // Робота Ніч
-        3 -> NeonCyan  // Комплекс А
-        else -> NeonGreen // Комплекс Б
+        1 -> NeonRed
+        2 -> NeonGold
+        3 -> NeonCyan
+        else -> NeonGreen
     }
 
     val borderColor = if (isSelected) NeonCyan else if (isToday) NeonCyanDim else Color.Transparent
@@ -163,6 +163,7 @@ fun CalendarDayCell(
 fun DailyScheduleSection(
     date: LocalDate,
     cycleDay: Int,
+    results: List<WorkoutResultUiModel>,
     onDismiss: () -> Unit,
     viewModel: CalendarViewModel
 ) {
@@ -192,10 +193,10 @@ fun DailyScheduleSection(
         
         Text(
             text = when(cycleDay) {
-                1 -> "СТАТУС: РОБОЧА ЗМІНА (ДЕНЬ)"
-                2 -> "СТАТУС: РОБОЧА ЗМІНА (НІЧ)"
-                3 -> "СТАТУС: ТРЕНУВАЛЬНИЙ КОМПЛЕКС А"
-                else -> "СТАТУС: ТРЕНУВАЛЬНИЙ КОМПЛЕКС Б"
+                1 -> "СТАТУС: Денна зміна"
+                2 -> "СТАТУС: Нічна зміна"
+                3 -> "СТАТУС: Тренування А"
+                else -> "СТАТУС: Тренування Б"
             },
             color = if (cycleDay <= 2) NeonRed else NeonGreen,
             fontSize = 11.sp,
@@ -205,10 +206,21 @@ fun DailyScheduleSection(
 
         HorizontalDivider(color = NeonCyan.copy(0.1f), thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
 
+        if (results.isNotEmpty()) {
+            Text("РЕЗУЛЬТАТИ ТРЕНУВАННЯ:", color = NeonCyan, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+            Spacer(Modifier.height(8.dp))
+            results.forEach { result ->
+                Text(result.exerciseName.uppercase(), color = NeonGold, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                val setsText = result.sets.joinToString(" | ") { "${it.weight}кг x ${it.reps}" }
+                Text(setsText, color = TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 8.dp, bottom = 4.dp))
+            }
+            HorizontalDivider(color = NeonCyan.copy(0.1f), thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
+        }
+
         schedule?.let { data ->
             if (data.workoutTemplateName != null) {
                 Text(
-                    text = "ПРОГРАМА: ${data.workoutTemplateName}",
+                    text = "ПЛАНОВА ПРОГРАМА: ${data.workoutTemplateName}",
                     color = NeonGold,
                     fontSize = 12.sp,
                     fontFamily = FontFamily.Monospace,

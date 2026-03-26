@@ -56,7 +56,7 @@ fun ActiveDayCard(
         // ── Daily Tasks ───────────────────────────────────────────────
         if (data.dailyTasks.isNotEmpty()) {
             DaySection(
-                title       = "ЩОДЕННІ ЗАВДАННЯ",
+                title       = "Завдання на день",
                 accentColor = NeonCyan,
                 content     = {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -71,7 +71,7 @@ fun ActiveDayCard(
         // ── Workout ───────────────────────────────────────────────────
         data.workoutName?.let { name ->
             DaySection(
-                title       = "ОСНОВНИЙ КВЕСТ",
+                title       = "Основне тренування",
                 accentColor = NeonGold,
                 content     = {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {

@@ -1,8 +1,8 @@
 package com.ihor.thesystem.feature.status.viewmodel
 
 data class StatusUiData(
-    val playerName: String            = "ІГОР",
-    val playerClass: String           = "ПРОБУДЖЕНИЙ",
+    val playerName: String            = "Ігор",
+    val playerClass: String           = "Новачок",
     val currentMonth: Int             = 1,
     val totalMonths: Int              = 12,
     val currentWeight: Float          = 80f,

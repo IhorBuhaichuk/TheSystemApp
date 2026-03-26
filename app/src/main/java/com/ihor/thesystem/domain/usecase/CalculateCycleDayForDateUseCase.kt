@@ -10,7 +10,7 @@ class CalculateCycleDayForDateUseCase @Inject constructor() {
     /**
      * @param targetDate Дата, для якої рахуємо день
      * @param anchorTimestamp Таймстемп Дня 1 (перша зміна)
-     * @return 1 - День, 2 - Ніч, 3 - Комплекс А, 4 - Комплекс Б
+     * @return 1 - День, 2 - Ніч, 3 - Тренування А, 4 - Тренування Б
      */
     operator fun invoke(targetDate: LocalDate, anchorTimestamp: Long): Int {
         if (anchorTimestamp == 0L) return 1

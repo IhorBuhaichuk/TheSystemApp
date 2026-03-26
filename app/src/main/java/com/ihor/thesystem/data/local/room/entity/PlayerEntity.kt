@@ -6,9 +6,9 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "player")
 data class PlayerEntity(
     @PrimaryKey val id: Int = 1,
-    val name: String        = "ІГОР",
+    val name: String        = "Ігор",
     val level: Int          = 1,
-    val playerClass: String = "ПРОБУДЖЕНИЙ",
+    val playerClass: String = "Новачок",
     val height: Float       = 0f,
     val currentMonth: Int   = 1,
     val currentWeek: Int    = 1,

@@ -24,6 +24,9 @@ import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.*
 import com.ihor.thesystem.feature.status.viewmodel.DebuffUiModel
 import com.ihor.thesystem.feature.status.viewmodel.StatusUiData
+import java.time.LocalDate
+import java.time.format.TextStyle as JavaTextStyle
+import java.util.*
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -89,8 +92,41 @@ fun PlayerLeftPanel(
                 .combinedClickable(onClick = onDebuffEdit, onLongClick = onDebuffEdit)
         )
 
-        // ── Cycle counter ─────────────────────────────────────────────
-        CycleCounter(currentDay = data.cycleDay)
+        // ── Cycle counter & Date ─────────────────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            CycleCounter(currentDay = data.cycleDay)
+            
+            CurrentDateDisplay()
+        }
+    }
+}
+
+@Composable
+private fun CurrentDateDisplay() {
+    val today = LocalDate.now()
+    val dayOfWeek = today.dayOfWeek.getDisplayName(JavaTextStyle.SHORT, Locale("uk")).uppercase()
+    val dayOfMonth = today.dayOfMonth
+    val month = today.month.getDisplayName(JavaTextStyle.SHORT, Locale("uk")).uppercase()
+
+    Column(horizontalAlignment = Alignment.End) {
+        Text(
+            text = dayOfWeek,
+            color = NeonCyan,
+            fontSize = 10.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "$dayOfMonth $month",
+            color = TextPrimary,
+            fontSize = 12.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
@@ -184,7 +220,7 @@ private fun CycleCounter(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(
-            text          = "CYCLE COUNTER",
+            text          = "День циклу",
             color         = NeonCyanDim,
             fontSize      = 9.sp,
             fontFamily    = FontFamily.Monospace,

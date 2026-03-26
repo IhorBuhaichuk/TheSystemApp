@@ -41,10 +41,28 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>) {
-        val sessionId = System.currentTimeMillis() // Спрощено
-        val entities = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }.map { input ->
+        val timestamp = System.currentTimeMillis()
+        
+        // Розрахунок тоннажу для лога сесії
+        val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
+        if (validSets.isEmpty()) return
+
+        val totalTonnage = validSets.sumOf { 
+            (it.weight.toDoubleOrNull() ?: 0.0) * (it.reps.toIntOrNull() ?: 0)
+        }
+
+        // Створюємо запис про сесію (батьківський запис для FOREIGN KEY)
+        val sessionLog = WorkoutSessionLogEntity(
+            questId = 0, // Швидке логування поза квестом
+            timestamp = timestamp,
+            totalTonnage = totalTonnage,
+            cycleDay = 0,
+            durationMinutes = 0
+        )
+
+        val entities = validSets.map { input ->
             ExerciseSetLogEntity(
-                sessionId = sessionId,
+                sessionId = 0, // Буде встановлено в saveFullSessionLog
                 exerciseId = exerciseId,
                 weight = input.weight.toDoubleOrNull() ?: 0.0,
                 reps = input.reps.toIntOrNull() ?: 0,
@@ -52,13 +70,13 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
             )
         }
         
-        if (entities.isNotEmpty()) {
-            analyticsDao.insertSetLogs(entities)
-            
-            val maxWeight = sets.mapNotNull { it.weight.toFloatOrNull() }.maxOrNull()
-            if (maxWeight != null) {
-                updateCurrentWeight(exerciseId, maxWeight)
-            }
+        // Зберігаємо сесію та підходи в транзакції (виправляє FOREIGN KEY crash)
+        analyticsDao.saveFullSessionLog(sessionLog, entities)
+        
+        // Оновлення поточної ваги в матриці (максимальна з підходів)
+        val maxWeight = sets.mapNotNull { it.weight.toFloatOrNull() }.maxOrNull()
+        if (maxWeight != null) {
+            updateCurrentWeight(exerciseId, maxWeight)
         }
     }
 }

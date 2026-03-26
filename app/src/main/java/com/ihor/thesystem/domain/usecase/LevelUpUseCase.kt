@@ -34,7 +34,7 @@ class LevelUpUseCase @Inject constructor(
     }
 
     private fun resolveClass(month: Int): String = when (month) {
-        1    -> "ПРОБУДЖЕНИЙ"
+        1    -> "Новачок"
         2    -> "УЧЕНЬ"
         3    -> "ПОСЛІДОВНИК"
         4    -> "ВОЇН"
