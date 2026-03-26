@@ -2,16 +2,20 @@ package com.ihor.thesystem.data.repository_impl
 
 import com.ihor.thesystem.data.local.room.dao.ProgressionMatrixDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
+import com.ihor.thesystem.data.local.room.dao.WorkoutAnalyticsDao
 import com.ihor.thesystem.data.local.room.entity.ProgressionMatrixEntity
+import com.ihor.thesystem.data.local.room.entity.ExerciseSetEntity
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
+import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class ProgressionMatrixRepositoryImpl @Inject constructor(
-    private val matrixDao:  ProgressionMatrixDao,
-    private val workoutDao: WorkoutDao
+    private val matrixDao:    ProgressionMatrixDao,
+    private val workoutDao:   WorkoutDao,
+    private val analyticsDao: WorkoutAnalyticsDao
 ) : ProgressionMatrixRepository {
 
     override fun getAllEntries(): Flow<List<ProgressionMatrixEntry>> =
@@ -26,6 +30,37 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     override suspend fun updateCurrentWeight(exerciseId: Int, newWeight: Float) {
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
         matrixDao.update(existing.copy(currentWeight = newWeight))
+    }
+
+    override suspend fun updateMatrixGoals(exerciseId: Int, startWeight: Float, targetWeight: Float) {
+        val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
+        matrixDao.update(existing.copy(
+            startWeight = startWeight,
+            targetWeight = targetWeight,
+            currentWeight = startWeight
+        ))
+    }
+
+    override suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>) {
+        val sessionId = System.currentTimeMillis() // Спрощено: в реальному додатку прив'язка до активної сесії
+        val entities = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }.map { input ->
+            ExerciseSetEntity(
+                sessionId = sessionId,
+                exerciseId = exerciseId.toString(),
+                weight = input.weight.toDoubleOrNull() ?: 0.0,
+                reps = input.reps.toIntOrNull() ?: 0,
+                isCompleted = true
+            )
+        }
+        
+        if (entities.isNotEmpty()) {
+            analyticsDao.insertSets(entities)
+            
+            val maxWeight = sets.mapNotNull { it.weight.toFloatOrNull() }.maxOrNull()
+            if (maxWeight != null) {
+                updateCurrentWeight(exerciseId, maxWeight)
+            }
+        }
     }
 }
 

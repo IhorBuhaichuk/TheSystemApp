@@ -17,7 +17,7 @@ import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.feature.statistics.ui.components.*
-import com.ihor.thesystem.feature.statistics.ui.dialogs.EditWeightDialog
+import com.ihor.thesystem.feature.statistics.ui.dialogs.*
 import com.ihor.thesystem.feature.statistics.viewmodel.*
 
 @Composable
@@ -98,7 +98,7 @@ fun StatisticsScreen(
                                 letterSpacing = 2.sp
                             )
                             Text(
-                                text       = "LONG PRESS = РЕДАГУВАТИ",
+                                text       = "TAP = LOG | FLAG = SETUP",
                                 color      = TextSecondary.copy(alpha = 0.5f),
                                 fontFamily = FontFamily.Monospace,
                                 fontSize   = 8.sp
@@ -129,8 +129,9 @@ fun StatisticsScreen(
                             key   = { it.exerciseId }
                         ) { entry ->
                             MatrixEntryCard(
-                                entry       = entry,
-                                onLongPress = { viewModel.onEditWeightTap(entry) }
+                                entry        = entry,
+                                onCardClick  = { viewModel.onOpenLogSets(entry) },
+                                onSetupClick = { viewModel.onOpenSetup(entry) }
                             )
                         }
                     }
@@ -143,18 +144,34 @@ fun StatisticsScreen(
                     }
                 }
 
-                // ── Dialog ─────────────────────────────────────────────
+                // ── Dialogs ───────────────────────────────────────────
                 when (val dialog = dialogState) {
-                    is StatisticsDialogState.EditWeight -> {
-                        EditWeightDialog(
-                            entry     = dialog.entry,
-                            onConfirm = { weight ->
-                                viewModel.onWeightConfirmed(dialog.entry.exerciseId, weight)
+                    is StatisticsDialogState.SetupMatrix -> {
+                        SetupMatrixDialog(
+                            exerciseName = dialog.entry.exerciseName,
+                            initialStart = dialog.startWeight,
+                            initialTarget = dialog.targetWeight,
+                            onConfirm = { start, target ->
+                                viewModel.onConfirmSetup(dialog.entry.exerciseId, start, target)
+                            },
+                            onDismiss = { viewModel.onDismissDialog() }
+                        )
+                    }
+                    is StatisticsDialogState.LogWorkoutSets -> {
+                        LogWorkoutSetsDialog(
+                            exerciseName = dialog.entry.exerciseName,
+                            sets = dialog.sets,
+                            onUpdate = { id, w, r -> viewModel.updateSetInput(id, w, r) },
+                            onAdd = { viewModel.addSet() },
+                            onRemove = { viewModel.removeSet() },
+                            onSave = { 
+                                viewModel.onLogSetsConfirmed(dialog.entry.exerciseId, dialog.sets)
                             },
                             onDismiss = { viewModel.onDismissDialog() }
                         )
                     }
                     StatisticsDialogState.None -> Unit
+                    else -> Unit
                 }
             }
 

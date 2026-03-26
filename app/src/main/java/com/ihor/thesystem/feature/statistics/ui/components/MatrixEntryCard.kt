@@ -1,12 +1,10 @@
 package com.ihor.thesystem.feature.statistics.ui.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,12 +17,12 @@ import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MatrixEntryCard(
     entry: MatrixEntryUiModel,
-    modifier: Modifier = Modifier,
-    onLongPress: () -> Unit = {}
+    onCardClick: () -> Unit,
+    onSetupClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     // Колір по прогресу
     val accentColor: Color = when {
@@ -37,30 +35,35 @@ fun MatrixEntryCard(
         modifier = modifier
             .fillMaxWidth()
             .sciPanel(accentColor.copy(0.35f), PanelSurface, 8.dp)
-            .combinedClickable(onClick = {}, onLongClick = onLongPress)
+            .clickable { onCardClick() }
             .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // ── Top row: name + edit hint ─────────────────────────────────
+        // ── Top row: name + setup button ──────────────────────────────
         Row(
             modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment     = Alignment.CenterVertically
         ) {
             Text(
-                text       = entry.exerciseName,
+                text       = entry.exerciseName.uppercase(),
                 color      = TextPrimary,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
                 fontSize   = 13.sp,
                 modifier   = Modifier.weight(1f)
             )
-            Icon(
-                imageVector        = Icons.Filled.Edit,
-                contentDescription = "Long press to edit",
-                tint               = TextSecondary.copy(alpha = 0.4f),
-                modifier           = Modifier.size(13.dp)
-            )
+            IconButton(
+                onClick = onSetupClick,
+                modifier = Modifier.size(28.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Flag,
+                    contentDescription = "Setup Goals",
+                    tint = NeonGold,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
 
         // ── Progress bar ──────────────────────────────────────────────
@@ -74,9 +77,9 @@ fun MatrixEntryCard(
             modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            WeightLabel("СТАРТ",    entry.displayStart,   TextSecondary)
-            WeightLabel("ЗАРАЗ",    entry.displayCurrent, accentColor)
-            WeightLabel("ЦІЛЬ",     entry.displayTarget,  NeonGold)
+            WeightBlock("СТАРТ",    entry.displayStart,   TextSecondary)
+            WeightBlock("ЗАРАЗ",    entry.displayCurrent, accentColor)
+            WeightBlock("ЦІЛЬ",     entry.displayTarget,  NeonGold)
         }
 
         // ── Weekly step ───────────────────────────────────────────────
@@ -92,7 +95,7 @@ fun MatrixEntryCard(
 }
 
 @Composable
-private fun WeightLabel(label: String, value: String, valueColor: Color) {
+private fun WeightBlock(label: String, value: String, valueColor: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text       = label,

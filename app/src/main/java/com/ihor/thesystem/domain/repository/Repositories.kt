@@ -1,6 +1,7 @@
 package com.ihor.thesystem.domain.repository
 
 import com.ihor.thesystem.domain.model.*
+import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 import kotlinx.coroutines.flow.Flow
 
 interface PlayerRepository {
@@ -40,6 +41,8 @@ interface ScheduleRepository {
 interface ProgressionMatrixRepository {
     fun getAllEntries(): Flow<List<ProgressionMatrixEntry>>
     suspend fun updateCurrentWeight(exerciseId: Int, newWeight: Float)
+    suspend fun updateMatrixGoals(exerciseId: Int, startWeight: Float, targetWeight: Float)
+    suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>)
 }
 
 data class ProgressionMatrixEntry(
@@ -50,6 +53,6 @@ data class ProgressionMatrixEntry(
     val targetWeight: Float,
     val currentWeight: Float,
     val targetWeightNote: String?,
-    val weeklyStep: Float,          // розраховується в UseCase
-    val progressPercent: Float      // 0f..1f
+    val weeklyStep: Float,          
+    val progressPercent: Float      
 )

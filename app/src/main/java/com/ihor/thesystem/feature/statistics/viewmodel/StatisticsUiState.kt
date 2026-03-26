@@ -32,7 +32,32 @@ data class MatrixEntryUiModel(
         get() = "${startWeight}кг"
 }
 
+/**
+ * Модель для вводу одного підходу (сету) в діалозі
+ */
+data class WorkoutSetInput(
+    val id: Long = System.nanoTime(),
+    val weight: String = "",
+    val reps: String = ""
+)
+
 sealed class StatisticsDialogState {
     object None : StatisticsDialogState()
-    data class EditWeight(val entry: MatrixEntryUiModel) : StatisticsDialogState()
+    
+    // Етап 1: Встановлення цілей (Старт/Ціль)
+    data class SetupMatrix(
+        val entry: MatrixEntryUiModel,
+        val startWeight: String,
+        val targetWeight: String
+    ) : StatisticsDialogState()
+    
+    // Етап 2: Логування підходів
+    data class LogWorkoutSets(
+        val entry: MatrixEntryUiModel,
+        val sets: List<WorkoutSetInput> = listOf(
+            WorkoutSetInput(),
+            WorkoutSetInput(),
+            WorkoutSetInput()
+        )
+    ) : StatisticsDialogState()
 }
