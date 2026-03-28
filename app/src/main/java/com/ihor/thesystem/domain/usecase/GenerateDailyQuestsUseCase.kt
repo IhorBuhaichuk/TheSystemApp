@@ -10,13 +10,13 @@ import javax.inject.Inject
  * Більше не використовує системний час для розрахунку дня, що забезпечує секвентальність.
  */
 class GenerateDailyQuestsUseCase @Inject constructor(
-    private val playerRepo: PlayerRepository,
     private val questRepo: QuestRepository,
     private val scheduleRepo: ScheduleRepository,
+    private val playerRepo: PlayerRepository,
     private val calculateRecommendation: CalculateRecommendedSetUseCase
 ) {
     suspend operator fun invoke() {
-        // SSOT: Беремо день циклу безпосередньо з профілю гравця
+        // ПРАВИЛЬНО: Беремо день циклу безпосередньо з профілю гравця
         val player = playerRepo.getPlayer().firstOrNull() ?: return
         val cycleDay = player.currentCycleDay
         
@@ -39,7 +39,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         if (activeMain == null && schedule.workoutTemplateName != null) {
             val recommendedExercises = schedule.exercises.map { exercise ->
                 val rec = calculateRecommendation(exercise.id, exercise.name)
-                // Передаємо чисті дані
+                // Передаємо чисті дані (ID, вага, сети, репси)
                 ExerciseRecommendation(
                     exerciseId = exercise.id,
                     exerciseName = exercise.name,

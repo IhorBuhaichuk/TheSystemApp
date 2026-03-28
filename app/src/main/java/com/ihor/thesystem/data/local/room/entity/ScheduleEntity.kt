@@ -7,6 +7,5 @@ import androidx.room.PrimaryKey
 data class ScheduleEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val cycleDay: Int,                     // 1–4
-    val workoutTemplateId: Int?  = null,
-    val debuffConfigId: Int?     = null
+    val workoutTemplateId: Int?  = null
 )

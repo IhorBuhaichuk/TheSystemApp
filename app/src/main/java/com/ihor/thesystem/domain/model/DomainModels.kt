@@ -28,9 +28,9 @@ data class QuestTask(
     val name: String,
     val isCompleted: Boolean,
     val exerciseId: Int? = null,
-    val recommendedWeight: Double? = null,
-    val recommendedSets: Int? = null,
-    val recommendedReps: Int? = null
+    val targetWeight: Double? = null,
+    val targetSets: Int? = null,
+    val targetReps: Int? = null
 )
 
 data class SystemConfig(

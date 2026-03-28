@@ -29,11 +29,11 @@ object UseCaseModule {
 
     @Provides @Singleton
     fun provideGenerateDailyQuestsUseCase(
-        playerRepo:   PlayerRepository,
         questRepo:    QuestRepository,
         scheduleRepo: ScheduleRepository,
+        playerRepo:   PlayerRepository,
         calculateRecommendation: CalculateRecommendedSetUseCase
-    ) = GenerateDailyQuestsUseCase(playerRepo, questRepo, scheduleRepo, calculateRecommendation)
+    ) = GenerateDailyQuestsUseCase(questRepo, scheduleRepo, playerRepo, calculateRecommendation)
 
     @Provides @Singleton
     fun provideLevelUpUseCase(

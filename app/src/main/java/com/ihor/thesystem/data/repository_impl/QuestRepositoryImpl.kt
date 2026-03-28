@@ -58,9 +58,9 @@ class QuestRepositoryImpl @Inject constructor(
                     questId = questId, 
                     name = rec.exerciseName,
                     exerciseId = rec.exerciseId,
-                    recommendedWeight = rec.weight,
-                    recommendedSets = rec.sets,
-                    recommendedReps = rec.reps
+                    targetWeight = rec.weight,
+                    targetSets = rec.sets,
+                    targetReps = rec.reps
                 )
             )
         }
@@ -99,9 +99,9 @@ private fun QuestWithTasks.toDomain() = Quest(
             name = it.name, 
             isCompleted = it.isCompleted, 
             exerciseId = it.exerciseId,
-            recommendedWeight = it.recommendedWeight,
-            recommendedSets = it.recommendedSets,
-            recommendedReps = it.recommendedReps
+            targetWeight = it.targetWeight,
+            targetSets = it.targetSets,
+            targetReps = it.targetReps
         ) 
     }
 )
