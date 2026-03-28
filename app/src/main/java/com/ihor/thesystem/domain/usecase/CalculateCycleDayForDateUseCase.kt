@@ -6,21 +6,25 @@ import javax.inject.Inject
 
 class CalculateCycleDayForDateUseCase @Inject constructor() {
     /**
-     * Математично точний розрахунок дня 4-денного циклу.
+     * Математично точний розрахунок дня 4-денного мікроциклу.
      * @param targetDate Дата, для якої рахуємо день
      * @param anchorEpochDay Дата прив'язки (Epoch Day)
-     * @param anchorCycleDay Який це був день циклу (1..4) в дату прив'язки
+     * @param anchorCycleDay Який це був день циклу (1..4)
      */
     operator fun invoke(targetDate: LocalDate, anchorEpochDay: Long, anchorCycleDay: Int): Int {
-        if (anchorEpochDay == 0L) return 1
-        
-        val anchorDate = LocalDate.ofEpochDay(anchorEpochDay)
-        val daysBetween = ChronoUnit.DAYS.between(anchorDate, targetDate)
+        // Захист від некоректних або порожніх даних
+        val safeAnchorEpochDay = if (anchorEpochDay <= 0L || anchorEpochDay > 300000L) {
+            LocalDate.now().toEpochDay()
+        } else {
+            anchorEpochDay
+        }
 
-        // Безпечний modulo для від'ємних значень (дат до якоря)
+        val anchorDate = LocalDate.ofEpochDay(safeAnchorEpochDay)
+        val daysBetween = ChronoUnit.DAYS.between(anchorDate, targetDate)
+        
+        // Безпечний modulo для від'ємних значень (дати до якоря)
         val offset = (daysBetween % 4 + 4) % 4
         
-        // Повертаємо день від 1 до 4
         return ((anchorCycleDay - 1 + offset) % 4 + 1).toInt()
     }
 }

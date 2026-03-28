@@ -17,22 +17,21 @@ class SyncCycleAnchorUseCase @Inject constructor(
         val config = configRepo.getConfig().firstOrNull() ?: return
         val player = playerRepo.getPlayer().firstOrNull() ?: return
         
-        val today = LocalDate.now()
+        // Гарантовано записуємо Epoch Day (кількість днів), а не мілісекунди
+        val todayEpochDay = LocalDate.now().toEpochDay()
         
         // 1. Оновлюємо конфігурацію системи (Anchor)
         configRepo.updateConfig(
             config.copy(
-                cycleAnchorDateTimestamp = today.toEpochDay(),
+                cycleAnchorDateTimestamp = todayEpochDay,
                 cycleAnchorDay = selectedDay
             )
         )
         
-        // 2. Оновлюємо поточний день гравця
-        playerRepo.updatePlayer(
-            player.copy(currentCycleDay = selectedDay)
-        )
+        // 2. Оновлюємо поточний день гравця для миттєвого відображення в UI
+        playerRepo.updateCurrentCycleDay(selectedDay)
         
-        // 3. Перегенеруємо квести на сьогодні
+        // 3. Перегенеруємо квести на сьогодні відповідно до нового дня циклу
         questRepo.archiveActiveQuests()
         generateQuests()
     }
