@@ -45,10 +45,8 @@ object DatabaseModule {
 
             override fun onOpen(sqliteDb: SupportSQLiteDatabase) {
                 super.onOpen(sqliteDb)
-                // Перевіряємо чи база не порожня (після міграцій)
                 db?.let { database ->
                     CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-                        // Якщо конфіг або вправи відсутні - дозаповнюємо
                         DatabasePopulator.populate(
                             playerDao            = database.playerDao(),
                             systemConfigDao      = database.systemConfigDao(),
@@ -71,7 +69,10 @@ object DatabaseModule {
             .addMigrations(
                 AppDatabase.MIGRATION_2_3, 
                 AppDatabase.MIGRATION_3_4,
-                AppDatabase.MIGRATION_4_5
+                AppDatabase.MIGRATION_4_5,
+                AppDatabase.MIGRATION_5_6,
+                AppDatabase.MIGRATION_6_7,
+                AppDatabase.MIGRATION_7_8
             )
             .fallbackToDestructiveMigration()
             .build()
@@ -90,4 +91,5 @@ object DatabaseModule {
     @Provides fun provideDebuffConfigDao(db: AppDatabase)      = db.debuffConfigDao()
     @Provides fun provideQuestLogDao(db: AppDatabase)          = db.questLogDao()
     @Provides fun provideWorkoutAnalyticsDao(db: AppDatabase)  = db.workoutAnalyticsDao()
+    @Provides fun provideProtocolTemplateDao(db: AppDatabase)  = db.protocolTemplateDao()
 }

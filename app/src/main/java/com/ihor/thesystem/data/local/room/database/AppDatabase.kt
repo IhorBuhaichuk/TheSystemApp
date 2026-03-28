@@ -35,7 +35,7 @@ import com.ihor.thesystem.data.local.room.relations.SessionWithSets
         ReferenceMatrixEntity::class,
         ProtocolTemplateEntity::class
     ],
-    version = 6,
+    version = 8, // Increased to 8 to fix integrity and PrimaryKey issues
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -164,6 +164,21 @@ abstract class AppDatabase : RoomDatabase() {
                         `note` TEXT
                     )
                 """)
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE progression_matrix_new (exerciseId INTEGER PRIMARY KEY NOT NULL, startWeight REAL NOT NULL, targetWeight REAL NOT NULL, currentWeight REAL NOT NULL, targetWeightNote TEXT)")
+                db.execSQL("INSERT OR REPLACE INTO progression_matrix_new (exerciseId, startWeight, targetWeight, currentWeight, targetWeightNote) SELECT exerciseId, startWeight, targetWeight, currentWeight, targetWeightNote FROM progression_matrix")
+                db.execSQL("DROP TABLE progression_matrix")
+                db.execSQL("ALTER TABLE progression_matrix_new RENAME TO progression_matrix")
+            }
+        }
+        
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Empty migration just to force identity check and resolve IllegalStateException
             }
         }
     }
