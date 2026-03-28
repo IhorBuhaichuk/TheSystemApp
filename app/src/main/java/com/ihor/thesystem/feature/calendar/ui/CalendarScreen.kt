@@ -201,16 +201,6 @@ fun CalendarDayCell(
         label = "alpha"
     )
 
-    val pulseRadius by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "radius"
-    )
-
     Box(
         modifier = Modifier
             .aspectRatio(1f)
@@ -237,7 +227,7 @@ fun CalendarDayCell(
                             brush = Brush.radialGradient(
                                 colors = listOf(NeonCyan.copy(alpha = pulseAlpha), Color.Transparent),
                                 center = center,
-                                radius = (size.width / 2) + pulseRadius
+                                radius = size.width / 1.2f
                             )
                         )
                     }

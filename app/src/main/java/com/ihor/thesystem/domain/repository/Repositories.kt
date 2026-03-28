@@ -4,7 +4,7 @@ import com.ihor.thesystem.domain.model.*
 import kotlinx.coroutines.flow.Flow
 
 interface SystemConfigRepository {
-    fun getConfig(): Flow<SystemConfig?>
+    fun getConfigFlow(): Flow<SystemConfig?>
     suspend fun updateConfig(config: SystemConfig)
 }
 

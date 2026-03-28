@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SystemConfigDao {
     @Query("SELECT * FROM system_config WHERE id = 1")
-    fun getConfig(): Flow<SystemConfigEntity?>
+    fun getConfigFlow(): Flow<SystemConfigEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(config: SystemConfigEntity)

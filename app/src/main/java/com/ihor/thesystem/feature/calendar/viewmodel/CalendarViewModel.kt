@@ -3,6 +3,7 @@ package com.ihor.thesystem.feature.calendar.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
+import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
@@ -58,13 +59,13 @@ class CalendarViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<CalendarUiState> = combine(
         _currentMonth,
-        configRepo.getConfig().filterNotNull(),
+        configRepo.getConfigFlow().filterNotNull(),
         _selectedDate,
         _workoutResults
-    ) { month, config, selectedDate, results ->
+    ) { month: YearMonth, config: SystemConfig, selectedDate: LocalDate?, results: List<WorkoutResultUiModel> ->
         val daysInMonth = month.lengthOfMonth()
         
-        // ГЕНЕРАЦІЯ СІТКИ: Передаємо конкретну дату для кожної клітинки
+        // ГЕНЕРАЦІЯ СІТКИ
         val calendarDays = (1..daysInMonth).map { dayNum ->
             val date = month.atDay(dayNum)
             val cycleDay = calculateCycleDay(

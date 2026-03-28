@@ -17,7 +17,7 @@ class CalculateEffectiveWeightUseCase @Inject constructor(
      * Rounding: To nearest 0.25 kg.
      */
     suspend operator fun invoke(baseWeight: Double, isPenaltyActive: Boolean): Double {
-        val config = configRepo.getConfig().firstOrNull() ?: return baseWeight
+        val config = configRepo.getConfigFlow().firstOrNull() ?: return baseWeight
         val activeDebuffs = debuffRepo.getActiveDebuffs().firstOrNull() ?: emptyList()
 
         var totalPenaltyPercent = 0

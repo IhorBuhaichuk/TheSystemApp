@@ -14,8 +14,7 @@ class SyncCycleAnchorUseCase @Inject constructor(
     private val generateQuests: GenerateDailyQuestsUseCase
 ) {
     suspend operator fun invoke(selectedDay: Int) {
-        val config = configRepo.getConfig().firstOrNull() ?: return
-        val player = playerRepo.getPlayer().firstOrNull() ?: return
+        val config = configRepo.getConfigFlow().firstOrNull() ?: return
         
         // Гарантовано записуємо Epoch Day (кількість днів), а не мілісекунди
         val todayEpochDay = LocalDate.now().toEpochDay()
