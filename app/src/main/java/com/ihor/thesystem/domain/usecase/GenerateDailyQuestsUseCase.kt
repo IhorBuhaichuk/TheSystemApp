@@ -20,13 +20,13 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         val player = playerRepo.getPlayer().firstOrNull() ?: return
         val cycleDay = player.currentCycleDay
         
-        // Перевіряємо наявність квестів, щоб не дублювати їх
+        // Перевіряємо наявність квестів окремо для кожного типу
         val activeDaily = questRepo.getActiveDailyQuest().firstOrNull()
         val activeMain = questRepo.getActiveMainQuest().firstOrNull()
 
         val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull() ?: return
 
-        // 1. Створюємо "РУТИНУ" (To-do List)
+        // 1. Створюємо "РУТИНУ" (To-do List) якщо її немає
         if (activeDaily == null) {
             questRepo.createDailyQuest(
                 title = "РУТИНА | ДЕНЬ $cycleDay",
@@ -35,11 +35,11 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             )
         }
 
-        // 2. Створюємо "ОСНОВНИЙ КВЕСТ" (Тренування)
+        // 2. Створюємо "ОСНОВНИЙ КВЕСТ" (Тренування) якщо він передбачений графіком і його ще немає
         if (activeMain == null && schedule.workoutTemplateName != null) {
             val recommendedExercises = schedule.exercises.map { exercise ->
                 val rec = calculateRecommendation(exercise.id, exercise.name)
-                // Передаємо чисті дані (ID, вага, сети, репси) замість форматованого рядка
+                // Передаємо чисті дані
                 ExerciseRecommendation(
                     exerciseId = exercise.id,
                     exerciseName = exercise.name,

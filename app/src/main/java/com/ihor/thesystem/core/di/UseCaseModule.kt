@@ -22,13 +22,18 @@ object UseCaseModule {
     ) = CalculateRecommendedSetUseCase(analyticsRepo, matrixRepo)
 
     @Provides @Singleton
+    fun provideCalculateEffectiveWeightUseCase(
+        configRepo: SystemConfigRepository,
+        debuffRepo: DebuffRepository
+    ) = CalculateEffectiveWeightUseCase(configRepo, debuffRepo)
+
+    @Provides @Singleton
     fun provideGenerateDailyQuestsUseCase(
-        configRepo:   SystemConfigRepository,
+        playerRepo:   PlayerRepository,
         questRepo:    QuestRepository,
         scheduleRepo: ScheduleRepository,
-        calculateCycleDay: CalculateCycleDayForDateUseCase,
         calculateRecommendation: CalculateRecommendedSetUseCase
-    ) = GenerateDailyQuestsUseCase(configRepo, questRepo, scheduleRepo, calculateCycleDay, calculateRecommendation)
+    ) = GenerateDailyQuestsUseCase(playerRepo, questRepo, scheduleRepo, calculateRecommendation)
 
     @Provides @Singleton
     fun provideLevelUpUseCase(
@@ -38,15 +43,13 @@ object UseCaseModule {
     @Provides @Singleton
     fun provideCheckPenaltyZoneUseCase(
         playerRepo: PlayerRepository,
-        questRepo:  QuestRepository,
-        matrixRepo: ProgressionMatrixRepository
-    ) = CheckPenaltyZoneUseCase(playerRepo, questRepo, matrixRepo)
+        questRepo:  QuestRepository
+    ) = CheckPenaltyZoneUseCase(playerRepo, questRepo)
 
     @Provides @Singleton
     fun provideActivatePenaltyManuallyUseCase(
-        playerRepo: PlayerRepository,
-        matrixRepo: ProgressionMatrixRepository
-    ) = ActivatePenaltyManuallyUseCase(playerRepo, matrixRepo)
+        playerRepo: PlayerRepository
+    ) = ActivatePenaltyManuallyUseCase(playerRepo)
 
     @Provides @Singleton
     fun provideAdvanceCycleDayUseCase(
