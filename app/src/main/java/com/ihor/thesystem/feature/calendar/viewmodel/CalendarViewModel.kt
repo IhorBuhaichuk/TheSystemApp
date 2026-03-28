@@ -94,7 +94,8 @@ class CalendarViewModel @Inject constructor(
             todayInfo = todayInfo,
             selectedDate = selectedDate,
             workoutResults = results,
-            currentMonth = month
+            currentMonth = month,
+            isLoading = false
         )
     }.stateIn(
         scope = viewModelScope,
