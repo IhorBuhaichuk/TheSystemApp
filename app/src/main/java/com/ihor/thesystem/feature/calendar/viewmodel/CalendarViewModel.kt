@@ -8,6 +8,7 @@ import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -17,8 +18,8 @@ import javax.inject.Inject
 
 data class CalendarDayUiModel(
     val date: LocalDate,
-    val cycleDay: Int, // 1..4
-    val label: String, // "Денна зміна", "Нічна зміна", "Відсипний", "Вихідний"
+    val cycleDay: Int,
+    val label: String,
     val isToday: Boolean
 )
 
@@ -54,6 +55,7 @@ class CalendarViewModel @Inject constructor(
     private val _selectedDate = MutableStateFlow<LocalDate?>(null)
     private val _workoutResults = MutableStateFlow<List<WorkoutResultUiModel>>(emptyList())
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<CalendarUiState> = combine(
         _currentMonth,
         configRepo.getConfig().filterNotNull(),
@@ -61,8 +63,10 @@ class CalendarViewModel @Inject constructor(
         _workoutResults
     ) { month, config, selectedDate, results ->
         val daysInMonth = month.lengthOfMonth()
-        val calendarDays = (1..daysInMonth).map { day ->
-            val date = month.atDay(day)
+        
+        // ГЕНЕРАЦІЯ СІТКИ: Передаємо конкретну дату для кожної клітинки
+        val calendarDays = (1..daysInMonth).map { dayNum ->
+            val date = month.atDay(dayNum)
             val cycleDay = calculateCycleDay(
                 targetDate = date,
                 anchorEpochDay = config.cycleAnchorDateTimestamp,
@@ -82,16 +86,10 @@ class CalendarViewModel @Inject constructor(
             anchorEpochDay = config.cycleAnchorDateTimestamp,
             anchorCycleDay = config.cycleAnchorDay
         )
-        val todayInfo = CalendarDayUiModel(
-            date = todayDate,
-            cycleDay = todayCycleDay,
-            label = getLabelForCycleDay(todayCycleDay),
-            isToday = true
-        )
-
+        
         CalendarUiState(
             days = calendarDays,
-            todayInfo = todayInfo,
+            todayInfo = CalendarDayUiModel(todayDate, todayCycleDay, getLabelForCycleDay(todayCycleDay), true),
             selectedDate = selectedDate,
             workoutResults = results,
             currentMonth = month,
@@ -103,37 +101,29 @@ class CalendarViewModel @Inject constructor(
         initialValue = CalendarUiState(isLoading = true)
     )
 
-    private fun getLabelForCycleDay(cycleDay: Int): String = when (cycleDay) {
+    private fun getLabelForCycleDay(day: Int) = when(day) {
         1 -> "Денна зміна"
         2 -> "Нічна зміна"
         3 -> "Відсипний"
         4 -> "Вихідний"
-        else -> "Невідомо"
+        else -> ""
     }
 
+    fun onMonthChange(month: YearMonth) { _currentMonth.value = month }
     fun onDateSelected(date: LocalDate?) {
         _selectedDate.value = date
-        if (date != null) {
-            loadWorkoutResults(date)
-        } else {
-            _workoutResults.value = emptyList()
-        }
-    }
-
-    fun onMonthChange(month: YearMonth) {
-        _currentMonth.value = month
+        if (date != null) loadWorkoutResults(date)
     }
 
     private fun loadWorkoutResults(date: LocalDate) {
         val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         viewModelScope.launch {
             analyticsRepo.getSessionsByDate(millis).collect { sessions ->
-                val results = sessions.flatMap { sessionWithSets ->
-                    sessionWithSets.sets.groupBy { it.exerciseId }.map { (exId, sets) ->
-                        val name = workoutDao.getExerciseNameById(exId) ?: "Вправа $exId"
+                val results = sessions.flatMap { session ->
+                    session.sets.groupBy { it.exerciseId }.map { (id, sets) ->
                         WorkoutResultUiModel(
-                            exerciseName = name,
-                            sets = sets.map { SetResultUiModel(it.weight, it.reps) }
+                            workoutDao.getExerciseNameById(id) ?: "Вправа",
+                            sets.map { SetResultUiModel(it.weight, it.reps) }
                         )
                     }
                 }
@@ -142,5 +132,5 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    fun getScheduleForDay(cycleDay: Int) = scheduleRepo.getScheduleForDay(cycleDay)
+    fun getScheduleForDay(day: Int) = scheduleRepo.getScheduleForDay(day)
 }
