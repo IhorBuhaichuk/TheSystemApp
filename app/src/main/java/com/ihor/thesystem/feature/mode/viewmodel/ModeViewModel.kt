@@ -9,6 +9,8 @@ import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.usecase.AdvanceCycleDayUseCase
+import com.ihor.thesystem.domain.usecase.GenerateDailyQuestsUseCase
+import com.ihor.thesystem.feature.mode.ui.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -18,10 +20,12 @@ sealed class ModeDialogState {
     object None                           : ModeDialogState()
     object ConfirmAdvance                 : ModeDialogState()
     data class EditSchedule(val day: Int) : ModeDialogState()
+    data class SyncAnchor(val day: Int)   : ModeDialogState()
 }
 
 sealed class ModeEvent {
     object DayAdvanced : ModeEvent()
+    object CycleSynced : ModeEvent()
 }
 
 @HiltViewModel
@@ -29,8 +33,16 @@ class ModeViewModel @Inject constructor(
     private val playerRepo:      PlayerRepository,
     private val questRepo:       QuestRepository,
     private val scheduleRepo:    ScheduleRepository,
-    private val advanceCycleDay: AdvanceCycleDayUseCase
+    private val advanceCycleDay: AdvanceCycleDayUseCase,
+    private val generateQuests:  GenerateDailyQuestsUseCase
 ) : ViewModel() {
+
+    init {
+        // Гарантуємо наявність квестів при кожному вході на екран
+        viewModelScope.launch {
+            generateQuests()
+        }
+    }
 
     val uiState: StateFlow<UiState<ModeUiData>> = playerRepo.getPlayer()
         .filterNotNull()
@@ -42,7 +54,8 @@ class ModeViewModel @Inject constructor(
             val dailyFlow = questRepo.getActiveDailyQuest()
             val mainFlow = questRepo.getActiveMainQuest()
 
-            combine(d1Flow, d2Flow, d3Flow, d4Flow, dailyFlow, mainFlow) { array ->
+            // Використовуємо список потоків для обходу ліміту combine
+            combine(listOf(d1Flow, d2Flow, d3Flow, d4Flow, dailyFlow, mainFlow)) { array ->
                 val d1 = array[0] as? ScheduleDay
                 val d2 = array[1] as? ScheduleDay
                 val d3 = array[2] as? ScheduleDay
@@ -53,12 +66,15 @@ class ModeViewModel @Inject constructor(
                 val allDays = listOf(d1, d2, d3, d4)
                 val current = allDays.getOrNull(player.currentCycleDay - 1)
                 
-                // Parsing recommendations from task name: "NAME | 70kg | 3x12"
+                // Використовуємо структуровані дані з QuestTask замість назви
                 val exercises = main?.tasks?.map { task ->
-                    val parts = task.name.split(" | ")
+                    val recStr = if (task.recommendedWeight != null) {
+                        "${task.recommendedWeight}кг | ${task.recommendedSets}x${task.recommendedReps}"
+                    } else null
+                    
                     ExerciseWorkoutUiModel(
-                        name = parts.getOrNull(0) ?: task.name,
-                        recommendation = if (parts.size > 1) parts.drop(1).joinToString(" | ") else null
+                        name = task.name,
+                        recommendation = recStr
                     )
                 } ?: emptyList()
 
@@ -73,9 +89,10 @@ class ModeViewModel @Inject constructor(
                     },
                     activeDayData = current?.toActiveDayUiModel(exercises, daily)
                 )
-            }.map<ModeUiData, UiState<ModeUiData>> { UiState.Content(it) }
+            }
         }
-        .catch { emit(UiState.Error(it.message ?: "Помилка")) }
+        .map<ModeUiData, UiState<ModeUiData>> { UiState.Content(it) }
+        .catch { emit(UiState.Error(it.message ?: "Помилка завантаження режиму")) }
         .stateIn(
             scope        = viewModelScope,
             started      = SharingStarted.WhileSubscribed(5_000),
@@ -90,6 +107,7 @@ class ModeViewModel @Inject constructor(
 
     fun onNextDayTap()              { _dialogState.value = ModeDialogState.ConfirmAdvance }
     fun onEditScheduleTap(day: Int) { _dialogState.value = ModeDialogState.EditSchedule(day) }
+    fun onCycleDayLongPress(day: Int) { _dialogState.value = ModeDialogState.SyncAnchor(day) }
     fun onDismissDialog()           { _dialogState.value = ModeDialogState.None }
 
     fun onConfirmAdvance() {
@@ -107,6 +125,14 @@ class ModeViewModel @Inject constructor(
             _events.emit(ModeEvent.DayAdvanced)
         }
     }
+
+    fun onConfirmSync(day: Int) {
+        viewModelScope.launch {
+            playerRepo.updateCurrentCycleDay(day)
+            onDismissDialog()
+            _events.emit(ModeEvent.CycleSynced)
+        }
+    }
 }
 
 private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean) =
@@ -122,15 +148,9 @@ private fun ScheduleDay.toActiveDayUiModel(
     exercises: List<ExerciseWorkoutUiModel>,
     dailyQuest: Quest?
 ): ActiveDayUiModel {
-    val debuffLabels = mapOf(
-        1 to "СЛАБКІСТЬ",
-        2 to "ЦНС",
-        3 to null,
-        4 to null
-    )
     return ActiveDayUiModel(
         dayNumber   = cycleDay,
-        debuffName  = debuffLabels[cycleDay],
+        debuffName  = if (cycleDay == 1) "СЛАБКІСТЬ" else if (cycleDay == 2) "ЦНС" else null,
         dailyTasks  = if (dailyQuest != null) listOf(dailyQuest) else emptyList(),
         workoutName = workoutTemplateName,
         exercises   = exercises

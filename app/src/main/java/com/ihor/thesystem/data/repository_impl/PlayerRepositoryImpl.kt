@@ -32,6 +32,11 @@ class PlayerRepositoryImpl @Inject constructor(
         val player = playerDao.getPlayer().firstOrNull() ?: return
         playerDao.insertOrUpdate(player.copy(height = height))
     }
+
+    override suspend fun updateCurrentCycleDay(day: Int) {
+        val player = playerDao.getPlayer().firstOrNull() ?: return
+        playerDao.insertOrUpdate(player.copy(currentCycleDay = day))
+    }
 }
 
 // ── Mappers ───────────────────────────────────────────────────────────────────

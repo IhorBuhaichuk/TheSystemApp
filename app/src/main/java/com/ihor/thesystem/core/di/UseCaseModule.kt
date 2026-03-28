@@ -91,4 +91,19 @@ object UseCaseModule {
     fun provideUpdatePlayerHeightUseCase(
         repo: PlayerRepository
     ) = UpdatePlayerHeightUseCase(repo)
+
+    @Provides @Singleton
+    fun provideSyncCycleAnchorUseCase(
+        configRepo: SystemConfigRepository,
+        playerRepo: PlayerRepository,
+        questRepo: QuestRepository,
+        generateQuests: GenerateDailyQuestsUseCase
+    ) = SyncCycleAnchorUseCase(configRepo, playerRepo, questRepo, generateQuests)
+    
+    @Provides @Singleton
+    fun provideFinalizeDayUseCase(
+        playerRepo: PlayerRepository,
+        questRepo: QuestRepository,
+        generateDailyQuestsUseCase: GenerateDailyQuestsUseCase
+    ) = FinalizeDayUseCase(playerRepo, questRepo, generateDailyQuestsUseCase)
 }

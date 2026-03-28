@@ -41,7 +41,8 @@ data class SystemConfig(
     val targetSets: Int,
     val targetReps: Int,
     val matrixWeeks: Int,
-    val cycleAnchorDateTimestamp: Long = 0L
+    val cycleAnchorDateTimestamp: Long = 0L, // Epoch Day
+    val cycleAnchorDay: Int = 1              // Який це був день циклу (1..4)
 )
 
 data class DebuffConfig(

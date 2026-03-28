@@ -1,28 +1,24 @@
 package com.ihor.thesystem.domain.usecase
 
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 class CalculateCycleDayForDateUseCase @Inject constructor() {
     /**
      * @param targetDate Дата, для якої рахуємо день
-     * @param anchorTimestamp Таймстемп Дня 1 (перша зміна)
-     * @return 1 - День, 2 - Ніч, 3 - Тренування А, 4 - Тренування Б
+     * @param anchorEpochDay Дата прив'язки (Epoch Day)
+     * @param anchorCycleDay Який це був день циклу (1..4)
+     * @return 1 - День, 2 - Ніч, 3 - Відсипний, 4 - Вихідний
      */
-    operator fun invoke(targetDate: LocalDate, anchorTimestamp: Long): Int {
-        if (anchorTimestamp == 0L) return 1
+    operator fun invoke(targetDate: LocalDate, anchorEpochDay: Long, anchorCycleDay: Int): Int {
+        if (anchorEpochDay == 0L) return 1
         
-        val anchorDate = Instant.ofEpochMilli(anchorTimestamp)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
+        val daysDifference = targetDate.toEpochDay() - anchorEpochDay
         
-        val daysDifference = ChronoUnit.DAYS.between(anchorDate, targetDate)
+        // Розрахунок зміщення відносно "Дня 1"
+        // (anchorCycleDay - 1) - це номер дня в 0-індексній системі (0..3)
+        val cycleDay = ((daysDifference + (anchorCycleDay - 1)) % 4 + 4) % 4 + 1
         
-        // Математично коректний modulo для від'ємних значень
-        val cycleDay = ((daysDifference % 4) + 4) % 4 + 1
         return cycleDay.toInt()
     }
 }

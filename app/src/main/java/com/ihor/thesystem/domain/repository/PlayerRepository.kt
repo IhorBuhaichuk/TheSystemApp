@@ -9,4 +9,5 @@ interface PlayerRepository {
     suspend fun updatePlayer(player: Player)
     suspend fun logWeight(weight: Float)
     suspend fun updateHeight(height: Float)
+    suspend fun updateCurrentCycleDay(day: Int)
 }

@@ -10,5 +10,6 @@ data class SystemConfigEntity(
     val targetSets: Int     = 3,
     val targetReps: Int     = 12,
     val matrixWeeks: Int    = 48,
-    val cycleAnchorDateTimestamp: Long = 0L // Таймстемп "Дня 1" циклу
+    val cycleAnchorDateTimestamp: Long = 0L, // Epoch Day
+    val cycleAnchorDay: Int = 1              // Який це був день циклу (1..4)
 )

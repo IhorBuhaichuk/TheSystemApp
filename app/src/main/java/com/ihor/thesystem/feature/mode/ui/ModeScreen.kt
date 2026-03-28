@@ -19,10 +19,10 @@ import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.mode.ui.components.*
 import com.ihor.thesystem.feature.mode.ui.dialogs.ConfirmAdvanceDialog
+import com.ihor.thesystem.feature.mode.ui.dialogs.SyncAnchorDialog
 import com.ihor.thesystem.feature.mode.viewmodel.ModeDialogState
 import com.ihor.thesystem.feature.mode.viewmodel.ModeEvent
 import com.ihor.thesystem.feature.mode.viewmodel.ModeViewModel
-import kotlinx.coroutines.flow.collect
 
 @Composable
 fun ModeScreen(
@@ -39,6 +39,8 @@ fun ModeScreen(
             when (event) {
                 ModeEvent.DayAdvanced ->
                     snackbarHostState.showSnackbar("День завершено. Новий цикл розпочато!")
+                ModeEvent.CycleSynced ->
+                    snackbarHostState.showSnackbar("Цикл синхронізовано з календарем")
             }
         }
     }
@@ -119,7 +121,10 @@ fun ModeScreen(
                                 fontSize      = 10.sp,
                                 letterSpacing = 2.sp
                             )
-                            CycleDaySelector(days = data.days)
+                            CycleDaySelector(
+                                days = data.days,
+                                onLongPress = { viewModel.onCycleDayLongPress(it) }
+                            )
                         }
 
                         // ── Penalty Warning ───────────────────────────
@@ -143,9 +148,9 @@ fun ModeScreen(
                                     )
                                     Text(
                                         text       = "Ваги знижені. Виконай 2 Main Quest для відновлення.",
-                                        color      = NeonRed.copy(alpha = 0.7f),
+                                        color = NeonRed.copy(alpha = 0.7f),
                                         fontFamily = FontFamily.Monospace,
-                                        fontSize   = 10.sp
+                                        fontSize = 10.sp
                                     )
                                 }
                             }
@@ -180,6 +185,13 @@ fun ModeScreen(
                                 onConfirm       = { viewModel.onConfirmAdvance() },
                                 onForceComplete = { viewModel.onForceCompleteDay() },
                                 onDismiss       = { viewModel.onDismissDialog() }
+                            )
+                        }
+                        is ModeDialogState.SyncAnchor -> {
+                            SyncAnchorDialog(
+                                dayNumber = dialog.day,
+                                onConfirm = { viewModel.onConfirmSync(dialog.day) },
+                                onDismiss = { viewModel.onDismissDialog() }
                             )
                         }
                         else -> Unit

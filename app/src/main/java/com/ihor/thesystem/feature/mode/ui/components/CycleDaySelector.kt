@@ -1,6 +1,7 @@
 package com.ihor.thesystem.feature.mode.ui.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -23,6 +25,7 @@ import com.ihor.thesystem.feature.mode.viewmodel.DayType
 @Composable
 fun CycleDaySelector(
     days: List<CycleDayUiModel>,
+    onLongPress: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -33,6 +36,7 @@ fun CycleDaySelector(
         days.forEach { day ->
             CycleDayHex(
                 day      = day,
+                onLongPress = { onLongPress(day.dayNumber) },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -42,6 +46,7 @@ fun CycleDaySelector(
 @Composable
 private fun CycleDayHex(
     day: CycleDayUiModel,
+    onLongPress: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val (icon: ImageVector, label: String) = when (day.dayNumber) {
@@ -68,7 +73,12 @@ private fun CycleDayHex(
         Box(
             modifier         = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1.155f),
+                .aspectRatio(1.155f)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = { onLongPress() }
+                    )
+                },
             contentAlignment = Alignment.Center
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {

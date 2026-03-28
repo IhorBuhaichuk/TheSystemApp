@@ -17,6 +17,7 @@ import javax.inject.Inject
 
 data class CalendarUiState(
     val anchorTimestamp: Long = 0L,
+    val anchorCycleDay: Int = 1,
     val selectedDate: LocalDate? = null,
     val workoutResults: List<WorkoutResultUiModel> = emptyList(),
     val isLoading: Boolean = false
@@ -47,13 +48,22 @@ class CalendarViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             configRepo.getConfig().collect { config ->
-                _uiState.update { it.copy(anchorTimestamp = config?.cycleAnchorDateTimestamp ?: 0L) }
+                _uiState.update { 
+                    it.copy(
+                        anchorTimestamp = config?.cycleAnchorDateTimestamp ?: 0L,
+                        anchorCycleDay = config?.cycleAnchorDay ?: 1
+                    ) 
+                }
             }
         }
     }
 
     fun getCycleDay(date: LocalDate): Int {
-        return calculateCycleDay(date, _uiState.value.anchorTimestamp)
+        return calculateCycleDay(
+            targetDate = date, 
+            anchorEpochDay = _uiState.value.anchorTimestamp,
+            anchorCycleDay = _uiState.value.anchorCycleDay
+        )
     }
 
     fun getScheduleForDay(cycleDay: Int) = scheduleRepo.getScheduleForDay(cycleDay)
