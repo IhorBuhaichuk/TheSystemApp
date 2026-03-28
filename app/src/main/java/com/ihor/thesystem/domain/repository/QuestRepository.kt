@@ -11,8 +11,10 @@ interface QuestRepository {
     suspend fun updateQuestStatus(questId: Int, status: DomainQuestStatus)
     suspend fun createDailyQuest(title: String, tasks: List<String>, scheduleId: Int?)
     
-    // Updated to accept ExerciseDetails to store IDs
-    suspend fun createMainQuest(title: String, exercises: List<ExerciseDetails>, scheduleId: Int?)
+    /**
+     * Creates a main quest with structured exercise recommendations.
+     */
+    suspend fun createMainQuest(title: String, exercises: List<ExerciseRecommendation>, scheduleId: Int?)
 
     suspend fun addTaskToQuest(questId: Int, taskName: String)
     suspend fun removeTask(taskId: Int)

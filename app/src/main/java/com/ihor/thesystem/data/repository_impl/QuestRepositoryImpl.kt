@@ -47,17 +47,20 @@ class QuestRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createMainQuest(
-        title: String, exercises: List<ExerciseDetails>, scheduleId: Int?
+        title: String, exercises: List<ExerciseRecommendation>, scheduleId: Int?
     ) {
         val questId = questDao.insertQuest(
             QuestEntity(title = title, type = EntityQuestType.MAIN, scheduleId = scheduleId)
         ).toInt()
-        exercises.forEach { exercise ->
+        exercises.forEach { rec ->
             questDao.insertQuestTask(
                 QuestTaskEntity(
                     questId = questId, 
-                    name = exercise.name,
-                    exerciseId = exercise.id
+                    name = rec.exerciseName,
+                    exerciseId = rec.exerciseId,
+                    recommendedWeight = rec.weight,
+                    recommendedSets = rec.sets,
+                    recommendedReps = rec.reps
                 )
             )
         }
@@ -89,7 +92,18 @@ private fun QuestWithTasks.toDomain() = Quest(
     type   = quest.type.toDomain(),
     date   = quest.date,
     status = quest.status.toDomain(),
-    tasks  = tasks.map { QuestTask(it.id, it.questId, it.name, it.isCompleted, it.exerciseId) }
+    tasks  = tasks.map { 
+        QuestTask(
+            id = it.id, 
+            questId = it.questId, 
+            name = it.name, 
+            isCompleted = it.isCompleted, 
+            exerciseId = it.exerciseId,
+            recommendedWeight = it.recommendedWeight,
+            recommendedSets = it.recommendedSets,
+            recommendedReps = it.recommendedReps
+        ) 
+    }
 )
 
 private fun EntityQuestType.toDomain() = when (this) {

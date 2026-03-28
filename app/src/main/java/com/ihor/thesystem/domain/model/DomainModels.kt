@@ -27,7 +27,10 @@ data class QuestTask(
     val questId: Int,
     val name: String,
     val isCompleted: Boolean,
-    val exerciseId: Int? = null
+    val exerciseId: Int? = null,
+    val recommendedWeight: Double? = null,
+    val recommendedSets: Int? = null,
+    val recommendedReps: Int? = null
 )
 
 data class SystemConfig(
@@ -59,4 +62,12 @@ data class ScheduleDay(
 data class ExerciseDetails(
     val id: Int,
     val name: String
+)
+
+data class ExerciseRecommendation(
+    val exerciseId: Int,
+    val exerciseName: String,
+    val weight: Double,
+    val sets: Int,
+    val reps: Int
 )
