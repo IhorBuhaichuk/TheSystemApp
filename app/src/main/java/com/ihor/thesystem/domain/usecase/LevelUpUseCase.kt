@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
@@ -16,36 +17,20 @@ class LevelUpUseCase @Inject constructor(
 
         var newWeek  = player.currentWeek + 1
         var newMonth = player.currentMonth
-        var newClass = player.playerClass
+        var newRank = PlayerRank.fromMonth(newMonth)
 
         if (newWeek > 4) {
             newWeek   = 1
             newMonth += 1
-            newClass  = resolveClass(newMonth)
+            newRank  = PlayerRank.fromMonth(newMonth)
         }
 
         playerRepo.updatePlayer(
             player.copy(
                 currentWeek  = newWeek,
                 currentMonth = newMonth,
-                playerClass  = newClass
+                playerClass  = newRank.title
             )
         )
-    }
-
-    private fun resolveClass(month: Int): String = when (month) {
-        1    -> "Новачок"
-        2    -> "УЧЕНЬ"
-        3    -> "ПОСЛІДОВНИК"
-        4    -> "ВОЇН"
-        5    -> "ВЕТЕРАН"
-        6    -> "МАЙСТЕР"
-        7    -> "ЕЛІТНИЙ ВОЇН"
-        8    -> "ЧЕМПІОН"
-        9    -> "ЛЕГЕНДА"
-        10   -> "БЕЗСМЕРТНИЙ"
-        11   -> "НАПІВБОГ"
-        12   -> "СИСТЕМА"
-        else -> "TRANSCENDED"
     }
 }
