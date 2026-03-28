@@ -97,8 +97,8 @@ private fun ProgressionMatrixEntity.toDomain(
         ((currentWeight - startWeight) / range).coerceIn(0f, 1f) else 0f
 
     return ProgressionMatrixEntry(
-        id                = exerciseId, // Використовуємо exerciseId як id для доменної моделі
-        exerciseId        = exerciseId,
+        id                = this.exerciseId, // Fixed: ProgressionMatrixEntity PrimaryKey is now exerciseId
+        exerciseId        = this.exerciseId,
         exerciseName      = exerciseName,
         startWeight       = startWeight,
         targetWeight      = targetWeight,

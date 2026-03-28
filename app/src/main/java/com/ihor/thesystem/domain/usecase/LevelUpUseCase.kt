@@ -17,12 +17,12 @@ class LevelUpUseCase @Inject constructor(
 
         var newWeek  = player.currentWeek + 1
         var newMonth = player.currentMonth
-        var newRank = PlayerRank.fromMonth(newMonth)
+        var newRank = PlayerRank.resolveByMonth(newMonth)
 
         if (newWeek > 4) {
             newWeek   = 1
             newMonth += 1
-            newRank  = PlayerRank.fromMonth(newMonth)
+            newRank  = PlayerRank.resolveByMonth(newMonth)
         }
 
         playerRepo.updatePlayer(

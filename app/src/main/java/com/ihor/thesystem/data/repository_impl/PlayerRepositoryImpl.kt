@@ -35,10 +35,28 @@ class PlayerRepositoryImpl @Inject constructor(
 }
 
 // ── Mappers ───────────────────────────────────────────────────────────────────
-private fun PlayerEntity.toDomain() = Player(id, name, level, playerClass, height,
-    currentMonth, currentWeek, currentCycleDay,
-    consecutiveFailedMainQuests, isPenaltyActive)
+private fun PlayerEntity.toDomain() = Player(
+    id = id, 
+    name = name, 
+    level = level, 
+    playerClass = playerClass, 
+    height = height,
+    currentMonth = currentMonth, 
+    currentWeek = currentWeek, 
+    currentCycleDay = currentCycleDay,
+    consecutiveMainQuestFailures = consecutiveMainQuestFailures, 
+    isPenaltyActive = isPenaltyActive
+)
 
-private fun Player.toEntity() = PlayerEntity(id, name, level, playerClass, height,
-    currentMonth, currentWeek, currentCycleDay,
-    consecutiveFailedMainQuests, isPenaltyActive)
+private fun Player.toEntity() = PlayerEntity(
+    id = id, 
+    name = name, 
+    level = level, 
+    playerClass = playerClass, 
+    height = height,
+    currentMonth = currentMonth, 
+    currentWeek = currentWeek, 
+    currentCycleDay = currentCycleDay,
+    consecutiveMainQuestFailures = consecutiveMainQuestFailures, 
+    isPenaltyActive = isPenaltyActive
+)

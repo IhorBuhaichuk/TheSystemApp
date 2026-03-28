@@ -4,6 +4,7 @@ import com.ihor.thesystem.domain.model.DomainQuestType
 import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 
@@ -12,6 +13,9 @@ class FinalizeDayUseCase @Inject constructor(
     private val questRepo: QuestRepository,
     private val generateDailyQuestsUseCase: GenerateDailyQuestsUseCase
 ) {
+    /**
+     * Повертає Event, який View model має показати (LevelUp або Penalty)
+     */
     suspend operator fun invoke(): DayFinalizationResult {
         val player = playerRepo.getPlayer().firstOrNull() ?: return DayFinalizationResult.None
         val todayQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
