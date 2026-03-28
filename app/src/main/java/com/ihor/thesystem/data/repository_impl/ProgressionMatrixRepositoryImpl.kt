@@ -79,6 +79,10 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     override suspend fun getReferenceForExercise(name: String): ReferenceMatrixEntity? {
         return matrixDao.getReferenceByName(name)
     }
+
+    override fun getAllReferences(): Flow<List<ReferenceMatrixEntity>> {
+        return matrixDao.getAllReferences()
+    }
 }
 
 private fun ProgressionMatrixEntity.toDomain(
@@ -93,7 +97,7 @@ private fun ProgressionMatrixEntity.toDomain(
         ((currentWeight - startWeight) / range).coerceIn(0f, 1f) else 0f
 
     return ProgressionMatrixEntry(
-        id                = id,
+        id                = exerciseId, // Використовуємо exerciseId як id для доменної моделі
         exerciseId        = exerciseId,
         exerciseName      = exerciseName,
         startWeight       = startWeight,

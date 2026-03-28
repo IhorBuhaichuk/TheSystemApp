@@ -26,7 +26,8 @@ data class QuestTask(
     val id: Int,
     val questId: Int,
     val name: String,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
+    val exerciseId: Int? = null
 )
 
 data class SystemConfig(

@@ -26,6 +26,9 @@ interface ProgressionMatrixDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReference(entry: ReferenceMatrixEntity)
 
+    @Query("SELECT * FROM reference_matrix")
+    fun getAllReferences(): Flow<List<ReferenceMatrixEntity>>
+
     @Query("SELECT * FROM reference_matrix WHERE exerciseName = :name LIMIT 1")
     suspend fun getReferenceByName(name: String): ReferenceMatrixEntity?
 

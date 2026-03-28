@@ -6,6 +6,7 @@ import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
+import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,50 +15,46 @@ import javax.inject.Inject
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     private val playerRepo: PlayerRepository,
-    private val matrixRepo: ProgressionMatrixRepository
+    private val matrixRepo: ProgressionMatrixRepository,
+    private val analyticsRepo: WorkoutAnalyticsRepository
 ) : ViewModel() {
 
-    val uiState: StateFlow<UiState<StatisticsUiData>> =
-        combine(
-            playerRepo.getPlayer().filterNotNull(),
-            matrixRepo.getAllEntries()
-        ) { player, matrix ->
-            // Enrichment logic: Fetch boundaries for each entry
-            // Note: In combine transform, we ARE in a suspending context
-            val updatedEntries = matrix.map { entry ->
-                val reference = matrixRepo.getReferenceForExercise(entry.exerciseName)
-                if (reference != null) {
-                    val m0 = reference.milestones["M0"]?.toFloat() ?: entry.startWeight
-                    val m12 = reference.milestones["M12"]?.toFloat() ?: entry.targetWeight
-                    entry.toUiModel().copy(
-                        startWeight = m0,
-                        targetWeight = m12
-                    )
-                } else {
-                    entry.toUiModel()
-                }
+    val uiState: StateFlow<UiState<StatisticsUiData>> = combine(
+        playerRepo.getPlayer().filterNotNull(),
+        matrixRepo.getAllEntries(),
+        matrixRepo.getAllReferences()
+    ) { player, matrix, references ->
+        val updatedEntries = matrix.map { entry ->
+            val ref = references.find { it.exerciseName.equals(entry.exerciseName, ignoreCase = true) }
+            if (ref != null) {
+                val m0 = ref.milestones["M0"]?.toFloat() ?: entry.startWeight
+                val m12 = ref.milestones["M12"]?.toFloat() ?: entry.targetWeight
+                entry.toUiModel().copy(
+                    startWeight = m0,
+                    targetWeight = m12
+                )
+            } else {
+                entry.toUiModel()
             }
-
-            StatisticsUiData(
-                playerName      = player.name,
-                playerClass     = player.playerClass,
-                currentMonth    = player.currentMonth,
-                currentWeek     = player.currentWeek,
-                currentCycleDay = player.currentCycleDay,
-                isPenaltyActive = player.isPenaltyActive,
-                matrixEntries   = updatedEntries
-            )
         }
-            .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
-            .catch { 
-                it.printStackTrace()
-                emit(UiState.Error(it.message ?: "Помилка")) 
-            }
-            .stateIn(
-                scope        = viewModelScope,
-                started      = SharingStarted.WhileSubscribed(5_000),
-                initialValue = UiState.Loading
-            )
+
+        StatisticsUiData(
+            playerName      = player.name,
+            playerClass     = player.playerClass,
+            currentMonth    = player.currentMonth,
+            currentWeek     = player.currentWeek,
+            currentCycleDay = player.currentCycleDay,
+            isPenaltyActive = player.isPenaltyActive,
+            matrixEntries   = updatedEntries
+        )
+    }
+    .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
+    .catch { emit(UiState.Error(it.message ?: "Помилка завантаження статистики")) }
+    .stateIn(
+        scope        = viewModelScope,
+        started      = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UiState.Loading
+    )
 
     private val _dialogState = MutableStateFlow<StatisticsDialogState>(StatisticsDialogState.None)
     val dialogState: StateFlow<StatisticsDialogState> = _dialogState.asStateFlow()

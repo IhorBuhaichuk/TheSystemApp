@@ -31,9 +31,9 @@ object DatabasePopulator {
             ExerciseEntity(8,  "Жим від підлоги"),
             ExerciseEntity(9,  "Жим гантелей сидячи"),
             ExerciseEntity(10, "Face Pulls"),
-            ExerciseEntity(11, "Жим гантелей (кут)"),
+            ExerciseEntity(11, "Жим гантелей під кутом"),
             ExerciseEntity(12, "Румунська тяга"),
-            ExerciseEntity(13, "Тяга в нахилі"),
+            ExerciseEntity(13, "Тяга штанги в нахилі"),
             ExerciseEntity(14, "Махи гантелями"),
             ExerciseEntity(15, "Згинання біцепс (EZ)"),
             ExerciseEntity(16, "Французький жим (EZ)"),
@@ -77,19 +77,19 @@ object DatabasePopulator {
                 mapOf("M0" to 0.0, "M1" to 0.0, "M2" to 2.0, "M3" to 4.0, "M4" to 6.0, "M5" to 8.0, "M6" to 10.0, "M7" to 12.0, "M8" to 14.0, "M9" to 16.0, "M10" to 17.5, "M11" to 19.0, "M12" to 20.0)
             ),
             ReferenceMatrixEntity(
-                "db_press_incline", "Жим гантелей (кут)", WeightType.ABSOLUTE, 1.0,
+                "db_press_incline", "Жим гантелей під кутом", WeightType.ABSOLUTE, 1.0,
                 mapOf("M0" to 16.0, "M1" to 18.5, "M2" to 20.0, "M3" to 21.0, "M4" to 22.0, "M5" to 23.0, "M6" to 24.0, "M7" to 28.0, "M8" to 29.0, "M9" to 30.0, "M10" to 31.0, "M11" to 32.0, "M12" to 32.5)
             ),
             ReferenceMatrixEntity(
-                "bicep_curl_ez", "Згинання біцепс (EZ)", WeightType.ABSOLUTE, 1.0,
+                "bicep_curl_ez", "Біцепс EZ", WeightType.ABSOLUTE, 1.0,
                 mapOf("M0" to 32.0, "M1" to 33.0, "M2" to 34.0, "M3" to 35.0, "M4" to 36.0, "M5" to 37.5, "M6" to 38.5, "M7" to 39.0, "M8" to 40.0, "M9" to 40.5, "M10" to 41.5, "M11" to 42.0, "M12" to 42.5)
             ),
             ReferenceMatrixEntity(
-                "french_press_ez", "Французький жим (EZ)", WeightType.ABSOLUTE, 1.0,
+                "french_press_ez", "Французький жим EZ", WeightType.ABSOLUTE, 1.0,
                 mapOf("M0" to 22.0, "M1" to 27.0, "M2" to 29.0, "M3" to 30.0, "M4" to 31.0, "M5" to 32.5, "M6" to 34.0, "M7" to 35.5, "M8" to 37.0, "M9" to 38.0, "M10" to 39.0, "M11" to 39.5, "M12" to 40.0)
             ),
             ReferenceMatrixEntity(
-                "lateral_raises", "Махи гантелями", WeightType.ABSOLUTE, 0.5,
+                "lateral_raises", "Махи гантелями в сторони", WeightType.ABSOLUTE, 0.5,
                 mapOf("M0" to 6.0, "M1" to 6.5, "M2" to 7.0, "M3" to 7.5, "M4" to 8.0, "M5" to 8.5, "M6" to 10.5, "M7" to 11.0, "M8" to 11.5, "M9" to 12.0, "M10" to 13.0, "M11" to 14.0, "M12" to 15.0)
             )
         )
@@ -150,20 +150,20 @@ object DatabasePopulator {
             Triple(6,  "Присідання", 62.5f),
             Triple(13, "Тяга штанги в нахилі", 54.0f),
             Triple(5,  "Підтягування", 26.0f),
-            Triple(11, "Жим гантелей (кут)", 22.0f),
+            Triple(11, "Жим гантелей під кутом", 22.0f),
             Triple(9,  "Жим гантелей сидячи", 14.5f),
             Triple(7,  "Болгарські присідання", 7.0f),
-            Triple(15, "Згинання біцепс (EZ)", 33.0f),
-            Triple(16, "Французький жим (EZ)", 33.0f),
+            Triple(15, "Біцепс EZ", 33.0f),
+            Triple(16, "Французький жим EZ", 33.0f),
             Triple(10, "Face Pulls", 11.5f),
-            Triple(14, "Махи гантелями", 6.0f)
+            Triple(14, "Махи гантелями в сторони", 6.0f)
         )
         
         matrixData.forEach { (exId, name, current) ->
             val ref = referenceMatrix.find { it.exerciseName == name }
             val start = ref?.milestones?.get("M0")?.toFloat() ?: current
             val target = ref?.milestones?.get("M12")?.toFloat() ?: -1.0f
-            progressionMatrixDao.insert(ProgressionMatrixEntity(0, exId, start, target, current))
+            progressionMatrixDao.insert(ProgressionMatrixEntity(exerciseId = exId, startWeight = start, targetWeight = target, currentWeight = current))
         }
     }
 }

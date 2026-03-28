@@ -32,9 +32,10 @@ import com.ihor.thesystem.data.local.room.relations.SessionWithSets
         ExerciseMilestoneEntity::class,
         WorkoutSessionLogEntity::class,
         ExerciseSetLogEntity::class,
-        ReferenceMatrixEntity::class
+        ReferenceMatrixEntity::class,
+        ProtocolTemplateEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -50,6 +51,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun debuffConfigDao(): DebuffConfigDao
     abstract fun questLogDao(): QuestLogDao
     abstract fun workoutAnalyticsDao(): WorkoutAnalyticsDao
+    abstract fun protocolTemplateDao(): ProtocolTemplateDao
 
     companion object {
         val MIGRATION_2_3 = object : Migration(2, 3) {
@@ -145,6 +147,21 @@ abstract class AppDatabase : RoomDatabase() {
                         `progressionStep` REAL NOT NULL, 
                         `milestones` TEXT NOT NULL, 
                         `repsMilestones` TEXT
+                    )
+                """)
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `protocol_template` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `cycleDay` INTEGER NOT NULL, 
+                        `taskName` TEXT NOT NULL, 
+                        `category` TEXT NOT NULL, 
+                        `contextRequirement` TEXT NOT NULL, 
+                        `note` TEXT
                     )
                 """)
             }

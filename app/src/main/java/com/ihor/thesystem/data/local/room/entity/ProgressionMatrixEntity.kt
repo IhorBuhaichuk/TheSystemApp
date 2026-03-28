@@ -5,10 +5,10 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "progression_matrix")
 data class ProgressionMatrixEntity(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey
     val exerciseId: Int,
     val startWeight: Float,
-    val targetWeight: Float,       // -1.0 = дивись targetWeightNote
+    val targetWeight: Float,
     val currentWeight: Float,
-    val targetWeightNote: String? = null  // напр. "BW+10"
+    val targetWeightNote: String? = null
 )

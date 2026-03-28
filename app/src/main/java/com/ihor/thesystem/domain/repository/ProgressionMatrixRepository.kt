@@ -10,8 +10,8 @@ interface ProgressionMatrixRepository {
     suspend fun updateMatrixGoals(exerciseId: Int, startWeight: Float, targetWeight: Float)
     suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>)
     
-    // Нові методи для Завдання 2
     suspend fun getReferenceForExercise(name: String): ReferenceMatrixEntity?
+    fun getAllReferences(): Flow<List<ReferenceMatrixEntity>>
 }
 
 data class ProgressionMatrixEntry(
