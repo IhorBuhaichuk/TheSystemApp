@@ -13,6 +13,6 @@ data class PlayerEntity(
     val currentMonth: Int   = 1,
     val currentWeek: Int    = 1,
     val currentCycleDay: Int = 1,
-    val consecutiveFailedMainQuests: Int = 0,
+    val consecutiveMainQuestFailures: Int = 0,
     val isPenaltyActive: Boolean = false
 )

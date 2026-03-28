@@ -9,7 +9,7 @@ data class Player(
     val currentMonth: Int,
     val currentWeek: Int,
     val currentCycleDay: Int,
-    val consecutiveFailedMainQuests: Int,
+    val consecutiveMainQuestFailures: Int,
     val isPenaltyActive: Boolean
 )
 
@@ -20,7 +20,9 @@ data class Quest(
     val date: Long,
     val status: DomainQuestStatus,
     val tasks: List<QuestTask>
-)
+) {
+    val isCompleted: Boolean get() = status == DomainQuestStatus.COMPLETED
+}
 
 data class QuestTask(
     val id: Int,
@@ -48,7 +50,9 @@ data class DebuffConfig(
     val text: String,
     val penaltyPercent: Int,
     val isActive: Boolean
-)
+) {
+    val penaltyPercentage: Double get() = penaltyPercent.toDouble()
+}
 
 data class ScheduleDay(
     val id: Int,

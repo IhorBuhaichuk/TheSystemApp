@@ -19,6 +19,9 @@ class QuestRepositoryImpl @Inject constructor(
     override fun getActiveMainQuest(): Flow<Quest?> =
         questDao.getActiveQuestByType(EntityQuestType.MAIN).map { it?.toDomain() }
 
+    override fun getActiveQuests(): Flow<List<Quest>> =
+        questDao.getActiveQuestsWithTasks().map { list -> list.map { it.toDomain() } }
+
     override suspend fun hasActiveQuests(): Boolean =
         questDao.getActiveQuestCount() > 0
 
@@ -74,6 +77,10 @@ class QuestRepositoryImpl @Inject constructor(
         questDao.deleteTask(taskId)
     }
 
+    override suspend fun archiveActiveQuests() {
+        questDao.archiveActiveQuests()
+    }
+
     override suspend fun getLastTwoMainQuestsStatus(): List<DomainQuestStatus> =
         questDao.getLastTwoMainQuests().map { it.status.toDomain() }
 
@@ -99,9 +106,9 @@ private fun QuestWithTasks.toDomain() = Quest(
             name = it.name, 
             isCompleted = it.isCompleted, 
             exerciseId = it.exerciseId,
-            targetWeight = it.targetWeight,
-            targetSets = it.targetSets,
-            targetReps = it.targetReps
+            recommendedWeight = it.targetWeight,
+            recommendedSets = it.targetSets,
+            recommendedReps = it.targetReps
         ) 
     }
 )

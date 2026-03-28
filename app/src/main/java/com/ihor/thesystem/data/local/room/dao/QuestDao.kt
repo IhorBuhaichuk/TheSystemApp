@@ -42,6 +42,9 @@ interface QuestDao {
     @Query("DELETE FROM quest_task WHERE id = :taskId")
     suspend fun deleteTask(taskId: Int)
 
+    @Query("UPDATE quest SET status = 'FAILED' WHERE status = 'ACTIVE'")
+    suspend fun archiveActiveQuests()
+
     @Transaction
     @Query("""
         SELECT * FROM quest 
