@@ -1,26 +1,32 @@
 package com.ihor.thesystem.feature.calendar.ui
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.components.buildHexagonPath
 import com.ihor.thesystem.core.ui.components.sciPanel
+import com.ihor.thesystem.feature.calendar.viewmodel.CalendarDayUiModel
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarViewModel
 import com.ihor.thesystem.feature.calendar.viewmodel.WorkoutResultUiModel
 import java.time.LocalDate
@@ -33,12 +39,6 @@ fun CalendarScreen(
     viewModel: CalendarViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val currentMonth = remember { YearMonth.now() }
-    val daysInMonth = currentMonth.lengthOfMonth()
-    // java.time.DayOfWeek: 1 (Mon) to 7 (Sun)
-    val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value
-    
-    val selectedDate = uiState.selectedDate
     val scrollState = rememberScrollState()
 
     Column(
@@ -48,6 +48,7 @@ fun CalendarScreen(
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
+        // ── Header ────────────────────────────────────────────────
         Text(
             text = "КОНТРОЛЬ ЦИКЛУ",
             color = NeonCyan,
@@ -56,55 +57,85 @@ fun CalendarScreen(
             fontSize = 20.sp,
             letterSpacing = 2.sp
         )
-        
-        Spacer(Modifier.height(24.dp))
-        
-        Text(
-            text = currentMonth.month.getDisplayName(TextStyle.FULL_STANDALONE, Locale("uk")).uppercase(),
-            color = TextPrimary,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 16.sp,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(Modifier.height(16.dp))
 
-        // Manual Grid to support outer scrolling
-        CalendarManualGrid(
-            firstDayOfWeek = firstDayOfWeek,
-            daysInMonth = daysInMonth,
-            currentMonth = currentMonth,
-            selectedDate = selectedDate,
-            viewModel = viewModel
-        )
-
-        if (selectedDate != null) {
-            Spacer(Modifier.height(24.dp))
-            DailyScheduleSection(
-                date = selectedDate,
-                cycleDay = viewModel.getCycleDay(selectedDate),
-                results = uiState.workoutResults,
-                onDismiss = { viewModel.onDateSelected(null) },
-                viewModel = viewModel
+        uiState.todayInfo?.let { today ->
+            Text(
+                text = "СЬОГОДНІ: ${today.label.uppercase()}",
+                color = when(today.cycleDay) {
+                    1 -> NeonGold
+                    2 -> NeonCyan
+                    else -> TextSecondary
+                },
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
-        
-        // Bottom padding for scroll
+
+        Spacer(Modifier.height(24.dp))
+
+        // ── Month Selector ────────────────────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { viewModel.onMonthChange(uiState.currentMonth.minusMonths(1)) }) {
+                Text("<", color = NeonCyan, fontFamily = FontFamily.Monospace)
+            }
+            Text(
+                text = uiState.currentMonth.month.getDisplayName(TextStyle.FULL_STANDALONE, Locale("uk")).uppercase() + 
+                       " ${uiState.currentMonth.year}",
+                color = TextPrimary,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center
+            )
+            IconButton(onClick = { viewModel.onMonthChange(uiState.currentMonth.plusMonths(1)) }) {
+                Text(">", color = NeonCyan, fontFamily = FontFamily.Monospace)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // ── Calendar Grid ─────────────────────────────────────────
+        CalendarGrid(
+            days = uiState.days,
+            currentMonth = uiState.currentMonth,
+            selectedDate = uiState.selectedDate,
+            onDateClick = { viewModel.onDateSelected(it) }
+        )
+
+        // ── Details Section ───────────────────────────────────────
+        uiState.selectedDate?.let { date ->
+            val selectedDayModel = uiState.days.find { it.date == date }
+            if (selectedDayModel != null) {
+                Spacer(Modifier.height(24.dp))
+                DailyScheduleSection(
+                    date = date,
+                    dayModel = selectedDayModel,
+                    results = uiState.workoutResults,
+                    onDismiss = { viewModel.onDateSelected(null) },
+                    viewModel = viewModel
+                )
+            }
+        }
+
         Spacer(Modifier.height(32.dp))
     }
 }
 
 @Composable
-fun CalendarManualGrid(
-    firstDayOfWeek: Int,
-    daysInMonth: Int,
+fun CalendarGrid(
+    days: List<CalendarDayUiModel>,
     currentMonth: YearMonth,
     selectedDate: LocalDate?,
-    viewModel: CalendarViewModel
+    onDateClick: (LocalDate) -> Unit
 ) {
     val weekDays = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд")
-    
+    val firstDayOfMonth = currentMonth.atDay(1)
+    val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value // 1 (Mon) - 7 (Sun)
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth()) {
             weekDays.forEach { day ->
@@ -119,7 +150,7 @@ fun CalendarManualGrid(
             }
         }
 
-        val totalCells = (firstDayOfWeek - 1) + daysInMonth
+        val totalCells = (firstDayOfWeek - 1) + currentMonth.lengthOfMonth()
         val rows = (totalCells + 6) / 7
 
         for (row in 0 until rows) {
@@ -129,19 +160,18 @@ fun CalendarManualGrid(
             ) {
                 for (col in 0 until 7) {
                     val cellIndex = row * 7 + col
-                    val dayNumber = cellIndex - (firstDayOfWeek - 2)
-                    
-                    if (dayNumber in 1..daysInMonth) {
-                        val date = currentMonth.atDay(dayNumber)
-                        val cycleDay = viewModel.getCycleDay(date)
+                    val dayOfMonth = cellIndex - (firstDayOfWeek - 2)
+
+                    if (dayOfMonth in 1..currentMonth.lengthOfMonth()) {
+                        val model = days.find { it.date.dayOfMonth == dayOfMonth }
                         Box(modifier = Modifier.weight(1f)) {
-                            CalendarDayCell(
-                                date = date,
-                                cycleDay = cycleDay,
-                                isToday = date == LocalDate.now(),
-                                isSelected = date == selectedDate,
-                                onClick = { viewModel.onDateSelected(date) }
-                            )
+                            if (model != null) {
+                                CalendarDayCell(
+                                    model = model,
+                                    isSelected = model.date == selectedDate,
+                                    onClick = { onDateClick(model.date) }
+                                )
+                            }
                         }
                     } else {
                         Spacer(modifier = Modifier.weight(1f))
@@ -155,42 +185,87 @@ fun CalendarManualGrid(
 
 @Composable
 fun CalendarDayCell(
-    date: LocalDate,
-    cycleDay: Int,
-    isToday: Boolean,
+    model: CalendarDayUiModel,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val indicatorColor = when(cycleDay) {
-        1 -> NeonRed
-        2 -> NeonGold
-        3 -> NeonCyan
-        else -> NeonGreen
-    }
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    
+    // Анімація для дня 2 (Нічна зміна)
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 0.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
 
-    val borderColor = if (isSelected) NeonCyan else if (isToday) NeonCyanDim else Color.Transparent
+    val pulseRadius by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "radius"
+    )
 
-    Column(
+    Box(
         modifier = Modifier
             .aspectRatio(1f)
-            .border(1.dp, borderColor, RoundedCornerShape(4.dp))
-            .background(if (isSelected) NeonCyan.copy(0.1f) else Color.Transparent)
+            .clip(HexagonShape)
+            .background(if (isSelected) NeonCyan.copy(0.15f) else PanelSurface.copy(alpha = 0.4f))
+            .drawBehind {
+                val path = buildHexagonPath(size)
+                
+                // Візуальні ефекти на основі дня циклу
+                when (model.cycleDay) {
+                    1 -> { // Денна зміна - Жовте світіння
+                        drawPath(
+                            path = path,
+                            brush = Brush.radialGradient(
+                                colors = listOf(NeonGold.copy(alpha = 0.4f), Color.Transparent),
+                                center = center,
+                                radius = size.width / 1.2f
+                            )
+                        )
+                    }
+                    2 -> { // Нічна зміна - Синя пульсація
+                        drawPath(
+                            path = path,
+                            brush = Brush.radialGradient(
+                                colors = listOf(NeonCyan.copy(alpha = pulseAlpha), Color.Transparent),
+                                center = center,
+                                radius = (size.width / 2) + pulseRadius
+                            )
+                        )
+                    }
+                }
+
+                // Бордюр
+                val borderColor = when {
+                    isSelected -> NeonCyan
+                    model.isToday -> NeonCyanDim
+                    else -> PanelBorder.copy(alpha = 0.5f)
+                }
+                drawPath(path, borderColor, style = Stroke(width = 1.dp.toPx()))
+            }
             .clickable { onClick() },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        contentAlignment = Alignment.Center
     ) {
         Text(
-            text = date.dayOfMonth.toString(),
-            color = if (isToday) NeonCyan else TextPrimary,
+            text = model.date.dayOfMonth.toString(),
+            color = when {
+                model.isToday -> NeonCyan
+                model.cycleDay == 1 -> NeonGold
+                model.cycleDay == 2 -> NeonCyan
+                else -> TextPrimary
+            },
             fontSize = 14.sp,
             fontFamily = FontFamily.Monospace,
-            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
-        )
-        Spacer(Modifier.height(4.dp))
-        Box(
-            Modifier
-                .size(6.dp)
-                .background(indicatorColor, CircleShape)
+            fontWeight = if (model.isToday) FontWeight.Bold else FontWeight.Normal
         )
     }
 }
@@ -198,12 +273,12 @@ fun CalendarDayCell(
 @Composable
 fun DailyScheduleSection(
     date: LocalDate,
-    cycleDay: Int,
+    dayModel: CalendarDayUiModel,
     results: List<WorkoutResultUiModel>,
     onDismiss: () -> Unit,
     viewModel: CalendarViewModel
 ) {
-    val schedule by viewModel.getScheduleForDay(cycleDay).collectAsState(null)
+    val schedule by viewModel.getScheduleForDay(dayModel.cycleDay).collectAsState(null)
 
     Column(
         modifier = Modifier
@@ -228,13 +303,12 @@ fun DailyScheduleSection(
         }
         
         Text(
-            text = when(cycleDay) {
-                1 -> "СТАТУС: Денна зміна"
-                2 -> "СТАТУС: Нічна зміна"
-                3 -> "СТАТУС: Тренування А"
-                else -> "СТАТУС: Тренування Б"
+            text = "СТАТУС: ${dayModel.label.uppercase()}",
+            color = when(dayModel.cycleDay) {
+                1 -> NeonGold
+                2 -> NeonCyan
+                else -> NeonGreen
             },
-            color = if (cycleDay <= 2) NeonRed else NeonGreen,
             fontSize = 11.sp,
             fontFamily = FontFamily.Monospace,
             modifier = Modifier.padding(vertical = 4.dp)
@@ -281,5 +355,15 @@ fun DailyScheduleSection(
                 )
             }
         }
+    }
+}
+
+val HexagonShape = object : Shape {
+    override fun createOutline(
+        size: androidx.compose.ui.geometry.Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        return Outline.Generic(buildHexagonPath(size))
     }
 }
