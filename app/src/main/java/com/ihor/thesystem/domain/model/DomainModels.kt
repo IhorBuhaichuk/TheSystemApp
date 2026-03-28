@@ -52,5 +52,10 @@ data class ScheduleDay(
     val workoutTemplateId: Int?,
     val workoutTemplateName: String?,
     val dailyTaskNames: List<String>,
-    val exerciseNames: List<String>
+    val exercises: List<ExerciseDetails>
+)
+
+data class ExerciseDetails(
+    val id: Int,
+    val name: String
 )

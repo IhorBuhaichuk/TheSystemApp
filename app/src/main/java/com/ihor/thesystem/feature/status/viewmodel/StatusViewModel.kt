@@ -20,6 +20,7 @@ sealed class StatusDialogState {
     object None                                                       : StatusDialogState()
     object EditName                                                   : StatusDialogState()
     object LogWeight                                                  : StatusDialogState()
+    object EditHeight                                                 : StatusDialogState()
     object EditDebuffs                                                : StatusDialogState()
     object EditSystemConfig                                           : StatusDialogState()
     data class QuestChecklist(val questId: Int, val isDaily: Boolean) : StatusDialogState()
@@ -30,6 +31,7 @@ class StatusViewModel @Inject constructor(
     private val getStatusData:         GetStatusScreenDataUseCase,
     private val updatePlayerName:      UpdatePlayerNameUseCase,
     private val logWeight:             LogWeightUseCase,
+    private val updateHeight:          UpdatePlayerHeightUseCase,
     private val toggleQuestTask:       ToggleQuestTaskUseCase,
     private val updateDebuff:          UpdateDebuffUseCase,
     private val generateDailyQuests:   GenerateDailyQuestsUseCase,
@@ -98,6 +100,7 @@ class StatusViewModel @Inject constructor(
     // ── Dialog triggers ───────────────────────────────────────────────
     fun onNameTap()         { _dialogState.value = StatusDialogState.EditName }
     fun onWeightTap()       { _dialogState.value = StatusDialogState.LogWeight }
+    fun onHeightTap()       { _dialogState.value = StatusDialogState.EditHeight }
     fun onDebuffTap()       { _dialogState.value = StatusDialogState.EditDebuffs }
     fun onSystemConfigTap() { _dialogState.value = StatusDialogState.EditSystemConfig }
     fun onQuestTap(questId: Int, isDaily: Boolean) {
@@ -117,6 +120,13 @@ class StatusViewModel @Inject constructor(
     fun onWeightConfirmed(weight: Float) {
         viewModelScope.launch {
             logWeight(weight)
+            onDismissDialog()
+        }
+    }
+
+    fun onHeightConfirmed(height: Float) {
+        viewModelScope.launch {
+            updateHeight(height)
             onDismissDialog()
         }
     }

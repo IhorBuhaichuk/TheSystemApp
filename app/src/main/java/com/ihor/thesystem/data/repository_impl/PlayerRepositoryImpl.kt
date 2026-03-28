@@ -7,6 +7,7 @@ import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -26,6 +27,11 @@ class PlayerRepositoryImpl @Inject constructor(
 
     override suspend fun logWeight(weight: Float) =
         weightLogDao.insert(WeightLogEntity(weight = weight))
+
+    override suspend fun updateHeight(height: Float) {
+        val player = playerDao.getPlayer().firstOrNull() ?: return
+        playerDao.insertOrUpdate(player.copy(height = height))
+    }
 }
 
 // ── Mappers ───────────────────────────────────────────────────────────────────

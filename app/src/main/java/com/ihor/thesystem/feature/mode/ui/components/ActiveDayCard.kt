@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.mode.viewmodel.ActiveDayUiModel
+import com.ihor.thesystem.feature.mode.viewmodel.ExerciseWorkoutUiModel
 
 @Composable
 fun ActiveDayCard(
@@ -60,8 +61,10 @@ fun ActiveDayCard(
                 accentColor = NeonCyan,
                 content     = {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        data.dailyTasks.forEach { task ->
-                            DayTaskRow(name = task.name)
+                        data.dailyTasks.forEach { quest ->
+                            quest.tasks.forEach { task ->
+                                DayTaskRow(name = task.name)
+                            }
                         }
                     }
                 }
@@ -84,7 +87,7 @@ fun ActiveDayCard(
                         )
                         Spacer(Modifier.height(2.dp))
                         data.exercises.forEach { exercise ->
-                            ExerciseRow(name = exercise)
+                            ExerciseRow(exercise = exercise)
                         }
                     }
                 }
@@ -164,7 +167,7 @@ private fun DayTaskRow(name: String) {
 }
 
 @Composable
-private fun ExerciseRow(name: String) {
+private fun ExerciseRow(exercise: ExerciseWorkoutUiModel) {
     Row(
         modifier              = Modifier
             .fillMaxWidth()
@@ -179,11 +182,21 @@ private fun ExerciseRow(name: String) {
             tint               = NeonGold.copy(alpha = 0.7f),
             modifier           = Modifier.size(13.dp)
         )
-        Text(
-            text       = name,
-            color      = TextPrimary,
-            fontFamily = FontFamily.Monospace,
-            fontSize   = 12.sp
-        )
+        Column {
+            Text(
+                text       = exercise.name,
+                color      = TextPrimary,
+                fontFamily = FontFamily.Monospace,
+                fontSize   = 12.sp
+            )
+            exercise.recommendation?.let {
+                Text(
+                    text = it,
+                    color = NeonCyanDim,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 10.sp
+                )
+            }
+        }
     }
 }

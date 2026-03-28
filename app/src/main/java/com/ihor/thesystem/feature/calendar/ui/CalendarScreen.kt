@@ -4,13 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,14 +35,17 @@ fun CalendarScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentMonth = remember { YearMonth.now() }
     val daysInMonth = currentMonth.lengthOfMonth()
+    // java.time.DayOfWeek: 1 (Mon) to 7 (Sun)
     val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value
     
     val selectedDate = uiState.selectedDate
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundDeep)
+            .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
         Text(
@@ -70,39 +70,14 @@ fun CalendarScreen(
         
         Spacer(Modifier.height(16.dp))
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(7),
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            val weekDays = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд")
-            items(weekDays) { day ->
-                Text(
-                    text = day,
-                    color = TextSecondary,
-                    textAlign = TextAlign.Center,
-                    fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-
-            items(firstDayOfWeek - 1) { Box(Modifier.size(40.dp)) }
-
-            items(daysInMonth) { dayIndex ->
-                val date = currentMonth.atDay(dayIndex + 1)
-                val cycleDay = viewModel.getCycleDay(date)
-                
-                CalendarDayCell(
-                    date = date,
-                    cycleDay = cycleDay,
-                    isToday = date == LocalDate.now(),
-                    isSelected = date == selectedDate,
-                    onClick = { viewModel.onDateSelected(date) }
-                )
-            }
-        }
+        // Manual Grid to support outer scrolling
+        CalendarManualGrid(
+            firstDayOfWeek = firstDayOfWeek,
+            daysInMonth = daysInMonth,
+            currentMonth = currentMonth,
+            selectedDate = selectedDate,
+            viewModel = viewModel
+        )
 
         if (selectedDate != null) {
             Spacer(Modifier.height(24.dp))
@@ -113,6 +88,67 @@ fun CalendarScreen(
                 onDismiss = { viewModel.onDateSelected(null) },
                 viewModel = viewModel
             )
+        }
+        
+        // Bottom padding for scroll
+        Spacer(Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun CalendarManualGrid(
+    firstDayOfWeek: Int,
+    daysInMonth: Int,
+    currentMonth: YearMonth,
+    selectedDate: LocalDate?,
+    viewModel: CalendarViewModel
+) {
+    val weekDays = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд")
+    
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            weekDays.forEach { day ->
+                Text(
+                    text = day,
+                    color = TextSecondary,
+                    textAlign = TextAlign.Center,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.weight(1f).padding(bottom = 8.dp)
+                )
+            }
+        }
+
+        val totalCells = (firstDayOfWeek - 1) + daysInMonth
+        val rows = (totalCells + 6) / 7
+
+        for (row in 0 until rows) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                for (col in 0 until 7) {
+                    val cellIndex = row * 7 + col
+                    val dayNumber = cellIndex - (firstDayOfWeek - 2)
+                    
+                    if (dayNumber in 1..daysInMonth) {
+                        val date = currentMonth.atDay(dayNumber)
+                        val cycleDay = viewModel.getCycleDay(date)
+                        Box(modifier = Modifier.weight(1f)) {
+                            CalendarDayCell(
+                                date = date,
+                                cycleDay = cycleDay,
+                                isToday = date == LocalDate.now(),
+                                isSelected = date == selectedDate,
+                                onClick = { viewModel.onDateSelected(date) }
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 }
@@ -227,9 +263,9 @@ fun DailyScheduleSection(
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(Modifier.height(4.dp))
-                data.exerciseNames.forEach { name ->
+                data.exercises.forEach { exercise ->
                     Text(
-                        text = "• $name",
+                        text = "• ${exercise.name}",
                         color = TextSecondary,
                         fontSize = 12.sp,
                         fontFamily = FontFamily.Monospace,

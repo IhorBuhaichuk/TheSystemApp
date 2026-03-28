@@ -40,6 +40,10 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         return dao.getSessionLogsByDate(dateMillis)
     }
 
+    override fun getAllLogs(): Flow<List<SessionWithSets>> {
+        return dao.getAllSessionLogs()
+    }
+
     // =========================================
     // MAPPER ФУНКЦІЇ (Entity <-> Domain)
     // =========================================

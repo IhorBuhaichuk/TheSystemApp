@@ -35,4 +35,9 @@ interface WorkoutAnalyticsRepository {
      * Отримує логі тренувань для конкретної дати.
      */
     fun getSessionsByDate(dateMillis: Long): Flow<List<SessionWithSets>>
+
+    /**
+     * Отримує всі логі тренувань.
+     */
+    fun getAllLogs(): Flow<List<SessionWithSets>>
 }

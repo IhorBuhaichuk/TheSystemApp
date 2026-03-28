@@ -43,7 +43,6 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     override suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>) {
         val timestamp = System.currentTimeMillis()
         
-        // Розрахунок тоннажу для лога сесії
         val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
         if (validSets.isEmpty()) return
 
@@ -51,9 +50,8 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
             (it.weight.toDoubleOrNull() ?: 0.0) * (it.reps.toIntOrNull() ?: 0)
         }
 
-        // Створюємо запис про сесію (батьківський запис для FOREIGN KEY)
         val sessionLog = WorkoutSessionLogEntity(
-            questId = 0, // Швидке логування поза квестом
+            questId = 0,
             timestamp = timestamp,
             totalTonnage = totalTonnage,
             cycleDay = 0,
@@ -62,7 +60,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
 
         val entities = validSets.map { input ->
             ExerciseSetLogEntity(
-                sessionId = 0, // Буде встановлено в saveFullSessionLog
+                sessionId = 0,
                 exerciseId = exerciseId,
                 weight = input.weight.toDoubleOrNull() ?: 0.0,
                 reps = input.reps.toIntOrNull() ?: 0,
@@ -70,14 +68,16 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
             )
         }
         
-        // Зберігаємо сесію та підходи в транзакції (виправляє FOREIGN KEY crash)
         analyticsDao.saveFullSessionLog(sessionLog, entities)
         
-        // Оновлення поточної ваги в матриці (максимальна з підходів)
         val maxWeight = sets.mapNotNull { it.weight.toFloatOrNull() }.maxOrNull()
         if (maxWeight != null) {
             updateCurrentWeight(exerciseId, maxWeight)
         }
+    }
+
+    override suspend fun getReferenceForExercise(name: String): ReferenceMatrixEntity? {
+        return matrixDao.getReferenceByName(name)
     }
 }
 

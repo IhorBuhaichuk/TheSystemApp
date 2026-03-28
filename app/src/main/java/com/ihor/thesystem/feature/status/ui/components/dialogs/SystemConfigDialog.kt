@@ -1,8 +1,10 @@
 package com.ihor.thesystem.feature.status.ui.components.dialogs
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -28,6 +30,7 @@ fun SystemConfigDialog(
     var weeks      by remember { mutableStateOf(config.matrixWeeks.toString()) }
 
     val isValid = listOf(penalty, sets, reps, weeks).all { it.toIntOrNull() != null }
+    val scrollState = rememberScrollState()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -47,7 +50,10 @@ fun SystemConfigDialog(
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 ConfigField(
                     label    = "ШТРАФ (%)",
                     value    = penalty,

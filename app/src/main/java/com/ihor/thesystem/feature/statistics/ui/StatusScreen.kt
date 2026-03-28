@@ -22,10 +22,7 @@ import com.ihor.thesystem.feature.statistics.ui.components.PlayerLeftPanel
 import com.ihor.thesystem.feature.statistics.ui.components.QuestCard
 import com.ihor.thesystem.feature.statistics.ui.components.QuestCardType
 import com.ihor.thesystem.feature.statistics.ui.components.StatRightPanel
-import com.ihor.thesystem.feature.statistics.ui.components.dialogs.DebuffEditorSheet
-import com.ihor.thesystem.feature.statistics.ui.components.dialogs.EditNameDialog
-import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogWeightDialog
-import com.ihor.thesystem.feature.statistics.ui.components.dialogs.QuestChecklistSheet
+import com.ihor.thesystem.feature.statistics.ui.components.dialogs.*
 
 // --- ВИПРАВЛЕНИЙ ІМПОРТ: SystemHeader має пакет status всередині файлу ---
 import com.ihor.thesystem.feature.status.ui.components.SystemHeader
@@ -108,7 +105,8 @@ fun StatusScreen(
                         weight      = "${data.currentWeight.toInt()}",
                         height      = "${data.height.toInt()}",
                         modifier    = Modifier.weight(0.40f),
-                        onWeightTap = { viewModel.onWeightTap() }
+                        onWeightTap = { viewModel.onWeightTap() },
+                        onHeightTap = { viewModel.onHeightTap() }
                     )
                 }
 
@@ -152,6 +150,13 @@ fun StatusScreen(
                         LogWeightDialog(
                             currentWeight = data.currentWeight,
                             onConfirm     = { viewModel.onWeightConfirmed(it) },
+                            onDismiss     = { viewModel.onDismissDialog() }
+                        )
+                    }
+                    is StatusDialogState.EditHeight -> {
+                        LogHeightDialog(
+                            currentHeight = data.height,
+                            onConfirm     = { viewModel.onHeightConfirmed(it) },
                             onDismiss     = { viewModel.onDismissDialog() }
                         )
                     }

@@ -31,9 +31,10 @@ import com.ihor.thesystem.data.local.room.relations.SessionWithSets
         WorkoutDirectiveEntity::class,
         ExerciseMilestoneEntity::class,
         WorkoutSessionLogEntity::class,
-        ExerciseSetLogEntity::class
+        ExerciseSetLogEntity::class,
+        ReferenceMatrixEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -83,11 +84,10 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS `workout_directives` (
-                        `exerciseId` INTEGER NOT NULL, 
+                        `exerciseId` INTEGER PRIMARY KEY NOT NULL, 
                         `targetWeight` REAL NOT NULL, 
                         `targetSets` INTEGER NOT NULL, 
-                        `targetReps` INTEGER NOT NULL, 
-                        PRIMARY KEY(`exerciseId`)
+                        `targetReps` INTEGER NOT NULL
                     )
                     """.trimIndent()
                 )
@@ -96,11 +96,9 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Оновлення існуючих таблиць
                 db.execSQL("ALTER TABLE workout_template ADD COLUMN timeLimitMinutes INTEGER NOT NULL DEFAULT 75")
                 db.execSQL("ALTER TABLE system_config ADD COLUMN cycleAnchorDateTimestamp INTEGER NOT NULL DEFAULT 0")
 
-                // Створення нових таблиць логування та мілстоунів
                 db.execSQL("""
                     CREATE TABLE IF NOT EXISTS `exercise_milestones` (
                         `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
@@ -134,6 +132,21 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                 """)
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_set_logs_sessionId` ON `exercise_set_logs` (`sessionId`)")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `reference_matrix` (
+                        `exerciseId` TEXT PRIMARY KEY NOT NULL, 
+                        `exerciseName` TEXT NOT NULL, 
+                        `weightType` TEXT NOT NULL, 
+                        `progressionStep` REAL NOT NULL, 
+                        `milestones` TEXT NOT NULL, 
+                        `repsMilestones` TEXT
+                    )
+                """)
             }
         }
     }

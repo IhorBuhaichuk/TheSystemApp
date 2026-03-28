@@ -22,6 +22,22 @@ class StatisticsViewModel @Inject constructor(
             playerRepo.getPlayer().filterNotNull(),
             matrixRepo.getAllEntries()
         ) { player, matrix ->
+            // Enrichment logic: Fetch boundaries for each entry
+            // Note: In combine transform, we ARE in a suspending context
+            val updatedEntries = matrix.map { entry ->
+                val reference = matrixRepo.getReferenceForExercise(entry.exerciseName)
+                if (reference != null) {
+                    val m0 = reference.milestones["M0"]?.toFloat() ?: entry.startWeight
+                    val m12 = reference.milestones["M12"]?.toFloat() ?: entry.targetWeight
+                    entry.toUiModel().copy(
+                        startWeight = m0,
+                        targetWeight = m12
+                    )
+                } else {
+                    entry.toUiModel()
+                }
+            }
+
             StatisticsUiData(
                 playerName      = player.name,
                 playerClass     = player.playerClass,
@@ -29,11 +45,14 @@ class StatisticsViewModel @Inject constructor(
                 currentWeek     = player.currentWeek,
                 currentCycleDay = player.currentCycleDay,
                 isPenaltyActive = player.isPenaltyActive,
-                matrixEntries   = matrix.map { it.toUiModel() }
+                matrixEntries   = updatedEntries
             )
         }
             .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
-            .catch { emit(UiState.Error(it.message ?: "Помилка")) }
+            .catch { 
+                it.printStackTrace()
+                emit(UiState.Error(it.message ?: "Помилка")) 
+            }
             .stateIn(
                 scope        = viewModelScope,
                 started      = SharingStarted.WhileSubscribed(5_000),
@@ -43,7 +62,6 @@ class StatisticsViewModel @Inject constructor(
     private val _dialogState = MutableStateFlow<StatisticsDialogState>(StatisticsDialogState.None)
     val dialogState: StateFlow<StatisticsDialogState> = _dialogState.asStateFlow()
 
-    // --- Етап 1: Керування SetupMatrixDialog ---
     fun onOpenSetup(entry: MatrixEntryUiModel) {
         _dialogState.value = StatisticsDialogState.SetupMatrix(
             entry = entry,
@@ -63,7 +81,6 @@ class StatisticsViewModel @Inject constructor(
         }
     }
 
-    // --- Етап 2: Керування LogWorkoutSetsDialog ---
     fun onOpenLogSets(entry: MatrixEntryUiModel) {
         _dialogState.value = StatisticsDialogState.LogWorkoutSets(
             entry = entry,

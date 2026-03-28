@@ -16,12 +16,19 @@ object UseCaseModule {
     fun provideCalculateCycleDayForDateUseCase() = CalculateCycleDayForDateUseCase()
 
     @Provides @Singleton
+    fun provideCalculateRecommendedSetUseCase(
+        analyticsRepo: WorkoutAnalyticsRepository,
+        matrixRepo: ProgressionMatrixRepository
+    ) = CalculateRecommendedSetUseCase(analyticsRepo, matrixRepo)
+
+    @Provides @Singleton
     fun provideGenerateDailyQuestsUseCase(
         configRepo:   SystemConfigRepository,
         questRepo:    QuestRepository,
         scheduleRepo: ScheduleRepository,
-        calculateCycleDay: CalculateCycleDayForDateUseCase
-    ) = GenerateDailyQuestsUseCase(configRepo, questRepo, scheduleRepo, calculateCycleDay)
+        calculateCycleDay: CalculateCycleDayForDateUseCase,
+        calculateRecommendation: CalculateRecommendedSetUseCase
+    ) = GenerateDailyQuestsUseCase(configRepo, questRepo, scheduleRepo, calculateCycleDay, calculateRecommendation)
 
     @Provides @Singleton
     fun provideLevelUpUseCase(
@@ -76,4 +83,9 @@ object UseCaseModule {
     fun provideUpdateSystemConfigUseCase(
         repo: SystemConfigRepository
     ) = UpdateSystemConfigUseCase(repo)
+
+    @Provides @Singleton
+    fun provideUpdatePlayerHeightUseCase(
+        repo: PlayerRepository
+    ) = UpdatePlayerHeightUseCase(repo)
 }

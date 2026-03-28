@@ -21,12 +21,12 @@ interface WorkoutDao {
     suspend fun getTemplateName(id: Int): String?
 
     @Query("""
-        SELECT e.name FROM exercise e 
+        SELECT e.* FROM exercise e 
         INNER JOIN workout_exercise_cross_ref cr ON e.id = cr.exerciseId 
         WHERE cr.workoutTemplateId = :templateId 
         ORDER BY cr.orderIndex ASC
     """)
-    suspend fun getExerciseNamesForTemplate(templateId: Int): List<String>
+    suspend fun getExercisesForTemplate(templateId: Int): List<ExerciseEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTemplate(template: WorkoutTemplateEntity): Long

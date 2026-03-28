@@ -42,6 +42,24 @@ object DatabaseModule {
                     }
                 }
             }
+
+            override fun onOpen(sqliteDb: SupportSQLiteDatabase) {
+                super.onOpen(sqliteDb)
+                // Перевіряємо чи база не порожня (після міграцій)
+                db?.let { database ->
+                    CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                        // Якщо конфіг або вправи відсутні - дозаповнюємо
+                        DatabasePopulator.populate(
+                            playerDao            = database.playerDao(),
+                            systemConfigDao      = database.systemConfigDao(),
+                            workoutDao           = database.workoutDao(),
+                            scheduleDao          = database.scheduleDao(),
+                            progressionMatrixDao = database.progressionMatrixDao(),
+                            debuffConfigDao      = database.debuffConfigDao()
+                        )
+                    }
+                }
+            }
         }
 
         val database = Room.databaseBuilder(
@@ -50,7 +68,11 @@ object DatabaseModule {
             "the_system_db"
         )
             .addCallback(callback)
-            .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
+            .addMigrations(
+                AppDatabase.MIGRATION_2_3, 
+                AppDatabase.MIGRATION_3_4,
+                AppDatabase.MIGRATION_4_5
+            )
             .fallbackToDestructiveMigration()
             .build()
 

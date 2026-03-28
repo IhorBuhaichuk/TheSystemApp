@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.domain.model.ScheduleDay
+import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
+import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.usecase.AdvanceCycleDayUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -25,6 +27,7 @@ sealed class ModeEvent {
 @HiltViewModel
 class ModeViewModel @Inject constructor(
     private val playerRepo:      PlayerRepository,
+    private val questRepo:       QuestRepository,
     private val scheduleRepo:    ScheduleRepository,
     private val advanceCycleDay: AdvanceCycleDayUseCase
 ) : ViewModel() {
@@ -32,14 +35,33 @@ class ModeViewModel @Inject constructor(
     val uiState: StateFlow<UiState<ModeUiData>> = playerRepo.getPlayer()
         .filterNotNull()
         .flatMapLatest { player ->
-            combine(
-                scheduleRepo.getScheduleForDay(1),
-                scheduleRepo.getScheduleForDay(2),
-                scheduleRepo.getScheduleForDay(3),
-                scheduleRepo.getScheduleForDay(4)
-            ) { d1, d2, d3, d4 ->
+            val d1Flow = scheduleRepo.getScheduleForDay(1)
+            val d2Flow = scheduleRepo.getScheduleForDay(2)
+            val d3Flow = scheduleRepo.getScheduleForDay(3)
+            val d4Flow = scheduleRepo.getScheduleForDay(4)
+            val dailyFlow = questRepo.getActiveDailyQuest()
+            val mainFlow = questRepo.getActiveMainQuest()
+
+            combine(d1Flow, d2Flow, d3Flow, d4Flow, dailyFlow, mainFlow) { array ->
+                val d1 = array[0] as? ScheduleDay
+                val d2 = array[1] as? ScheduleDay
+                val d3 = array[2] as? ScheduleDay
+                val d4 = array[3] as? ScheduleDay
+                val daily = array[4] as? Quest
+                val main = array[5] as? Quest
+
                 val allDays = listOf(d1, d2, d3, d4)
                 val current = allDays.getOrNull(player.currentCycleDay - 1)
+                
+                // Parsing recommendations from task name: "NAME | 70kg | 3x12"
+                val exercises = main?.tasks?.map { task ->
+                    val parts = task.name.split(" | ")
+                    ExerciseWorkoutUiModel(
+                        name = parts.getOrNull(0) ?: task.name,
+                        recommendation = if (parts.size > 1) parts.drop(1).joinToString(" | ") else null
+                    )
+                } ?: emptyList()
+
                 ModeUiData(
                     currentCycleDay = player.currentCycleDay,
                     isPenaltyActive = player.isPenaltyActive,
@@ -49,11 +71,10 @@ class ModeViewModel @Inject constructor(
                             isActive = (i + 1) == player.currentCycleDay
                         )
                     },
-                    activeDayData = current?.toActiveDayUiModel()
+                    activeDayData = current?.toActiveDayUiModel(exercises, daily)
                 )
-            }
+            }.map<ModeUiData, UiState<ModeUiData>> { UiState.Content(it) }
         }
-        .map<ModeUiData, UiState<ModeUiData>> { UiState.Content(it) }
         .catch { emit(UiState.Error(it.message ?: "Помилка")) }
         .stateIn(
             scope        = viewModelScope,
@@ -88,7 +109,6 @@ class ModeViewModel @Inject constructor(
     }
 }
 
-// ── Mappers ───────────────────────────────────────────────────────────────────
 private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean) =
     CycleDayUiModel(
         dayNumber   = dayNum,
@@ -98,7 +118,10 @@ private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean) =
         workoutName = workoutTemplateName
     )
 
-private fun ScheduleDay.toActiveDayUiModel(): ActiveDayUiModel {
+private fun ScheduleDay.toActiveDayUiModel(
+    exercises: List<ExerciseWorkoutUiModel>,
+    dailyQuest: Quest?
+): ActiveDayUiModel {
     val debuffLabels = mapOf(
         1 to "СЛАБКІСТЬ",
         2 to "ЦНС",
@@ -108,8 +131,8 @@ private fun ScheduleDay.toActiveDayUiModel(): ActiveDayUiModel {
     return ActiveDayUiModel(
         dayNumber   = cycleDay,
         debuffName  = debuffLabels[cycleDay],
-        dailyTasks  = dailyTaskNames.map { ActiveTaskUiModel(name = it) },
+        dailyTasks  = if (dailyQuest != null) listOf(dailyQuest) else emptyList(),
         workoutName = workoutTemplateName,
-        exercises   = exerciseNames
+        exercises   = exercises
     )
 }
