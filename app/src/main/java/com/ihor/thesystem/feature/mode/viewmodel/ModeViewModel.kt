@@ -8,12 +8,14 @@ import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
+import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import com.ihor.thesystem.domain.usecase.AdvanceCycleDayUseCase
 import com.ihor.thesystem.domain.usecase.GenerateDailyQuestsUseCase
 import com.ihor.thesystem.feature.mode.ui.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 sealed class ModeDialogState {
@@ -33,12 +35,12 @@ class ModeViewModel @Inject constructor(
     private val playerRepo:      PlayerRepository,
     private val questRepo:       QuestRepository,
     private val scheduleRepo:    ScheduleRepository,
+    private val configRepo:      SystemConfigRepository,
     private val advanceCycleDay: AdvanceCycleDayUseCase,
     private val generateQuests:  GenerateDailyQuestsUseCase
 ) : ViewModel() {
 
     init {
-        // Гарантуємо наявність квестів при кожному вході на екран
         viewModelScope.launch {
             generateQuests()
         }
@@ -54,7 +56,6 @@ class ModeViewModel @Inject constructor(
             val dailyFlow = questRepo.getActiveDailyQuest()
             val mainFlow = questRepo.getActiveMainQuest()
 
-            // Використовуємо список потоків для обходу ліміту combine
             combine(listOf(d1Flow, d2Flow, d3Flow, d4Flow, dailyFlow, mainFlow)) { array ->
                 val d1 = array[0] as? ScheduleDay
                 val d2 = array[1] as? ScheduleDay
@@ -66,7 +67,6 @@ class ModeViewModel @Inject constructor(
                 val allDays = listOf(d1, d2, d3, d4)
                 val current = allDays.getOrNull(player.currentCycleDay - 1)
                 
-                // Використовуємо структуровані дані з QuestTask замість назви
                 val exercises = main?.tasks?.map { task ->
                     val recStr = if (task.recommendedWeight != null) {
                         "${task.recommendedWeight}кг | ${task.recommendedSets}x${task.recommendedReps}"
@@ -128,7 +128,20 @@ class ModeViewModel @Inject constructor(
 
     fun onConfirmSync(day: Int) {
         viewModelScope.launch {
+            // 1. Оновлюємо поточний день гравця
             playerRepo.updateCurrentCycleDay(day)
+            
+            // 2. Оновлюємо якір у конфігурації (щоб календар перерахувався)
+            val currentConfig = configRepo.getConfigFlow().firstOrNull()
+            if (currentConfig != null) {
+                configRepo.updateConfig(
+                    currentConfig.copy(
+                        cycleAnchorDateTimestamp = LocalDate.now().toEpochDay(),
+                        cycleAnchorDay = day
+                    )
+                )
+            }
+
             onDismissDialog()
             _events.emit(ModeEvent.CycleSynced)
         }

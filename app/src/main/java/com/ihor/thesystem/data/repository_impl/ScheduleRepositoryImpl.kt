@@ -16,20 +16,22 @@ class ScheduleRepositoryImpl @Inject constructor(
 
     override fun getScheduleForDay(day: Int): Flow<ScheduleDay?> =
         scheduleDao.getScheduleForDay(day).map { details ->
-            details?.let { d ->
-                val templateId   = d.schedule.workoutTemplateId
-                val templateName = templateId?.let { workoutDao.getTemplateName(it) }
-                val exercises    = templateId?.let { workoutDao.getExercisesForTemplate(it) }
-                    ?: emptyList()
-                
-                ScheduleDay(
-                    id                  = d.schedule.id,
-                    cycleDay            = d.schedule.cycleDay,
-                    workoutTemplateId   = templateId,
-                    workoutTemplateName = templateName,
-                    dailyTaskNames      = d.dailyTasks.map { it.name },
-                    exercises           = exercises.map { ExerciseDetails(it.id, it.name) }
-                )
-            }
+            if (details == null) return@map null
+            
+            val d = details
+            val templateId = d.schedule.workoutTemplateId
+            
+            // Отримуємо назву та вправи безпечно
+            val templateName = templateId?.let { workoutDao.getTemplateNameSync(it) }
+            val exercises = templateId?.let { workoutDao.getExercisesForTemplateSync(it) } ?: emptyList()
+            
+            ScheduleDay(
+                id                  = d.schedule.id,
+                cycleDay            = d.schedule.cycleDay,
+                workoutTemplateId   = templateId,
+                workoutTemplateName = templateName,
+                dailyTaskNames      = d.dailyTasks.map { it.name },
+                exercises           = exercises.map { ExerciseDetails(it.id, it.name) }
+            )
         }
 }

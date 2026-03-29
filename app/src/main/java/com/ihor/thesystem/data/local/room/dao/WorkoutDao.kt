@@ -4,45 +4,59 @@ import androidx.room.*
 import com.ihor.thesystem.data.local.room.entity.ExerciseEntity
 import com.ihor.thesystem.data.local.room.entity.WorkoutExerciseCrossRef
 import com.ihor.thesystem.data.local.room.entity.WorkoutTemplateEntity
-import com.ihor.thesystem.data.local.room.relations.WorkoutWithExercises
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WorkoutDao {
-    @Transaction
-    @Query("SELECT * FROM workout_template")
-    fun getAllWorkoutsWithExercises(): Flow<List<WorkoutWithExercises>>
 
-    @Transaction
-    @Query("SELECT * FROM workout_template WHERE id = :id")
-    fun getWorkoutWithExercises(id: Int): Flow<WorkoutWithExercises?>
+    @Query("SELECT * FROM exercises")
+    fun getAllExercises(): Flow<List<ExerciseEntity>>
 
-    @Query("SELECT name FROM workout_template WHERE id = :id")
-    suspend fun getTemplateName(id: Int): String?
+    @Query("SELECT * FROM exercises")
+    suspend fun getAllExercisesSync(): List<ExerciseEntity>
 
-    @Query("""
-        SELECT e.* FROM exercise e 
-        INNER JOIN workout_exercise_cross_ref cr ON e.id = cr.exerciseId 
-        WHERE cr.workoutTemplateId = :templateId 
-        ORDER BY cr.orderIndex ASC
-    """)
-    suspend fun getExercisesForTemplate(templateId: Int): List<ExerciseEntity>
+    @Query("SELECT name FROM exercises WHERE id = :id")
+    suspend fun getExerciseNameById(id: Int): String?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTemplate(template: WorkoutTemplateEntity): Long
+    suspend fun insertExercise(exercise: ExerciseEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertExercise(exercise: ExerciseEntity): Long
+    suspend fun insertTemplate(template: WorkoutTemplateEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCrossRef(crossRef: WorkoutExerciseCrossRef)
 
-    @Query("SELECT name FROM exercise WHERE id = :id")
-    suspend fun getExerciseNameById(id: Int): String?
+    @Transaction
+    @Query("SELECT * FROM workout_templates WHERE id = :templateId")
+    fun getTemplateWithExercises(templateId: Int): Flow<TemplateWithExercises?>
 
-    @Query("SELECT * FROM exercise WHERE id = :id")
-    suspend fun getExerciseById(id: Int): ExerciseEntity?
+    @Query("SELECT name FROM workout_templates WHERE id = :templateId")
+    suspend fun getTemplateNameSync(templateId: Int): String?
 
-    @Delete
-    suspend fun deleteTemplate(template: WorkoutTemplateEntity)
+    @Transaction
+    @Query("""
+        SELECT e.* FROM exercises e
+        INNER JOIN workout_exercise_cross_ref xr ON e.id = xr.exerciseId
+        WHERE xr.workoutTemplateId = :templateId
+        ORDER BY xr.orderIndex ASC
+    """)
+    suspend fun getExercisesForTemplateSync(templateId: Int): List<ExerciseEntity>
+
+    @Query("DELETE FROM workout_templates")
+    suspend fun deleteAllTemplates()
 }
+
+data class TemplateWithExercises(
+    @Embedded val template: WorkoutTemplateEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "id",
+        associateBy = Junction(
+            WorkoutExerciseCrossRef::class,
+            parentColumn = "workoutTemplateId",
+            entityColumn = "exerciseId"
+        )
+    )
+    val exercises: List<ExerciseEntity>
+)

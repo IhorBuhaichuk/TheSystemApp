@@ -40,7 +40,7 @@ android {
 
     sourceSets {
         getByName("main") {
-            // У AGP 9.0+ для додавання папок використовуємо такий синтаксис:
+            // Новий синтаксис для AGP 9.0 з увімкненим builtInKotlin
             kotlin.directories.add("src/main/java")
             kotlin.directories.add("../domain")
         }

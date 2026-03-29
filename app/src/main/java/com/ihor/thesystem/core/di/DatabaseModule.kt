@@ -2,8 +2,6 @@ package com.ihor.thesystem.core.di
 
 import android.content.Context
 import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ihor.thesystem.data.local.room.database.AppDatabase
 import com.ihor.thesystem.data.local.room.database.DatabasePopulator
 import dagger.Module
@@ -23,49 +21,14 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
-        var db: AppDatabase? = null
-
-        val callback = object : RoomDatabase.Callback() {
-            override fun onCreate(sqliteDb: SupportSQLiteDatabase) {
-                super.onCreate(sqliteDb)
-                db?.let { database ->
-                    CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-                        DatabasePopulator.populate(
-                            playerDao            = database.playerDao(),
-                            systemConfigDao      = database.systemConfigDao(),
-                            workoutDao           = database.workoutDao(),
-                            scheduleDao          = database.scheduleDao(),
-                            progressionMatrixDao = database.progressionMatrixDao(),
-                            debuffConfigDao      = database.debuffConfigDao()
-                        )
-                    }
-                }
-            }
-
-            override fun onOpen(sqliteDb: SupportSQLiteDatabase) {
-                super.onOpen(sqliteDb)
-                db?.let { database ->
-                    CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-                        DatabasePopulator.populate(
-                            playerDao            = database.playerDao(),
-                            systemConfigDao      = database.systemConfigDao(),
-                            workoutDao           = database.workoutDao(),
-                            scheduleDao          = database.scheduleDao(),
-                            progressionMatrixDao = database.progressionMatrixDao(),
-                            debuffConfigDao      = database.debuffConfigDao()
-                        )
-                    }
-                }
-            }
-        }
-
+    fun provideDatabase(
+        @ApplicationContext context: Context
+    ): AppDatabase {
         val database = Room.databaseBuilder(
             context,
             AppDatabase::class.java,
             "the_system_db"
         )
-            .addCallback(callback)
             .addMigrations(
                 AppDatabase.MIGRATION_2_3, 
                 AppDatabase.MIGRATION_3_4,
@@ -77,7 +40,15 @@ object DatabaseModule {
             .fallbackToDestructiveMigration()
             .build()
 
-        db = database
+        // ОДИН ВИКЛИК: Заповнюємо базу в фоновому потоці
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try {
+                DatabasePopulator.populate(database)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         return database
     }
 

@@ -12,6 +12,7 @@ import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import com.ihor.thesystem.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,9 +44,13 @@ class StatusViewModel @Inject constructor(
     private val systemConfigRepo:      SystemConfigRepository
 ) : ViewModel() {
 
+    // Додаємо невелику затримку або фільтрацію, щоб дати базі прокинутись
     val uiState: StateFlow<UiState<StatusUiData>> = getStatusData()
         .map<StatusUiData, UiState<StatusUiData>> { UiState.Content(it) }
-        .catch { emit(UiState.Error(it.message ?: "Помилка системи")) }
+        .catch { 
+            it.printStackTrace()
+            emit(UiState.Error("Завантаження системи...")) 
+        }
         .stateIn(
             scope        = viewModelScope,
             started      = SharingStarted.WhileSubscribed(5_000),
@@ -66,6 +71,8 @@ class StatusViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            // ПЕРЕВІРКА: Чекаємо трохи, поки DatabasePopulator завершить роботу
+            delay(500)
             generateDailyQuests()
         }
 
@@ -75,21 +82,11 @@ class StatusViewModel @Inject constructor(
             playerRepo.getPlayer()
                 .filterNotNull()
                 .collect { player ->
-                    val prev = prevClass
-                    if (prev != null && prev != player.playerClass) {
-                        _events.emit(
-                            StatusOneOffEvent.ShowLevelUp(
-                                newClass = player.playerClass,
-                                newMonth = player.currentMonth
-                            )
-                        )
+                    if (prevClass != null && prevClass != player.playerClass) {
+                        _events.emit(StatusOneOffEvent.ShowLevelUp(player.playerClass, player.currentMonth))
                     }
-                    val wasPenalty = prevPenalty
-                    if (wasPenalty == false && player.isPenaltyActive) {
+                    if (prevPenalty == false && player.isPenaltyActive) {
                         _events.emit(StatusOneOffEvent.ShowPenaltyActivated)
-                    }
-                    if (wasPenalty == true && !player.isPenaltyActive) {
-                        _events.emit(StatusOneOffEvent.ShowPenaltyDeactivated)
                     }
                     prevClass   = player.playerClass
                     prevPenalty = player.isPenaltyActive
@@ -97,7 +94,6 @@ class StatusViewModel @Inject constructor(
         }
     }
 
-    // ── Dialog triggers ───────────────────────────────────────────────
     fun onNameTap()         { _dialogState.value = StatusDialogState.EditName }
     fun onWeightTap()       { _dialogState.value = StatusDialogState.LogWeight }
     fun onHeightTap()       { _dialogState.value = StatusDialogState.EditHeight }
@@ -108,7 +104,6 @@ class StatusViewModel @Inject constructor(
     }
     fun onDismissDialog()   { _dialogState.value = StatusDialogState.None }
 
-    // ── Actions ───────────────────────────────────────────────────────
     fun onNameConfirmed(newName: String) {
         viewModelScope.launch {
             val player = playerRepo.getPlayer().firstOrNull() ?: return@launch
