@@ -41,8 +41,10 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>) {
-        val timestamp = System.currentTimeMillis()
-        
+        saveExerciseSetsWithDate(exerciseId, sets, System.currentTimeMillis())
+    }
+
+    override suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<WorkoutSetInput>, timestamp: Long) {
         val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
         if (validSets.isEmpty()) return
 
@@ -97,7 +99,7 @@ private fun ProgressionMatrixEntity.toDomain(
         ((currentWeight - startWeight) / range).coerceIn(0f, 1f) else 0f
 
     return ProgressionMatrixEntry(
-        id                = this.exerciseId, // Fixed: ProgressionMatrixEntity PrimaryKey is now exerciseId
+        id                = this.exerciseId,
         exerciseId        = this.exerciseId,
         exerciseName      = exerciseName,
         startWeight       = startWeight,

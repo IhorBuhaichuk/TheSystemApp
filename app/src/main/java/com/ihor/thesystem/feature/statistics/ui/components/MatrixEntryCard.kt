@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -34,8 +35,9 @@ fun MatrixEntryCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .alpha(if (entry.isActive) 1f else 0.4f)
             .sciPanel(accentColor.copy(0.35f), PanelSurface, 8.dp)
-            .clickable { onCardClick() }
+            .clickable(enabled = entry.isActive) { onCardClick() }
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {

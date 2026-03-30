@@ -21,7 +21,9 @@ data class MatrixEntryUiModel(
     val currentWeight: Float,
     val targetWeightNote: String?,
     val weeklyStep: Float,
-    val progressPercent: Float
+    val progressPercent: Float,
+    val isActive: Boolean = true,
+    val orderIndex: Int = 999
 ) {
     val displayTarget: String
         get() = if (targetWeight < 0f) targetWeightNote ?: "—"

@@ -6,6 +6,7 @@ import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
+import com.ihor.thesystem.domain.repository.ViewingDateRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,11 +50,12 @@ class CalendarViewModel @Inject constructor(
     private val scheduleRepo: ScheduleRepository,
     private val analyticsRepo: WorkoutAnalyticsRepository,
     private val workoutDao: WorkoutDao,
-    private val calculateCycleDay: CalculateCycleDayForDateUseCase
+    private val calculateCycleDay: CalculateCycleDayForDateUseCase,
+    private val viewingDateRepo: ViewingDateRepository
 ) : ViewModel() {
 
     private val _currentMonth = MutableStateFlow(YearMonth.now())
-    private val _selectedDate = MutableStateFlow<LocalDate?>(null)
+    val _selectedDate = viewingDateRepo.selectedDate
     private val _workoutResults = MutableStateFlow<List<WorkoutResultUiModel>>(emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -65,7 +67,6 @@ class CalendarViewModel @Inject constructor(
     ) { month: YearMonth, config: SystemConfig, selectedDate: LocalDate?, results: List<WorkoutResultUiModel> ->
         val daysInMonth = month.lengthOfMonth()
         
-        // ГЕНЕРАЦІЯ СІТКИ
         val calendarDays = (1..daysInMonth).map { dayNum ->
             val date = month.atDay(dayNum)
             val cycleDay = calculateCycleDay(
@@ -112,8 +113,15 @@ class CalendarViewModel @Inject constructor(
 
     fun onMonthChange(month: YearMonth) { _currentMonth.value = month }
     fun onDateSelected(date: LocalDate?) {
-        _selectedDate.value = date
-        if (date != null) loadWorkoutResults(date)
+        if (date != null) {
+            viewingDateRepo.setDate(date)
+            loadWorkoutResults(date)
+        } else {
+            // If date is null, we can keep the last selected date or reset to today.
+            // Requirement says default is LocalDate.now().
+            // However, the UI might want to dismiss the details panel.
+            // Let's allow null in repo if needed, but for now we just follow the plan.
+        }
     }
 
     private fun loadWorkoutResults(date: LocalDate) {
