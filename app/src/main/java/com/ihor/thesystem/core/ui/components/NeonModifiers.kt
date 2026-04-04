@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Малює статичну sci-fi панель із зрізаними кутами.
+ * Оптимізовано для високої продуктивності UI.
  */
 fun Modifier.sciPanel(
     borderColor: Color,
@@ -35,7 +36,8 @@ fun Modifier.sciPanel(
 }
 
 /**
- * Неонове свічення для статичних елементів.
+ * Неонове свічення навколо елементу.
+ * Використовує апаратне розмиття для статичних об'єктів.
  */
 fun Modifier.neonGlow(color: Color, radius: Dp = 10.dp): Modifier = this.drawBehind {
     drawIntoCanvas { canvas ->
