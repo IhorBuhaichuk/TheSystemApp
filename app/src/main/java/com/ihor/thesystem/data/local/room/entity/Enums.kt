@@ -1,6 +1,6 @@
 package com.ihor.thesystem.data.local.room.entity
 
-enum class QuestType   { DAILY, MAIN }
+enum class QuestType   { DAILY, MAIN, PROMOTION }
 enum class QuestStatus { ACTIVE, COMPLETED, FAILED }
 
 enum class WeightType {

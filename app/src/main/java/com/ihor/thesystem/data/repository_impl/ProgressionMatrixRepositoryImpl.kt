@@ -92,19 +92,34 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     override suspend fun completeCycle(exerciseId: Int) {
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
         val nextCycles = existing.completedCycles + 1
-        val nextRank = when {
-            nextCycles >= 5 -> Rank.S
-            nextCycles == 4 -> Rank.A
-            nextCycles == 3 -> Rank.B
-            nextCycles == 2 -> Rank.C
-            nextCycles == 1 -> Rank.D
-            else -> Rank.E
-        }
+        
+        // Встановлюємо статус очікування екзамену замість миттєвого підвищення рангу
         matrixDao.update(existing.copy(
             completedCycles = nextCycles,
+            isPromotionPending = true
+        ))
+    }
+
+    override suspend fun promoteRank(exerciseId: Int) {
+        val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
+        val nextRank = when (existing.currentRank) {
+            Rank.E -> Rank.D
+            Rank.D -> Rank.C
+            Rank.C -> Rank.B
+            Rank.B -> Rank.A
+            Rank.A -> Rank.S
+            Rank.S -> Rank.S
+        }
+        matrixDao.update(existing.copy(
+            isPromotionPending = false,
             currentRank = nextRank
         ))
         recalculateGlobalRank()
+    }
+
+    override suspend fun setPromotionPending(exerciseId: Int, pending: Boolean) {
+        val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
+        matrixDao.update(existing.copy(isPromotionPending = pending))
     }
 
     override suspend fun recalculateGlobalRank() {
@@ -141,6 +156,7 @@ private fun ProgressionMatrixEntity.toDomain(
         weeklyStep        = weeklyStep,
         progressPercent   = progress,
         currentRank       = currentRank,
-        completedCycles   = completedCycles
+        completedCycles   = completedCycles,
+        isPromotionPending = isPromotionPending
     )
 }

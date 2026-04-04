@@ -13,5 +13,6 @@ data class ProgressionMatrixEntity(
     val currentWeight: Float,
     val targetWeightNote: String? = null,
     val currentRank: Rank = Rank.E,
-    val completedCycles: Int = 0
+    val completedCycles: Int = 0,
+    val isPromotionPending: Boolean = false
 )

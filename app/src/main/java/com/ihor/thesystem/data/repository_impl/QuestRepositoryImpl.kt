@@ -19,6 +19,9 @@ class QuestRepositoryImpl @Inject constructor(
     override fun getActiveMainQuest(): Flow<Quest?> =
         questDao.getActiveQuestByType(EntityQuestType.MAIN).map { it?.toDomain() }
 
+    override fun getActivePromotionQuest(): Flow<Quest?> =
+        questDao.getActiveQuestByType(EntityQuestType.PROMOTION).map { it?.toDomain() }
+
     override fun getActiveQuests(): Flow<List<Quest>> =
         questDao.getActiveQuestsWithTasks().map { list -> list.map { it.toDomain() } }
 
@@ -69,6 +72,20 @@ class QuestRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun createPromotionQuest(exerciseId: Int, title: String, description: String) {
+        val questId = questDao.insertQuest(
+            QuestEntity(title = title, type = EntityQuestType.PROMOTION, scheduleId = null)
+        ).toInt()
+        questDao.insertQuestTask(
+            QuestTaskEntity(
+                questId = questId,
+                name = description,
+                exerciseId = exerciseId,
+                isCompleted = false
+            )
+        )
+    }
+
     override suspend fun addTaskToQuest(questId: Int, taskName: String) {
         questDao.insertQuestTask(QuestTaskEntity(questId = questId, name = taskName))
     }
@@ -88,11 +105,9 @@ class QuestRepositoryImpl @Inject constructor(
         questDao.getQuestsByDate(dateMillis).map { list -> list.map { it.toDomain() } }
 }
 
-// ── Type aliases to avoid naming clash ────────────────────────────────────────
 private typealias EntityQuestType   = com.ihor.thesystem.data.local.room.entity.QuestType
 private typealias EntityQuestStatus = com.ihor.thesystem.data.local.room.entity.QuestStatus
 
-// ── Mappers ───────────────────────────────────────────────────────────────────
 private fun QuestWithTasks.toDomain() = Quest(
     id     = quest.id,
     title  = quest.title,
@@ -116,6 +131,7 @@ private fun QuestWithTasks.toDomain() = Quest(
 private fun EntityQuestType.toDomain() = when (this) {
     EntityQuestType.DAILY -> DomainQuestType.DAILY
     EntityQuestType.MAIN  -> DomainQuestType.MAIN
+    EntityQuestType.PROMOTION -> DomainQuestType.PROMOTION
 }
 
 private fun EntityQuestStatus.toDomain() = when (this) {

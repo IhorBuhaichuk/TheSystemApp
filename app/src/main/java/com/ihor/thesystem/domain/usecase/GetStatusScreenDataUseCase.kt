@@ -23,9 +23,10 @@ class GetStatusScreenDataUseCase @Inject constructor(
             combine(
                 questRepo.getActiveDailyQuest(),
                 questRepo.getActiveMainQuest(),
+                questRepo.getActivePromotionQuest(),
                 debuffRepo.getActiveDebuffs(),
                 playerRepo.getLatestWeight()
-            ) { daily, main, debuffs, weight ->
+            ) { daily, main, promotion, debuffs, weight ->
                 StatusUiData(
                     playerName             = player.name,
                     playerClass            = player.playerClass,
@@ -38,7 +39,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     monthWorkoutsTotal     = 13,
                     activeDebuffs          = debuffs.map { it.toUiModel() }.toImmutableList(),
                     dailyQuest             = daily?.toUiModel(),
-                    mainQuest              = main?.toUiModel(),
+                    mainQuest              = promotion?.toUiModel() ?: main?.toUiModel(),
                     globalRank             = player.globalRank
                 )
             }
@@ -58,6 +59,8 @@ private fun Quest.toUiModel() = QuestUiModel(
         DomainQuestType.MAIN  ->
             if (status == DomainQuestStatus.COMPLETED) "[ ВИКОНАНО ✓ ]"
             else "[ НАГОРОДА: +1 ТИЖДЕНЬ ]"
+        DomainQuestType.PROMOTION ->
+            "[ ПІДТВЕРДЖЕННЯ РАНГУ ]"
     },
     tasks       = tasks.map { TaskUiModel(it.id, it.name, it.isCompleted) }.toImmutableList(),
     isCompleted = status == DomainQuestStatus.COMPLETED

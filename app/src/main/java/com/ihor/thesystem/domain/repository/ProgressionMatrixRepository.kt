@@ -17,6 +17,8 @@ interface ProgressionMatrixRepository {
     
     suspend fun completeCycle(exerciseId: Int)
     suspend fun recalculateGlobalRank()
+    suspend fun setPromotionPending(exerciseId: Int, pending: Boolean)
+    suspend fun promoteRank(exerciseId: Int)
 }
 
 data class ProgressionMatrixEntry(
@@ -30,5 +32,6 @@ data class ProgressionMatrixEntry(
     val weeklyStep: Float,
     val progressPercent: Float,
     val currentRank: Rank = Rank.E,
-    val completedCycles: Int = 0
+    val completedCycles: Int = 0,
+    val isPromotionPending: Boolean = false
 )

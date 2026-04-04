@@ -15,12 +15,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.domain.model.DomainQuestType
 
 // --- Імпорти з пакета statistics ---
 import com.ihor.thesystem.feature.statistics.ui.components.EmptyQuestCard
 import com.ihor.thesystem.feature.statistics.ui.components.PlayerLeftPanel
 import com.ihor.thesystem.feature.statistics.ui.components.QuestCard
-import com.ihor.thesystem.feature.statistics.ui.components.QuestCardType
 import com.ihor.thesystem.feature.statistics.ui.components.StatRightPanel
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.*
 
@@ -119,20 +119,20 @@ fun StatusScreen(
                     data.dailyQuest?.let { quest ->
                         QuestCard(
                             quest       = quest,
-                            type        = QuestCardType.DAILY,
+                            type        = DomainQuestType.DAILY,
                             onClick     = { viewModel.onQuestTap(quest.id, isDaily = true) },
                             onLongClick = { /* TODO: редактор квесту */ }
                         )
-                    } ?: EmptyQuestCard(QuestCardType.DAILY)
+                    } ?: EmptyQuestCard(DomainQuestType.DAILY)
 
                     data.mainQuest?.let { quest ->
                         QuestCard(
                             quest       = quest,
-                            type        = QuestCardType.MAIN,
+                            type        = DomainQuestType.MAIN,
                             onClick     = { viewModel.onQuestTap(quest.id, isDaily = false) },
                             onLongClick = { /* TODO: редактор квесту */ }
                         )
-                    } ?: EmptyQuestCard(QuestCardType.MAIN)
+                    } ?: EmptyQuestCard(DomainQuestType.MAIN)
 
                     Spacer(Modifier.height(6.dp))
                 }

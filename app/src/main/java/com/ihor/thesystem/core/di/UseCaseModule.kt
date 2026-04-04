@@ -32,8 +32,9 @@ object UseCaseModule {
         questRepo:    QuestRepository,
         scheduleRepo: ScheduleRepository,
         playerRepo:   PlayerRepository,
+        matrixRepo:   ProgressionMatrixRepository,
         calculateRecommendation: CalculateRecommendedSetUseCase
-    ) = GenerateDailyQuestsUseCase(questRepo, scheduleRepo, playerRepo, calculateRecommendation)
+    ) = GenerateDailyQuestsUseCase(questRepo, scheduleRepo, playerRepo, matrixRepo, calculateRecommendation)
 
     @Provides @Singleton
     fun provideLevelUpUseCase(
