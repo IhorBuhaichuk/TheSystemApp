@@ -9,17 +9,17 @@ import kotlinx.coroutines.flow.Flow
 interface QuestDao {
     @Transaction
     @Query("SELECT * FROM quest WHERE status = :status ORDER BY date DESC")
-    fun getActiveQuestsWithTasks(status: QuestStatus = QuestStatus.ACTIVE): Flow<List<QuestWithTasks>>
+    fun getActiveQuestsWithTasks(status: QuestStatus): Flow<List<QuestWithTasks>>
 
     @Transaction
     @Query("SELECT * FROM quest WHERE type = :type AND status = :status LIMIT 1")
     fun getActiveQuestByType(
         type: QuestType, 
-        status: QuestStatus = QuestStatus.ACTIVE
+        status: QuestStatus
     ): Flow<QuestWithTasks?>
 
     @Query("SELECT COUNT(*) FROM quest WHERE status = :status")
-    suspend fun getActiveQuestCount(status: QuestStatus = QuestStatus.ACTIVE): Int
+    suspend fun getActiveQuestCount(status: QuestStatus): Int
 
     @Query("SELECT * FROM quest_task WHERE questId = :questId")
     suspend fun getTasksForQuestSync(questId: Int): List<QuestTaskEntity>
@@ -42,7 +42,7 @@ interface QuestDao {
     @Query("SELECT * FROM quest WHERE type = :type ORDER BY date DESC LIMIT :limit")
     suspend fun getLastQuestsByType(
         type: QuestType,
-        limit: Int = 2
+        limit: Int
     ): List<QuestEntity>
 
     @Query("DELETE FROM quest_task WHERE id = :taskId")
@@ -50,8 +50,8 @@ interface QuestDao {
 
     @Query("UPDATE quest SET status = :targetStatus WHERE status = :sourceStatus")
     suspend fun archiveActiveQuests(
-        sourceStatus: QuestStatus = QuestStatus.ACTIVE,
-        targetStatus: QuestStatus = QuestStatus.FAILED
+        sourceStatus: QuestStatus,
+        targetStatus: QuestStatus
     )
 
     @Transaction
@@ -69,22 +69,22 @@ interface QuestDao {
     """)
     fun getDailyQuestsForDate(
         dateMillis: Long,
-        typeDaily: QuestType = QuestType.DAILY,
-        typeMain: QuestType = QuestType.MAIN
+        typeDaily: QuestType,
+        typeMain: QuestType
     ): Flow<List<QuestWithTasks>>
 
     @Transaction
     @Query("SELECT * FROM quest WHERE type = :questType AND status != :completedStatus")
     fun getPendingPromotionQuests(
-        questType: QuestType = QuestType.PROMOTION,
-        completedStatus: QuestStatus = QuestStatus.COMPLETED
+        questType: QuestType,
+        completedStatus: QuestStatus
     ): Flow<List<QuestWithTasks>>
 
     @Query("SELECT * FROM quest WHERE type = :type AND status = :status AND scheduleId = :exerciseId LIMIT 1")
     suspend fun getActivePromotionQuestByExercise(
         exerciseId: Int,
-        type: QuestType = QuestType.PROMOTION,
-        status: QuestStatus = QuestStatus.ACTIVE
+        type: QuestType,
+        status: QuestStatus
     ): QuestEntity?
 
     @Transaction

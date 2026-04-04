@@ -9,9 +9,6 @@ object DatabasePopulator {
         val workoutDao = db.workoutDao()
         if (workoutDao.getAllExercisesSync().isNotEmpty()) return
 
-        // Виконуємо вставки окремими кроками без однієї гігантської транзакції,
-        // щоб не блокувати базу надовго при старті.
-        
         // 1. Гравець та конфігурація
         db.playerDao().insertOrUpdate(PlayerEntity())
         db.systemConfigDao().insertOrUpdate(SystemConfigEntity())
@@ -38,7 +35,20 @@ object DatabasePopulator {
         )
         exercises.forEach { workoutDao.insertExercise(it) }
 
-        // 3. Матриця прогресії (12 основних вправ)
+        // 3. Шаблони тренувань (Templates)
+        // ТРЕНУВАННЯ А (id = 2)
+        workoutDao.insertTemplate(WorkoutTemplateEntity(id = 2, name = "Тренування А"))
+        listOf(6, 8, 13, 9, 10, 15, 17).forEachIndexed { index, exId ->
+            workoutDao.insertCrossRef(WorkoutExerciseCrossRef(2, exId, index))
+        }
+
+        // ТРЕНУВАННЯ Б (id = 3)
+        workoutDao.insertTemplate(WorkoutTemplateEntity(id = 3, name = "Тренування Б"))
+        listOf(12, 5, 11, 7, 14, 16, 17).forEachIndexed { index, exId ->
+            workoutDao.insertCrossRef(WorkoutExerciseCrossRef(3, exId, index))
+        }
+
+        // 4. Матриця прогресії
         val matrixData = listOf(
             ProgressionMatrixEntity(8,  60f, 85f,  69f),
             ProgressionMatrixEntity(6,  55f, 120f, 62.5f),
@@ -55,7 +65,7 @@ object DatabasePopulator {
         )
         matrixData.forEach { db.progressionMatrixDao().insert(it) }
 
-        // 4. Розклад та дебафи
+        // 5. Розклад та дебафи
         db.debuffConfigDao().insert(DebuffConfigEntity(1, "СЛАБКІСТЬ", "Дебаф: зниження продуктивності", 0))
         db.debuffConfigDao().insert(DebuffConfigEntity(2, "ЦНС", "Дебаф: перевтома системи", 0))
         

@@ -14,19 +14,19 @@ class QuestRepositoryImpl @Inject constructor(
 ) : QuestRepository {
 
     override fun getActiveDailyQuest(): Flow<Quest?> =
-        questDao.getActiveQuestByType(EntityQuestType.DAILY).map { it?.toDomain() }
+        questDao.getActiveQuestByType(EntityQuestType.DAILY, EntityQuestStatus.ACTIVE).map { it?.toDomain() }
 
     override fun getActiveMainQuest(): Flow<Quest?> =
-        questDao.getActiveQuestByType(EntityQuestType.MAIN).map { it?.toDomain() }
+        questDao.getActiveQuestByType(EntityQuestType.MAIN, EntityQuestStatus.ACTIVE).map { it?.toDomain() }
 
     override fun getActivePromotionQuest(): Flow<Quest?> =
-        questDao.getActiveQuestByType(EntityQuestType.PROMOTION).map { it?.toDomain() }
+        questDao.getActiveQuestByType(EntityQuestType.PROMOTION, EntityQuestStatus.ACTIVE).map { it?.toDomain() }
 
     override fun getActiveQuests(): Flow<List<Quest>> =
-        questDao.getActiveQuestsWithTasks().map { list -> list.map { it.toDomain() } }
+        questDao.getActiveQuestsWithTasks(EntityQuestStatus.ACTIVE).map { list -> list.map { it.toDomain() } }
 
     override suspend fun hasActiveQuests(): Boolean =
-        questDao.getActiveQuestCount() > 0
+        questDao.getActiveQuestCount(EntityQuestStatus.ACTIVE) > 0
 
     override suspend fun toggleTaskCompletion(taskId: Int, questId: Int, isCompleted: Boolean) {
         questDao.setTaskCompletion(taskId, isCompleted)
@@ -95,7 +95,10 @@ class QuestRepositoryImpl @Inject constructor(
     }
 
     override suspend fun archiveActiveQuests() {
-        questDao.archiveActiveQuests()
+        questDao.archiveActiveQuests(
+            sourceStatus = EntityQuestStatus.ACTIVE,
+            targetStatus = EntityQuestStatus.FAILED
+        )
     }
 
     override suspend fun getLastTwoMainQuestsStatus(): List<DomainQuestStatus> =
@@ -108,14 +111,13 @@ class QuestRepositoryImpl @Inject constructor(
         questDao.getQuestWithTasksById(questId)?.toDomain()
 
     override fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>> =
-        questDao.getDailyQuestsForDate(dateMillis).map { list -> list.map { it.toDomain() } }
+        questDao.getDailyQuestsForDate(dateMillis, EntityQuestType.DAILY, EntityQuestType.MAIN).map { list -> list.map { it.toDomain() } }
 
     override fun getPendingPromotionQuests(): Flow<List<Quest>> =
-        questDao.getPendingPromotionQuests().map { list -> list.map { it.toDomain() } }
+        questDao.getPendingPromotionQuests(EntityQuestType.PROMOTION, EntityQuestStatus.COMPLETED).map { list -> list.map { it.toDomain() } }
 
-    // Required by UI if it still calls getActivePromotionQuests
     override fun getActivePromotionQuests(): Flow<List<Quest>> =
-        questDao.getActiveQuestsWithTasks().map { list -> 
+        questDao.getActiveQuestsWithTasks(EntityQuestStatus.ACTIVE).map { list ->
             list.filter { it.quest.type == EntityQuestType.PROMOTION }.map { it.toDomain() } 
         }
 }
