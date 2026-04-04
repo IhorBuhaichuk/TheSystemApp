@@ -1,6 +1,7 @@
 package com.ihor.thesystem.domain.repository
 
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
+import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistoryWithId
 import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutDirective
@@ -16,34 +17,15 @@ data class DailyTonnageStats(
 )
 
 interface WorkoutAnalyticsRepository {
-    /**
-     * Зберігає загальні дані сесії та список виконаних підходів в єдиній транзакції.
-     * Повертає ID створеної сесії.
-     */
     suspend fun saveSessionWithSets(session: WorkoutSession, sets: List<ExerciseSet>): Long
-
-    /**
-     * Зберігає або оновлює (замінює) директиви для наступного тренування.
-     */
     suspend fun saveDirectives(directives: List<WorkoutDirective>)
-
-    /**
-     * Отримує згруповану статистику тоннажу за вказаний період (по днях).
-     */
     fun getDailyTonnageStatsForMonth(monthStart: Long, monthEnd: Long): Flow<List<DailyTonnageStats>>
-
-    /**
-     * Отримує логі тренувань для конкретної дати.
-     */
     fun getSessionsByDate(dateMillis: Long): Flow<List<SessionWithSets>>
-
-    /**
-     * Отримує всі логі тренувань.
-     */
     fun getAllLogs(): Flow<List<SessionWithSets>>
-
-    /**
-     * Отримує історію ваги для графіка вправи.
-     */
+    
+    // Отримання історії для однієї вправи
     fun getWeightHistory(exerciseId: Int): Flow<List<ExerciseWeightHistory>>
+    
+    // ОПТИМІЗАЦІЯ: Отримання всієї історії за один запит
+    fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>>
 }

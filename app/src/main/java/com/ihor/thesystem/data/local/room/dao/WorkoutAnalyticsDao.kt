@@ -46,8 +46,16 @@ abstract class WorkoutAnalyticsDao {
     abstract fun getSessionLogsByDate(dateMillis: Long): Flow<List<SessionWithSets>>
 
     /**
-     * Отримання історії максимальної ваги для конкретної вправи з лімітом для масштабованості
+     * Отримання історії ваги для всіх вправ одним запитом
      */
+    @Query("""
+        SELECT e.weight, s.timestamp, e.exerciseId
+        FROM exercise_set_logs e
+        JOIN workout_session_logs s ON e.sessionId = s.sessionId
+        ORDER BY s.timestamp ASC
+    """)
+    abstract fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>>
+
     @Query("""
         SELECT MAX(weight) as weight, s.timestamp
         FROM exercise_set_logs e
@@ -59,9 +67,6 @@ abstract class WorkoutAnalyticsDao {
     """)
     abstract fun getWeightHistoryForExercise(exerciseId: Int): Flow<List<ExerciseWeightHistory>>
 
-    /**
-     * Статистика тоннажу по днях для графіка з обмеженням періоду
-     */
     @Query("""
         SELECT 
             MIN(timestamp) AS dateUnixTimestamp, 
@@ -74,21 +79,21 @@ abstract class WorkoutAnalyticsDao {
     """)
     abstract fun getDailyTonnageStats(start: Long, end: Long): Flow<List<DailyTonnageStats>>
 
-    /**
-     * Розрахунок пікового тоннажу за весь час
-     */
     @Query("SELECT MAX(totalTonnage) FROM workout_session_logs")
     abstract suspend fun getPeakTonnage(): Double?
 
-    /**
-     * Отримання останніх директив для вправи
-     */
     @Query("SELECT * FROM workout_directives WHERE exerciseId = :exerciseId")
     abstract suspend fun getDirectiveForExercise(exerciseId: Int): WorkoutDirectiveEntity?
     
     @Query("DELETE FROM workout_directives")
     abstract suspend fun clearDirectives()
 }
+
+data class ExerciseWeightHistoryWithId(
+    val weight: Double,
+    val timestamp: Long,
+    val exerciseId: Int
+)
 
 data class ExerciseWeightHistory(
     val weight: Double,

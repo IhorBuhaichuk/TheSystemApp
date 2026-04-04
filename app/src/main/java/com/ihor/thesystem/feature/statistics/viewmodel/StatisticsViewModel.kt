@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
+import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistoryWithId
+import com.ihor.thesystem.data.local.room.entity.ReferenceMatrixEntity
+import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -30,63 +32,63 @@ class StatisticsViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<UiState<StatisticsUiData>> = combine(
         playerRepo.getPlayer().filterNotNull(),
+        matrixRepo.getAllEntries(),
+        matrixRepo.getAllReferences(),
+        analyticsRepo.getAllWeightHistories(),
         viewingDateRepo.selectedDate,
-        configRepo.getConfigFlow().filterNotNull(),
-        matrixRepo.getAllReferences()
-    ) { player, selectedDate, config, references ->
-        Quad(player, selectedDate, config, references)
-    }.flatMapLatest { (player, selectedDate, config, references) ->
-        matrixRepo.getAllEntries().flatMapLatest { matrix ->
-            val historiesFlows = matrix.map { entry ->
-                analyticsRepo.getWeightHistory(entry.exerciseId).map { history ->
-                    entry.exerciseId to history
-                }
-            }
+        configRepo.getConfigFlow().filterNotNull()
+    ) { args: Array<Any?> ->
+        val player = args[0] as Player
+        val matrix = args[1] as List<ProgressionMatrixEntry>
+        val references = args[2] as List<ReferenceMatrixEntity>
+        val allHistories = args[3] as List<ExerciseWeightHistoryWithId>
+        val selectedDate = args[4] as LocalDate
+        val config = args[5] as SystemConfig
+
+        val cycleDay = calculateCycleDay(
+            targetDate = selectedDate,
+            anchorEpochDay = config.cycleAnchorDateTimestamp,
+            anchorCycleDay = config.cycleAnchorDay
+        )
+
+        val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
+        val activeExerciseIds = schedule?.exercises?.map { it.id } ?: emptyList()
+
+        // Групуємо історії по exerciseId в пам'яті
+        val historiesMap = allHistories.groupBy { it.exerciseId }
+
+        val updatedEntries = matrix.map { entry ->
+            val ref = references.find { it.exerciseName.equals(entry.exerciseName, ignoreCase = true) }
+            val isExerciseActive = activeExerciseIds.contains(entry.exerciseId)
+            val orderIndex = if (isExerciseActive) activeExerciseIds.indexOf(entry.exerciseId) else 999
+
+            val m0 = ref?.milestones?.get("M0")?.toFloat() ?: entry.startWeight
+            val m12 = ref?.milestones?.get("M12")?.toFloat() ?: entry.targetWeight
             
-            if (historiesFlows.isEmpty()) {
-                flowOf(emptyMap<Int, List<ExerciseWeightHistory>>())
-            } else {
-                combine(historiesFlows) { it.toMap() }
-            }.map { historiesMap ->
-                val cycleDay = calculateCycleDay(
-                    targetDate = selectedDate,
-                    anchorEpochDay = config.cycleAnchorDateTimestamp,
-                    anchorCycleDay = config.cycleAnchorDay
-                )
+            // Беремо історію з мапи
+            val history = historiesMap[entry.exerciseId]?.map { 
+                ExerciseWeightHistory(it.weight, it.timestamp) 
+            } ?: emptyList()
 
-                val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
-                val activeExerciseIds = schedule?.exercises?.map { it.id } ?: emptyList()
+            entry.toUiModel(isExerciseActive, orderIndex, history).copy(
+                startWeight = m0,
+                targetWeight = m12
+            )
+        }.sortedWith(compareBy({ !it.isActive }, { it.orderIndex }, { it.exerciseName }))
 
-                val updatedEntries = matrix.map { entry ->
-                    val ref = references.find { it.exerciseName.equals(entry.exerciseName, ignoreCase = true) }
-                    val isActive = activeExerciseIds.contains(entry.exerciseId)
-                    val orderIndex = if (isActive) activeExerciseIds.indexOf(entry.exerciseId) else 999
-
-                    val m0 = ref?.milestones?.get("M0")?.toFloat() ?: entry.startWeight
-                    val m12 = ref?.milestones?.get("M12")?.toFloat() ?: entry.targetWeight
-                    
-                    entry.toUiModel(isActive, orderIndex, historiesMap[entry.exerciseId] ?: emptyList()).copy(
-                        startWeight = m0,
-                        targetWeight = m12
-                    )
-                }.sortedWith(compareBy({ !it.isActive }, { it.orderIndex }, { it.exerciseName }))
-
-                StatisticsUiData(
-                    playerName      = player.name,
-                    playerClass     = player.playerClass,
-                    currentMonth    = player.currentMonth,
-                    currentWeek     = player.currentWeek,
-                    currentCycleDay = cycleDay,
-                    isPenaltyActive = player.isPenaltyActive,
-                    globalRank      = player.globalRank,
-                    matrixEntries   = updatedEntries.toImmutableList(),
-                    tonnageStats    = emptyList<DailyTonnageStats>().toImmutableList() // Placeholder for actual tonnage stats
-                )
-            }
-        }
+        StatisticsUiData(
+            playerName      = player.name,
+            playerClass     = player.playerClass,
+            currentMonth    = player.currentMonth,
+            currentWeek     = player.currentWeek,
+            currentCycleDay = cycleDay,
+            isPenaltyActive = player.isPenaltyActive,
+            globalRank      = player.globalRank,
+            matrixEntries   = updatedEntries.toImmutableList()
+        )
     }
     .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
-    .catch { emit(UiState.Error(it.message ?: "Помилка завантаження статистики")) }
+    .catch { emit(UiState.Error(it.message ?: "Помилка")) }
     .stateIn(
         scope        = viewModelScope,
         started      = SharingStarted.WhileSubscribed(5_000),
@@ -97,30 +99,26 @@ class StatisticsViewModel @Inject constructor(
     val dialogState: StateFlow<StatisticsDialogState> = _dialogState.asStateFlow()
 
     fun onOpenSetup(entry: MatrixEntryUiModel) {
-        _dialogState.value = StatisticsDialogState.SetupMatrix(
-            entry = entry,
-            startWeight = entry.startWeight.toString(),
-            targetWeight = entry.targetWeight.toString()
-        )
+        _dialogState.value = StatisticsDialogState.SetupMatrix(entry, entry.startWeight.toString(), entry.targetWeight.toString())
     }
 
     fun onConfirmSetup(exerciseId: Int, start: String, target: String) {
         viewModelScope.launch {
-            matrixRepo.updateMatrixGoals(
-                exerciseId = exerciseId,
-                startWeight = start.toFloatOrNull() ?: 0f,
-                targetWeight = target.toFloatOrNull() ?: 0f
-            )
+            matrixRepo.updateMatrixGoals(exerciseId, start.toFloatOrNull() ?: 0f, target.toFloatOrNull() ?: 0f)
+            recalculateGlobalRank()
             onDismissDialog()
+        }
+    }
+
+    private fun recalculateGlobalRank() {
+        viewModelScope.launch {
+            matrixRepo.recalculateGlobalRank()
         }
     }
 
     fun onOpenLogSets(entry: MatrixEntryUiModel) {
         if (!entry.isActive) return
-        _dialogState.value = StatisticsDialogState.LogWorkoutSets(
-            entry = entry,
-            sets = List(3) { WorkoutSetInput() }.toImmutableList()
-        )
+        _dialogState.value = StatisticsDialogState.LogWorkoutSets(entry)
     }
 
     fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>) {
@@ -156,9 +154,7 @@ class StatisticsViewModel @Inject constructor(
         }
     }
 
-    fun onDismissDialog() {
-        _dialogState.value = StatisticsDialogState.None
-    }
+    fun onDismissDialog() { _dialogState.value = StatisticsDialogState.None }
 
     private fun ProgressionMatrixEntry.toUiModel(isActive: Boolean, orderIndex: Int, history: List<ExerciseWeightHistory>) = MatrixEntryUiModel(
         exerciseId       = exerciseId,
@@ -176,5 +172,3 @@ class StatisticsViewModel @Inject constructor(
         weightHistory    = history.toImmutableList()
     )
 }
-
-data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)

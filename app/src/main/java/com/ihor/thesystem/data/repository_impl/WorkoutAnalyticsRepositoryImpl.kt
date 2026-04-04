@@ -1,6 +1,7 @@
 package com.ihor.thesystem.data.repository_impl
 
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
+import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistoryWithId
 import com.ihor.thesystem.data.local.room.dao.WorkoutAnalyticsDao
 import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.data.local.room.relations.SessionWithSets
@@ -49,38 +50,37 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         return dao.getWeightHistoryForExercise(exerciseId)
     }
 
+    // ОПТИМІЗАЦІЯ: Отримання всього списку історій за раз
+    override fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>> {
+        return dao.getAllWeightHistories()
+    }
+
     // =========================================
-    // MAPPER ФУНКЦІЇ (Entity <-> Domain)
+    // MAPPER ФУНКЦІЇ
     // =========================================
 
-    private fun WorkoutSession.toLogEntity(): WorkoutSessionLogEntity {
-        return WorkoutSessionLogEntity(
-            sessionId = this.sessionId,
-            questId = this.questId,
-            timestamp = this.timestamp,
-            totalTonnage = this.totalTonnage,
-            cycleDay = this.cycleDay,
-            durationMinutes = 0
-        )
-    }
+    private fun WorkoutSession.toLogEntity() = WorkoutSessionLogEntity(
+        sessionId = this.sessionId,
+        questId = this.questId,
+        timestamp = this.timestamp,
+        totalTonnage = this.totalTonnage,
+        cycleDay = this.cycleDay,
+        durationMinutes = 0
+    )
 
-    private fun ExerciseSet.toLogEntity(): ExerciseSetLogEntity {
-        return ExerciseSetLogEntity(
-            setId = this.setId,
-            sessionId = this.sessionId,
-            exerciseId = this.exerciseId.toIntOrNull() ?: 0,
-            weight = this.weight,
-            reps = this.reps,
-            isCompleted = this.isCompleted
-        )
-    }
+    private fun ExerciseSet.toLogEntity() = ExerciseSetLogEntity(
+        setId = this.setId,
+        sessionId = this.sessionId,
+        exerciseId = this.exerciseId.toIntOrNull() ?: 0,
+        weight = this.weight,
+        reps = this.reps,
+        isCompleted = this.isCompleted
+    )
 
-    private fun WorkoutDirective.toEntity(): WorkoutDirectiveEntity {
-        return WorkoutDirectiveEntity(
-            exerciseId = this.exerciseId.toIntOrNull() ?: 0,
-            targetWeight = this.targetWeight,
-            targetSets = this.targetSets,
-            targetReps = this.targetReps
-        )
-    }
+    private fun WorkoutDirective.toEntity() = WorkoutDirectiveEntity(
+        exerciseId = this.exerciseId.toIntOrNull() ?: 0,
+        targetWeight = this.targetWeight,
+        targetSets = this.targetSets,
+        targetReps = this.targetReps
+    )
 }
