@@ -48,13 +48,21 @@ interface QuestDao {
     @Transaction
     @Query("""
         SELECT * FROM quest 
-        WHERE (date(date / 1000, 'unixepoch', 'localtime') = date(:dateMillis / 1000, 'unixepoch', 'localtime') AND (type = 'DAILY' OR type = 'MAIN'))
-           OR (type = 'PROMOTION' AND status = 'ACTIVE')
+        WHERE date(date / 1000, 'unixepoch', 'localtime') = date(:dateMillis / 1000, 'unixepoch', 'localtime')
     """)
     fun getQuestsByDate(dateMillis: Long): Flow<List<QuestWithTasks>>
 
+    @Transaction
+    @Query("""
+        SELECT * FROM quest 
+        WHERE date(date / 1000, 'unixepoch', 'localtime') = date(:dateMillis / 1000, 'unixepoch', 'localtime')
+        AND (type = 'DAILY' OR type = 'MAIN')
+    """)
+    fun getDailyQuestsForDate(dateMillis: Long): Flow<List<QuestWithTasks>>
+
+    @Transaction
     @Query("SELECT * FROM quest WHERE type = 'PROMOTION' AND status = 'ACTIVE'")
-    fun getPendingPromotionQuests(): Flow<List<QuestEntity>>
+    fun getActivePromotionQuests(): Flow<List<QuestWithTasks>>
 
     @Query("SELECT * FROM quest WHERE type = 'PROMOTION' AND status = 'ACTIVE' AND scheduleId = :exerciseId LIMIT 1")
     suspend fun getActivePromotionQuestByExercise(exerciseId: Int): QuestEntity?

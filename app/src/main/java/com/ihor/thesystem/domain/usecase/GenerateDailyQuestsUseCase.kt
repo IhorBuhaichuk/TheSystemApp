@@ -16,45 +16,49 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         val player = playerRepo.getPlayer().firstOrNull() ?: return
         val cycleDay = player.currentCycleDay
         
-        // 1. ПАРАЛЕЛЬНА ГЕНЕРАЦІЯ DAILY ТА MAIN КВЕСТІВ
+        // БЛОК 1: ГЕНЕРАЦІЯ DAILY ТА MAIN
         val activeDaily = questRepo.getActiveDailyQuest().firstOrNull()
         val activeMain = questRepo.getActiveMainQuest().firstOrNull()
-        val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull() ?: return
+        val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
 
-        if (activeDaily == null) {
-            questRepo.createDailyQuest(
-                title = "РУТИНА | ДЕНЬ $cycleDay",
-                tasks = emptyList(), 
-                scheduleId = schedule.id
-            )
-        }
-
-        if (activeMain == null && schedule.workoutTemplateName != null) {
-            val recommendedExercises = schedule.exercises.map { exercise ->
-                val rec = calculateRecommendation(exercise.id, exercise.name)
-                ExerciseRecommendation(
-                    exerciseId = exercise.id,
-                    exerciseName = exercise.name,
-                    weight = rec.weight,
-                    sets = rec.sets,
-                    reps = rec.reps
+        if (schedule != null) {
+            if (activeDaily == null) {
+                questRepo.createDailyQuest(
+                    title = "РУТИНА | ДЕНЬ $cycleDay",
+                    tasks = emptyList(), 
+                    scheduleId = schedule.id
                 )
             }
 
-            questRepo.createMainQuest(
-                title = schedule.workoutTemplateName.uppercase(),
-                exercises = recommendedExercises,
-                scheduleId = schedule.id
-            )
+            if (activeMain == null && schedule.workoutTemplateName != null) {
+                val recommendedExercises = schedule.exercises.map { exercise ->
+                    val rec = calculateRecommendation(exercise.id, exercise.name)
+                    ExerciseRecommendation(
+                        exerciseId = exercise.id,
+                        exerciseName = exercise.name,
+                        weight = rec.weight,
+                        sets = rec.sets,
+                        reps = rec.reps
+                    )
+                }
+
+                questRepo.createMainQuest(
+                    title = schedule.workoutTemplateName.uppercase(),
+                    exercises = recommendedExercises,
+                    scheduleId = schedule.id
+                )
+            }
         }
 
-        // 2. ГЕНЕРАЦІЯ PROMOTION КВЕСТІВ (БЕЗ БЛОКУВАННЯ)
+        // БЛОК 2: ГЕНЕРАЦІЯ PROMOTION (НЕЗАЛЕЖНО)
         val matrixEntries = matrixRepo.getAllEntries().firstOrNull() ?: emptyList()
         val pendingPromotions = matrixEntries.filter { it.isPromotionPending }
         
         pendingPromotions.forEach { pending ->
-            val promotionQuests = questRepo.getActiveQuests().firstOrNull()?.filter { it.type == DomainQuestType.PROMOTION } ?: emptyList()
-            val alreadyExists = promotionQuests.any { q -> q.tasks.any { t -> t.exerciseId == pending.exerciseId } }
+            val allActiveQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
+            val alreadyExists = allActiveQuests.any { q -> 
+                q.type == DomainQuestType.PROMOTION && q.scheduleId == pending.exerciseId 
+            }
             
             if (!alreadyExists) {
                 questRepo.createPromotionQuest(

@@ -20,14 +20,21 @@ class GetStatusScreenDataUseCase @Inject constructor(
     operator fun invoke(): Flow<StatusUiData> =
         playerRepo.getPlayer().flatMapLatest { player ->
             if (player == null) return@flatMapLatest flowOf(StatusUiData())
+            
+            val dailyQuestsFlow = questRepo.getDailyQuestsForDate(System.currentTimeMillis())
+            val promotionQuestsFlow = questRepo.getActivePromotionQuests()
+            
             combine(
-                questRepo.getQuestsByDate(System.currentTimeMillis()),
+                dailyQuestsFlow,
+                promotionQuestsFlow,
                 debuffRepo.getActiveDebuffs(),
                 playerRepo.getLatestWeight()
-            ) { quests, debuffs, weight ->
-                val daily = quests.find { it.type == DomainQuestType.DAILY }
-                val main = quests.find { it.type == DomainQuestType.MAIN }
-                val promotions = quests.filter { it.type == DomainQuestType.PROMOTION }
+            ) { dailyQuests, promotionQuests, debuffs, weight ->
+                val allQuests = dailyQuests + promotionQuests
+                
+                val daily = allQuests.find { it.type == DomainQuestType.DAILY }
+                val main = allQuests.find { it.type == DomainQuestType.MAIN }
+                val promotions = allQuests.filter { it.type == DomainQuestType.PROMOTION }
 
                 StatusUiData(
                     playerName             = player.name,

@@ -21,4 +21,8 @@ interface QuestRepository {
     suspend fun getLastTwoMainQuestsStatus(): List<DomainQuestStatus>
     fun getQuestsByDate(dateMillis: Long): Flow<List<Quest>>
     suspend fun getQuestById(questId: Int): Quest?
+
+    // New methods for the fix
+    fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>>
+    fun getActivePromotionQuests(): Flow<List<Quest>>
 }
