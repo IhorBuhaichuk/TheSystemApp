@@ -99,7 +99,7 @@ class QuestRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getLastTwoMainQuestsStatus(): List<DomainQuestStatus> =
-        questDao.getLastTwoMainQuests().map { it.status.toDomain() }
+        questDao.getLastQuestsByType(type = EntityQuestType.MAIN, limit = 2).map { it.status.toDomain() }
 
     override fun getQuestsByDate(dateMillis: Long): Flow<List<Quest>> =
         questDao.getQuestsByDate(dateMillis).map { list -> list.map { it.toDomain() } }
@@ -110,8 +110,14 @@ class QuestRepositoryImpl @Inject constructor(
     override fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>> =
         questDao.getDailyQuestsForDate(dateMillis).map { list -> list.map { it.toDomain() } }
 
+    override fun getPendingPromotionQuests(): Flow<List<Quest>> =
+        questDao.getPendingPromotionQuests().map { list -> list.map { it.toDomain() } }
+
+    // Required by UI if it still calls getActivePromotionQuests
     override fun getActivePromotionQuests(): Flow<List<Quest>> =
-        questDao.getActivePromotionQuests().map { list -> list.map { it.toDomain() } }
+        questDao.getActiveQuestsWithTasks().map { list -> 
+            list.filter { it.quest.type == EntityQuestType.PROMOTION }.map { it.toDomain() } 
+        }
 }
 
 private typealias EntityQuestType   = com.ihor.thesystem.data.local.room.entity.QuestType

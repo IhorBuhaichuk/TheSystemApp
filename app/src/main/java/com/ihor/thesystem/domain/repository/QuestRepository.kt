@@ -22,7 +22,8 @@ interface QuestRepository {
     fun getQuestsByDate(dateMillis: Long): Flow<List<Quest>>
     suspend fun getQuestById(questId: Int): Quest?
 
-    // New methods for the fix
+    // Fixed methods
     fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>>
+    fun getPendingPromotionQuests(): Flow<List<Quest>>
     fun getActivePromotionQuests(): Flow<List<Quest>>
 }
