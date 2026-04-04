@@ -10,11 +10,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.components.OneRepMaxText
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 
@@ -25,7 +25,6 @@ fun MatrixEntryCard(
     onSetupClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Колір по прогресу
     val accentColor: Color = when {
         entry.progressPercent >= 1f  -> NeonGreen
         entry.progressPercent >= 0.5f -> NeonCyan
@@ -41,20 +40,26 @@ fun MatrixEntryCard(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // ── Top row: name + setup button ──────────────────────────────
         Row(
             modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment     = Alignment.CenterVertically
         ) {
-            Text(
-                text       = entry.exerciseName.uppercase(),
-                color      = TextPrimary,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize   = 13.sp,
-                modifier   = Modifier.weight(1f)
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text       = entry.exerciseName.uppercase(),
+                    color      = TextPrimary,
+                    fontFamily = RajdhaniFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize   = 13.sp
+                )
+                // Розрахунок 1RM на основі поточної ваги (приймаємо 8-10 повторень як стандарт для розрахунку з матриці)
+                OneRepMaxText(
+                    weight = entry.currentWeight.toDouble(), 
+                    reps = 8,
+                    label = "EST. 1RM: "
+                )
+            }
             IconButton(
                 onClick = onSetupClick,
                 modifier = Modifier.size(28.dp)
@@ -68,13 +73,11 @@ fun MatrixEntryCard(
             }
         }
 
-        // ── Progress bar ──────────────────────────────────────────────
         MatrixProgressBar(
             progress    = entry.progressPercent,
             accentColor = accentColor
         )
 
-        // ── Weight row ────────────────────────────────────────────────
         Row(
             modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -82,16 +85,6 @@ fun MatrixEntryCard(
             WeightBlock("СТАРТ",    entry.displayStart,   TextSecondary)
             WeightBlock("ЗАРАЗ",    entry.displayCurrent, accentColor)
             WeightBlock("ЦІЛЬ",     entry.displayTarget,  NeonGold)
-        }
-
-        // ── Weekly step ───────────────────────────────────────────────
-        if (entry.weeklyStep > 0f) {
-            Text(
-                text       = "+${String.format("%.2f", entry.weeklyStep)}кг / тиждень",
-                color      = TextSecondary.copy(alpha = 0.6f),
-                fontFamily = FontFamily.Monospace,
-                fontSize   = 9.sp
-            )
         }
     }
 }
@@ -102,15 +95,15 @@ private fun WeightBlock(label: String, value: String, valueColor: Color) {
         Text(
             text       = label,
             color      = TextSecondary.copy(alpha = 0.5f),
-            fontFamily = FontFamily.Monospace,
-            fontSize   = 8.sp
+            fontFamily = RajdhaniFamily,
+            fontSize   = 9.sp
         )
         Text(
             text       = value,
             color      = valueColor,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = TekoFamily,
             fontWeight = FontWeight.Bold,
-            fontSize   = 12.sp
+            fontSize   = 14.sp
         )
     }
 }

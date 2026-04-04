@@ -8,11 +8,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.components.OneRepMaxText
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.mode.viewmodel.ActiveDayUiModel
 import com.ihor.thesystem.feature.mode.viewmodel.ExerciseWorkoutUiModel
@@ -22,11 +22,15 @@ fun ActiveDayCard(
     data: ActiveDayUiModel,
     modifier: Modifier = Modifier
 ) {
+    // Тільки статична панель без жодної анімації
     Column(
-        modifier            = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .sciPanel(PanelBorder.copy(alpha = 0.5f), PanelSurface, 12.dp)
+            .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // ── Header ────────────────────────────────────────────────────
+        // Header
         Row(
             modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -35,9 +39,9 @@ fun ActiveDayCard(
             Text(
                 text          = "[ ДЕНЬ ${data.dayNumber} ]",
                 color         = NeonCyan,
-                fontFamily    = FontFamily.Monospace,
+                fontFamily    = TekoFamily,
                 fontWeight    = FontWeight.Bold,
-                fontSize      = 16.sp,
+                fontSize      = 20.sp,
                 letterSpacing = 2.sp
             )
             data.debuffName?.let { debuff ->
@@ -49,12 +53,12 @@ fun ActiveDayCard(
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Icon(Icons.Filled.Warning, null, tint = NeonRed, modifier = Modifier.size(12.dp))
-                    Text(debuff, color = NeonRed, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                    Text(debuff, color = NeonRed, fontSize = 10.sp, fontFamily = RajdhaniFamily)
                 }
             }
         }
 
-        // ── Daily Tasks ───────────────────────────────────────────────
+        // Daily Tasks
         if (data.dailyTasks.isNotEmpty()) {
             DaySection(
                 title       = "Завдання на день",
@@ -71,7 +75,7 @@ fun ActiveDayCard(
             )
         }
 
-        // ── Workout ───────────────────────────────────────────────────
+        // Workout
         data.workoutName?.let { name ->
             DaySection(
                 title       = "Основне тренування",
@@ -81,7 +85,7 @@ fun ActiveDayCard(
                         Text(
                             text       = name.uppercase(),
                             color      = NeonGold,
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = RajdhaniFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize   = 13.sp
                         )
@@ -110,7 +114,7 @@ fun ActiveDayCard(
                     Text(
                         text       = "ДЕНЬ ПАСИВНОГО ВІДНОВЛЕННЯ",
                         color      = NeonCyanDim,
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = RajdhaniFamily,
                         fontSize   = 11.sp
                     )
                 }
@@ -135,7 +139,7 @@ private fun DaySection(
         Text(
             text          = title,
             color         = accentColor,
-            fontFamily    = FontFamily.Monospace,
+            fontFamily    = RajdhaniFamily,
             fontWeight    = FontWeight.Bold,
             fontSize      = 11.sp,
             letterSpacing = 1.5.sp
@@ -160,7 +164,7 @@ private fun DayTaskRow(name: String) {
         Text(
             text       = name,
             color      = TextPrimary,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = RajdhaniFamily,
             fontSize   = 12.sp
         )
     }
@@ -186,16 +190,27 @@ private fun ExerciseRow(exercise: ExerciseWorkoutUiModel) {
             Text(
                 text       = exercise.name,
                 color      = TextPrimary,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = RajdhaniFamily,
                 fontSize   = 12.sp
             )
-            exercise.recommendation?.let {
-                Text(
-                    text = it,
-                    color = NeonCyanDim,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 10.sp
-                )
+            exercise.recommendation?.let { rec ->
+                // Покращений парсинг для розрахунку 1RM
+                val weightPart = rec.lowercase().split("кг").firstOrNull()?.trim()?.toDoubleOrNull()
+                val repsPart = rec.lowercase().split("x").lastOrNull()?.trim()?.toIntOrNull()
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = rec,
+                        color = NeonCyanDim,
+                        fontFamily = RajdhaniFamily,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    
+                    if (weightPart != null && repsPart != null) {
+                        OneRepMaxText(weight = weightPart, reps = repsPart)
+                    }
+                }
             }
         }
     }

@@ -8,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +43,7 @@ fun StatisticsScreen(
             Text(
                 text          = "СТАТИСТИКА",
                 color         = NeonGreen,
-                fontFamily    = FontFamily.Monospace,
+                fontFamily    = RajdhaniFamily,
                 fontWeight    = FontWeight.Bold,
                 fontSize      = 18.sp,
                 letterSpacing = 3.sp
@@ -52,7 +51,7 @@ fun StatisticsScreen(
             Text(
                 text       = "МАТРИЦЯ ПРОГРЕСІЇ",
                 color      = TextSecondary,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = RajdhaniFamily,
                 fontSize   = 10.sp
             )
         }
@@ -92,7 +91,7 @@ fun StatisticsScreen(
                             Text(
                                 text          = "МАТРИЦЯ ПРОГРЕСІЇ",
                                 color         = NeonGreen,
-                                fontFamily    = FontFamily.Monospace,
+                                fontFamily    = RajdhaniFamily,
                                 fontWeight    = FontWeight.Bold,
                                 fontSize      = 12.sp,
                                 letterSpacing = 2.sp
@@ -100,7 +99,7 @@ fun StatisticsScreen(
                             Text(
                                 text       = "TAP = LOG | FLAG = SETUP",
                                 color      = TextSecondary.copy(alpha = 0.5f),
-                                fontFamily = FontFamily.Monospace,
+                                fontFamily = RajdhaniFamily,
                                 fontSize   = 8.sp
                             )
                         }
@@ -118,7 +117,7 @@ fun StatisticsScreen(
                                 Text(
                                     text       = "[ МАТРИЦЯ ПОРОЖНЯ ]",
                                     color      = TextSecondary,
-                                    fontFamily = FontFamily.Monospace,
+                                    fontFamily = RajdhaniFamily,
                                     fontSize   = 12.sp
                                 )
                             }
@@ -183,7 +182,7 @@ fun StatisticsScreen(
                     Text(
                         text       = "[ ПОМИЛКА: ${(state as UiState.Error).message} ]",
                         color      = NeonRed,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = RajdhaniFamily
                     )
                 }
             }

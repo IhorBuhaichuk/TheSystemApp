@@ -8,7 +8,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ihor.thesystem.data.local.room.converters.Converters
 import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
-import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 
 @Database(
     entities = [
@@ -35,7 +34,7 @@ import com.ihor.thesystem.data.local.room.relations.SessionWithSets
         ReferenceMatrixEntity::class,
         ProtocolTemplateEntity::class
     ],
-    version = 8, // Increased to 8 to fix integrity and PrimaryKey issues
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -98,7 +97,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE workout_template ADD COLUMN timeLimitMinutes INTEGER NOT NULL DEFAULT 75")
+                db.execSQL("ALTER TABLE workout_templates ADD COLUMN timeLimitMinutes INTEGER NOT NULL DEFAULT 75")
                 db.execSQL("ALTER TABLE system_config ADD COLUMN cycleAnchorDateTimestamp INTEGER NOT NULL DEFAULT 0")
 
                 db.execSQL("""
@@ -178,7 +177,13 @@ abstract class AppDatabase : RoomDatabase() {
         
         val MIGRATION_7_8 = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Empty migration just to force identity check and resolve IllegalStateException
+                // Stable version bridge
+            }
+        }
+
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Prepared for future changes. Data is preserved.
             }
         }
     }

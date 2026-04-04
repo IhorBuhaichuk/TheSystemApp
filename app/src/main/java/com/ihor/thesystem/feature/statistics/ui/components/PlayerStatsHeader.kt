@@ -8,7 +8,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,14 +37,14 @@ fun PlayerStatsHeader(
                 Text(
                     text       = data.playerName,
                     color      = NeonCyan,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = RajdhaniFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize   = 24.sp
                 )
                 Text(
                     text       = "[ ${data.playerClass} ]",
                     color      = TextSecondary,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = RajdhaniFamily,
                     fontSize   = 11.sp
                 )
             }
@@ -58,7 +57,7 @@ fun PlayerStatsHeader(
                     verticalAlignment     = Alignment.CenterVertically
                 ) {
                     Icon(Icons.Filled.Warning, null, tint = NeonRed, modifier = Modifier.size(13.dp))
-                    Text("ШТРАФ", color = NeonRed, fontFamily = FontFamily.Monospace, fontSize = 10.sp)
+                    Text("ШТРАФ", color = NeonRed, fontFamily = RajdhaniFamily, fontSize = 10.sp)
                 }
             }
         }
@@ -108,14 +107,14 @@ private fun StatChip(
         Text(
             text       = value,
             color      = TextPrimary,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = TekoFamily,
             fontWeight = FontWeight.Bold,
-            fontSize   = 14.sp
+            fontSize   = 18.sp
         )
         Text(
             text       = label,
             color      = TextSecondary,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = RajdhaniFamily,
             fontSize   = 8.sp
         )
     }
