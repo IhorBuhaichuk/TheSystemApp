@@ -36,6 +36,9 @@ fun QuestChecklistSheet(
 ) {
     var newTaskName by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
+    
+    // Створюємо локальну копію списку для стабільності під час анімацій закриття
+    val tasks = remember(quest.tasks) { quest.tasks }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -123,7 +126,7 @@ fun QuestChecklistSheet(
                 }
             }
 
-            if (quest.tasks.isEmpty()) {
+            if (tasks.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
                     contentAlignment = Alignment.Center
@@ -136,22 +139,25 @@ fun QuestChecklistSheet(
                     )
                 }
             } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.weight(1f, fill = false)
-                ) {
-                    items(quest.tasks, key = { it.id }) { task ->
-                        TaskRow(
-                            task        = task,
-                            accentColor = accentColor,
-                            onToggle    = { onTaskToggle(task) },
-                            onRemove    = { onRemoveTask(task.id) }
-                        )
+                // Використовуємо Box з обмеженням висоти для LazyColumn, щоб уникнути конфліктів ModalBottomSheet
+                Box(modifier = Modifier.heightIn(max = 400.dp)) {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(tasks, key = { it.id }) { task ->
+                            TaskRow(
+                                task        = task,
+                                accentColor = accentColor,
+                                onToggle    = { onTaskToggle(task) },
+                                onRemove    = { onRemoveTask(task.id) }
+                            )
+                        }
                     }
                 }
             }
 
-            if (quest.isCompleted && quest.tasks.isNotEmpty()) {
+            if (quest.isCompleted && tasks.isNotEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()

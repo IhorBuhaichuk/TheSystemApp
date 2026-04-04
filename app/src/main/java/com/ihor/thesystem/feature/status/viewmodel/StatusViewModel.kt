@@ -106,51 +106,87 @@ class StatusViewModel @Inject constructor(
 
     fun onNameConfirmed(newName: String) {
         viewModelScope.launch {
-            val player = playerRepo.getPlayer().firstOrNull() ?: return@launch
-            updatePlayerName(player, newName)
-            onDismissDialog()
+            try {
+                val player = playerRepo.getPlayer().firstOrNull() ?: return@launch
+                updatePlayerName(player, newName)
+                onDismissDialog()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun onWeightConfirmed(weight: Float) {
         viewModelScope.launch {
-            logWeight(weight)
-            onDismissDialog()
+            try {
+                logWeight(weight)
+                onDismissDialog()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun onHeightConfirmed(height: Float) {
         viewModelScope.launch {
-            updateHeight(height)
-            onDismissDialog()
+            try {
+                updateHeight(height)
+                onDismissDialog()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun onTaskToggled(task: TaskUiModel, questId: Int) {
-        viewModelScope.launch { toggleQuestTask(task, questId) }
+        viewModelScope.launch {
+            try {
+                toggleQuestTask(task, questId)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun onAddTask(questId: Int, taskName: String) {
         if (taskName.isBlank()) return
         viewModelScope.launch {
-            questRepo.addTaskToQuest(questId, taskName)
+            try {
+                questRepo.addTaskToQuest(questId, taskName)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun onRemoveTask(taskId: Int) {
         viewModelScope.launch {
-            questRepo.removeTask(taskId)
+            try {
+                questRepo.removeTask(taskId)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun onDebuffToggled(debuff: DebuffConfig) {
-        viewModelScope.launch { updateDebuff(debuff.copy(isActive = !debuff.isActive)) }
+        viewModelScope.launch {
+            try {
+                updateDebuff(debuff.copy(isActive = !debuff.isActive))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun onSystemConfigConfirmed(config: SystemConfig) {
         viewModelScope.launch {
-            updateSystemConfig(config)
-            onDismissDialog()
+            try {
+                updateSystemConfig(config)
+                onDismissDialog()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
