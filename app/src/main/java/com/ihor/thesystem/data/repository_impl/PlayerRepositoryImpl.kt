@@ -50,7 +50,8 @@ private fun PlayerEntity.toDomain() = Player(
     currentWeek = currentWeek, 
     currentCycleDay = currentCycleDay,
     consecutiveMainQuestFailures = consecutiveMainQuestFailures, 
-    isPenaltyActive = isPenaltyActive
+    isPenaltyActive = isPenaltyActive,
+    globalRank = globalRank
 )
 
 private fun Player.toEntity() = PlayerEntity(
@@ -63,5 +64,6 @@ private fun Player.toEntity() = PlayerEntity(
     currentWeek = currentWeek, 
     currentCycleDay = currentCycleDay,
     consecutiveMainQuestFailures = consecutiveMainQuestFailures, 
-    isPenaltyActive = isPenaltyActive
+    isPenaltyActive = isPenaltyActive,
+    globalRank = globalRank
 )

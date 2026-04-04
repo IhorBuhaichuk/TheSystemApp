@@ -13,6 +13,8 @@ import com.ihor.thesystem.domain.usecase.AdvanceCycleDayUseCase
 import com.ihor.thesystem.domain.usecase.GenerateDailyQuestsUseCase
 import com.ihor.thesystem.feature.mode.ui.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -86,8 +88,8 @@ class ModeViewModel @Inject constructor(
                             dayNum   = i + 1,
                             isActive = (i + 1) == player.currentCycleDay
                         )
-                    },
-                    activeDayData = current?.toActiveDayUiModel(exercises, daily)
+                    }.toImmutableList(),
+                    activeDayData = current?.toActiveDayUiModel(exercises.toImmutableList(), daily)
                 )
             }
         }
@@ -128,10 +130,8 @@ class ModeViewModel @Inject constructor(
 
     fun onConfirmSync(day: Int) {
         viewModelScope.launch {
-            // 1. Оновлюємо поточний день гравця
             playerRepo.updateCurrentCycleDay(day)
             
-            // 2. Оновлюємо якір у конфігурації (щоб календар перерахувався)
             val currentConfig = configRepo.getConfigFlow().firstOrNull()
             if (currentConfig != null) {
                 configRepo.updateConfig(
@@ -158,13 +158,13 @@ private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean) =
     )
 
 private fun ScheduleDay.toActiveDayUiModel(
-    exercises: List<ExerciseWorkoutUiModel>,
+    exercises: ImmutableList<ExerciseWorkoutUiModel>,
     dailyQuest: Quest?
 ): ActiveDayUiModel {
     return ActiveDayUiModel(
         dayNumber   = cycleDay,
         debuffName  = if (cycleDay == 1) "СЛАБКІСТЬ" else if (cycleDay == 2) "ЦНС" else null,
-        dailyTasks  = if (dailyQuest != null) listOf(dailyQuest) else emptyList(),
+        dailyTasks  = (if (dailyQuest != null) listOf(dailyQuest) else emptyList<Quest>()).toImmutableList(),
         workoutName = workoutTemplateName,
         exercises   = exercises
     )

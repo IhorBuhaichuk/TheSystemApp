@@ -59,6 +59,9 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.ui.text.google.fonts)
     
+    // Immutable collections for UI performance
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
+    
     // Vico Charts - Using direct strings to ensure resolution
     implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.28")
     implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.28")

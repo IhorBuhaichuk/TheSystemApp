@@ -1,10 +1,12 @@
 package com.ihor.thesystem.feature.mode.viewmodel
 
 import com.ihor.thesystem.domain.model.Quest
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 data class ModeUiData(
     val currentCycleDay: Int             = 1,
-    val days: List<CycleDayUiModel>      = emptyList(),
+    val days: ImmutableList<CycleDayUiModel> = persistentListOf(),
     val activeDayData: ActiveDayUiModel? = null,
     val isPenaltyActive: Boolean         = false
 )
@@ -22,9 +24,9 @@ enum class DayType { REST, WORKOUT }
 data class ActiveDayUiModel(
     val dayNumber: Int,
     val debuffName: String?,
-    val dailyTasks: List<Quest>,
+    val dailyTasks: ImmutableList<Quest>,
     val workoutName: String?,
-    val exercises: List<ExerciseWorkoutUiModel>
+    val exercises: ImmutableList<ExerciseWorkoutUiModel>
 )
 
 data class ExerciseWorkoutUiModel(

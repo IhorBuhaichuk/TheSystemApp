@@ -7,6 +7,8 @@ import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -76,7 +78,9 @@ class StatisticsViewModel @Inject constructor(
                     currentWeek     = player.currentWeek,
                     currentCycleDay = cycleDay,
                     isPenaltyActive = player.isPenaltyActive,
-                    matrixEntries   = updatedEntries
+                    globalRank      = player.globalRank,
+                    matrixEntries   = updatedEntries.toImmutableList(),
+                    tonnageStats    = emptyList<DailyTonnageStats>().toImmutableList() // Placeholder for actual tonnage stats
                 )
             }
         }
@@ -115,7 +119,7 @@ class StatisticsViewModel @Inject constructor(
         if (!entry.isActive) return
         _dialogState.value = StatisticsDialogState.LogWorkoutSets(
             entry = entry,
-            sets = List(3) { WorkoutSetInput() }
+            sets = List(3) { WorkoutSetInput() }.toImmutableList()
         )
     }
 
@@ -131,14 +135,14 @@ class StatisticsViewModel @Inject constructor(
     fun addSet() {
         val current = _dialogState.value
         if (current is StatisticsDialogState.LogWorkoutSets) {
-            _dialogState.value = current.copy(sets = current.sets + WorkoutSetInput())
+            _dialogState.value = current.copy(sets = (current.sets + WorkoutSetInput()).toImmutableList())
         }
     }
 
     fun removeSet() {
         val current = _dialogState.value
         if (current is StatisticsDialogState.LogWorkoutSets && current.sets.size > 1) {
-            _dialogState.value = current.copy(sets = current.sets.dropLast(1))
+            _dialogState.value = current.copy(sets = current.sets.dropLast(1).toImmutableList())
         }
     }
 
@@ -147,7 +151,7 @@ class StatisticsViewModel @Inject constructor(
         if (current is StatisticsDialogState.LogWorkoutSets) {
             val newList = current.sets.map { 
                 if (it.id == setId) it.copy(weight = weight, reps = reps) else it 
-            }
+            }.toImmutableList()
             _dialogState.value = current.copy(sets = newList)
         }
     }
@@ -165,9 +169,11 @@ class StatisticsViewModel @Inject constructor(
         targetWeightNote = targetWeightNote,
         weeklyStep       = weeklyStep,
         progressPercent  = progressPercent,
+        currentRank      = currentRank,
+        completedCycles  = completedCycles,
         isActive         = isActive,
         orderIndex       = orderIndex,
-        weightHistory    = history
+        weightHistory    = history.toImmutableList()
     )
 }
 

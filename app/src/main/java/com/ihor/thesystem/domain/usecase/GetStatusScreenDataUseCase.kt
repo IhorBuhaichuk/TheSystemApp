@@ -5,6 +5,7 @@ import com.ihor.thesystem.domain.repository.DebuffRepository
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.feature.status.viewmodel.*
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -35,9 +36,10 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     cycleDay               = player.currentCycleDay,
                     monthWorkoutsCompleted = 0,  // TODO: Phase 3 — з QuestLog
                     monthWorkoutsTotal     = 13,
-                    activeDebuffs          = debuffs.map { it.toUiModel() },
+                    activeDebuffs          = debuffs.map { it.toUiModel() }.toImmutableList(),
                     dailyQuest             = daily?.toUiModel(),
-                    mainQuest              = main?.toUiModel()
+                    mainQuest              = main?.toUiModel(),
+                    globalRank             = player.globalRank
                 )
             }
         }
@@ -57,6 +59,6 @@ private fun Quest.toUiModel() = QuestUiModel(
             if (status == DomainQuestStatus.COMPLETED) "[ ВИКОНАНО ✓ ]"
             else "[ НАГОРОДА: +1 ТИЖДЕНЬ ]"
     },
-    tasks       = tasks.map { TaskUiModel(it.id, it.name, it.isCompleted) },
+    tasks       = tasks.map { TaskUiModel(it.id, it.name, it.isCompleted) }.toImmutableList(),
     isCompleted = status == DomainQuestStatus.COMPLETED
 )

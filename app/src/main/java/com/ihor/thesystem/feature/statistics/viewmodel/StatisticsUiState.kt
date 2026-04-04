@@ -3,6 +3,8 @@ package com.ihor.thesystem.feature.statistics.viewmodel
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 data class StatisticsUiData(
     val playerName: String                      = "",
@@ -12,8 +14,8 @@ data class StatisticsUiData(
     val currentCycleDay: Int                    = 1,
     val isPenaltyActive: Boolean                = false,
     val globalRank: Rank                        = Rank.E,
-    val matrixEntries: List<MatrixEntryUiModel> = emptyList(),
-    val tonnageStats: List<DailyTonnageStats>   = emptyList()
+    val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf(),
+    val tonnageStats: ImmutableList<DailyTonnageStats>   = persistentListOf()
 )
 
 data class MatrixEntryUiModel(
@@ -29,7 +31,7 @@ data class MatrixEntryUiModel(
     val completedCycles: Int = 0,
     val isActive: Boolean = true,
     val orderIndex: Int = 999,
-    val weightHistory: List<ExerciseWeightHistory> = emptyList()
+    val weightHistory: ImmutableList<ExerciseWeightHistory> = persistentListOf()
 ) {
     val displayTarget: String
         get() = if (targetWeight < 0f) targetWeightNote ?: "—"
@@ -57,7 +59,7 @@ sealed class StatisticsDialogState {
     
     data class LogWorkoutSets(
         val entry: MatrixEntryUiModel,
-        val sets: List<WorkoutSetInput> = listOf(
+        val sets: ImmutableList<WorkoutSetInput> = persistentListOf(
             WorkoutSetInput(),
             WorkoutSetInput(),
             WorkoutSetInput()

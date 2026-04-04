@@ -1,6 +1,8 @@
 package com.ihor.thesystem.feature.status.viewmodel
 
 import com.ihor.thesystem.domain.model.Rank
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 data class StatusUiData(
     val playerName: String            = "Ігор",
@@ -12,7 +14,7 @@ data class StatusUiData(
     val cycleDay: Int                 = 1,
     val monthWorkoutsCompleted: Int   = 2,
     val monthWorkoutsTotal: Int       = 13,
-    val activeDebuffs: List<DebuffUiModel> = emptyList(),
+    val activeDebuffs: ImmutableList<DebuffUiModel> = persistentListOf(),
     val dailyQuest: QuestUiModel?     = null,
     val mainQuest: QuestUiModel?      = null,
     val globalRank: Rank              = Rank.E
@@ -30,7 +32,7 @@ data class QuestUiModel(
     val id: Int,
     val title: String,
     val subtitle: String,
-    val tasks: List<TaskUiModel> = emptyList(),
+    val tasks: ImmutableList<TaskUiModel> = persistentListOf(),
     val isCompleted: Boolean = false
 )
 
