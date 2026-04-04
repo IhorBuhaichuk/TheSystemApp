@@ -73,8 +73,10 @@ class QuestRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createPromotionQuest(exerciseId: Int, title: String, description: String) {
+        // Ми використовуємо scheduleId для збереження exerciseId у PROMOTION квестах, 
+        // щоб легше було їх ідентифікувати
         val questId = questDao.insertQuest(
-            QuestEntity(title = title, type = EntityQuestType.PROMOTION, scheduleId = null)
+            QuestEntity(title = title, type = EntityQuestType.PROMOTION, scheduleId = exerciseId)
         ).toInt()
         questDao.insertQuestTask(
             QuestTaskEntity(
@@ -103,6 +105,9 @@ class QuestRepositoryImpl @Inject constructor(
 
     override fun getQuestsByDate(dateMillis: Long): Flow<List<Quest>> =
         questDao.getQuestsByDate(dateMillis).map { list -> list.map { it.toDomain() } }
+
+    override suspend fun getQuestById(questId: Int): Quest? =
+        questDao.getQuestWithTasksById(questId)?.toDomain()
 }
 
 private typealias EntityQuestType   = com.ihor.thesystem.data.local.room.entity.QuestType
@@ -114,6 +119,7 @@ private fun QuestWithTasks.toDomain() = Quest(
     type   = quest.type.toDomain(),
     date   = quest.date,
     status = quest.status.toDomain(),
+    scheduleId = quest.scheduleId,
     tasks  = tasks.map { 
         QuestTask(
             id = it.id, 

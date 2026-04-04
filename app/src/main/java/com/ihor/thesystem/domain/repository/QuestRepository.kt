@@ -20,4 +20,5 @@ interface QuestRepository {
 
     suspend fun getLastTwoMainQuestsStatus(): List<DomainQuestStatus>
     fun getQuestsByDate(dateMillis: Long): Flow<List<Quest>>
+    suspend fun getQuestById(questId: Int): Quest?
 }

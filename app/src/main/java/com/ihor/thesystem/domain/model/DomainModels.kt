@@ -20,7 +20,8 @@ data class Quest(
     val type: DomainQuestType,
     val date: Long,
     val status: DomainQuestStatus,
-    val tasks: List<QuestTask>
+    val tasks: List<QuestTask>,
+    val scheduleId: Int? = null
 ) {
     val isCompleted: Boolean get() = status == DomainQuestStatus.COMPLETED
 }

@@ -16,21 +16,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         val player = playerRepo.getPlayer().firstOrNull() ?: return
         val cycleDay = player.currentCycleDay
         
-        // 1. ПЕРЕВІРКА НА ЕКЗАМЕНИ (PROMOTION)
-        val matrixEntries = matrixRepo.getAllEntries().firstOrNull() ?: emptyList()
-        val pendingPromotion = matrixEntries.find { it.isPromotionPending }
-        
-        val activePromotion = questRepo.getActivePromotionQuest().firstOrNull()
-        
-        if (pendingPromotion != null && activePromotion == null) {
-            questRepo.createPromotionQuest(
-                exerciseId = pendingPromotion.exerciseId,
-                title = "ЕКЗАМЕН: ${pendingPromotion.exerciseName.uppercase()}",
-                description = "Встанови новий максимум або підтверди статус для підвищення рангу до ${Rank.fromValue(pendingPromotion.currentRank.value + 1).name}"
-            )
-            return // Якщо є екзамен, інші квести можуть зачекати або йти паралельно
-        }
-
+        // 1. ПАРАЛЕЛЬНА ГЕНЕРАЦІЯ DAILY ТА MAIN КВЕСТІВ
         val activeDaily = questRepo.getActiveDailyQuest().firstOrNull()
         val activeMain = questRepo.getActiveMainQuest().firstOrNull()
         val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull() ?: return
@@ -60,6 +46,23 @@ class GenerateDailyQuestsUseCase @Inject constructor(
                 exercises = recommendedExercises,
                 scheduleId = schedule.id
             )
+        }
+
+        // 2. ГЕНЕРАЦІЯ PROMOTION КВЕСТІВ (БЕЗ БЛОКУВАННЯ)
+        val matrixEntries = matrixRepo.getAllEntries().firstOrNull() ?: emptyList()
+        val pendingPromotions = matrixEntries.filter { it.isPromotionPending }
+        
+        pendingPromotions.forEach { pending ->
+            val promotionQuests = questRepo.getActiveQuests().firstOrNull()?.filter { it.type == DomainQuestType.PROMOTION } ?: emptyList()
+            val alreadyExists = promotionQuests.any { q -> q.tasks.any { t -> t.exerciseId == pending.exerciseId } }
+            
+            if (!alreadyExists) {
+                questRepo.createPromotionQuest(
+                    exerciseId = pending.exerciseId,
+                    title = "ЕКЗАМЕН: ${pending.exerciseName.uppercase()}",
+                    description = "Встанови новий максимум або підтверди статус для підвищення рангу до ${Rank.fromValue(pending.currentRank.value + 1).name}"
+                )
+            }
         }
     }
 }

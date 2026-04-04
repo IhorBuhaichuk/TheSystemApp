@@ -116,6 +116,7 @@ fun StatusScreen(
                         .padding(horizontal = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    // 1. РУТИНА (DAILY)
                     data.dailyQuest?.let { quest ->
                         QuestCard(
                             quest       = quest,
@@ -125,6 +126,7 @@ fun StatusScreen(
                         )
                     } ?: EmptyQuestCard(DomainQuestType.DAILY)
 
+                    // 2. ОСНОВНИЙ КВЕСТ (MAIN)
                     data.mainQuest?.let { quest ->
                         QuestCard(
                             quest       = quest,
@@ -133,6 +135,16 @@ fun StatusScreen(
                             onLongClick = { /* TODO: редактор квесту */ }
                         )
                     } ?: EmptyQuestCard(DomainQuestType.MAIN)
+
+                    // 3. ЕКЗАМЕНИ (PROMOTION)
+                    data.promotionQuests.forEach { quest ->
+                        QuestCard(
+                            quest       = quest,
+                            type        = DomainQuestType.PROMOTION,
+                            onClick     = { viewModel.onQuestTap(quest.id, isDaily = false) },
+                            onLongClick = { /* TODO: редактор квесту */ }
+                        )
+                    }
 
                     Spacer(Modifier.height(6.dp))
                 }
@@ -168,8 +180,14 @@ fun StatusScreen(
                         )
                     }
                     is StatusDialogState.QuestChecklist -> {
-                        val quest  = if (dialog.isDaily) data.dailyQuest else data.mainQuest
+                        val quest = if (dialog.isDaily) {
+                            data.dailyQuest
+                        } else {
+                            data.mainQuest ?: data.promotionQuests.find { it.id == dialog.questId }
+                        }
+                        
                         val accent = if (dialog.isDaily) NeonCyan else NeonGold
+
                         quest?.let { q ->
                             QuestChecklistSheet(
                                 quest        = q,

@@ -43,7 +43,12 @@ fun QuestCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .sciPanel(accentColor.copy(alpha = 0.6f), PanelSurface, 12.dp)
+            .sciPanel(
+                borderColor = if (isPromotion) accentColor else accentColor.copy(alpha = 0.6f),
+                backgroundColor = PanelSurface,
+                cornerCut = 12.dp,
+                borderWidth = if (isPromotion) 2.dp else 1.dp
+            )
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
@@ -80,20 +85,22 @@ fun QuestCard(
                     color = if (isPromotion) accentColor else TextPrimary,
                     fontFamily = if (isPromotion) TekoFamily else RajdhaniFamily,
                     fontWeight = FontWeight.Bold,
-                    fontSize = if (isPromotion) 22.sp else 16.sp
+                    fontSize = if (isPromotion) 28.sp else 16.sp, // Масивний шрифт для Екзамену
+                    lineHeight = if (isPromotion) 32.sp else 20.sp
                 )
                 Text(
                     text = quest.subtitle,
-                    color = TextSecondary,
+                    color = if (isPromotion) accentColor.copy(alpha = 0.8f) else TextSecondary,
                     fontFamily = RajdhaniFamily,
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
+                    fontWeight = if (isPromotion) FontWeight.Bold else FontWeight.Normal
                 )
             }
             Icon(
                 imageVector = if (isPromotion) Icons.Filled.Star else Icons.Filled.Assignment,
                 contentDescription = null,
                 tint = accentColor.copy(alpha = 0.8f),
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(if (isPromotion) 32.dp else 24.dp)
             )
         }
 

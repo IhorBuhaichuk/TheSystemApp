@@ -1,11 +1,14 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.QuestRepository
+import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.feature.status.viewmodel.TaskUiModel
 import javax.inject.Inject
 
 class ToggleQuestTaskUseCase @Inject constructor(
-    private val repo: QuestRepository
+    private val repo: QuestRepository,
+    private val matrixRepo: ProgressionMatrixRepository
 ) {
     suspend operator fun invoke(task: TaskUiModel, questId: Int) {
         repo.toggleTaskCompletion(
@@ -13,5 +16,19 @@ class ToggleQuestTaskUseCase @Inject constructor(
             questId     = questId,
             isCompleted = !task.isCompleted
         )
+
+        // Перевіряємо, чи цей квест є PROMOTION і чи він завершений
+        val quest = repo.getQuestById(questId)
+        if (quest != null && quest.type == DomainQuestType.PROMOTION && quest.status == DomainQuestStatus.COMPLETED) {
+            val exerciseId = quest.scheduleId // Ми зберегли exerciseId у scheduleId при створенні
+            if (exerciseId != null) {
+                // 1. Скидаємо прапорець очікування
+                matrixRepo.setPromotionPending(exerciseId, false)
+                // 2. Підвищуємо ранг вправи
+                matrixRepo.promoteRank(exerciseId)
+                // 3. Перераховуємо глобальний ранг гравця
+                matrixRepo.recalculateGlobalRank()
+            }
+        }
     }
 }

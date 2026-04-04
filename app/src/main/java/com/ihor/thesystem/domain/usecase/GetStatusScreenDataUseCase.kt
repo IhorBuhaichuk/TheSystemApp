@@ -21,12 +21,14 @@ class GetStatusScreenDataUseCase @Inject constructor(
         playerRepo.getPlayer().flatMapLatest { player ->
             if (player == null) return@flatMapLatest flowOf(StatusUiData())
             combine(
-                questRepo.getActiveDailyQuest(),
-                questRepo.getActiveMainQuest(),
-                questRepo.getActivePromotionQuest(),
+                questRepo.getQuestsByDate(System.currentTimeMillis()),
                 debuffRepo.getActiveDebuffs(),
                 playerRepo.getLatestWeight()
-            ) { daily, main, promotion, debuffs, weight ->
+            ) { quests, debuffs, weight ->
+                val daily = quests.find { it.type == DomainQuestType.DAILY }
+                val main = quests.find { it.type == DomainQuestType.MAIN }
+                val promotions = quests.filter { it.type == DomainQuestType.PROMOTION }
+
                 StatusUiData(
                     playerName             = player.name,
                     playerClass            = player.playerClass,
@@ -39,7 +41,8 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     monthWorkoutsTotal     = 13,
                     activeDebuffs          = debuffs.map { it.toUiModel() }.toImmutableList(),
                     dailyQuest             = daily?.toUiModel(),
-                    mainQuest              = promotion?.toUiModel() ?: main?.toUiModel(),
+                    mainQuest              = main?.toUiModel(),
+                    promotionQuests        = promotions.map { it.toUiModel() }.toImmutableList(),
                     globalRank             = player.globalRank
                 )
             }
@@ -60,7 +63,7 @@ private fun Quest.toUiModel() = QuestUiModel(
             if (status == DomainQuestStatus.COMPLETED) "[ ВИКОНАНО ✓ ]"
             else "[ НАГОРОДА: +1 ТИЖДЕНЬ ]"
         DomainQuestType.PROMOTION ->
-            "[ ПІДТВЕРДЖЕННЯ РАНГУ ]"
+            "[ НАГОРОДА: +500 EXP | ПІДТВЕРДЖЕННЯ РАНГУ ]"
     },
     tasks       = tasks.map { TaskUiModel(it.id, it.name, it.isCompleted) }.toImmutableList(),
     isCompleted = status == DomainQuestStatus.COMPLETED
