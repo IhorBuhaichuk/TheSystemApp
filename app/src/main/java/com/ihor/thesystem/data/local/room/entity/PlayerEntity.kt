@@ -2,6 +2,7 @@ package com.ihor.thesystem.data.local.room.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.ihor.thesystem.domain.model.Rank
 
 @Entity(tableName = "player")
 data class PlayerEntity(
@@ -14,5 +15,6 @@ data class PlayerEntity(
     val currentWeek: Int    = 1,
     val currentCycleDay: Int = 1,
     val consecutiveMainQuestFailures: Int = 0,
-    val isPenaltyActive: Boolean = false
+    val isPenaltyActive: Boolean = false,
+    val globalRank: Rank = Rank.E
 )

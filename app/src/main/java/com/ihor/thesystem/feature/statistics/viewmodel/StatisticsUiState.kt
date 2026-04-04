@@ -1,6 +1,7 @@
 package com.ihor.thesystem.feature.statistics.viewmodel
 
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
+import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
 
 data class StatisticsUiData(
@@ -10,6 +11,7 @@ data class StatisticsUiData(
     val currentWeek: Int                        = 1,
     val currentCycleDay: Int                    = 1,
     val isPenaltyActive: Boolean                = false,
+    val globalRank: Rank                        = Rank.E,
     val matrixEntries: List<MatrixEntryUiModel> = emptyList(),
     val tonnageStats: List<DailyTonnageStats>   = emptyList()
 )
@@ -23,6 +25,8 @@ data class MatrixEntryUiModel(
     val targetWeightNote: String?,
     val weeklyStep: Float,
     val progressPercent: Float,
+    val currentRank: Rank = Rank.E,
+    val completedCycles: Int = 0,
     val isActive: Boolean = true,
     val orderIndex: Int = 999,
     val weightHistory: List<ExerciseWeightHistory> = emptyList()
@@ -36,9 +40,6 @@ data class MatrixEntryUiModel(
         get() = "${startWeight}кг"
 }
 
-/**
- * Модель для вводу одного підходу (сету) в діалозі
- */
 data class WorkoutSetInput(
     val id: Long = System.nanoTime(),
     val weight: String = "",
@@ -48,14 +49,12 @@ data class WorkoutSetInput(
 sealed class StatisticsDialogState {
     object None : StatisticsDialogState()
     
-    // Етап 1: Встановлення цілей (Старт/Ціль)
     data class SetupMatrix(
         val entry: MatrixEntryUiModel,
         val startWeight: String,
         val targetWeight: String
     ) : StatisticsDialogState()
     
-    // Етап 2: Логування підходів
     data class LogWorkoutSets(
         val entry: MatrixEntryUiModel,
         val sets: List<WorkoutSetInput> = listOf(

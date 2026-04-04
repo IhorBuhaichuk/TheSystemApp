@@ -34,7 +34,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ReferenceMatrixEntity::class,
         ProtocolTemplateEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -177,13 +177,24 @@ abstract class AppDatabase : RoomDatabase() {
         
         val MIGRATION_7_8 = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Stable version bridge
+                // Identity forced migration
             }
         }
 
         val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Prepared for future changes. Data is preserved.
+                // Current version stabilization
+            }
+        }
+
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Add Rank and completedCycles to progression_matrix
+                db.execSQL("ALTER TABLE progression_matrix ADD COLUMN currentRank TEXT NOT NULL DEFAULT 'E'")
+                db.execSQL("ALTER TABLE progression_matrix ADD COLUMN completedCycles INTEGER NOT NULL DEFAULT 0")
+                
+                // Add globalRank to player
+                db.execSQL("ALTER TABLE player ADD COLUMN globalRank TEXT NOT NULL DEFAULT 'E'")
             }
         }
     }

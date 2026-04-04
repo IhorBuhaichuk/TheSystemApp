@@ -1,28 +1,31 @@
 package com.ihor.thesystem.data.repository_impl
 
+import com.ihor.thesystem.data.local.room.dao.PlayerDao
 import com.ihor.thesystem.data.local.room.dao.ProgressionMatrixDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutAnalyticsDao
 import com.ihor.thesystem.data.local.room.entity.*
+import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 class ProgressionMatrixRepositoryImpl @Inject constructor(
     private val matrixDao:    ProgressionMatrixDao,
     private val workoutDao:   WorkoutDao,
-    private val analyticsDao: WorkoutAnalyticsDao
+    private val analyticsDao: WorkoutAnalyticsDao,
+    private val playerDao:    PlayerDao
 ) : ProgressionMatrixRepository {
 
     override fun getAllEntries(): Flow<List<ProgressionMatrixEntry>> =
-        matrixDao.getAllEntries().map { list ->
-            list.map { entity ->
-                val name = workoutDao.getExerciseNameById(entity.exerciseId)
-                    ?: "Вправа ${entity.exerciseId}"
-                entity.toDomain(name, matrixWeeks = 48)
+        matrixDao.getAllEntriesWithNames().map { list ->
+            list.map { item ->
+                item.entity.toDomain(item.exerciseName, matrixWeeks = 48)
             }
         }
 
@@ -85,6 +88,35 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     override fun getAllReferences(): Flow<List<ReferenceMatrixEntity>> {
         return matrixDao.getAllReferences()
     }
+
+    override suspend fun completeCycle(exerciseId: Int) {
+        val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
+        val nextCycles = existing.completedCycles + 1
+        val nextRank = when {
+            nextCycles >= 5 -> Rank.S
+            nextCycles == 4 -> Rank.A
+            nextCycles == 3 -> Rank.B
+            nextCycles == 2 -> Rank.C
+            nextCycles == 1 -> Rank.D
+            else -> Rank.E
+        }
+        matrixDao.update(existing.copy(
+            completedCycles = nextCycles,
+            currentRank = nextRank
+        ))
+        recalculateGlobalRank()
+    }
+
+    override suspend fun recalculateGlobalRank() {
+        val entries = matrixDao.getAllEntriesWithNames().first()
+        if (entries.isEmpty()) return
+        
+        val avgValue = entries.map { it.entity.currentRank.value }.average().roundToInt()
+        val globalRank = Rank.fromValue(avgValue)
+        
+        val player = playerDao.getPlayerSync() ?: return
+        playerDao.update(player.copy(globalRank = globalRank))
+    }
 }
 
 private fun ProgressionMatrixEntity.toDomain(
@@ -107,6 +139,8 @@ private fun ProgressionMatrixEntity.toDomain(
         currentWeight     = currentWeight,
         targetWeightNote  = targetWeightNote,
         weeklyStep        = weeklyStep,
-        progressPercent   = progress
+        progressPercent   = progress,
+        currentRank       = currentRank,
+        completedCycles   = completedCycles
     )
 }

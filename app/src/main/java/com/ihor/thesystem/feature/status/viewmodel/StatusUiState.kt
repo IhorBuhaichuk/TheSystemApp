@@ -1,5 +1,7 @@
 package com.ihor.thesystem.feature.status.viewmodel
 
+import com.ihor.thesystem.domain.model.Rank
+
 data class StatusUiData(
     val playerName: String            = "Ігор",
     val playerClass: String           = "Новачок",
@@ -12,7 +14,8 @@ data class StatusUiData(
     val monthWorkoutsTotal: Int       = 13,
     val activeDebuffs: List<DebuffUiModel> = emptyList(),
     val dailyQuest: QuestUiModel?     = null,
-    val mainQuest: QuestUiModel?      = null
+    val mainQuest: QuestUiModel?      = null,
+    val globalRank: Rank              = Rank.E
 )
 
 data class DebuffUiModel(

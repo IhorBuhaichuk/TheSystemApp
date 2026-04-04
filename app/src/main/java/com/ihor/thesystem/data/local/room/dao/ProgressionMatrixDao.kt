@@ -7,6 +7,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProgressionMatrixDao {
+    @Query("""
+        SELECT pm.*, e.name as exerciseName 
+        FROM progression_matrix pm
+        JOIN exercises e ON pm.exerciseId = e.id
+    """)
+    fun getAllEntriesWithNames(): Flow<List<ProgressionMatrixWithExercise>>
+
     @Query("SELECT * FROM progression_matrix")
     fun getAllEntries(): Flow<List<ProgressionMatrixEntity>>
 
@@ -35,3 +42,8 @@ interface ProgressionMatrixDao {
     @Query("SELECT * FROM reference_matrix WHERE exerciseId = :id LIMIT 1")
     suspend fun getReferenceById(id: String): ReferenceMatrixEntity?
 }
+
+data class ProgressionMatrixWithExercise(
+    @Embedded val entity: ProgressionMatrixEntity,
+    val exerciseName: String
+)

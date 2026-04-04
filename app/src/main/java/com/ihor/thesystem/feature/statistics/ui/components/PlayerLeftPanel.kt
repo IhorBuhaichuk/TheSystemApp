@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,36 +47,45 @@ fun PlayerLeftPanel(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // ── "Player Status" label ──────────────────────────────────────
-        Text(
-            text       = "Player Status",
-            color      = TextSecondary,
-            fontSize   = 10.sp,
-            fontFamily = FontFamily.Monospace
-        )
+        // --- Player Name + GLOBAL RANK ---
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text       = "Player Status",
+                    color      = TextSecondary,
+                    fontSize   = 10.sp,
+                    fontFamily = RajdhaniFamily
+                )
+                GlitchText(
+                    text     = data.playerName,
+                    style    = TextStyle(
+                        fontSize   = 34.sp,
+                        fontFamily = RajdhaniFamily,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .combinedClickable(onClick = onNameTap, onLongClick = onNameTap)
+                )
+            }
+            
+            // Global Rank Badge на головному екрані
+            RankBadge(rank = data.globalRank, size = 52.dp)
+        }
 
-        // ── Player Name — glitch ──────────────────────────────────────
-        GlitchText(
-            text     = data.playerName,
-            style    = TextStyle(
-                fontSize   = 34.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .combinedClickable(onClick = onNameTap, onLongClick = onNameTap)
-        )
-
-        // ── Class ─────────────────────────────────────────────────────
+        // --- Class ---
         Text(
             text       = "[ КЛАС: ${data.playerClass} ]",
             color      = TextSecondary,
             fontSize   = 10.sp,
-            fontFamily = FontFamily.Monospace
+            fontFamily = RajdhaniFamily
         )
 
-        // ── Progress bar ──────────────────────────────────────────────
+        // --- Progress bar ---
         WorkoutProgressBar(
             completed  = data.monthWorkoutsCompleted,
             total      = data.monthWorkoutsTotal,
@@ -86,7 +94,7 @@ fun PlayerLeftPanel(
                 .height(18.dp)
         )
 
-        // ── Debuff block ──────────────────────────────────────────────
+        // --- Debuff block ---
         DebuffBlock(
             debuffs  = data.activeDebuffs,
             modifier = Modifier
@@ -94,7 +102,7 @@ fun PlayerLeftPanel(
                 .combinedClickable(onClick = onDebuffEdit, onLongClick = onDebuffEdit)
         )
 
-        // ── Cycle counter ─────────────────────────────────────────────
+        // --- Cycle counter ---
         CycleCounter(currentDay = data.cycleDay)
     }
 }
@@ -174,7 +182,7 @@ private fun DebuffBlock(
                         text       = "▲ ${d.text}",
                         color      = NeonRed,
                         fontSize   = 10.sp,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = RajdhaniFamily
                     )
                 }
             }
@@ -192,7 +200,7 @@ private fun CycleCounter(
             text          = "CYCLE COUNTER",
             color         = NeonCyanDim,
             fontSize      = 9.sp,
-            fontFamily    = FontFamily.Monospace,
+            fontFamily    = RajdhaniFamily,
             letterSpacing = 2.sp
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

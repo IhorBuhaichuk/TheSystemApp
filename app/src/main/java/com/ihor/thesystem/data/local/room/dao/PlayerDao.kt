@@ -9,6 +9,9 @@ interface PlayerDao {
     @Query("SELECT * FROM player WHERE id = 1")
     fun getPlayer(): Flow<PlayerEntity?>
 
+    @Query("SELECT * FROM player WHERE id = 1 LIMIT 1")
+    suspend fun getPlayerSync(): PlayerEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(player: PlayerEntity)
 

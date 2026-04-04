@@ -1,6 +1,7 @@
 package com.ihor.thesystem.domain.repository
 
 import com.ihor.thesystem.data.local.room.entity.ReferenceMatrixEntity
+import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 import kotlinx.coroutines.flow.Flow
 
@@ -13,6 +14,9 @@ interface ProgressionMatrixRepository {
     
     suspend fun getReferenceForExercise(name: String): ReferenceMatrixEntity?
     fun getAllReferences(): Flow<List<ReferenceMatrixEntity>>
+    
+    suspend fun completeCycle(exerciseId: Int)
+    suspend fun recalculateGlobalRank()
 }
 
 data class ProgressionMatrixEntry(
@@ -24,5 +28,7 @@ data class ProgressionMatrixEntry(
     val currentWeight: Float,
     val targetWeightNote: String?,
     val weeklyStep: Float,
-    val progressPercent: Float
+    val progressPercent: Float,
+    val currentRank: Rank = Rank.E,
+    val completedCycles: Int = 0
 )

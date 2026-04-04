@@ -2,6 +2,7 @@ package com.ihor.thesystem.data.local.room.converters
 
 import androidx.room.TypeConverter
 import com.ihor.thesystem.data.local.room.entity.*
+import com.ihor.thesystem.domain.model.Rank
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -15,6 +16,9 @@ class Converters {
 
     @TypeConverter fun weightTypeToString(v: WeightType?): String? = v?.name
     @TypeConverter fun stringToWeightType(v: String?): WeightType? = v?.let { WeightType.valueOf(it) }
+
+    @TypeConverter fun rankToString(v: Rank?): String? = v?.name
+    @TypeConverter fun stringToRank(v: String?): Rank? = v?.let { Rank.valueOf(it) }
 
     @TypeConverter
     fun fromDoubleMap(value: Map<String, Double>?): String? = value?.let { Json.encodeToString(it) }

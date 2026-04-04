@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.OneRepMaxText
+import com.ihor.thesystem.core.ui.components.RankBadge
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 
@@ -40,10 +41,11 @@ fun MatrixEntryCard(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        // --- Top Row: Name + Rank Badge ---
         Row(
             modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment     = Alignment.CenterVertically
+            verticalAlignment     = Alignment.Top
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -59,20 +61,12 @@ fun MatrixEntryCard(
                     label = "EST. 1RM: "
                 )
             }
-            IconButton(
-                onClick = onSetupClick,
-                modifier = Modifier.size(28.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Flag,
-                    contentDescription = "Setup Goals",
-                    tint = NeonGold,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
+            
+            // Ранг вправи спозиціонований праворуч
+            RankBadge(rank = entry.currentRank, size = 44.dp)
         }
 
-        // ВСТАВКА ГРАФІКА ПРОГРЕСУ
+        // --- Progress Chart ---
         if (entry.weightHistory.size >= 2) {
             ExerciseProgressChart(
                 history = entry.weightHistory,
@@ -86,13 +80,32 @@ fun MatrixEntryCard(
             accentColor = accentColor
         )
 
+        // --- Bottom Row: Weights + Setup Button ---
         Row(
             modifier              = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment     = Alignment.Bottom
         ) {
-            WeightBlock("СТАРТ",    entry.displayStart,   TextSecondary)
-            WeightBlock("ЗАРАЗ",    entry.displayCurrent, accentColor)
-            WeightBlock("ЦІЛЬ",     entry.displayTarget,  NeonGold)
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                WeightBlock("СТАРТ",    entry.displayStart,   TextSecondary)
+                WeightBlock("ЗАРАЗ",    entry.displayCurrent, accentColor)
+                WeightBlock("ЦІЛЬ",     entry.displayTarget,  NeonGold)
+            }
+
+            IconButton(
+                onClick = onSetupClick,
+                modifier = Modifier.size(28.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Flag,
+                    contentDescription = "Setup Goals",
+                    tint = NeonGold,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
     }
 }

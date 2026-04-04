@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.components.RankBadge
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 
@@ -27,27 +28,32 @@ fun PlayerStatsHeader(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Name + class
+        // Name + class + RANK
         Row(
             modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment     = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text       = data.playerName,
-                    color      = NeonCyan,
-                    fontFamily = RajdhaniFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize   = 24.sp
-                )
-                Text(
-                    text       = "[ ${data.playerClass} ]",
-                    color      = TextSecondary,
-                    fontFamily = RajdhaniFamily,
-                    fontSize   = 11.sp
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RankBadge(rank = data.globalRank, size = 52.dp)
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text       = data.playerName,
+                        color      = TextPrimary,
+                        fontFamily = RajdhaniFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize   = 24.sp
+                    )
+                    Text(
+                        text       = "[ ${data.playerClass} ]",
+                        color      = TextSecondary,
+                        fontFamily = RajdhaniFamily,
+                        fontSize   = 11.sp
+                    )
+                }
             }
+            
             if (data.isPenaltyActive) {
                 Row(
                     modifier = Modifier
@@ -67,37 +73,22 @@ fun PlayerStatsHeader(
             modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            StatChip(
-                icon  = Icons.Filled.CalendarMonth,
-                label = "МІСЯЦЬ",
-                value = "${data.currentMonth}/12",
-                modifier = Modifier.weight(1f)
-            )
-            StatChip(
-                icon  = Icons.Filled.BarChart,
-                label = "ТИЖДЕНЬ",
-                value = "${data.currentWeek}",
-                modifier = Modifier.weight(1f)
-            )
-            StatChip(
-                icon  = Icons.Filled.Loop,
-                label = "ДЕНЬ ЦИКЛУ",
-                value = "${data.currentCycleDay}/4",
-                modifier = Modifier.weight(1f)
-            )
+            StatChip(icon = Icons.Filled.CalendarMonth, label = "МІСЯЦЬ", value = "${data.currentMonth}/12")
+            StatChip(icon = Icons.Filled.BarChart, label = "ТИЖДЕНЬ", value = "${data.currentWeek}")
+            StatChip(icon = Icons.Filled.Loop, label = "ДЕНЬ", value = "${data.currentCycleDay}/4")
         }
     }
 }
 
 @Composable
-private fun StatChip(
+private fun RowScope.StatChip(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    value: String,
-    modifier: Modifier = Modifier
+    value: String
 ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
+            .weight(1f)
             .sciPanel(NeonCyan.copy(0.2f), NeonCyan.copy(0.05f), 8.dp)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
