@@ -21,6 +21,10 @@ import com.ihor.thesystem.core.theme.TekoFamily
 import com.ihor.thesystem.core.theme.TextPrimary
 import com.ihor.thesystem.domain.model.Rank
 
+/**
+ * Преміальний бейдж рангу.
+ * Відображає слово "RANK" та літеру рангу в гексагональній рамці зі світінням.
+ */
 @Composable
 fun RankBadge(
     rank: Rank,
@@ -28,7 +32,7 @@ fun RankBadge(
     size: Dp = 48.dp
 ) {
     val rankColor = when (rank) {
-        Rank.E -> Color.DarkGray
+        Rank.E -> Color.Gray
         Rank.D -> Color(0xFF1E90FF)
         Rank.C -> Color(0xFF00FF00)
         Rank.B -> Color(0xFFFFD700)
@@ -55,8 +59,10 @@ fun RankBadge(
                 close()
             }
 
+            // Фонова заливка
             drawPath(path, rankColor.copy(alpha = 0.15f))
 
+            // Ефект світіння (Glow)
             drawIntoCanvas { canvas ->
                 val paint = Paint().asFrameworkPaint().apply {
                     this.color = rankColor.toArgb()
@@ -66,7 +72,12 @@ fun RankBadge(
                 canvas.nativeCanvas.drawPath(path.asAndroidPath(), paint)
             }
 
-            drawPath(path, rankColor.copy(alpha = 0.8f), style = Stroke(width = 1.5.dp.toPx()))
+            // Обводка
+            drawPath(
+                path = path,
+                color = rankColor.copy(alpha = 0.8f),
+                style = Stroke(width = 1.5.dp.toPx())
+            )
         }
 
         Column(
