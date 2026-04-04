@@ -1,5 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
+import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.ihor.thesystem.BuildConfig
@@ -9,16 +10,15 @@ import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutDirective
 import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
 
-    // Налаштовуємо парсер JSON так, щоб він не падав, якщо AI додасть зайві поля
     private val json = Json { ignoreUnknownKeys = true }
 
-    // Ініціалізація моделі Gemini з ключем доступу та суворими системними інструкціями
     private val generativeModel = GenerativeModel(
         modelName = "gemini-1.5-flash",
         apiKey = BuildConfig.GEMINI_API_KEY,
@@ -31,40 +31,50 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
         session: WorkoutSession,
         sets: List<ExerciseSet>
     ): AiArchitectReport {
-        // Жорсткий ліміт очікування: 10 секунд
-        return withTimeout(10_000L) {
-
-            // Формуємо звіт про тренування для AI
-            val prompt = buildString {
-                appendLine("Аналіз тренування:")
-                appendLine("День циклу: ${session.cycleDay}")
-                appendLine("Загальний тоннаж: ${session.totalTonnage} кг")
-                appendLine("Виконані підходи:")
-                sets.forEach { set ->
-                    val status = if (set.isCompleted) "Виконано" else "Провалено"
-                    appendLine("- Вправа: ${set.exerciseId}, Вага: ${set.weight}кг, Повторення: ${set.reps} ($status)")
-                }
-                appendLine("Очікувана схема JSON: { \"architectFeedback\": \"...\", \"currentStageStatus\": \"...\", \"completedExercises\": [\"id1\"], \"pendingExercises\": [\"id2\"], \"nextWorkoutDirective\": [{ \"exerciseId\": \"...\", \"targetWeight\": 0.0, \"targetSets\": 0, \"targetReps\": 0 }] }")
+        val prompt = buildString {
+            appendLine("Аналіз тренування:")
+            appendLine("День циклу: ${session.cycleDay}")
+            appendLine("Загальний тоннаж: ${session.totalTonnage} кг")
+            appendLine("Виконані підходи:")
+            sets.forEach { set ->
+                val status = if (set.isCompleted) "Виконано" else "Провалено"
+                appendLine("- Вправа: ${set.exerciseId}, Вага: ${set.weight}кг, Повторення: ${set.reps} ($status)")
             }
-
-            // Відправляємо запит
-            val response = generativeModel.generateContent(prompt)
-            val responseText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
-
-            // Очищаємо текст від можливих маркерів форматування (```json ... ```)
-            val cleanJson = responseText.replace("```json", "").replace("```", "").trim()
-
-            // Перетворюємо текст (JSON) у програмний об'єкт (DTO)
-            val dto = json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
-
-            // Перетворюємо DTO у чисту доменну модель
-            dto.toDomain()
+            appendLine("Очікувана схема JSON: { \"architectFeedback\": \"...\", \"currentStageStatus\": \"...\", \"completedExercises\": [\"id1\"], \"pendingExercises\": [\"id2\"], \"nextWorkoutDirective\": [{ \"exerciseId\": \"...\", \"targetWeight\": 0.0, \"targetSets\": 0, \"targetReps\": 0 }] }")
         }
+
+        var lastException: Exception? = null
+        val maxRetries = 3
+        
+        // --- Механізм Exponential Backoff ---
+        for (attempt in 1..maxRetries) {
+            try {
+                return withTimeout(15_000L) { // Збільшено таймаут для стабільності
+                    val response = generativeModel.generateContent(prompt)
+                    val responseText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
+                    val cleanJson = responseText.replace("```json", "").replace("```", "").trim()
+                    val dto = json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
+                    dto.toDomain()
+                }
+            } catch (e: Exception) {
+                lastException = e
+                Log.e("AiArchitect", "Спроба $attempt не вдалася: ${e.message}")
+                
+                if (attempt < maxRetries) {
+                    val waitTime = when(attempt) {
+                        1 -> 1000L
+                        2 -> 2000L
+                        else -> 4000L
+                    }
+                    delay(waitTime)
+                }
+            }
+        }
+
+        // Якщо всі спроби вичерпано
+        throw lastException ?: RuntimeException("Не вдалося отримати аналіз від ШІ")
     }
 
-    // =========================================
-    // MAPPER ФУНКЦІЇ
-    // =========================================
     private fun GeminiWorkoutResponseDto.toDomain(): AiArchitectReport {
         return AiArchitectReport(
             architectFeedback = this.architectFeedback,
@@ -79,7 +89,7 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
                     targetReps = it.targetReps
                 )
             },
-            recoveryWindowHours = 24.0, // Буде перезаписано правильним значенням у FinalizeSessionUseCase
+            recoveryWindowHours = 24.0,
             isFallback = false
         )
     }
