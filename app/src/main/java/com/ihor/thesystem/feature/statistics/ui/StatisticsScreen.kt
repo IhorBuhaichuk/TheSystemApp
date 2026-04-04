@@ -134,13 +134,6 @@ fun StatisticsScreen(
                             )
                         }
                     }
-
-                    item {
-                        TonnageChartCanvas(
-                            entries = data.tonnageStats,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
                 }
 
                 // ── Dialogs ───────────────────────────────────────────
