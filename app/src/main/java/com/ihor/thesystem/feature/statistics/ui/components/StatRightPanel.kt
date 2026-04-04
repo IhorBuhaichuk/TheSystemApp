@@ -14,11 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
 
@@ -38,20 +39,20 @@ fun StatRightPanel(
     ) {
         HexStatBadge(
             icon = Icons.Filled.Flag,
-            label = "ТРЕНУВАЛЬНИЙ МІСЯЦЬ",
+            label = stringResource(R.string.text_month),
             value = month,
             modifier = Modifier.fillMaxWidth()
         )
         HexStatBadge(
             icon = Icons.Filled.MonitorWeight,
-            label = "ПОТОЧНА ВАГА",
+            label = stringResource(R.string.text_weight),
             value = "$weight кг",
             onClick = onWeightTap,
             modifier = Modifier.fillMaxWidth()
         )
         HexStatBadge(
             icon = Icons.Filled.Height,
-            label = "ЗРІСТ",
+            label = stringResource(R.string.text_height),
             value = "$height см",
             onClick = onHeightTap,
             modifier = Modifier.fillMaxWidth()
@@ -95,7 +96,7 @@ private fun HexStatBadge(
                 text = label,
                 color = TextSecondary,
                 fontSize = 7.sp,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = RajdhaniFamily,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 lineHeight = 8.sp
@@ -104,7 +105,7 @@ private fun HexStatBadge(
                 text = value,
                 color = TextPrimary,
                 fontSize = 14.sp,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = TekoFamily,
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center
             )

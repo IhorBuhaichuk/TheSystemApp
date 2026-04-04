@@ -20,10 +20,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.*
 import com.ihor.thesystem.feature.status.viewmodel.DebuffUiModel
@@ -39,47 +41,49 @@ fun PlayerLeftPanel(
 ) {
     Column(
         modifier = modifier
+            .fillMaxWidth()
             .sciPanel(
                 borderColor     = PanelBorder,
                 backgroundColor = PanelSurface.copy(alpha = 0.92f),
                 cornerCut       = 14.dp
             )
             .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // --- Player Name + GLOBAL RANK ---
+        // --- Label ---
+        Text(
+            text       = stringResource(R.string.text_player_status),
+            color      = TextSecondary,
+            fontSize   = 10.sp,
+            fontFamily = RajdhaniFamily
+        )
+
+        // --- Row: Name (Left) + Rank (Right) ---
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text       = "Player Status",
-                    color      = TextSecondary,
-                    fontSize   = 10.sp,
-                    fontFamily = RajdhaniFamily
-                )
-                GlitchText(
-                    text     = data.playerName,
-                    style    = TextStyle(
-                        fontSize   = 34.sp,
-                        fontFamily = RajdhaniFamily,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .combinedClickable(onClick = onNameTap, onLongClick = onNameTap)
-                )
-            }
+            // Player Name
+            GlitchText(
+                text     = data.playerName,
+                style    = TextStyle(
+                    fontSize   = 34.sp,
+                    fontFamily = RajdhaniFamily,
+                    fontWeight = FontWeight.Bold
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .combinedClickable(onClick = onNameTap, onLongClick = onNameTap)
+            )
             
-            // Global Rank Badge на головному екрані
-            RankBadge(rank = data.globalRank, size = 52.dp)
+            // Global Rank Badge
+            RankBadge(rank = data.globalRank, size = 48.dp)
         }
 
         // --- Class ---
         Text(
-            text       = "[ КЛАС: ${data.playerClass} ]",
+            text       = "[ ${stringResource(R.string.text_class)}: ${data.playerClass} ]",
             color      = TextSecondary,
             fontSize   = 10.sp,
             fontFamily = RajdhaniFamily
@@ -103,11 +107,18 @@ fun PlayerLeftPanel(
         )
 
         // --- Cycle counter ---
-        CycleCounter(currentDay = data.cycleDay)
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text(
+                text          = stringResource(R.string.text_cycle_counter),
+                color         = NeonCyanDim,
+                fontSize      = 9.sp,
+                fontFamily    = RajdhaniFamily,
+                letterSpacing = 2.sp
+            )
+            CycleCounter(currentDay = data.cycleDay)
+        }
     }
 }
-
-// ─── Private sub-composables ─────────────────────────────────────────────────
 
 @Composable
 private fun WorkoutProgressBar(
@@ -127,18 +138,6 @@ private fun WorkoutProgressBar(
                 size         = Size(size.width * progress.coerceIn(0f, 1f), size.height),
                 cornerRadius = cr
             )
-        }
-        // Tick marks
-        if (total > 1) {
-            for (i in 1 until total) {
-                val x = size.width / total * i
-                drawLine(
-                    color       = BackgroundDeep.copy(alpha = 0.8f),
-                    start       = Offset(x, 0f),
-                    end         = Offset(x, size.height),
-                    strokeWidth = 1.5.dp.toPx()
-                )
-            }
         }
         // Border
         drawRoundRect(
@@ -171,7 +170,7 @@ private fun DebuffBlock(
         if (debuffs.isEmpty()) {
             Icon(
                 imageVector = Icons.Filled.Warning,
-                contentDescription = "Debuff warning",
+                contentDescription = null,
                 tint   = NeonRed,
                 modifier = Modifier.size(28.dp)
             )
@@ -195,28 +194,19 @@ private fun CycleCounter(
     currentDay: Int,
     totalDays: Int = 4
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text(
-            text          = "CYCLE COUNTER",
-            color         = NeonCyanDim,
-            fontSize      = 9.sp,
-            fontFamily    = RajdhaniFamily,
-            letterSpacing = 2.sp
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (day in 1..totalDays) {
-                val icon = when(day) {
-                    1 -> Icons.Filled.WbSunny
-                    2 -> Icons.Filled.NightsStay
-                    3 -> Icons.Filled.Bedtime
-                    else -> Icons.Filled.Weekend
-                }
-                CycleHex(
-                    isActive = day <= currentDay,
-                    isCurrent = day == currentDay,
-                    icon = icon
-                )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        for (day in 1..totalDays) {
+            val icon = when(day) {
+                1 -> Icons.Filled.WbSunny
+                2 -> Icons.Filled.NightsStay
+                3 -> Icons.Filled.Bedtime
+                else -> Icons.Filled.Weekend
             }
+            CycleHex(
+                isActive = day <= currentDay,
+                isCurrent = day == currentDay,
+                icon = icon
+            )
         }
     }
 }
@@ -229,12 +219,8 @@ private fun CycleHex(
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
+        initialValue = 0.4f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(800, easing = LinearEasing), RepeatMode.Reverse),
         label = "alpha"
     )
 

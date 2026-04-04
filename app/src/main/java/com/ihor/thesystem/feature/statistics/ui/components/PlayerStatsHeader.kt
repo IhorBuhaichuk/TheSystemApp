@@ -8,9 +8,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.RankBadge
 import com.ihor.thesystem.core.ui.components.sciPanel
@@ -63,7 +65,12 @@ fun PlayerStatsHeader(
                     verticalAlignment     = Alignment.CenterVertically
                 ) {
                     Icon(Icons.Filled.Warning, null, tint = NeonRed, modifier = Modifier.size(13.dp))
-                    Text("ШТРАФ", color = NeonRed, fontFamily = RajdhaniFamily, fontSize = 10.sp)
+                    Text(
+                        text = stringResource(R.string.text_penalty), 
+                        color = NeonRed, 
+                        fontFamily = RajdhaniFamily, 
+                        fontSize = 10.sp
+                    )
                 }
             }
         }
@@ -73,9 +80,21 @@ fun PlayerStatsHeader(
             modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            StatChip(icon = Icons.Filled.CalendarMonth, label = "МІСЯЦЬ", value = "${data.currentMonth}/12")
-            StatChip(icon = Icons.Filled.BarChart, label = "ТИЖДЕНЬ", value = "${data.currentWeek}")
-            StatChip(icon = Icons.Filled.Loop, label = "ДЕНЬ", value = "${data.currentCycleDay}/4")
+            StatChip(
+                icon = Icons.Filled.CalendarMonth, 
+                label = stringResource(R.string.text_month), 
+                value = "${data.currentMonth}/12"
+            )
+            StatChip(
+                icon = Icons.Filled.BarChart, 
+                label = stringResource(R.string.text_week), 
+                value = "${data.currentWeek}"
+            )
+            StatChip(
+                icon = Icons.Filled.Loop, 
+                label = stringResource(R.string.text_day), 
+                value = "${data.currentCycleDay}/4"
+            )
         }
     }
 }
