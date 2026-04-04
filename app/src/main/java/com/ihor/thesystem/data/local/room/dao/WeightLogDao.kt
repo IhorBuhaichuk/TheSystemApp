@@ -6,13 +6,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WeightLogDao {
-    @Query("SELECT * FROM weight_log ORDER BY timestamp DESC")
+    @Query("SELECT * FROM weight_log ORDER BY timestamp DESC LIMIT 100")
     fun getAllLogs(): Flow<List<WeightLogEntity>>
 
     @Query("SELECT * FROM weight_log ORDER BY timestamp DESC LIMIT 1")
     fun getLatestLog(): Flow<WeightLogEntity?>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(log: WeightLogEntity)
 
     @Delete

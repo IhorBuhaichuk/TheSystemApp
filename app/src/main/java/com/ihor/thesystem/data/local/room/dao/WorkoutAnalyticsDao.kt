@@ -34,18 +34,19 @@ abstract class WorkoutAnalyticsDao {
     }
 
     @Transaction
-    @Query("SELECT * FROM workout_session_logs ORDER BY timestamp DESC")
+    @Query("SELECT * FROM workout_session_logs ORDER BY timestamp DESC LIMIT 100")
     abstract fun getAllSessionLogs(): Flow<List<SessionWithSets>>
 
     @Transaction
     @Query("""
         SELECT * FROM workout_session_logs 
         WHERE date(timestamp / 1000, 'unixepoch', 'localtime') = date(:dateMillis / 1000, 'unixepoch', 'localtime')
+        LIMIT 50
     """)
     abstract fun getSessionLogsByDate(dateMillis: Long): Flow<List<SessionWithSets>>
 
     /**
-     * Отримання історії максимальної ваги для конкретної вправи
+     * Отримання історії максимальної ваги для конкретної вправи з лімітом для масштабованості
      */
     @Query("""
         SELECT MAX(weight) as weight, s.timestamp
@@ -53,12 +54,13 @@ abstract class WorkoutAnalyticsDao {
         JOIN workout_session_logs s ON e.sessionId = s.sessionId
         WHERE e.exerciseId = :exerciseId
         GROUP BY date(s.timestamp / 1000, 'unixepoch')
-        ORDER BY s.timestamp ASC
+        ORDER BY s.timestamp DESC
+        LIMIT 100
     """)
     abstract fun getWeightHistoryForExercise(exerciseId: Int): Flow<List<ExerciseWeightHistory>>
 
     /**
-     * Статистика тоннажу по днях для графіка
+     * Статистика тоннажу по днях для графіка з обмеженням періоду
      */
     @Query("""
         SELECT 
@@ -68,6 +70,7 @@ abstract class WorkoutAnalyticsDao {
         WHERE timestamp BETWEEN :start AND :end
         GROUP BY date(timestamp / 1000, 'unixepoch')
         ORDER BY dateUnixTimestamp ASC
+        LIMIT 365
     """)
     abstract fun getDailyTonnageStats(start: Long, end: Long): Flow<List<DailyTonnageStats>>
 

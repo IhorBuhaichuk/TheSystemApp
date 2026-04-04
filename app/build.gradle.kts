@@ -100,4 +100,5 @@ dependencies {
 ksp {
     arg("dagger.hilt.android.internal.disableAndroidSuperclassValidation", "true")
     arg("dagger.hilt.android.internal.projectType", "APP")
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
