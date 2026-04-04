@@ -1,5 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
+import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.data.local.room.dao.WorkoutAnalyticsDao
 import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.data.local.room.relations.SessionWithSets
@@ -42,6 +43,10 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
 
     override fun getAllLogs(): Flow<List<SessionWithSets>> {
         return dao.getAllSessionLogs()
+    }
+
+    override fun getWeightHistory(exerciseId: Int): Flow<List<ExerciseWeightHistory>> {
+        return dao.getWeightHistoryForExercise(exerciseId)
     }
 
     // =========================================

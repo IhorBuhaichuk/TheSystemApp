@@ -40,7 +40,6 @@ android {
 
     sourceSets {
         getByName("main") {
-            // Новий синтаксис для AGP 9.0 з увімкненим builtInKotlin
             kotlin.directories.add("src/main/java")
             kotlin.directories.add("../domain")
         }
@@ -59,6 +58,11 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.ui.text.google.fonts)
+    
+    // Vico Charts - Using direct strings to ensure resolution
+    implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.28")
+    implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.28")
+    implementation("com.patrykandpatrick.vico:core:2.0.0-alpha.28")
     
     // Hilt
     implementation(libs.hilt.android)

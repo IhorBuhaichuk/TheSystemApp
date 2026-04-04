@@ -1,5 +1,6 @@
 package com.ihor.thesystem.feature.statistics.viewmodel
 
+import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
 
 data class StatisticsUiData(
@@ -23,7 +24,8 @@ data class MatrixEntryUiModel(
     val weeklyStep: Float,
     val progressPercent: Float,
     val isActive: Boolean = true,
-    val orderIndex: Int = 999
+    val orderIndex: Int = 999,
+    val weightHistory: List<ExerciseWeightHistory> = emptyList()
 ) {
     val displayTarget: String
         get() = if (targetWeight < 0f) targetWeightNote ?: "—"

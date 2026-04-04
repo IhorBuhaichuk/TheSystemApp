@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.repository
 
+import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutDirective
@@ -40,4 +41,9 @@ interface WorkoutAnalyticsRepository {
      * Отримує всі логі тренувань.
      */
     fun getAllLogs(): Flow<List<SessionWithSets>>
+
+    /**
+     * Отримує історію ваги для графіка вправи.
+     */
+    fun getWeightHistory(exerciseId: Int): Flow<List<ExerciseWeightHistory>>
 }

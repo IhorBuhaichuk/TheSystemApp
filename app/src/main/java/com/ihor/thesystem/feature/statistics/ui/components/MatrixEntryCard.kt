@@ -53,7 +53,6 @@ fun MatrixEntryCard(
                     fontWeight = FontWeight.Bold,
                     fontSize   = 13.sp
                 )
-                // Розрахунок 1RM на основі поточної ваги (приймаємо 8-10 повторень як стандарт для розрахунку з матриці)
                 OneRepMaxText(
                     weight = entry.currentWeight.toDouble(), 
                     reps = 8,
@@ -71,6 +70,15 @@ fun MatrixEntryCard(
                     modifier = Modifier.size(18.dp)
                 )
             }
+        }
+
+        // ВСТАВКА ГРАФІКА ПРОГРЕСУ
+        if (entry.weightHistory.size >= 2) {
+            ExerciseProgressChart(
+                history = entry.weightHistory,
+                accentColor = accentColor,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
         }
 
         MatrixProgressBar(

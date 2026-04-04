@@ -3,12 +3,15 @@ package com.ihor.thesystem.feature.statistics.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.ZoneId
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,46 +25,61 @@ class StatisticsViewModel @Inject constructor(
     private val calculateCycleDay: CalculateCycleDayForDateUseCase
 ) : ViewModel() {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<UiState<StatisticsUiData>> = combine(
         playerRepo.getPlayer().filterNotNull(),
-        matrixRepo.getAllEntries(),
-        matrixRepo.getAllReferences(),
         viewingDateRepo.selectedDate,
-        configRepo.getConfigFlow().filterNotNull()
-    ) { player, matrix, references, selectedDate, config ->
-        
-        val cycleDay = calculateCycleDay(
-            targetDate = selectedDate,
-            anchorEpochDay = config.cycleAnchorDateTimestamp,
-            anchorCycleDay = config.cycleAnchorDay
-        )
-
-        val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
-        val activeExerciseIds = schedule?.exercises?.map { it.id } ?: emptyList()
-
-        val updatedEntries = matrix.map { entry ->
-            val ref = references.find { it.exerciseName.equals(entry.exerciseName, ignoreCase = true) }
-            val isActive = activeExerciseIds.contains(entry.exerciseId)
-            val orderIndex = if (isActive) activeExerciseIds.indexOf(entry.exerciseId) else 999
-
-            val m0 = ref?.milestones?.get("M0")?.toFloat() ?: entry.startWeight
-            val m12 = ref?.milestones?.get("M12")?.toFloat() ?: entry.targetWeight
+        configRepo.getConfigFlow().filterNotNull(),
+        matrixRepo.getAllReferences()
+    ) { player, selectedDate, config, references ->
+        Quad(player, selectedDate, config, references)
+    }.flatMapLatest { (player, selectedDate, config, references) ->
+        matrixRepo.getAllEntries().flatMapLatest { matrix ->
+            val historiesFlows = matrix.map { entry ->
+                analyticsRepo.getWeightHistory(entry.exerciseId).map { history ->
+                    entry.exerciseId to history
+                }
+            }
             
-            entry.toUiModel(isActive, orderIndex).copy(
-                startWeight = m0,
-                targetWeight = m12
-            )
-        }.sortedWith(compareBy({ !it.isActive }, { it.orderIndex }, { it.exerciseName }))
+            if (historiesFlows.isEmpty()) {
+                flowOf(emptyMap<Int, List<ExerciseWeightHistory>>())
+            } else {
+                combine(historiesFlows) { it.toMap() }
+            }.map { historiesMap ->
+                val cycleDay = calculateCycleDay(
+                    targetDate = selectedDate,
+                    anchorEpochDay = config.cycleAnchorDateTimestamp,
+                    anchorCycleDay = config.cycleAnchorDay
+                )
 
-        StatisticsUiData(
-            playerName      = player.name,
-            playerClass     = player.playerClass,
-            currentMonth    = player.currentMonth,
-            currentWeek     = player.currentWeek,
-            currentCycleDay = cycleDay, // Повертаємо день для обраної дати
-            isPenaltyActive = player.isPenaltyActive,
-            matrixEntries   = updatedEntries
-        )
+                val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
+                val activeExerciseIds = schedule?.exercises?.map { it.id } ?: emptyList()
+
+                val updatedEntries = matrix.map { entry ->
+                    val ref = references.find { it.exerciseName.equals(entry.exerciseName, ignoreCase = true) }
+                    val isActive = activeExerciseIds.contains(entry.exerciseId)
+                    val orderIndex = if (isActive) activeExerciseIds.indexOf(entry.exerciseId) else 999
+
+                    val m0 = ref?.milestones?.get("M0")?.toFloat() ?: entry.startWeight
+                    val m12 = ref?.milestones?.get("M12")?.toFloat() ?: entry.targetWeight
+                    
+                    entry.toUiModel(isActive, orderIndex, historiesMap[entry.exerciseId] ?: emptyList()).copy(
+                        startWeight = m0,
+                        targetWeight = m12
+                    )
+                }.sortedWith(compareBy({ !it.isActive }, { it.orderIndex }, { it.exerciseName }))
+
+                StatisticsUiData(
+                    playerName      = player.name,
+                    playerClass     = player.playerClass,
+                    currentMonth    = player.currentMonth,
+                    currentWeek     = player.currentWeek,
+                    currentCycleDay = cycleDay,
+                    isPenaltyActive = player.isPenaltyActive,
+                    matrixEntries   = updatedEntries
+                )
+            }
+        }
     }
     .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
     .catch { emit(UiState.Error(it.message ?: "Помилка завантаження статистики")) }
@@ -94,7 +112,7 @@ class StatisticsViewModel @Inject constructor(
     }
 
     fun onOpenLogSets(entry: MatrixEntryUiModel) {
-        if (!entry.isActive) return // Блокуємо відкриття для неактивних вправ
+        if (!entry.isActive) return
         _dialogState.value = StatisticsDialogState.LogWorkoutSets(
             entry = entry,
             sets = List(3) { WorkoutSetInput() }
@@ -105,8 +123,6 @@ class StatisticsViewModel @Inject constructor(
         viewModelScope.launch {
             val date = viewingDateRepo.selectedDate.value
             val timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            
-            // Оновлюємо репозиторій, щоб він приймав кастомний таймстемп (Backfilling)
             matrixRepo.saveExerciseSetsWithDate(exerciseId, sets, timestamp)
             onDismissDialog()
         }
@@ -140,7 +156,7 @@ class StatisticsViewModel @Inject constructor(
         _dialogState.value = StatisticsDialogState.None
     }
 
-    private fun ProgressionMatrixEntry.toUiModel(isActive: Boolean, orderIndex: Int) = MatrixEntryUiModel(
+    private fun ProgressionMatrixEntry.toUiModel(isActive: Boolean, orderIndex: Int, history: List<ExerciseWeightHistory>) = MatrixEntryUiModel(
         exerciseId       = exerciseId,
         exerciseName     = exerciseName,
         startWeight      = startWeight,
@@ -150,6 +166,9 @@ class StatisticsViewModel @Inject constructor(
         weeklyStep       = weeklyStep,
         progressPercent  = progressPercent,
         isActive         = isActive,
-        orderIndex       = orderIndex
+        orderIndex       = orderIndex,
+        weightHistory    = history
     )
 }
+
+data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)

@@ -14,7 +14,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
@@ -23,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.components.MaxOneRepMaxText
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarDayUiModel
@@ -51,7 +51,7 @@ fun CalendarScreen(
         Text(
             text = "КОНТРОЛЬ ЦИКЛУ",
             color = NeonCyan,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = RajdhaniFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
             letterSpacing = 2.sp
@@ -65,7 +65,7 @@ fun CalendarScreen(
                     2 -> NeonCyan
                     else -> TextSecondary
                 },
-                fontFamily = FontFamily.Monospace,
+                fontFamily = RajdhaniFamily,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 4.dp)
             )
@@ -80,18 +80,18 @@ fun CalendarScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { viewModel.onMonthChange(uiState.currentMonth.minusMonths(1)) }) {
-                Text("<", color = NeonCyan, fontFamily = FontFamily.Monospace)
+                Text("<", color = NeonCyan, fontFamily = RajdhaniFamily)
             }
             Text(
                 text = uiState.currentMonth.month.getDisplayName(TextStyle.FULL_STANDALONE, Locale("uk")).uppercase() + 
                        " ${uiState.currentMonth.year}",
                 color = TextPrimary,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = RajdhaniFamily,
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center
             )
             IconButton(onClick = { viewModel.onMonthChange(uiState.currentMonth.plusMonths(1)) }) {
-                Text(">", color = NeonCyan, fontFamily = FontFamily.Monospace)
+                Text(">", color = NeonCyan, fontFamily = RajdhaniFamily)
             }
         }
 
@@ -133,7 +133,7 @@ fun CalendarGrid(
 ) {
     val weekDays = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд")
     val firstDayOfMonth = currentMonth.atDay(1)
-    val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value // 1 (Mon) - 7 (Sun)
+    val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value 
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -143,7 +143,7 @@ fun CalendarGrid(
                     color = TextSecondary,
                     textAlign = TextAlign.Center,
                     fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = RajdhaniFamily,
                     modifier = Modifier.weight(1f).padding(bottom = 8.dp)
                 )
             }
@@ -189,8 +189,6 @@ fun CalendarDayCell(
     onClick: () -> Unit
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    
-    // Анімація для дня 2 (Нічна зміна)
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.2f,
         targetValue = 0.6f,
@@ -208,10 +206,8 @@ fun CalendarDayCell(
             .background(if (isSelected) NeonCyan.copy(0.15f) else PanelSurface.copy(alpha = 0.4f))
             .drawBehind {
                 val path = buildHexagonPath(size)
-                
-                // Візуальні ефекти на основі дня циклу
                 when (model.cycleDay) {
-                    1 -> { // Денна зміна - Жовте світіння
+                    1 -> {
                         drawPath(
                             path = path,
                             brush = Brush.radialGradient(
@@ -221,7 +217,7 @@ fun CalendarDayCell(
                             )
                         )
                     }
-                    2 -> { // Нічна зміна - Синя пульсація
+                    2 -> {
                         drawPath(
                             path = path,
                             brush = Brush.radialGradient(
@@ -232,8 +228,6 @@ fun CalendarDayCell(
                         )
                     }
                 }
-
-                // Бордюр
                 val borderColor = when {
                     isSelected -> NeonCyan
                     model.isToday -> NeonCyanDim
@@ -253,7 +247,7 @@ fun CalendarDayCell(
                 else -> TextPrimary
             },
             fontSize = 14.sp,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = RajdhaniFamily,
             fontWeight = if (model.isToday) FontWeight.Bold else FontWeight.Normal
         )
     }
@@ -283,11 +277,11 @@ fun DailyScheduleSection(
             Text(
                 text = "ДЕНЬ ${date.dayOfMonth}.${date.monthValue}",
                 color = TextPrimary,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = RajdhaniFamily,
                 fontWeight = FontWeight.Bold
             )
             IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
-                Text("[X]", color = NeonRed, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Text("[X]", color = NeonRed, fontSize = 10.sp, fontFamily = RajdhaniFamily)
             }
         }
         
@@ -299,19 +293,34 @@ fun DailyScheduleSection(
                 else -> NeonGreen
             },
             fontSize = 11.sp,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = RajdhaniFamily,
             modifier = Modifier.padding(vertical = 4.dp)
         )
 
         HorizontalDivider(color = NeonCyan.copy(0.1f), thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
 
         if (results.isNotEmpty()) {
-            Text("РЕЗУЛЬТАТИ ТРЕНУВАННЯ:", color = NeonCyan, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+            Text("РЕЗУЛЬТАТИ ТРЕНУВАННЯ:", color = NeonCyan, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
             Spacer(Modifier.height(8.dp))
             results.forEach { result ->
-                Text(result.exerciseName.uppercase(), color = NeonGold, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-                val setsText = result.sets.joinToString(" | ") { "${it.weight}кг x ${it.reps}" }
-                Text(setsText, color = TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 8.dp, bottom = 4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(result.exerciseName.uppercase(), color = NeonGold, fontSize = 11.sp, fontFamily = RajdhaniFamily)
+                        val setsText = result.sets.joinToString(" | ") { "${it.weight}кг x ${it.reps}" }
+                        Text(setsText, color = TextSecondary, fontSize = 10.sp, fontFamily = RajdhaniFamily, modifier = Modifier.padding(start = 8.dp))
+                    }
+                    
+                    // ПОКАЗУЄМО МАКСИМАЛЬНИЙ 1RM СЕРЕД УСІХ ПІДХОДІВ
+                    MaxOneRepMaxText(
+                        sets = result.sets.map { it.weight to it.reps },
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
             }
             HorizontalDivider(color = NeonCyan.copy(0.1f), thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
         }
@@ -322,7 +331,7 @@ fun DailyScheduleSection(
                     text = "ПЛАНОВА ПРОГРАМА: ${data.workoutTemplateName}",
                     color = NeonGold,
                     fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = RajdhaniFamily,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(Modifier.height(4.dp))
@@ -331,7 +340,7 @@ fun DailyScheduleSection(
                         text = "• ${exercise.name}",
                         color = TextSecondary,
                         fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = RajdhaniFamily,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -340,7 +349,7 @@ fun DailyScheduleSection(
                     text = "РЕЖИМ: АКТИВНЕ ВІДНОВЛЕННЯ",
                     color = NeonCyanDim,
                     fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = RajdhaniFamily
                 )
             }
         }
