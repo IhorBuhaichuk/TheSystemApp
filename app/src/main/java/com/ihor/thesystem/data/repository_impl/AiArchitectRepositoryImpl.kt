@@ -31,6 +31,15 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
     )
 
     override suspend fun getChatResponse(prompt: String): ChatMessage {
+        val apiKey = BuildConfig.GEMINI_API_KEY
+        if (apiKey.isNullOrBlank() || apiKey == "null") {
+            return ChatMessage(
+                role = ChatRole.AI,
+                text = "КРИТИЧНА ПОМИЛКА: Ключ Gemini API не знайдено. Перевірте local.properties.",
+                isActionable = false
+            )
+        }
+
         return try {
             withTimeout(20_000L) {
                 val response = generativeModel.generateContent(prompt)

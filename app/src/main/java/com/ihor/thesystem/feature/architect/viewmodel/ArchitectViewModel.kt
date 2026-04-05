@@ -35,25 +35,35 @@ class ArchitectViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             val context = getLastWorkoutContext()
             
-            val welcomeMessage = if (context != null) {
-                ChatMessage(
-                    role = ChatRole.SYSTEM,
-                    text = "Вітаю. Ось результати вашого останнього тренування:\n\n$context\n\nБажаєте надіслати ці результати на аналіз Архітектору?",
-                    isActionable = true
+            if (context != null) {
+                val initialMessages = listOf(
+                    ChatMessage(
+                        role = ChatRole.SYSTEM,
+                        text = "Вітаю. Ось результати вашого останнього тренування:\n$context\n\nБажаєте надіслати ці результати на аналіз Архітектору?",
+                        isActionable = true
+                    )
                 )
+                _uiState.update { 
+                    it.copy(
+                        messages = initialMessages, 
+                        lastWorkoutContext = context,
+                        isLoading = false
+                    ) 
+                }
             } else {
-                ChatMessage(
-                    role = ChatRole.SYSTEM,
-                    text = "Вітаю. Наразі в базі даних відсутні записи про ваші тренування. Виконайте хоча б один квест, щоб я міг проаналізувати прогрес."
+                val initialMessages = listOf(
+                    ChatMessage(
+                        role = ChatRole.SYSTEM,
+                        text = "СИСТЕМА: Відсутні дані для аналізу. Завершіть хоча б один тренувальний цикл, щоб Архітектор міг проаналізувати прогрес.",
+                        isActionable = false
+                    )
                 )
-            }
-
-            _uiState.update { 
-                it.copy(
-                    messages = listOf(welcomeMessage),
-                    lastWorkoutContext = context,
-                    isLoading = false
-                ) 
+                _uiState.update { 
+                    it.copy(
+                        messages = initialMessages,
+                        isLoading = false
+                    ) 
+                }
             }
         }
     }
@@ -89,13 +99,24 @@ class ArchitectViewModel @Inject constructor(
                 ВАЖЛИВО: Відповідь поверни СУВОРО у форматі JSON: {"feedback_text": "Твій текст з пунктами 1,2,3", "next_workout_targets": [{"exercise_id": ID, "weight": 50.0, "reps": 8}]}
             """.trimIndent()
 
-            // 4. Запит до репозиторію
-            val aiResponse = aiRepository.getChatResponse(prompt)
-            
-            _uiState.update { it.copy(
-                messages = it.messages + aiResponse,
-                isLoading = false
-            ) }
+            // 4. Запит до репозиторію з обробкою помилок
+            try {
+                val aiResponse = aiRepository.getChatResponse(prompt)
+                _uiState.update { it.copy(
+                    messages = it.messages + aiResponse,
+                    isLoading = false
+                ) }
+            } catch (e: Exception) {
+                val errorMsg = ChatMessage(
+                    role = ChatRole.SYSTEM,
+                    text = "ПОМИЛКА МЕРЕЖІ: ${e.message ?: "Невідома помилка зв'язку з архітектором"}",
+                    isActionable = false
+                )
+                _uiState.update { it.copy(
+                    messages = it.messages + errorMsg,
+                    isLoading = false
+                ) }
+            }
         }
     }
 
