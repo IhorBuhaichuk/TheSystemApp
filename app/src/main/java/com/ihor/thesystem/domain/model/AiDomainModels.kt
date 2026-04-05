@@ -1,7 +1,21 @@
 package com.ihor.thesystem.domain.model
 
+import java.util.UUID
+
+enum class ChatRole { SYSTEM, USER, AI }
+
+data class AiWorkoutRecommendation(val exerciseId: Long, val weight: Float, val reps: Int)
+
+data class ChatMessage(
+    val id: String = UUID.randomUUID().toString(),
+    val role: ChatRole,
+    val text: String,
+    val recommendations: List<AiWorkoutRecommendation> = emptyList(),
+    val isActionable: Boolean = false
+)
+
 /**
- * Загальна інформація про проведене тренування.
+ * Базові моделі тренувань, що використовуються для аналізу Архітектором.
  */
 data class WorkoutSession(
     val sessionId: Long = 0L,
@@ -11,9 +25,6 @@ data class WorkoutSession(
     val cycleDay: Int
 )
 
-/**
- * Дані про конкретний виконаний підхід (сет) у межах тренування.
- */
 data class ExerciseSet(
     val setId: Long = 0L,
     val sessionId: Long,
@@ -23,9 +34,6 @@ data class ExerciseSet(
     val isCompleted: Boolean
 )
 
-/**
- * Вказівка (директива) для наступного тренування щодо конкретної вправи.
- */
 data class WorkoutDirective(
     val exerciseId: String,
     val targetWeight: Double,
@@ -35,6 +43,7 @@ data class WorkoutDirective(
 
 /**
  * Комплексний звіт від AI Архітектора після аналізу тренування.
+ * (Зберігаємо для сумісності під час рефакторингу)
  */
 data class AiArchitectReport(
     val architectFeedback: String,

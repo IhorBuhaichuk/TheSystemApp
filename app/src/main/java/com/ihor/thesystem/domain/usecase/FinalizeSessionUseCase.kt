@@ -1,13 +1,10 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.domain.model.AiArchitectReport
-import com.ihor.thesystem.domain.model.ExerciseSet
-import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
-import com.ihor.thesystem.domain.model.WorkoutDirective
-import com.ihor.thesystem.domain.model.WorkoutSession
+import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
+import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
@@ -30,7 +27,7 @@ class FinalizeSessionUseCase @Inject constructor(
         isNightShift: Boolean
     ): Result<AiArchitectReport> {
         return runCatching {
-            // 1. Зберегти сесію та сети (Отримуємо ID збереженої сесії)
+            // 1. Зберегти сесію та сети
             val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
             val currentSession = session.copy(sessionId = sessionId)
 
@@ -41,30 +38,43 @@ class FinalizeSessionUseCase @Inject constructor(
                 emptyList<ProgressionMatrixEntry>()
             }
 
-            // 3. Розрахувати тоннаж (сума вага * повторення для завершених сетів)
+            // 3. Розрахувати тоннаж
             val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
             val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
 
-            // 4. Викликати CalculateRecoveryWindowUseCase
+            // 4. Розрахунок відновлення
             val recoveryDuration = calculateRecovery(finalTonnage, isNightShift).getOrDefault(24.hours)
             val recoveryHours = recoveryDuration.inWholeHours.toDouble()
 
-            // 5. Запит до AiArchitectRepository
+            // 5. Запит до AI (через новий метод чату для сумісності)
+            val context = sets.joinToString("\n") { "- Вправа ${it.exerciseId}: ${it.weight}кг х ${it.reps}" }
+            val prompt = "Швидкий аналіз для логу: $context. Поверни JSON з feedback_text та next_workout_targets."
+            
             val report = try {
-                aiRepository.analyzeSession(currentSession, sets)
+                val chatMsg = aiRepository.getChatResponse(prompt)
+                AiArchitectReport(
+                    architectFeedback = chatMsg.text,
+                    currentStageStatus = "[ LOGGED ]",
+                    completedExercises = sets.map { it.exerciseId }.distinct(),
+                    pendingExercises = emptyList(),
+                    nextWorkoutDirectives = chatMsg.recommendations.map { 
+                        WorkoutDirective(it.exerciseId.toString(), it.weight.toDouble(), 3, it.reps)
+                    },
+                    recoveryWindowHours = recoveryHours,
+                    isFallback = false
+                )
             } catch (e: Exception) {
-                // FALLBACK: Якщо AI недоступний або таймаут
                 generateFallbackReport(sets, matrix, recoveryHours)
             }
 
-            // 6. ValidateDirectivesUseCase (фільтр через матрицю)
+            // 6. Валідація директив
             val validatedDirectives = validateDirectives(report.nextWorkoutDirectives, matrix)
                 .getOrDefault(report.nextWorkoutDirectives)
 
             // 7. Зберегти директиви
             analyticsRepository.saveDirectives(validatedDirectives)
 
-            // 8. Повернути фінальний звіт з відфільтрованими даними
+            // 8. Повернути фінальний звіт
             report.copy(
                 nextWorkoutDirectives = validatedDirectives,
                 recoveryWindowHours = recoveryHours
@@ -77,20 +87,19 @@ class FinalizeSessionUseCase @Inject constructor(
         matrix: List<ProgressionMatrixEntry>,
         recoveryHours: Double
     ): AiArchitectReport {
-        // Резервний розрахунок на основі поточної матриці прогресії
         val fallbackDirectives = sets.map { set ->
             val entry = matrix.find { it.exerciseId.toString() == set.exerciseId }
             WorkoutDirective(
                 exerciseId = set.exerciseId,
                 targetWeight = entry?.startWeight?.toDouble() ?: set.weight,
-                targetSets = 3, // Базові значення для резервного плану
+                targetSets = 3,
                 targetReps = 10
             )
         }.distinctBy { it.exerciseId }
 
         return AiArchitectReport(
-            architectFeedback = "ЗВ'ЯЗОК З AI ВТРАЧЕНО. Активовано резервний протокол: розрахунок наступного тренування виконано локально згідно з обмеженнями матриці.",
-            currentStageStatus = "[ FALLBACK PROTOCOL ACTIVE ]",
+            architectFeedback = "ЗВ'ЯЗОК З AI ВТРАЧЕНО. Активовано резервний протокол.",
+            currentStageStatus = "[ FALLBACK ]",
             completedExercises = sets.map { it.exerciseId }.distinct(),
             pendingExercises = emptyList(),
             nextWorkoutDirectives = fallbackDirectives,

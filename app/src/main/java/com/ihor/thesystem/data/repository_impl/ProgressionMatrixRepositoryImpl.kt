@@ -132,6 +132,15 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val player = playerDao.getPlayerSync() ?: return
         playerDao.update(player.copy(globalRank = globalRank))
     }
+
+    override suspend fun updateTarget(exerciseId: Long, weight: Float, reps: Int) {
+        val id = exerciseId.toInt()
+        val existing = matrixDao.getEntryForExerciseSync(id) ?: return
+        matrixDao.update(existing.copy(
+            targetWeight = weight,
+            targetWeightNote = "Рекомендація AI ($reps reps)"
+        ))
+    }
 }
 
 private fun ProgressionMatrixEntity.toDomain(
