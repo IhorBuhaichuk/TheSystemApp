@@ -1,5 +1,6 @@
 package com.ihor.thesystem.core.di
 
+import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.*
 import dagger.Module
@@ -107,4 +108,15 @@ object UseCaseModule {
         questRepo: QuestRepository,
         generateDailyQuestsUseCase: GenerateDailyQuestsUseCase
     ) = FinalizeDayUseCase(playerRepo, questRepo, generateDailyQuestsUseCase)
+
+    @Provides @Singleton
+    fun provideGetLastWorkoutContextUseCase(
+        analyticsRepo: WorkoutAnalyticsRepository,
+        workoutDao: WorkoutDao
+    ) = GetLastWorkoutContextUseCase(analyticsRepo, workoutDao)
+
+    @Provides @Singleton
+    fun provideApplyAiRecommendationsUseCase(
+        matrixRepo: ProgressionMatrixRepository
+    ) = ApplyAiRecommendationsUseCase(matrixRepo)
 }

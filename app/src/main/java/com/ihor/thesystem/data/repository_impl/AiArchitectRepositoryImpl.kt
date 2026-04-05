@@ -20,8 +20,9 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
         coerceInputValues = true
     }
 
+    // Оновлення моделі на "gemini-2.5-flash" згідно з доступними ресурсами в AI Studio.
     private val generativeModel = GenerativeModel(
-        modelName = "gemini-1.5-flash",
+        modelName = "gemini-2.5-flash",
         apiKey = BuildConfig.GEMINI_API_KEY,
         systemInstruction = content {
             text("Ти — жорсткий AI-тренер Системи. Твій стиль: кіберпанк, суворий, мотивуючий. " +
@@ -41,16 +42,14 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
         }
 
         return try {
-            withTimeout(20_000L) {
+            withTimeout(30_000L) {
                 val response = generativeModel.generateContent(prompt)
                 val rawText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
                 
-                // Безпечний парсинг маркдауну
+                // Надійне очищення JSON від маркдаун-блоків
                 val cleanJson = rawText
-                    .removePrefix("```json")
-                    .removeSuffix("```")
-                    .replace("```json", "") // на випадок якщо prefix не спрацював точно
-                    .replace("```", "")
+                    .replace(Regex("(?s)```json\\s*(.*?)\\s*```"), "$1")
+                    .replace(Regex("(?s)```\\s*(.*?)\\s*```"), "$1")
                     .trim()
 
                 val dto = json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
@@ -66,9 +65,10 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
             }
         } catch (e: Exception) {
             Log.e("AiArchitect", "Помилка Gemini: ${e.message}")
+            val errorDetail = e.localizedMessage ?: e.message ?: "Unknown error"
             ChatMessage(
                 role = ChatRole.AI,
-                text = "Системна помилка зв'язку з архітектором. Спробуй пізніше. [Error: ${e.localizedMessage}]",
+                text = "Системна помилка зв'язку з архітектором. [Деталі: $errorDetail]. Спробуйте пізніше або перевірте налаштування моделі в AI Studio.",
                 isActionable = false
             )
         }
