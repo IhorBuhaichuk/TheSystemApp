@@ -22,14 +22,23 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
 
         if (schedule != null) {
+            // ФІКС: Завжди ACTIVE для Рутини
             if (activeDaily == null) {
+                // Список завдань для рутини (можна розширити)
+                val routineTasks = listOf(
+                    "Прийом вітамінів та добавок",
+                    "Контроль водного балансу (2л+)",
+                    "Заповнення щоденного звіту"
+                )
+                
                 questRepo.createDailyQuest(
                     title = "РУТИНА | ДЕНЬ $cycleDay",
-                    tasks = emptyList(), 
+                    tasks = routineTasks, 
                     scheduleId = schedule.id
                 )
             }
 
+            // ФІКС: Завжди ACTIVE для Основного тренування
             if (activeMain == null && schedule.workoutTemplateName != null) {
                 val recommendedExercises = schedule.exercises.map { exercise ->
                     val rec = calculateRecommendation(exercise.id, exercise.name)

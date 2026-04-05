@@ -12,7 +12,7 @@ interface QuestDao {
     fun getActiveQuestsWithTasks(status: QuestStatus): Flow<List<QuestWithTasks>>
 
     @Transaction
-    @Query("SELECT * FROM quest WHERE type = :type AND status = :status LIMIT 1")
+    @Query("SELECT * FROM quest WHERE type = :type AND status = :status ORDER BY date DESC LIMIT 1")
     fun getActiveQuestByType(
         type: QuestType, 
         status: QuestStatus
@@ -58,6 +58,7 @@ interface QuestDao {
     @Query("""
         SELECT * FROM quest 
         WHERE date(date / 1000, 'unixepoch', 'localtime') = date(:dateMillis / 1000, 'unixepoch', 'localtime')
+        ORDER BY date DESC
     """)
     fun getQuestsByDate(dateMillis: Long): Flow<List<QuestWithTasks>>
 
@@ -66,6 +67,7 @@ interface QuestDao {
         SELECT * FROM quest 
         WHERE date(date / 1000, 'unixepoch', 'localtime') = date(:dateMillis / 1000, 'unixepoch', 'localtime')
         AND (type = :typeDaily OR type = :typeMain)
+        ORDER BY date DESC
     """)
     fun getDailyQuestsForDate(
         dateMillis: Long,
@@ -74,13 +76,13 @@ interface QuestDao {
     ): Flow<List<QuestWithTasks>>
 
     @Transaction
-    @Query("SELECT * FROM quest WHERE type = :questType AND status != :completedStatus")
+    @Query("SELECT * FROM quest WHERE type = :questType AND status != :completedStatus ORDER BY date DESC")
     fun getPendingPromotionQuests(
         questType: QuestType,
         completedStatus: QuestStatus
     ): Flow<List<QuestWithTasks>>
 
-    @Query("SELECT * FROM quest WHERE type = :type AND status = :status AND scheduleId = :exerciseId LIMIT 1")
+    @Query("SELECT * FROM quest WHERE type = :type AND status = :status AND scheduleId = :exerciseId ORDER BY date DESC LIMIT 1")
     suspend fun getActivePromotionQuestByExercise(
         exerciseId: Int,
         type: QuestType,
