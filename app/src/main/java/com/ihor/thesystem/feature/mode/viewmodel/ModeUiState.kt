@@ -6,6 +6,7 @@ import kotlinx.collections.immutable.persistentListOf
 
 data class ModeUiData(
     val currentCycleDay: Int             = 1,
+    val selectedDay: Int                 = 1,
     val days: ImmutableList<CycleDayUiModel> = persistentListOf(),
     val activeDayData: ActiveDayUiModel? = null,
     val isPenaltyActive: Boolean         = false
@@ -16,6 +17,7 @@ data class CycleDayUiModel(
     val label: String,
     val type: DayType,
     val isActive: Boolean,
+    val isSelected: Boolean = false,
     val workoutName: String? = null
 )
 

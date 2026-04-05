@@ -1,7 +1,7 @@
 package com.ihor.thesystem.domain.model
 
 enum class DomainQuestType { DAILY, MAIN, PROMOTION }
-enum class DomainQuestStatus { ACTIVE, COMPLETED, FAILED }
+enum class DomainQuestStatus { ACTIVE, COMPLETED, FAILED, LOCKED }
 
 enum class Rank(val value: Int) {
     E(0), D(1), C(2), B(3), A(4), S(5);

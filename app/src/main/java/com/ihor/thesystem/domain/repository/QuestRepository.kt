@@ -13,7 +13,13 @@ interface QuestRepository {
     suspend fun updateQuestStatus(questId: Int, status: DomainQuestStatus)
     suspend fun createDailyQuest(title: String, tasks: List<String>, scheduleId: Int?)
     suspend fun createMainQuest(title: String, exercises: List<ExerciseRecommendation>, scheduleId: Int?)
-    suspend fun createPromotionQuest(exerciseId: Int, title: String, description: String)
+    suspend fun createPromotionQuest(
+        exerciseId: Int, 
+        title: String, 
+        description: String,
+        targetWeight: Double? = null,
+        targetReps: Int? = null
+    )
     suspend fun addTaskToQuest(questId: Int, taskName: String)
     suspend fun removeTask(taskId: Int)
     suspend fun archiveActiveQuests()

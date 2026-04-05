@@ -123,6 +123,7 @@ fun ModeScreen(
                             )
                             CycleDaySelector(
                                 days = data.days,
+                                onTap = { viewModel.onCycleDayTap(it) },
                                 onLongPress = { viewModel.onCycleDayLongPress(it) }
                             )
                         }

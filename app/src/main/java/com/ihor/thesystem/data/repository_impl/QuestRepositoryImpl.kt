@@ -45,7 +45,7 @@ class QuestRepositoryImpl @Inject constructor(
         title: String, tasks: List<String>, scheduleId: Int?
     ) {
         val questId = questDao.insertQuest(
-            QuestEntity(title = title, type = EntityQuestType.DAILY, scheduleId = scheduleId)
+            QuestEntity(title = title, type = EntityQuestType.DAILY, scheduleId = scheduleId, status = EntityQuestStatus.ACTIVE)
         ).toInt()
         tasks.forEach { taskName ->
             questDao.insertQuestTask(QuestTaskEntity(questId = questId, name = taskName))
@@ -56,7 +56,7 @@ class QuestRepositoryImpl @Inject constructor(
         title: String, exercises: List<ExerciseRecommendation>, scheduleId: Int?
     ) {
         val questId = questDao.insertQuest(
-            QuestEntity(title = title, type = EntityQuestType.MAIN, scheduleId = scheduleId)
+            QuestEntity(title = title, type = EntityQuestType.MAIN, scheduleId = scheduleId, status = EntityQuestStatus.ACTIVE)
         ).toInt()
         exercises.forEach { rec ->
             questDao.insertQuestTask(
@@ -72,16 +72,25 @@ class QuestRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun createPromotionQuest(exerciseId: Int, title: String, description: String) {
+    override suspend fun createPromotionQuest(
+        exerciseId: Int, 
+        title: String, 
+        description: String,
+        targetWeight: Double?,
+        targetReps: Int?
+    ) {
         val questId = questDao.insertQuest(
-            QuestEntity(title = title, type = EntityQuestType.PROMOTION, scheduleId = exerciseId)
+            QuestEntity(title = title, type = EntityQuestType.PROMOTION, scheduleId = exerciseId, status = EntityQuestStatus.ACTIVE)
         ).toInt()
         questDao.insertQuestTask(
             QuestTaskEntity(
                 questId = questId,
                 name = description,
                 exerciseId = exerciseId,
-                isCompleted = false
+                isCompleted = false,
+                targetWeight = targetWeight,
+                targetReps = targetReps,
+                targetSets = 1
             )
         )
     }
@@ -156,10 +165,12 @@ private fun EntityQuestStatus.toDomain() = when (this) {
     EntityQuestStatus.ACTIVE    -> DomainQuestStatus.ACTIVE
     EntityQuestStatus.COMPLETED -> DomainQuestStatus.COMPLETED
     EntityQuestStatus.FAILED    -> DomainQuestStatus.FAILED
+    EntityQuestStatus.LOCKED    -> DomainQuestStatus.LOCKED
 }
 
 private fun DomainQuestStatus.toEntity() = when (this) {
     DomainQuestStatus.ACTIVE    -> EntityQuestStatus.ACTIVE
     DomainQuestStatus.COMPLETED -> EntityQuestStatus.COMPLETED
     DomainQuestStatus.FAILED    -> EntityQuestStatus.FAILED
+    DomainQuestStatus.LOCKED    -> EntityQuestStatus.LOCKED
 }

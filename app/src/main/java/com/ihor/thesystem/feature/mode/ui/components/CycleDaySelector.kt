@@ -24,6 +24,7 @@ import com.ihor.thesystem.feature.mode.viewmodel.DayType
 @Composable
 fun CycleDaySelector(
     days: List<CycleDayUiModel>,
+    onTap: (Int) -> Unit,
     onLongPress: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -35,6 +36,7 @@ fun CycleDaySelector(
         days.forEach { day ->
             CycleDayHex(
                 day      = day,
+                onTap    = { onTap(day.dayNumber) },
                 onLongPress = { onLongPress(day.dayNumber) },
                 modifier = Modifier.weight(1f)
             )
@@ -45,6 +47,7 @@ fun CycleDaySelector(
 @Composable
 private fun CycleDayHex(
     day: CycleDayUiModel,
+    onTap: () -> Unit,
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -59,10 +62,13 @@ private fun CycleDayHex(
     val accentColor = when {
         day.isActive && day.type == DayType.WORKOUT -> NeonGold
         day.isActive                                -> NeonCyan
+        day.isSelected                              -> if (day.type == DayType.WORKOUT) NeonGold else NeonCyan
         day.type == DayType.WORKOUT                 -> NeonGold.copy(alpha = 0.35f)
         else                                        -> NeonCyanDim.copy(alpha = 0.25f)
     }
-    val borderColor = if (day.isActive) accentColor else accentColor.copy(alpha = 0.4f)
+    
+    // Більш виражений колір для обраного дня
+    val borderColor = if (day.isActive || day.isSelected) accentColor else accentColor.copy(alpha = 0.4f)
 
     Column(
         modifier              = modifier,
@@ -75,6 +81,7 @@ private fun CycleDayHex(
                 .aspectRatio(1.155f)
                 .pointerInput(Unit) {
                     detectTapGestures(
+                        onTap = { onTap() },
                         onLongPress = { onLongPress() }
                     )
                 },
@@ -82,18 +89,21 @@ private fun CycleDayHex(
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val path = buildHexagonPath(size, rotationDegrees = 0f)
-                val bg   = if (day.isActive) accentColor.copy(alpha = 0.18f)
-                else PanelSurface
+                val bg   = when {
+                    day.isActive   -> accentColor.copy(alpha = 0.25f)
+                    day.isSelected -> accentColor.copy(alpha = 0.12f)
+                    else           -> PanelSurface
+                }
                 drawPath(path, bg)
                 drawPath(
                     path  = path,
                     color = borderColor,
-                    style = Stroke(width = if (day.isActive) 2.5.dp.toPx() else 1.5.dp.toPx())
+                    style = Stroke(width = if (day.isActive) 3.dp.toPx() else if (day.isSelected) 2.dp.toPx() else 1.5.dp.toPx())
                 )
             }
             Text(
                 text = day.dayNumber.toString(),
-                color = if (day.isActive) accentColor else TextSecondary,
+                color = if (day.isActive || day.isSelected) accentColor else TextSecondary,
                 fontFamily = TekoFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
@@ -103,10 +113,10 @@ private fun CycleDayHex(
 
         Text(
             text       = label,
-            color      = if (day.isActive) accentColor else TextSecondary.copy(alpha = 0.5f),
+            color      = if (day.isActive || day.isSelected) accentColor else TextSecondary.copy(alpha = 0.5f),
             fontSize   = 10.sp,
             fontFamily = RajdhaniFamily,
-            fontWeight = if (day.isActive) FontWeight.Bold else FontWeight.Normal
+            fontWeight = if (day.isActive || day.isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }
 }

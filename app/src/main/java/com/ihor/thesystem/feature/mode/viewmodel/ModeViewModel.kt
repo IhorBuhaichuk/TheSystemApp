@@ -15,6 +15,7 @@ import com.ihor.thesystem.feature.mode.ui.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -42,15 +43,36 @@ class ModeViewModel @Inject constructor(
     private val generateQuests:  GenerateDailyQuestsUseCase
 ) : ViewModel() {
 
+    private val _uiState = MutableStateFlow<UiState<ModeUiData>>(UiState.Loading)
+    val uiState: StateFlow<UiState<ModeUiData>> = _uiState.asStateFlow()
+
+    private val _dialogState = MutableStateFlow<ModeDialogState>(ModeDialogState.None)
+    val dialogState: StateFlow<ModeDialogState> = _dialogState.asStateFlow()
+
+    private val _events = MutableSharedFlow<ModeEvent>()
+    val events = _events.asSharedFlow()
+
+    private var scheduleJob: Job? = null
+    private var selectedDay: Int = 1
+
     init {
         viewModelScope.launch {
             generateQuests()
+            
+            playerRepo.getPlayer().filterNotNull().collect { player ->
+                // При першому завантаженні або зміні поточного дня циклу оновлюємо вибраний день
+                val isFirstLoad = _uiState.value is UiState.Loading
+                if (isFirstLoad) {
+                    selectedDay = player.currentCycleDay
+                }
+                loadDataForDay(selectedDay, player.currentCycleDay, player.isPenaltyActive)
+            }
         }
     }
 
-    val uiState: StateFlow<UiState<ModeUiData>> = playerRepo.getPlayer()
-        .filterNotNull()
-        .flatMapLatest { player ->
+    private fun loadDataForDay(day: Int, currentCycleDay: Int, isPenaltyActive: Boolean) {
+        scheduleJob?.cancel()
+        scheduleJob = viewModelScope.launch {
             val d1Flow = scheduleRepo.getScheduleForDay(1)
             val d2Flow = scheduleRepo.getScheduleForDay(2)
             val d3Flow = scheduleRepo.getScheduleForDay(3)
@@ -67,45 +89,51 @@ class ModeViewModel @Inject constructor(
                 val main = array[5] as? Quest
 
                 val allDays = listOf(d1, d2, d3, d4)
-                val current = allDays.getOrNull(player.currentCycleDay - 1)
+                val currentSelected = allDays.getOrNull(day - 1)
                 
-                val exercises = main?.tasks?.map { task ->
-                    val recStr = if (task.recommendedWeight != null) {
-                        "${task.recommendedWeight}кг | ${task.recommendedSets}x${task.recommendedReps}"
-                    } else null
-                    
-                    ExerciseWorkoutUiModel(
-                        name = task.name,
-                        recommendation = recStr
-                    )
-                } ?: emptyList()
+                // Вправи показуємо:
+                // 1. Якщо це поточний день циклу - з активного Main квесту (там актуальні ваги)
+                // 2. Якщо інший день - просто назви з шаблону розкладу
+                val exercises = if (day == currentCycleDay) {
+                    main?.tasks?.map { task ->
+                        val recStr = if (task.recommendedWeight != null) {
+                            "${task.recommendedWeight}кг | ${task.recommendedSets}x${task.recommendedReps}"
+                        } else null
+                        ExerciseWorkoutUiModel(name = task.name, recommendation = recStr)
+                    } ?: emptyList()
+                } else {
+                    currentSelected?.exercises?.map { ExerciseWorkoutUiModel(name = it.name) } ?: emptyList()
+                }
 
                 ModeUiData(
-                    currentCycleDay = player.currentCycleDay,
-                    isPenaltyActive = player.isPenaltyActive,
-                    days = allDays.mapIndexedNotNull { i, day ->
-                        day?.toCycleDayUiModel(
-                            dayNum   = i + 1,
-                            isActive = (i + 1) == player.currentCycleDay
+                    currentCycleDay = currentCycleDay,
+                    selectedDay = day,
+                    isPenaltyActive = isPenaltyActive,
+                    days = allDays.mapIndexedNotNull { i, scheduleDay ->
+                        scheduleDay?.toCycleDayUiModel(
+                            dayNum = i + 1,
+                            isActive = (i + 1) == currentCycleDay,
+                            isSelected = (i + 1) == day
                         )
                     }.toImmutableList(),
-                    activeDayData = current?.toActiveDayUiModel(exercises.toImmutableList(), daily)
+                    activeDayData = currentSelected?.toActiveDayUiModel(
+                        exercises.toImmutableList(), 
+                        if(day == currentCycleDay) daily else null
+                    )
                 )
+            }.collect { data ->
+                _uiState.value = UiState.Content(data)
             }
         }
-        .map<ModeUiData, UiState<ModeUiData>> { UiState.Content(it) }
-        .catch { emit(UiState.Error(it.message ?: "Помилка завантаження режиму")) }
-        .stateIn(
-            scope        = viewModelScope,
-            started      = SharingStarted.WhileSubscribed(5_000),
-            initialValue = UiState.Loading
-        )
+    }
 
-    private val _dialogState = MutableStateFlow<ModeDialogState>(ModeDialogState.None)
-    val dialogState: StateFlow<ModeDialogState> = _dialogState.asStateFlow()
-
-    private val _events = MutableSharedFlow<ModeEvent>()
-    val events = _events.asSharedFlow()
+    fun onCycleDayTap(day: Int) {
+        selectedDay = day
+        viewModelScope.launch {
+            val player = playerRepo.getPlayer().firstOrNull() ?: return@launch
+            loadDataForDay(day, player.currentCycleDay, player.isPenaltyActive)
+        }
+    }
 
     fun onNextDayTap()              { _dialogState.value = ModeDialogState.ConfirmAdvance }
     fun onEditScheduleTap(day: Int) { _dialogState.value = ModeDialogState.EditSchedule(day) }
@@ -148,12 +176,19 @@ class ModeViewModel @Inject constructor(
     }
 }
 
-private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean) =
+private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean, isSelected: Boolean) =
     CycleDayUiModel(
         dayNumber   = dayNum,
-        label       = "ДЕНЬ $dayNum",
+        label       = when(dayNum) {
+            1 -> "ДЕНЬ"
+            2 -> "НІЧ"
+            3 -> "ВІДСИПНИЙ"
+            4 -> "ВИХІДНИЙ"
+            else -> "ДЕНЬ $dayNum"
+        },
         type        = if (workoutTemplateId != null) DayType.WORKOUT else DayType.REST,
         isActive    = isActive,
+        isSelected  = isSelected,
         workoutName = workoutTemplateName
     )
 

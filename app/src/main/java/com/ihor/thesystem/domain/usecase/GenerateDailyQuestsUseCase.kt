@@ -2,8 +2,11 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+import kotlin.math.round
+import java.util.Locale
 
 class GenerateDailyQuestsUseCase @Inject constructor(
     private val questRepo: QuestRepository,
@@ -16,30 +19,37 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         val player = playerRepo.getPlayer().firstOrNull() ?: return
         val cycleDay = player.currentCycleDay
         
+        // ЗАВДАННЯ 2: Міграція "застряглих" квестів
+        val todayQuests = questRepo.getDailyQuestsForDate(System.currentTimeMillis()).first()
+        if (todayQuests.isNotEmpty()) {
+            // Примусове розблокування старих квестів (Fix)
+            todayQuests.filter { it.status == DomainQuestStatus.LOCKED }.forEach { lockedQuest ->
+                questRepo.updateQuestStatus(lockedQuest.id, DomainQuestStatus.ACTIVE)
+            }
+            
+            // Перевіряємо PROMOTION навіть якщо денні квести вже є
+            generatePromotionQuests()
+            return
+        }
+
         // БЛОК 1: ГЕНЕРАЦІЯ DAILY ТА MAIN
-        val activeDaily = questRepo.getActiveDailyQuest().firstOrNull()
-        val activeMain = questRepo.getActiveMainQuest().firstOrNull()
         val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
 
         if (schedule != null) {
-            // ФІКС: Завжди ACTIVE для Рутини
-            if (activeDaily == null) {
-                // Список завдань для рутини (можна розширити)
-                val routineTasks = listOf(
-                    "Прийом вітамінів та добавок",
-                    "Контроль водного балансу (2л+)",
-                    "Заповнення щоденного звіту"
-                )
-                
-                questRepo.createDailyQuest(
-                    title = "РУТИНА | ДЕНЬ $cycleDay",
-                    tasks = routineTasks, 
-                    scheduleId = schedule.id
-                )
-            }
+            // ЗАВДАННЯ 1: Виправлення генерації (Завжди ACTIVE)
+            val routineTasks = listOf(
+                "Прийом вітамінів та добавок",
+                "Контроль водного балансу (2л+)",
+                "Заповнення щоденного звіту"
+            )
+            
+            questRepo.createDailyQuest(
+                title = "РУТИНА | ДЕНЬ $cycleDay",
+                tasks = routineTasks, 
+                scheduleId = schedule.id
+            )
 
-            // ФІКС: Завжди ACTIVE для Основного тренування
-            if (activeMain == null && schedule.workoutTemplateName != null) {
+            if (schedule.workoutTemplateName != null) {
                 val recommendedExercises = schedule.exercises.map { exercise ->
                     val rec = calculateRecommendation(exercise.id, exercise.name)
                     ExerciseRecommendation(
@@ -51,6 +61,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
                     )
                 }
 
+                // ФІКС: Квест створюється як ACTIVE (імплементовано в репозиторії)
                 questRepo.createMainQuest(
                     title = schedule.workoutTemplateName.uppercase(),
                     exercises = recommendedExercises,
@@ -60,6 +71,10 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         }
 
         // БЛОК 2: ГЕНЕРАЦІЯ PROMOTION (НЕЗАЛЕЖНО)
+        generatePromotionQuests()
+    }
+
+    private suspend fun generatePromotionQuests() {
         val matrixEntries = matrixRepo.getAllEntries().firstOrNull() ?: emptyList()
         val pendingPromotions = matrixEntries.filter { it.isPromotionPending }
         
@@ -70,10 +85,17 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             }
             
             if (!alreadyExists) {
+                // МАТЕМАТИЧНИЙ АЛГОРИТМ РОЗРАХУНКУ ДЛЯ ЕКЗАМЕНУ
+                val targetWeight = pending.targetWeight
+                val rawExamWeight = targetWeight * 1.025f
+                val examWeight = (round(rawExamWeight / 2.5f) * 2.5f).toDouble()
+                
                 questRepo.createPromotionQuest(
                     exerciseId = pending.exerciseId,
                     title = "ЕКЗАМЕН: ${pending.exerciseName.uppercase()}",
-                    description = "Встанови новий максимум або підтверди статус для підвищення рангу до ${Rank.fromValue(pending.currentRank.value + 1).name}"
+                    description = "Тест 1RM: ${pending.exerciseName}",
+                    targetWeight = examWeight,
+                    targetReps = 1
                 )
             }
         }
