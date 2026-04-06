@@ -93,7 +93,6 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
         val nextCycles = existing.completedCycles + 1
         
-        // Встановлюємо статус очікування екзамену замість миттєвого підвищення рангу
         matrixDao.update(existing.copy(
             completedCycles = nextCycles,
             isPromotionPending = true
@@ -133,12 +132,14 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         playerDao.update(player.copy(globalRank = globalRank))
     }
 
-    override suspend fun updateTarget(exerciseId: Long, weight: Float, reps: Int) {
+    override suspend fun updateTarget(exerciseId: Long, weight: Double, sets: Int, reps: String) {
         val id = exerciseId.toInt()
         val existing = matrixDao.getEntryForExerciseSync(id) ?: return
         matrixDao.update(existing.copy(
-            targetWeight = weight,
-            targetWeightNote = "Рекомендація AI ($reps reps)"
+            nextRecommendedWeight = weight,
+            nextRecommendedSets = sets,
+            nextRecommendedReps = reps,
+            targetWeightNote = "Рекомендація AI ($sets sets, $reps reps)"
         ))
     }
 }
@@ -166,6 +167,9 @@ private fun ProgressionMatrixEntity.toDomain(
         progressPercent   = progress,
         currentRank       = currentRank,
         completedCycles   = completedCycles,
-        isPromotionPending = isPromotionPending
+        isPromotionPending = isPromotionPending,
+        nextRecommendedWeight = nextRecommendedWeight,
+        nextRecommendedSets = nextRecommendedSets,
+        nextRecommendedReps = nextRecommendedReps
     )
 }

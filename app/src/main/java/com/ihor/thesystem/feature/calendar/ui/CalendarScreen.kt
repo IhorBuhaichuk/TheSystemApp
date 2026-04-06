@@ -28,6 +28,7 @@ import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarDayUiModel
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarViewModel
 import com.ihor.thesystem.feature.calendar.viewmodel.WorkoutResultUiModel
+import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -114,6 +115,8 @@ fun CalendarScreen(
                     date = date,
                     dayModel = selectedDayModel,
                     results = uiState.workoutResults,
+                    recommendations = uiState.nextWorkoutRecommendations,
+                    loggedWeight = uiState.loggedWeightForDate,
                     onDismiss = { viewModel.onDateSelected(null) },
                     viewModel = viewModel
                 )
@@ -258,6 +261,8 @@ fun DailyScheduleSection(
     date: LocalDate,
     dayModel: CalendarDayUiModel,
     results: List<WorkoutResultUiModel>,
+    recommendations: List<ProgressionMatrixEntry>,
+    loggedWeight: Double?,
     onDismiss: () -> Unit,
     viewModel: CalendarViewModel
 ) {
@@ -274,12 +279,23 @@ fun DailyScheduleSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "ДЕНЬ ${date.dayOfMonth}.${date.monthValue}",
-                color = TextPrimary,
-                fontFamily = RajdhaniFamily,
-                fontWeight = FontWeight.Bold
-            )
+            Column {
+                Text(
+                    text = "ДЕНЬ ${date.dayOfMonth}.${date.monthValue}",
+                    color = TextPrimary,
+                    fontFamily = RajdhaniFamily,
+                    fontWeight = FontWeight.Bold
+                )
+                if (loggedWeight != null) {
+                    Text(
+                        text = "Вага: $loggedWeight кг",
+                        color = NeonCyan,
+                        fontFamily = RajdhaniFamily,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
             IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
                 Text("[X]", color = NeonRed, fontSize = 10.sp, fontFamily = RajdhaniFamily)
             }
@@ -314,13 +330,35 @@ fun DailyScheduleSection(
                         Text(setsText, color = TextSecondary, fontSize = 10.sp, fontFamily = RajdhaniFamily, modifier = Modifier.padding(start = 8.dp))
                     }
                     
-                    // ПОКАЗУЄМО МАКСИМАЛЬНИЙ 1RM СЕРЕД УСІХ ПІДХОДІВ
                     MaxOneRepMaxText(
                         sets = result.sets.map { it.weight to it.reps },
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
                 Spacer(Modifier.height(6.dp))
+            }
+            HorizontalDivider(color = NeonCyan.copy(0.1f), thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
+        }
+
+        // --- Блок Рекомендацій від Системи ---
+        if (recommendations.isNotEmpty()) {
+            Text(
+                text = "РЕКОМЕНДАЦІЇ ВІД СИСТЕМИ:",
+                color = NeonCyan,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = RajdhaniFamily
+            )
+            Spacer(Modifier.height(8.dp))
+            
+            recommendations.forEach { rec ->
+                Text(
+                    text = "• ${rec.exerciseName}: ${rec.nextRecommendedWeight}кг, ${rec.nextRecommendedSets}x, ${rec.nextRecommendedReps}",
+                    color = TextPrimary,
+                    fontSize = 11.sp,
+                    fontFamily = RajdhaniFamily,
+                    modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
+                )
             }
             HorizontalDivider(color = NeonCyan.copy(0.1f), thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
         }

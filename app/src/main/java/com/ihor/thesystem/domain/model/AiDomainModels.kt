@@ -4,7 +4,12 @@ import java.util.UUID
 
 enum class ChatRole { SYSTEM, USER, AI }
 
-data class AiWorkoutRecommendation(val exerciseId: Long, val weight: Float, val reps: Int)
+data class AiWorkoutRecommendation(
+    val exerciseId: Long, 
+    val weight: Float, 
+    val sets: Int, 
+    val reps: String
+)
 
 data class ChatMessage(
     val id: String = UUID.randomUUID().toString(),
@@ -38,7 +43,7 @@ data class WorkoutDirective(
     val exerciseId: String,
     val targetWeight: Double,
     val targetSets: Int,
-    val targetReps: Int
+    val targetReps: String
 )
 
 /**

@@ -12,6 +12,13 @@ interface WeightLogDao {
     @Query("SELECT * FROM weight_log ORDER BY timestamp DESC LIMIT 1")
     fun getLatestLog(): Flow<WeightLogEntity?>
 
+    @Query("""
+        SELECT weight FROM weight_log 
+        WHERE date(timestamp / 1000, 'unixepoch', 'localtime') = date(:dateMillis / 1000, 'unixepoch', 'localtime') 
+        ORDER BY timestamp DESC LIMIT 1
+    """)
+    suspend fun getWeightByDate(dateMillis: Long): Float?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(log: WeightLogEntity)
 

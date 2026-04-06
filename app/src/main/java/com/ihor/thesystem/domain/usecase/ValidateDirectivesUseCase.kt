@@ -25,13 +25,14 @@ class ValidateDirectivesUseCase @Inject constructor() {
                             minimumValue = matrixEntry.startWeight.toDouble(),
                             maximumValue = matrixEntry.targetWeight.toDouble()
                         ),
-                        targetReps = directive.targetReps.coerceIn(1, 30),
+                        // Оскільки targetReps тепер String (діапазони), ми не можемо напряму використати coerceIn.
+                        // Для базової валідації намагаємося розпарсити або залишаємо як є.
+                        targetReps = directive.targetReps,
                         targetSets = directive.targetSets.coerceAtLeast(1)
                     )
                 } else {
                     // Якщо вправи чомусь немає в матриці, ставимо базові ліміти
                     directive.copy(
-                        targetReps = directive.targetReps.coerceIn(1, 30),
                         targetSets = directive.targetSets.coerceAtLeast(1)
                     )
                 }

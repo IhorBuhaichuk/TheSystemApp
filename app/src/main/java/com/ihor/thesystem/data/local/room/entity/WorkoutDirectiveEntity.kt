@@ -9,5 +9,5 @@ data class WorkoutDirectiveEntity(
     val exerciseId: Int,
     val targetWeight: Double,
     val targetSets: Int,
-    val targetReps: Int
+    val targetReps: String
 )

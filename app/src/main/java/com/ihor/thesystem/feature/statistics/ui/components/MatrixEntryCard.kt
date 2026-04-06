@@ -80,6 +80,29 @@ fun MatrixEntryCard(
             accentColor = accentColor
         )
 
+        // --- AI Recommendation Row ---
+        if (entry.nextRecommendedWeight != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "НАСТУПНЕ ТРЕНУВАННЯ: ",
+                    color = TextSecondary,
+                    fontFamily = RajdhaniFamily,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "${entry.nextRecommendedWeight}кг, ${entry.nextRecommendedSets}x, ${entry.nextRecommendedReps}",
+                    color = NeonCyan,
+                    fontFamily = TekoFamily,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
         // --- Bottom Row: Weights + Setup Button ---
         Row(
             modifier              = Modifier.fillMaxWidth(),

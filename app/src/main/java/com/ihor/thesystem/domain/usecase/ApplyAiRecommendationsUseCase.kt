@@ -11,7 +11,8 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
         recommendations.forEach { rec ->
             matrixRepo.updateTarget(
                 exerciseId = rec.exerciseId,
-                weight = rec.weight,
+                weight = rec.weight.toDouble(),
+                sets = rec.sets,
                 reps = rec.reps
             )
         }

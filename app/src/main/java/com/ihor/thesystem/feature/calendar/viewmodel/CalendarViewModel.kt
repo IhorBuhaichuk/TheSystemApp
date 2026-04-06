@@ -2,14 +2,14 @@ package com.ihor.thesystem.feature.calendar.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ihor.thesystem.data.local.room.dao.WeightLogDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
+import com.ihor.thesystem.data.local.room.entity.ProgressionMatrixEntity
 import com.ihor.thesystem.domain.model.SystemConfig
-import com.ihor.thesystem.domain.repository.ScheduleRepository
-import com.ihor.thesystem.domain.repository.SystemConfigRepository
-import com.ihor.thesystem.domain.repository.ViewingDateRepository
-import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
+import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -30,6 +30,8 @@ data class CalendarUiState(
     val todayInfo: CalendarDayUiModel? = null,
     val selectedDate: LocalDate? = null,
     val workoutResults: List<WorkoutResultUiModel> = emptyList(),
+    val nextWorkoutRecommendations: List<ProgressionMatrixEntry> = emptyList(),
+    val loggedWeightForDate: Double? = null,
     val currentMonth: YearMonth = YearMonth.now(),
     val isLoading: Boolean = false
 )
@@ -49,6 +51,8 @@ class CalendarViewModel @Inject constructor(
     private val configRepo: SystemConfigRepository,
     private val scheduleRepo: ScheduleRepository,
     private val analyticsRepo: WorkoutAnalyticsRepository,
+    private val matrixRepo: ProgressionMatrixRepository,
+    private val weightLogDao: WeightLogDao,
     private val workoutDao: WorkoutDao,
     private val calculateCycleDay: CalculateCycleDayForDateUseCase,
     private val viewingDateRepo: ViewingDateRepository
@@ -57,14 +61,25 @@ class CalendarViewModel @Inject constructor(
     private val _currentMonth = MutableStateFlow(YearMonth.now())
     val _selectedDate = viewingDateRepo.selectedDate
     private val _workoutResults = MutableStateFlow<List<WorkoutResultUiModel>>(emptyList())
+    private val _recommendations = MutableStateFlow<List<ProgressionMatrixEntry>>(emptyList())
+    private val _loggedWeight = MutableStateFlow<Double?>(null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<CalendarUiState> = combine(
         _currentMonth,
         configRepo.getConfigFlow().filterNotNull(),
         _selectedDate,
-        _workoutResults
-    ) { month: YearMonth, config: SystemConfig, selectedDate: LocalDate?, results: List<WorkoutResultUiModel> ->
+        _workoutResults,
+        _recommendations,
+        _loggedWeight
+    ) { args: Array<Any?> ->
+        val month = args[0] as YearMonth
+        val config = args[1] as SystemConfig
+        val selectedDate = args[2] as LocalDate?
+        val results = args[3] as List<WorkoutResultUiModel>
+        val recs = args[4] as List<ProgressionMatrixEntry>
+        val weight = args[5] as Double?
+
         val daysInMonth = month.lengthOfMonth()
         
         val calendarDays = (1..daysInMonth).map { dayNum ->
@@ -94,6 +109,8 @@ class CalendarViewModel @Inject constructor(
             todayInfo = CalendarDayUiModel(todayDate, todayCycleDay, getLabelForCycleDay(todayCycleDay), true),
             selectedDate = selectedDate,
             workoutResults = results,
+            nextWorkoutRecommendations = recs,
+            loggedWeightForDate = weight,
             currentMonth = month,
             isLoading = false
         )
@@ -116,11 +133,12 @@ class CalendarViewModel @Inject constructor(
         if (date != null) {
             viewingDateRepo.setDate(date)
             loadWorkoutResults(date)
+            loadRecommendations(date)
+            loadWeight(date)
         } else {
-            // If date is null, we can keep the last selected date or reset to today.
-            // Requirement says default is LocalDate.now().
-            // However, the UI might want to dismiss the details panel.
-            // Let's allow null in repo if needed, but for now we just follow the plan.
+            _loggedWeight.value = null
+            _workoutResults.value = emptyList()
+            _recommendations.value = emptyList()
         }
     }
 
@@ -138,6 +156,37 @@ class CalendarViewModel @Inject constructor(
                 }
                 _workoutResults.value = results
             }
+        }
+    }
+
+    private fun loadRecommendations(date: LocalDate) {
+        viewModelScope.launch {
+            val config = configRepo.getConfigFlow().firstOrNull() ?: return@launch
+            val cycleDay = calculateCycleDay(
+                targetDate = date,
+                anchorEpochDay = config.cycleAnchorDateTimestamp,
+                anchorCycleDay = config.cycleAnchorDay
+            )
+            
+            val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
+            if (schedule?.workoutTemplateId != null) {
+                val exerciseIds = schedule.exercises.map { it.id }
+                matrixRepo.getAllEntries().collect { allEntries ->
+                    _recommendations.value = allEntries.filter { 
+                        exerciseIds.contains(it.exerciseId) && it.nextRecommendedWeight != null 
+                    }
+                }
+            } else {
+                _recommendations.value = emptyList()
+            }
+        }
+    }
+
+    private fun loadWeight(date: LocalDate) {
+        val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        viewModelScope.launch {
+            val weight = weightLogDao.getWeightByDate(millis)
+            _loggedWeight.value = weight?.toDouble()
         }
     }
 

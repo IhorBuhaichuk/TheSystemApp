@@ -52,13 +52,24 @@ class FinalizeSessionUseCase @Inject constructor(
             
             val report = try {
                 val chatMsg = aiRepository.getChatResponse(prompt)
+                
+                // --- Збереження рекомендацій ШІ в матрицю прогресії ---
+                chatMsg.recommendations.forEach { rec ->
+                    progressionMatrixRepository.updateTarget(
+                        exerciseId = rec.exerciseId,
+                        weight = rec.weight.toDouble(),
+                        sets = rec.sets,
+                        reps = rec.reps
+                    )
+                }
+
                 AiArchitectReport(
                     architectFeedback = chatMsg.text,
                     currentStageStatus = "[ LOGGED ]",
                     completedExercises = sets.map { it.exerciseId }.distinct(),
                     pendingExercises = emptyList(),
                     nextWorkoutDirectives = chatMsg.recommendations.map { 
-                        WorkoutDirective(it.exerciseId.toString(), it.weight.toDouble(), 3, it.reps)
+                        WorkoutDirective(it.exerciseId.toString(), it.weight.toDouble(), it.sets, it.reps)
                     },
                     recoveryWindowHours = recoveryHours,
                     isFallback = false
@@ -93,7 +104,7 @@ class FinalizeSessionUseCase @Inject constructor(
                 exerciseId = set.exerciseId,
                 targetWeight = entry?.startWeight?.toDouble() ?: set.weight,
                 targetSets = 3,
-                targetReps = 10
+                targetReps = "10"
             )
         }.distinctBy { it.exerciseId }
 

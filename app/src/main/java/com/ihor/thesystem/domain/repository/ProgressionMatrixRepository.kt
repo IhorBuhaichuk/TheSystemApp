@@ -21,9 +21,9 @@ interface ProgressionMatrixRepository {
     suspend fun promoteRank(exerciseId: Int)
 
     /**
-     * Оновлює цільові показники вправи (вагу та кількість повторень) на основі рекомендацій ШІ.
+     * Оновлює цільові показники вправи на основі рекомендацій ШІ.
      */
-    suspend fun updateTarget(exerciseId: Long, weight: Float, reps: Int)
+    suspend fun updateTarget(exerciseId: Long, weight: Double, sets: Int, reps: String)
 }
 
 data class ProgressionMatrixEntry(
@@ -38,5 +38,8 @@ data class ProgressionMatrixEntry(
     val progressPercent: Float,
     val currentRank: Rank = Rank.E,
     val completedCycles: Int = 0,
-    val isPromotionPending: Boolean = false
+    val isPromotionPending: Boolean = false,
+    val nextRecommendedWeight: Double? = null,
+    val nextRecommendedSets: Int? = null,
+    val nextRecommendedReps: String? = null
 )

@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistoryWithId
+import com.ihor.thesystem.data.local.room.dao.WeightLogDao
 import com.ihor.thesystem.data.local.room.entity.ReferenceMatrixEntity
+import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
@@ -26,6 +28,7 @@ class StatisticsViewModel @Inject constructor(
     private val viewingDateRepo: ViewingDateRepository,
     private val configRepo: SystemConfigRepository,
     private val scheduleRepo: ScheduleRepository,
+    private val weightLogDao: WeightLogDao,
     private val calculateCycleDay: CalculateCycleDayForDateUseCase
 ) : ViewModel() {
 
@@ -36,7 +39,8 @@ class StatisticsViewModel @Inject constructor(
         matrixRepo.getAllReferences(),
         analyticsRepo.getAllWeightHistories(),
         viewingDateRepo.selectedDate,
-        configRepo.getConfigFlow().filterNotNull()
+        configRepo.getConfigFlow().filterNotNull(),
+        weightLogDao.getAllLogs()
     ) { args: Array<Any?> ->
         val player = args[0] as Player
         val matrix = args[1] as List<ProgressionMatrixEntry>
@@ -44,6 +48,7 @@ class StatisticsViewModel @Inject constructor(
         val allHistories = args[3] as List<ExerciseWeightHistoryWithId>
         val selectedDate = args[4] as LocalDate
         val config = args[5] as SystemConfig
+        val weightHistory = args[6] as List<WeightLogEntity>
 
         val cycleDay = calculateCycleDay(
             targetDate = selectedDate,
@@ -80,11 +85,13 @@ class StatisticsViewModel @Inject constructor(
             playerName      = player.name,
             playerClass     = player.playerClass,
             currentMonth    = player.currentMonth,
+            totalMonths     = 12,
             currentWeek     = player.currentWeek,
             currentCycleDay = cycleDay,
             isPenaltyActive = player.isPenaltyActive,
             globalRank      = player.globalRank,
-            matrixEntries   = updatedEntries.toImmutableList()
+            matrixEntries   = updatedEntries.toImmutableList(),
+            weightHistory   = weightHistory.sortedBy { it.timestamp }.toImmutableList()
         )
     }
     .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
@@ -169,6 +176,9 @@ class StatisticsViewModel @Inject constructor(
         completedCycles  = completedCycles,
         isActive         = isActive,
         orderIndex       = orderIndex,
-        weightHistory    = history.toImmutableList()
+        weightHistory    = history.toImmutableList(),
+        nextRecommendedWeight = nextRecommendedWeight,
+        nextRecommendedSets = nextRecommendedSets,
+        nextRecommendedReps = nextRecommendedReps
     )
 }

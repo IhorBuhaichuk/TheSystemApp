@@ -79,6 +79,16 @@ fun StatisticsScreen(
                         PlayerStatsHeader(data = data)
                     }
 
+                    // ── Weight Chart section ───────────────────────────
+                    if (data.weightHistory.size >= 2) {
+                        item {
+                            WeightProgressChart(
+                                history = data.weightHistory,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                    }
+
                     // ── Matrix section title ───────────────────────────
                     item {
                         Row(

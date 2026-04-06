@@ -34,7 +34,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ReferenceMatrixEntity::class,
         ProtocolTemplateEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -113,10 +113,22 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_11_12 = object : Migration(11, 12) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Promotion type added to Enum, column already added in 10_11 or if missing we can check.
-                // Based on prompt, we need to ensure isPromotionPending is there.
-                // If version was 11, and it had isPromotionPending, then 12 is for PROMOTION type in QuestType.
-                // QuestType is an Enum stored as String, so no SQL change needed for type.
+                // Promotion type added to Enum, handled by TypeConverter
+            }
+        }
+
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 1. Оновлення progression_matrix
+                db.execSQL("ALTER TABLE progression_matrix ADD COLUMN nextRecommendedWeight REAL")
+                db.execSQL("ALTER TABLE progression_matrix ADD COLUMN nextRecommendedSets INTEGER")
+                db.execSQL("ALTER TABLE progression_matrix ADD COLUMN nextRecommendedReps TEXT")
+
+                // 2. Міграція workout_directives для зміни типу targetReps з INTEGER на TEXT
+                db.execSQL("CREATE TABLE IF NOT EXISTS `workout_directives_new` (`exerciseId` INTEGER NOT NULL, `targetWeight` REAL NOT NULL, `targetSets` INTEGER NOT NULL, `targetReps` TEXT NOT NULL, PRIMARY KEY(`exerciseId`))")
+                db.execSQL("INSERT INTO `workout_directives_new` (`exerciseId`, `targetWeight`, `targetSets`, `targetReps`) SELECT `exerciseId`, `targetWeight`, `targetSets`, CAST(`targetReps` AS TEXT) FROM `workout_directives`")
+                db.execSQL("DROP TABLE `workout_directives`")
+                db.execSQL("ALTER TABLE `workout_directives_new` RENAME TO `workout_directives`")
             }
         }
     }

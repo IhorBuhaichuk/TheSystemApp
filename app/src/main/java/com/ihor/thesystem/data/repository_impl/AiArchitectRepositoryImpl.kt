@@ -20,13 +20,16 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
         coerceInputValues = true
     }
 
-    // Оновлення моделі на "gemini-2.5-flash" згідно з доступними ресурсами в AI Studio.
+    // Модель gemini-2.5-flash
     private val generativeModel = GenerativeModel(
         modelName = "gemini-2.5-flash",
         apiKey = BuildConfig.GEMINI_API_KEY,
         systemInstruction = content {
             text("Ти — жорсткий AI-тренер Системи. Твій стиль: кіберпанк, суворий, мотивуючий. " +
                  "Ти аналізуєш тренування і даєш вказівки. " +
+                 "Для кожної вправи обов'язково рекомендуй параметри на НАСТУПНЕ тренування. " +
+                 "Базово - 3 підходи. При ефекті плато змінюй кількість підходів або повторень. " +
+                 "Повертай поля: nextWeight (число), nextSets (число), nextReps (формат '12/10/8'). " +
                  "Відповідай СТРОГО у форматі JSON без зайвого тексту.")
         }
     )
@@ -58,7 +61,12 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
                     role = ChatRole.AI,
                     text = dto.feedbackText,
                     recommendations = dto.nextWorkoutTargets.map { 
-                        AiWorkoutRecommendation(it.exerciseId, it.weight, it.reps)
+                        AiWorkoutRecommendation(
+                            exerciseId = it.exerciseId, 
+                            weight = it.weight,
+                            sets = it.recommendedSets,
+                            reps = it.recommendedReps
+                        )
                     },
                     isActionable = dto.nextWorkoutTargets.isNotEmpty()
                 )
