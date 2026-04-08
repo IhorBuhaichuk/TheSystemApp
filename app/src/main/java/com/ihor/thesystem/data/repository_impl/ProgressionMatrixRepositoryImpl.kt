@@ -14,7 +14,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import kotlin.math.roundToInt
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.ZoneId
 
 class ProgressionMatrixRepositoryImpl @Inject constructor(
     private val matrixDao:    ProgressionMatrixDao,
@@ -52,20 +53,11 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
         if (validSets.isEmpty()) return
 
-        // Визначаємо межі дня для пошуку дублікатів
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timestamp
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val startOfDay = calendar.timeInMillis
-
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59)
-        calendar.set(Calendar.MILLISECOND, 999)
-        val endOfDay = calendar.timeInMillis
+        // Визначаємо межі дня за допомогою java.time
+        val zoneId = ZoneId.systemDefault()
+        val today = LocalDate.now(zoneId)
+        val startOfDay = today.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val endOfDay = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
 
         val totalTonnage = validSets.sumOf { 
             (it.weight.toDoubleOrNull() ?: 0.0) * (it.reps.toIntOrNull() ?: 0)
@@ -83,7 +75,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
                 WorkoutSessionLogEntity(
                     sessionId = sessionId,
                     questId = 0,
-                    timestamp = timestamp,
+                    timestamp = System.currentTimeMillis(),
                     totalTonnage = totalTonnage,
                     cycleDay = 0,
                     durationMinutes = 0
@@ -106,7 +98,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
             // Якщо записів сьогодні не було - створюємо нову сесію
             val sessionLog = WorkoutSessionLogEntity(
                 questId = 0,
-                timestamp = timestamp,
+                timestamp = System.currentTimeMillis(),
                 totalTonnage = totalTonnage,
                 cycleDay = 0,
                 durationMinutes = 0

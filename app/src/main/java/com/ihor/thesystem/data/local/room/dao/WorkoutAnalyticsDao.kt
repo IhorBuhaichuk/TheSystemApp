@@ -21,10 +21,14 @@ abstract class WorkoutAnalyticsDao {
     @Update
     abstract suspend fun updateSetLog(log: ExerciseSetLogEntity)
 
+    /**
+     * Знаходить останній лог вправи за вказаний діапазон часу.
+     */
     @Query("""
         SELECT e.* FROM exercise_set_logs e
         JOIN workout_session_logs s ON e.sessionId = s.sessionId
         WHERE e.exerciseId = :exerciseId AND s.timestamp BETWEEN :startOfDay AND :endOfDay
+        ORDER BY s.timestamp DESC
         LIMIT 1
     """)
     abstract suspend fun getLogForExerciseOnDate(exerciseId: Int, startOfDay: Long, endOfDay: Long): ExerciseSetLogEntity?
@@ -69,7 +73,7 @@ abstract class WorkoutAnalyticsDao {
     @Query("""
         SELECT MAX(weight) as weight, s.timestamp
         FROM exercise_set_logs e
-        JOIN workout_session_logs s ON e.sessionId = s.sessionId
+        JOIN workout_session_logs s ON s.sessionId = e.sessionId
         WHERE e.exerciseId = :exerciseId
         GROUP BY date(s.timestamp / 1000, 'unixepoch')
         ORDER BY s.timestamp DESC
