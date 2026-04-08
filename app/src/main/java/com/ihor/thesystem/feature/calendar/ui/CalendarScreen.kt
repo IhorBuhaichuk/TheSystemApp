@@ -261,7 +261,7 @@ fun DailyScheduleSection(
     date: LocalDate,
     dayModel: CalendarDayUiModel,
     results: List<WorkoutResultUiModel>,
-    recommendations: List<ProgressionMatrixEntry>,
+        recommendations: List<ProgressionMatrixEntry>,
     loggedWeight: Double?,
     onDismiss: () -> Unit,
     viewModel: CalendarViewModel

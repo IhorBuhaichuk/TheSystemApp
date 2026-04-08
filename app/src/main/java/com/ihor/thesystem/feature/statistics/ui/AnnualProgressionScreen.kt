@@ -1,0 +1,141 @@
+package com.ihor.thesystem.feature.statistics.ui
+
+import android.content.pm.ActivityInfo
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.util.LockScreenOrientation
+import com.ihor.thesystem.feature.statistics.model.AnnualMatrixProvider
+import com.ihor.thesystem.feature.statistics.model.MatrixRow
+
+@Composable
+fun AnnualProgressionScreen(navController: NavHostController) {
+    LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+
+    val matrixData = AnnualMatrixProvider.getMatrix()
+    val horizontalScrollState = rememberScrollState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundDeep)
+            .padding(16.dp)
+    ) {
+        // --- Header ---
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "РІЧНА МАТРИЦЯ ПРОГРЕСІЇ",
+                color = NeonGreen,
+                fontFamily = TekoFamily,
+                fontSize = 24.sp,
+                letterSpacing = 2.sp
+            )
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.Default.Close, contentDescription = "Close", tint = NeonRed)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // --- Table ---
+        Box(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.horizontalScroll(horizontalScrollState)) {
+                // Header Row
+                Row(modifier = Modifier.background(PanelSurface)) {
+                    TableCell(text = "Вправа", width = 150.dp, isHeader = true)
+                    for (m in 0..12) {
+                        val rankInfo = getRankInfo(m)
+                        TableCell(
+                            text = "M$m (${rankInfo.first})",
+                            width = 70.dp,
+                            isHeader = true,
+                            color = rankInfo.second
+                        )
+                    }
+                }
+
+                // Data Rows
+                LazyColumn {
+                    items(matrixData) { row ->
+                        MatrixDataRow(row)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MatrixDataRow(row: MatrixRow) {
+    Row {
+        TableCell(text = row.exercise, width = 150.dp, isName = true)
+        row.targets.forEachIndexed { index, target ->
+            val rankInfo = getRankInfo(index)
+            TableCell(
+                text = target,
+                width = 70.dp,
+                color = rankInfo.second
+            )
+        }
+    }
+}
+
+@Composable
+private fun TableCell(
+    text: String,
+    width: androidx.compose.ui.unit.Dp,
+    isHeader: Boolean = false,
+    isName: Boolean = false,
+    color: Color = TextPrimary
+) {
+    Box(
+        modifier = Modifier
+            .size(width, 40.dp)
+            .border(0.5.dp, PanelBorder.copy(alpha = 0.3f))
+            .padding(4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = if (isHeader) color else if (isName) TextPrimary else color.copy(alpha = 0.8f),
+            fontFamily = if (isName) RajdhaniFamily else TekoFamily,
+            fontWeight = if (isHeader || isName) FontWeight.Bold else FontWeight.Normal,
+            fontSize = if (isName) 12.sp else 14.sp,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+    }
+}
+
+private fun getRankInfo(month: Int): Pair<String, Color> {
+    return when (month) {
+        0, 1 -> "E" to Color.DarkGray
+        2, 3 -> "D" to Color(0xFF1E90FF)
+        4, 5 -> "C" to Color(0xFF00FF00)
+        6, 7 -> "B" to Color(0xFFFFD700)
+        8, 9 -> "A" to Color(0xFFA020F0)
+        10, 11, 12 -> "S" to Color(0xFFFF003C)
+        else -> "" to Color.White
+    }
+}

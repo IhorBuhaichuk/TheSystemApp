@@ -8,13 +8,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.ihor.thesystem.core.navigation.Routes
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.ui.components.*
 import com.ihor.thesystem.feature.statistics.ui.components.*
 import com.ihor.thesystem.feature.statistics.ui.dialogs.*
 import com.ihor.thesystem.feature.statistics.viewmodel.*
@@ -77,6 +80,31 @@ fun StatisticsScreen(
                     // ── Player header card ─────────────────────────────
                     item {
                         PlayerStatsHeader(data = data)
+                    }
+
+                    // ── Annual Matrix Button ───────────────────────────
+                    item {
+                        Button(
+                            onClick = { navController.navigate(Routes.AnnualMatrix.route) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .sciPanel(
+                                    borderColor = NeonGreen,
+                                    backgroundColor = NeonGreen.copy(alpha = 0.1f),
+                                    cornerCut = 8.dp
+                                ),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                        ) {
+                            Text(
+                                text = "РІЧНА МАТРИЦЯ ПРОГРЕСІЇ",
+                                color = NeonGreen,
+                                fontFamily = TekoFamily,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 2.sp
+                            )
+                        }
                     }
 
                     // ── Weight Chart section ───────────────────────────

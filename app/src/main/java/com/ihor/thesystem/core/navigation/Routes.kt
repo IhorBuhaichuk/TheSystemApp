@@ -6,4 +6,5 @@ sealed class Routes(val route: String) {
     object Statistics : Routes("statistics")
     object Architect  : Routes("architect")
     object Calendar   : Routes("calendar")
+    object AnnualMatrix : Routes("annual_matrix")
 }

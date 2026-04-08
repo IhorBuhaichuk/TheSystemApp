@@ -12,6 +12,7 @@ import com.ihor.thesystem.core.ui.components.SystemBottomNavBar
 import com.ihor.thesystem.feature.architect.ui.ArchitectScreen
 import com.ihor.thesystem.feature.calendar.ui.CalendarScreen
 import com.ihor.thesystem.feature.mode.ui.ModeScreen
+import com.ihor.thesystem.feature.statistics.ui.AnnualProgressionScreen
 import com.ihor.thesystem.feature.statistics.ui.StatisticsScreen
 import com.ihor.thesystem.feature.status.ui.StatusScreen
 
@@ -44,6 +45,9 @@ fun AppNavGraph(navController: NavHostController) {
                         navController.popBackStack()
                     }
                 )
+            }
+            composable(Routes.AnnualMatrix.route) {
+                AnnualProgressionScreen(navController = navController)
             }
         }
     }
