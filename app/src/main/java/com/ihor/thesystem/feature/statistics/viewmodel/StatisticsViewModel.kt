@@ -125,7 +125,19 @@ class StatisticsViewModel @Inject constructor(
 
     fun onOpenLogSets(entry: MatrixEntryUiModel) {
         if (!entry.isActive) return
-        _dialogState.value = StatisticsDialogState.LogWorkoutSets(entry)
+        viewModelScope.launch {
+            val date = viewingDateRepo.selectedDate.value
+            val zoneId = ZoneId.systemDefault()
+            val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
+            val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
+            
+            val existingLog = analyticsRepo.getLogForExerciseOnDate(entry.exerciseId, startOfDay, endOfDay)
+            
+            _dialogState.value = StatisticsDialogState.LogWorkoutSets(
+                entry = entry,
+                existingLog = existingLog
+            )
+        }
     }
 
     fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>, feedback: String) {

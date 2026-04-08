@@ -1,10 +1,13 @@
 package com.ihor.thesystem.feature.statistics.ui.dialogs
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -42,7 +45,10 @@ fun EditWeightDialog(
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Text(
                     text       = entry.exerciseName,
                     color      = TextPrimary,
@@ -89,14 +95,16 @@ fun EditWeightDialog(
                         fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 }
 
+                // Завдання 2: Поле фітбеку
                 OutlinedTextField(
                     value = feedback,
                     onValueChange = { feedback = it },
-                    label = {
-                        Text("Ваші відчуття (біль, втома, легкість)...", fontFamily = FontFamily.Monospace, fontSize = 11.sp)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Фітбек (відчуття, біль, легкість...)") },
+                    leadingIcon = { Icon(Icons.Default.Edit, contentDescription = "Feedback") },
                     maxLines = 3,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor   = NeonCyan,
                         unfocusedBorderColor = PanelBorder,

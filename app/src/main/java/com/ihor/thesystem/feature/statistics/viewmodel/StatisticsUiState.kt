@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.statistics.viewmodel
 
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
+import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
 import kotlinx.collections.immutable.ImmutableList
@@ -70,6 +71,7 @@ sealed class StatisticsDialogState {
             WorkoutSetInput(),
             WorkoutSetInput(),
             WorkoutSetInput()
-        )
+        ),
+        val existingLog: ExerciseSetLogEntity? = null
     ) : StatisticsDialogState()
 }

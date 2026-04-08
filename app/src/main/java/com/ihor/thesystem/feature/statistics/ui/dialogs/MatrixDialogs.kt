@@ -1,9 +1,12 @@
 package com.ihor.thesystem.feature.statistics.ui.dialogs
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.sciPanel
+import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 
 @Composable
@@ -31,41 +35,49 @@ fun SetupMatrixDialog(
     var target by remember { mutableStateOf(initialTarget) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Column(
+        Surface(
             modifier = Modifier
-                .sciPanel(NeonGold.copy(0.5f), BackgroundDeep, 16.dp)
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxWidth()
+                .sciPanel(NeonGold.copy(0.5f), BackgroundDeep, 16.dp),
+            color = Color.Transparent
         ) {
-            Text(
-                text = "[ НАЛАШТУВАННЯ МАТРИЦІ ]",
-                color = NeonGold,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-            Text(
-                text = exerciseName.uppercase(),
-                color = TextPrimary,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp
-            )
-            
-            NeonInputField(label = "Стартова вага (кг)", value = start) { start = it }
-            NeonInputField(label = "Цільова вага (кг)", value = target) { target = it }
-
-            Button(
-                onClick = { onConfirm(start, target) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = NeonGold.copy(0.2f)),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "[ ПІДТВЕРДИТИ ]",
+                    text = "[ НАЛАШТУВАННЯ МАТРИЦІ ]",
                     color = NeonGold,
                     fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
                 )
+                Text(
+                    text = exerciseName.uppercase(),
+                    color = TextPrimary,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp
+                )
+                
+                NeonInputField(label = "Стартова вага (кг)", value = start) { start = it }
+                NeonInputField(label = "Цільова вага (кг)", value = target) { target = it }
+
+                Button(
+                    onClick = { onConfirm(start, target) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonGold.copy(0.2f)),
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        text = "[ ПІДТВЕРДИТИ ]",
+                        color = NeonGold,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
@@ -79,45 +91,53 @@ fun LogWorkoutSetsDialog(
     onAdd: () -> Unit,
     onRemove: () -> Unit,
     onSave: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    existingLog: ExerciseSetLogEntity? = null
 ) {
-    var feedback by remember { mutableStateOf("") }
+    // Завдання 2: Правильна ініціалізація стану фітбеку
+    var feedback by remember(existingLog) { mutableStateOf(existingLog?.userFeedback ?: "") }
 
     Dialog(onDismissRequest = onDismiss) {
-        Column(
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .sciPanel(NeonCyan.copy(0.5f), BackgroundDeep, 16.dp)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .sciPanel(NeonCyan.copy(0.5f), BackgroundDeep, 16.dp),
+            color = Color.Transparent
         ) {
-            Text(
-                text = "[ ЛОГУВАННЯ ПІДХОДІВ ]",
-                color = NeonCyan,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-            Text(
-                text = exerciseName.uppercase(),
-                color = TextPrimary,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp
-            )
-            
-            Box(modifier = Modifier.heightIn(max = 250.dp)) {
-                LazyColumn(
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()) // КРИТИЧНО: Додаємо скрол для вмісту
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "[ ЛОГУВАННЯ ПІДХОДІВ ]",
+                    color = NeonCyan,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = exerciseName.uppercase(),
+                    color = TextPrimary,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp
+                )
+                
+                // Введення підходів
+                Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(sets, key = { it.id }) { set ->
+                    sets.forEachIndexed { index, set ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "СЕТ ${sets.indexOf(set) + 1}",
+                                text = "СЕТ ${index + 1}",
                                 color = TextSecondary,
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 10.sp,
@@ -137,61 +157,72 @@ fun LogWorkoutSetsDialog(
                         }
                     }
                 }
-            }
 
-            OutlinedTextField(
-                value = feedback,
-                onValueChange = { feedback = it },
-                placeholder = {
-                    Text("Ваші відчуття (біль, втома, легкість)...", color = TextSecondary.copy(alpha = 0.5f), fontFamily = RajdhaniFamily, fontSize = 11.sp)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = 3,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = NeonCyan,
-                    unfocusedBorderColor = PanelBorder,
-                    focusedLabelColor = NeonCyan,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary,
-                    cursorColor = NeonCyan
-                ),
-                textStyle = androidx.compose.ui.text.TextStyle(fontFamily = RajdhaniFamily, fontSize = 13.sp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onRemove,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonRed),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, NeonRed.copy(0.3f))
+                // Керування підходами (+ / - СЕТ)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text("- СЕТ", fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                    OutlinedButton(
+                        onClick = onRemove,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonRed),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, NeonRed.copy(0.3f))
+                    ) {
+                        Text("- СЕТ", fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                    }
+                    OutlinedButton(
+                        onClick = onAdd,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonGreen),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, NeonGreen.copy(0.3f))
+                    ) {
+                        Text("+ СЕТ", fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                    }
                 }
-                OutlinedButton(
-                    onClick = onAdd,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonGreen),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, NeonGreen.copy(0.3f))
-                ) {
-                    Text("+ СЕТ", fontFamily = FontFamily.Monospace, fontSize = 12.sp)
-                }
-            }
 
-            Button(
-                onClick = { onSave(feedback) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
-            ) {
-                Text(
-                    text = "[ ЗАЛОГУВАТИ ]",
-                    color = BackgroundDeep,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold
+                // ПОЛЕ ФІТБЕКУ (Завдання 2) - ПІД полями вводу ваги/повторень
+                OutlinedTextField(
+                    value = feedback,
+                    onValueChange = { feedback = it },
+                    label = { Text("Фітбек (відчуття, біль, легкість...)") },
+                    leadingIcon = { Icon(Icons.Default.Edit, contentDescription = "Feedback") },
+                    maxLines = 3,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = NeonCyan,
+                        unfocusedBorderColor = PanelBorder,
+                        focusedLabelColor = NeonCyan,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        cursorColor = NeonCyan
+                    ),
+                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = RajdhaniFamily, fontSize = 14.sp)
                 )
+
+                // Кнопка збереження
+                Button(
+                    onClick = { onSave(feedback) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        text = "[ ЗАЛОГУВАТИ ]",
+                        color = BackgroundDeep,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("СКАСУВАТИ", color = TextSecondary, fontFamily = FontFamily.Monospace)
+                }
             }
         }
     }

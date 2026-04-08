@@ -197,7 +197,8 @@ fun StatisticsScreen(
                             onSave = { feedback ->
                                 viewModel.onLogSetsConfirmed(dialog.entry.exerciseId, dialog.sets, feedback)
                             },
-                            onDismiss = { viewModel.onDismissDialog() }
+                            onDismiss = { viewModel.onDismissDialog() },
+                            existingLog = dialog.existingLog
                         )
                     }
                     StatisticsDialogState.None -> Unit
