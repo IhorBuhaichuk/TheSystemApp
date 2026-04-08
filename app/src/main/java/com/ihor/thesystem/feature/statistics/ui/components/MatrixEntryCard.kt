@@ -3,6 +3,7 @@ package com.ihor.thesystem.feature.statistics.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -99,6 +100,31 @@ fun MatrixEntryCard(
                     fontFamily = TekoFamily,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        // --- AI Feedback Row ---
+        if (entry.lastAiFeedback != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = "AI Feedback",
+                    tint = NeonCyan,
+                    modifier = Modifier.size(14.dp)
+                )
+                Text(
+                    text = entry.lastAiFeedback,
+                    color = Color.LightGray,
+                    fontFamily = RajdhaniFamily,
+                    fontSize = 14.sp,
+                    lineHeight = 18.sp
                 )
             }
         }

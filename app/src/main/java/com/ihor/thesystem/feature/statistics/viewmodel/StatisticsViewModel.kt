@@ -128,11 +128,11 @@ class StatisticsViewModel @Inject constructor(
         _dialogState.value = StatisticsDialogState.LogWorkoutSets(entry)
     }
 
-    fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>) {
+    fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>, feedback: String) {
         viewModelScope.launch {
             val date = viewingDateRepo.selectedDate.value
             val timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            matrixRepo.saveExerciseSetsWithDate(exerciseId, sets, timestamp)
+            matrixRepo.saveExerciseSetsWithDate(exerciseId, sets, timestamp, feedback)
             onDismissDialog()
         }
     }
@@ -179,6 +179,7 @@ class StatisticsViewModel @Inject constructor(
         weightHistory    = history.toImmutableList(),
         nextRecommendedWeight = nextRecommendedWeight,
         nextRecommendedSets = nextRecommendedSets,
-        nextRecommendedReps = nextRecommendedReps
+        nextRecommendedReps = nextRecommendedReps,
+        lastAiFeedback = lastAiFeedback
     )
 }

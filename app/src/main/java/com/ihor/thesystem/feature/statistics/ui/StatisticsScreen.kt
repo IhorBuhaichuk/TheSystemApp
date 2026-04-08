@@ -194,8 +194,8 @@ fun StatisticsScreen(
                             onUpdate = { id, w, r -> viewModel.updateSetInput(id, w, r) },
                             onAdd = { viewModel.addSet() },
                             onRemove = { viewModel.removeSet() },
-                            onSave = { 
-                                viewModel.onLogSetsConfirmed(dialog.entry.exerciseId, dialog.sets)
+                            onSave = { feedback ->
+                                viewModel.onLogSetsConfirmed(dialog.entry.exerciseId, dialog.sets, feedback)
                             },
                             onDismiss = { viewModel.onDismissDialog() }
                         )

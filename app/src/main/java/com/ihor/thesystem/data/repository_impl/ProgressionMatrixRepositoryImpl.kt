@@ -49,7 +49,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         saveExerciseSetsWithDate(exerciseId, sets, System.currentTimeMillis())
     }
 
-    override suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<WorkoutSetInput>, timestamp: Long) {
+    override suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<WorkoutSetInput>, timestamp: Long, userFeedback: String?) {
         val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
         if (validSets.isEmpty()) return
 
@@ -90,7 +90,8 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
                     exerciseId = exerciseId,
                     weight = input.weight.toDoubleOrNull() ?: 0.0,
                     reps = input.reps.toIntOrNull() ?: 0,
-                    isCompleted = true
+                    isCompleted = true,
+                    userFeedback = userFeedback
                 )
             }
             analyticsDao.insertSetLogs(entities)
@@ -110,7 +111,8 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
                     exerciseId = exerciseId,
                     weight = input.weight.toDoubleOrNull() ?: 0.0,
                     reps = input.reps.toIntOrNull() ?: 0,
-                    isCompleted = true
+                    isCompleted = true,
+                    userFeedback = userFeedback
                 )
             }
             analyticsDao.saveFullSessionLog(sessionLog, entities)
@@ -219,6 +221,7 @@ private fun ProgressionMatrixEntity.toDomain(
         isPromotionPending = isPromotionPending,
         nextRecommendedWeight = nextRecommendedWeight,
         nextRecommendedSets = nextRecommendedSets,
-        nextRecommendedReps = nextRecommendedReps
+        nextRecommendedReps = nextRecommendedReps,
+        lastAiFeedback = lastAiFeedback
     )
 }

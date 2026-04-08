@@ -37,7 +37,8 @@ data class MatrixEntryUiModel(
     val weightHistory: ImmutableList<ExerciseWeightHistory> = persistentListOf(),
     val nextRecommendedWeight: Double? = null,
     val nextRecommendedSets: Int? = null,
-    val nextRecommendedReps: String? = null
+    val nextRecommendedReps: String? = null,
+    val lastAiFeedback: String? = null
 ) {
     val displayTarget: String
         get() = if (targetWeight < 0f) targetWeightNote ?: "—"

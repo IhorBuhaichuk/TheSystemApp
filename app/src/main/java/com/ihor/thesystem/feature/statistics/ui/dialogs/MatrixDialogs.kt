@@ -142,8 +142,8 @@ fun LogWorkoutSetsDialog(
             OutlinedTextField(
                 value = feedback,
                 onValueChange = { feedback = it },
-                label = {
-                    Text("Ваші відчуття (біль, втома, легкість)...", fontFamily = RajdhaniFamily, fontSize = 11.sp)
+                placeholder = {
+                    Text("Ваші відчуття (біль, втома, легкість)...", color = TextSecondary.copy(alpha = 0.5f), fontFamily = RajdhaniFamily, fontSize = 11.sp)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 3,
@@ -152,7 +152,8 @@ fun LogWorkoutSetsDialog(
                     unfocusedBorderColor = PanelBorder,
                     focusedLabelColor = NeonCyan,
                     focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
+                    unfocusedTextColor = TextPrimary,
+                    cursorColor = NeonCyan
                 ),
                 textStyle = androidx.compose.ui.text.TextStyle(fontFamily = RajdhaniFamily, fontSize = 13.sp)
             )
