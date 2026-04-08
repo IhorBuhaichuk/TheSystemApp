@@ -5,6 +5,7 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.ihor.thesystem.BuildConfig
 import com.ihor.thesystem.data.remote.dto.GeminiWorkoutResponseDto
+import com.ihor.thesystem.data.remote.dto.WorkoutTargetDto
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
@@ -24,12 +25,7 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
         modelName = "gemini-2.5-flash",
         apiKey = BuildConfig.GEMINI_API_KEY,
         systemInstruction = content {
-            text("Ти елітний персональний тренер-аналітик. Твій стиль: професійний, природний, підтримуючий, але об'єктивний та лаконічний. " +
-                 "ЗАБОРОНЕНО використовувати роботизований жаргон ('ІНІЦІАЛІЗАЦІЯ', 'СТАТУС', 'СИСТЕМА'), капслок для слів та надмірний пафос. " +
-                 "Спілкуйся як реальна людина-експерт. Твоє завдання: проаналізувати поточний результат вправи, історію останніх тренувань, " +
-                 "динаміку власної ваги гравця та його суб'єктивний фітбек. Порівняй цей прогрес із цільовими нормативами 'Річної Матриці Прогресії'. " +
-                 "Надай коротку текстову оцінку (aiFeedback) до 3-х речень та чітку рекомендацію на наступне тренування (nextWeight, nextSets, nextReps). " +
-                 "Відповідай СТРОГО у форматі JSON: {\"feedback_text\": \"Текст аналізу для користувача\", \"next_workout_targets\": [{\"exercise_id\": ID, \"nextWeight\": 0.0, \"nextSets\": 0, \"nextReps\": \"...\"}], \"aiFeedback\": \"Коротка оцінка для матриці (до 3 речень)\"}")
+            text("Ти елітний фітнес-аналітик. Аналізуй поточний результат, історію (5 тренувань), вагу та фітбек гравця. Порівнюй з Річною Матрицею. Відповідай строго масивом об'єкт JSON. Кожен об'єкт має містити параметри на наступне тренування та поле aiFeedback (лише текст до 3 речень). СУВОРО ЗАБОРОНЕНО використовувати подвійні лапки (\"\") або переноси рядка (\\n) всередині aiFeedback. Використовуй одинарні лапки ('').")
         }
     )
 
@@ -44,31 +40,42 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
         }
 
         return try {
-            withTimeout(40_000L) {
+            withTimeout(60_000L) {
                 val response = generativeModel.generateContent(prompt)
-                val rawText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
+                val responseText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
                 
-                // Надійне очищення JSON від маркдаун-блоків
-                val cleanJson = rawText
-                    .replace(Regex("(?s)```json\\s*(.*?)\\s*```"), "$1")
-                    .replace(Regex("(?s)```\\s*(.*?)\\s*```"), "$1")
+                // Очищення JSON за запитом
+                val cleanJson = responseText
+                    .replace("```json", "")
+                    .replace("```", "")
                     .trim()
 
-                val dto = json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
+                val targets = try {
+                    json.decodeFromString<List<WorkoutTargetDto>>(cleanJson)
+                } catch (e: Exception) {
+                    // Fallback на випадок якщо AI загорнув це в об'єкт з полем next_workout_targets
+                    try {
+                        json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson).nextWorkoutTargets
+                    } catch (e2: Exception) {
+                        Log.e("AiArchitect", "Failed to parse JSON: $cleanJson")
+                        throw e2
+                    }
+                }
                 
                 ChatMessage(
                     role = ChatRole.AI,
-                    text = dto.feedbackText,
-                    recommendations = dto.nextWorkoutTargets.map { 
+                    text = "Аналіз завершено. Директиви вправ оновлено.",
+                    recommendations = targets.map { 
                         AiWorkoutRecommendation(
                             exerciseId = it.exerciseId, 
                             weight = it.weight,
                             sets = it.recommendedSets,
-                            reps = it.recommendedReps
+                            reps = it.recommendedReps,
+                            aiFeedback = it.aiFeedback
                         )
                     },
-                    isActionable = dto.nextWorkoutTargets.isNotEmpty(),
-                    aiFeedback = dto.aiFeedback
+                    isActionable = targets.isNotEmpty(),
+                    aiFeedback = targets.firstOrNull()?.aiFeedback
                 )
             }
         } catch (e: Exception) {

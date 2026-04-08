@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -104,7 +105,7 @@ fun MatrixEntryCard(
             }
         }
 
-        // --- AI Feedback Row ---
+        // --- AI Feedback Row (Завдання 1) ---
         if (entry.lastAiFeedback != null) {
             Row(
                 modifier = Modifier
@@ -114,10 +115,10 @@ fun MatrixEntryCard(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.AutoAwesome,
-                    contentDescription = "AI Feedback",
+                    imageVector = Icons.Default.Psychology,
+                    contentDescription = "Coach AI",
                     tint = NeonCyan,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = entry.lastAiFeedback,

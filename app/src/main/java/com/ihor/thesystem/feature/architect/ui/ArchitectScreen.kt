@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,7 +22,9 @@ import com.ihor.thesystem.core.ui.components.GlitchText
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
+import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.feature.architect.viewmodel.ArchitectViewModel
+import com.ihor.thesystem.feature.architect.viewmodel.ArchitectUiState
 import kotlinx.coroutines.launch
 
 @Composable
@@ -30,72 +33,70 @@ fun ArchitectScreen(
     onAcknowledge: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-
-    // Авто-скрол до останнього повідомлення при зміні списку
-    LaunchedEffect(uiState.messages.size, uiState.isLoading) {
-        if (uiState.messages.isNotEmpty()) {
-            scope.launch {
-                listState.animateScrollToItem(uiState.messages.size)
-            }
-        }
-    }
+    val chatHistory by viewModel.chatHistory.collectAsState()
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundDeep)
-            .padding(horizontal = 16.dp)
     ) {
         // ── Header ────────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 20.dp),
+                .padding(vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
             GlitchText(
-                text = "AI ARCHITECT v1.0",
-                style = MaterialTheme.typography.headlineMedium.copy(
+                text = "AI INTERFACE v1.0",
+                style = MaterialTheme.typography.headlineSmall.copy(
                     fontFamily = TekoFamily,
                     letterSpacing = 4.sp
                 )
             )
         }
 
-        // ── Chat List ─────────────────────────────────────────────
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 24.dp)
-        ) {
-            items(uiState.messages, key = { it.id }) { message ->
-                ChatBubble(
-                    message = message,
-                    onAnalyzeClick = { viewModel.sendForAnalysis() },
-                    onApplyClick = { viewModel.applyRecommendations(it) }
-                )
-            }
-
-            if (uiState.isLoading) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        GlitchText(
-                            text = "АРХІТЕКТОР ФОРМУЄ ВІДПОВІДЬ...",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = NeonCyan,
-                                fontFamily = RajdhaniFamily
-                            )
-                        )
-                    }
+        // ── Tabs (Завдання 2) ─────────────────────────────────────
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            containerColor = Color.Transparent,
+            contentColor = NeonCyan,
+            indicator = { tabPositions ->
+                if (selectedTabIndex < tabPositions.size) {
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                        color = NeonCyan
+                    )
                 }
+            },
+            divider = { HorizontalDivider(color = Color.White.copy(alpha = 0.1f)) }
+        ) {
+            Tab(
+                selected = selectedTabIndex == 0,
+                onClick = { selectedTabIndex = 0 },
+                text = { Text("АРХІТЕКТОР", fontFamily = RajdhaniFamily, fontWeight = FontWeight.Bold) }
+            )
+            Tab(
+                selected = selectedTabIndex == 1,
+                onClick = { 
+                    selectedTabIndex = 1
+                    // Завантаження історії для сесії 0L (або поточної)
+                    viewModel.loadChatHistory(0L) 
+                },
+                text = { Text("ТРЕНЕР", fontFamily = RajdhaniFamily, fontWeight = FontWeight.Bold) }
+            )
+        }
+
+        Box(modifier = Modifier.weight(1f)) {
+            if (selectedTabIndex == 0) {
+                ArchitectView(uiState, viewModel)
+            } else {
+                LiveChatView(
+                    history = chatHistory,
+                    sessionId = 0L,
+                    onSendMessage = { sessionId, text -> viewModel.sendMessage(sessionId, text) }
+                )
             }
         }
 
@@ -104,7 +105,7 @@ fun ArchitectScreen(
             onClick = onAcknowledge,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 20.dp)
+                .padding(16.dp)
                 .height(50.dp)
                 .sciPanel(borderColor = NeonCyan.copy(0.3f), backgroundColor = Color.Transparent, cornerCut = 8.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
@@ -120,10 +121,61 @@ fun ArchitectScreen(
 }
 
 @Composable
+private fun ArchitectView(
+    uiState: ArchitectUiState,
+    viewModel: ArchitectViewModel
+) {
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(uiState.messages.size, uiState.isLoading) {
+        if (uiState.messages.isNotEmpty()) {
+            scope.launch {
+                listState.animateScrollToItem(uiState.messages.size - 1)
+            }
+        }
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
+    ) {
+        items(uiState.messages, key = { it.id }) { message ->
+            ChatBubble(
+                message = message,
+                onAnalyzeClick = { viewModel.sendForAnalysis() },
+                onApplyClick = { viewModel.applyRecommendations(it) }
+            )
+        }
+
+        if (uiState.isLoading) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    GlitchText(
+                        text = "АРХІТЕКТОР ФОРМУЄ ВІДПОВІДЬ...",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = NeonCyan,
+                            fontFamily = RajdhaniFamily
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun ChatBubble(
     message: ChatMessage,
     onAnalyzeClick: () -> Unit,
-    onApplyClick: (List<com.ihor.thesystem.domain.model.AiWorkoutRecommendation>) -> Unit
+    onApplyClick: (List<AiWorkoutRecommendation>) -> Unit
 ) {
     val alignment = when (message.role) {
         ChatRole.USER -> Alignment.CenterEnd
@@ -139,7 +191,7 @@ fun ChatBubble(
         
         ChatRole.AI -> Modifier
             .sciPanel(
-                borderColor = Color(0xFFBC00FF).copy(0.6f), // Фіолетове світіння AI
+                borderColor = Color(0xFFBC00FF).copy(0.6f),
                 backgroundColor = PanelSurface,
                 cornerCut = 10.dp
             )
@@ -159,7 +211,6 @@ fun ChatBubble(
             modifier = Modifier.fillMaxWidth(0.85f),
             horizontalAlignment = if (message.role == ChatRole.USER) Alignment.End else Alignment.Start
         ) {
-            // Role Label
             Text(
                 text = message.role.name,
                 fontFamily = TekoFamily,
@@ -173,17 +224,15 @@ fun ChatBubble(
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
-            // Content
             Column(modifier = bubbleModifier) {
                 Text(
                     text = message.text,
-                    color = if (message.role == ChatRole.USER) TextPrimary else TextPrimary,
+                    color = TextPrimary,
                     fontFamily = RajdhaniFamily,
                     fontSize = 14.sp,
                     lineHeight = 18.sp
                 )
 
-                // Recommendations List (if AI)
                 if (message.recommendations.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
@@ -203,7 +252,6 @@ fun ChatBubble(
                 }
             }
 
-            // Action Buttons
             if (message.isActionable) {
                 Spacer(modifier = Modifier.height(8.dp))
                 if (message.role == ChatRole.SYSTEM) {

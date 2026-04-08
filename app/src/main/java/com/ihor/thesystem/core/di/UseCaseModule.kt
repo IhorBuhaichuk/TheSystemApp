@@ -1,5 +1,6 @@
 package com.ihor.thesystem.core.di
 
+import com.ihor.thesystem.data.local.room.dao.ChatDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.*
@@ -117,12 +118,21 @@ object UseCaseModule {
 
     @Provides @Singleton
     fun provideApplyAiRecommendationsUseCase(
-        matrixRepo: ProgressionMatrixRepository
-    ) = ApplyAiRecommendationsUseCase(matrixRepo)
+        matrixRepo: ProgressionMatrixRepository,
+        playerRepo: PlayerRepository,
+        analyticsRepo: WorkoutAnalyticsRepository,
+        aiRepository: AiArchitectRepository
+    ) = ApplyAiRecommendationsUseCase(matrixRepo, playerRepo, analyticsRepo, aiRepository)
 
     @Provides @Singleton
     fun provideRecalculateGlobalRankUseCase(
         matrixRepo: ProgressionMatrixRepository,
         playerRepo: PlayerRepository
     ) = RecalculateGlobalRankUseCase(matrixRepo, playerRepo)
+
+    @Provides @Singleton
+    fun provideSendChatMessageUseCase(
+        chatDao: ChatDao,
+        liveCoachRepository: LiveCoachRepository
+    ) = SendChatMessageUseCase(chatDao, liveCoachRepository)
 }

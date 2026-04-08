@@ -8,7 +8,8 @@ data class AiWorkoutRecommendation(
     val exerciseId: Long, 
     val weight: Float, 
     val sets: Int, 
-    val reps: String
+    val reps: String,
+    val aiFeedback: String? = null
 )
 
 data class ChatMessage(

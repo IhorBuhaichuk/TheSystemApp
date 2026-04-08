@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import androidx.compose.ui.Alignment
 
@@ -23,10 +24,12 @@ import androidx.compose.ui.Alignment
 fun EditWeightDialog(
     entry: MatrixEntryUiModel,
     onConfirm: (Float, String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    existingLog: ExerciseSetLogEntity? = null
 ) {
     var input    by remember { mutableStateOf(entry.currentWeight.toString()) }
-    var feedback by remember { mutableStateOf("") }
+    // Завдання 1: Стан фітбеку згідно вимог
+    var feedback by remember(existingLog) { mutableStateOf(existingLog?.userFeedback ?: "") }
     var isError  by remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -95,16 +98,16 @@ fun EditWeightDialog(
                         fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 }
 
-                // Завдання 2: Поле фітбеку
+                // Завдання 1: Поле фітбеку
                 OutlinedTextField(
                     value = feedback,
                     onValueChange = { feedback = it },
-                    label = { Text("Фітбек (відчуття, біль, легкість...)") },
+                    label = {
+                        Text("Фітбек (відчуття, біль, легкість...)", fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                    },
                     leadingIcon = { Icon(Icons.Default.Edit, contentDescription = "Feedback") },
+                    modifier = Modifier.fillMaxWidth(),
                     maxLines = 3,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor   = NeonCyan,
                         unfocusedBorderColor = PanelBorder,

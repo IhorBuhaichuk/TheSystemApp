@@ -2,17 +2,17 @@ package com.ihor.thesystem.feature.architect.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ihor.thesystem.data.local.room.dao.ChatDao
+import com.ihor.thesystem.data.local.room.entity.ChatMessageEntity
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
 import com.ihor.thesystem.domain.usecase.ApplyAiRecommendationsUseCase
 import com.ihor.thesystem.domain.usecase.GetLastWorkoutContextUseCase
+import com.ihor.thesystem.domain.usecase.SendChatMessageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,11 +20,16 @@ import javax.inject.Inject
 class ArchitectViewModel @Inject constructor(
     private val getLastWorkoutContext: GetLastWorkoutContextUseCase,
     private val applyAiRecommendations: ApplyAiRecommendationsUseCase,
-    private val aiRepository: AiArchitectRepository
+    private val sendChatMessageUseCase: SendChatMessageUseCase,
+    private val aiRepository: AiArchitectRepository,
+    private val chatDao: ChatDao
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ArchitectUiState())
     val uiState: StateFlow<ArchitectUiState> = _uiState.asStateFlow()
+
+    private val _chatHistory = MutableStateFlow<List<ChatMessageEntity>>(emptyList())
+    val chatHistory: StateFlow<List<ChatMessageEntity>> = _chatHistory.asStateFlow()
 
     init {
         loadInitialContext()
@@ -64,6 +69,34 @@ class ArchitectViewModel @Inject constructor(
                         isLoading = false
                     ) 
                 }
+            }
+        }
+    }
+
+    /**
+     * Завантажує історію чату для конкретної сесії.
+     */
+    fun loadChatHistory(sessionId: Long) {
+        viewModelScope.launch {
+            chatDao.getChatHistory(sessionId).collect { history ->
+                _chatHistory.value = history
+            }
+        }
+    }
+
+    /**
+     * Відправляє повідомлення живому тренеру.
+     */
+    fun sendMessage(sessionId: Long, text: String) {
+        if (text.isBlank()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                sendChatMessageUseCase(sessionId, text)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

@@ -41,7 +41,8 @@ object DatabaseModule {
                 AppDatabase.MIGRATION_10_11,
                 AppDatabase.MIGRATION_11_12,
                 AppDatabase.MIGRATION_12_13,
-                AppDatabase.MIGRATION_13_14
+                AppDatabase.MIGRATION_13_14,
+                AppDatabase.MIGRATION_14_15
             )
             .build()
 
@@ -68,4 +69,5 @@ object DatabaseModule {
     @Provides fun provideQuestLogDao(db: AppDatabase)          = db.questLogDao()
     @Provides fun provideWorkoutAnalyticsDao(db: AppDatabase)  = db.workoutAnalyticsDao()
     @Provides fun provideProtocolTemplateDao(db: AppDatabase)  = db.protocolTemplateDao()
+    @Provides fun provideChatDao(db: AppDatabase)              = db.chatDao()
 }

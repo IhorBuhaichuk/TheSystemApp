@@ -32,9 +32,10 @@ import com.ihor.thesystem.data.local.room.entity.*
         WorkoutSessionLogEntity::class,
         ExerciseSetLogEntity::class,
         ReferenceMatrixEntity::class,
-        ProtocolTemplateEntity::class
+        ProtocolTemplateEntity::class,
+        ChatMessageEntity::class
     ],
-    version = 14,
+    version = 15,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -51,6 +52,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun questLogDao(): QuestLogDao
     abstract fun workoutAnalyticsDao(): WorkoutAnalyticsDao
     abstract fun protocolTemplateDao(): ProtocolTemplateDao
+    abstract fun chatDao(): ChatDao
 
     companion object {
         val MIGRATION_2_3 = object : Migration(2, 3) {
@@ -136,6 +138,12 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE exercise_set_logs ADD COLUMN userFeedback TEXT")
                 db.execSQL("ALTER TABLE progression_matrix ADD COLUMN lastAiFeedback TEXT")
+            }
+        }
+
+        val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `chat_message_table` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sessionId` INTEGER NOT NULL, `role` TEXT NOT NULL, `message` TEXT NOT NULL, `timestamp` INTEGER NOT NULL)")
             }
         }
     }
