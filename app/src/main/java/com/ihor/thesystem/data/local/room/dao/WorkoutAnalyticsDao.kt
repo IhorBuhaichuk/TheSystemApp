@@ -1,10 +1,6 @@
 package com.ihor.thesystem.data.local.room.dao
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Transaction
+import androidx.room.*
 import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
@@ -18,6 +14,20 @@ abstract class WorkoutAnalyticsDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertSetLogs(sets: List<ExerciseSetLogEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertSetLog(log: ExerciseSetLogEntity): Long
+
+    @Update
+    abstract suspend fun updateSetLog(log: ExerciseSetLogEntity)
+
+    @Query("""
+        SELECT e.* FROM exercise_set_logs e
+        JOIN workout_session_logs s ON e.sessionId = s.sessionId
+        WHERE e.exerciseId = :exerciseId AND s.timestamp BETWEEN :startOfDay AND :endOfDay
+        LIMIT 1
+    """)
+    abstract suspend fun getLogForExerciseOnDate(exerciseId: Int, startOfDay: Long, endOfDay: Long): ExerciseSetLogEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertOrReplaceDirectives(directives: List<WorkoutDirectiveEntity>)
@@ -87,6 +97,9 @@ abstract class WorkoutAnalyticsDao {
     
     @Query("DELETE FROM workout_directives")
     abstract suspend fun clearDirectives()
+
+    @Query("DELETE FROM exercise_set_logs WHERE sessionId = :sessionId")
+    abstract suspend fun deleteSetsBySession(sessionId: Long)
 }
 
 data class ExerciseWeightHistoryWithId(

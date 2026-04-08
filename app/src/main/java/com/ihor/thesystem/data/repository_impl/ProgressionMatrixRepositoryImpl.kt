@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import kotlin.math.roundToInt
+import java.util.Calendar
 
 class ProgressionMatrixRepositoryImpl @Inject constructor(
     private val matrixDao:    ProgressionMatrixDao,
@@ -51,31 +52,80 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
         if (validSets.isEmpty()) return
 
+        // Визначаємо межі дня для пошуку дублікатів
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timestamp
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startOfDay = calendar.timeInMillis
+
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val endOfDay = calendar.timeInMillis
+
         val totalTonnage = validSets.sumOf { 
             (it.weight.toDoubleOrNull() ?: 0.0) * (it.reps.toIntOrNull() ?: 0)
         }
 
-        val sessionLog = WorkoutSessionLogEntity(
-            questId = 0,
-            timestamp = timestamp,
-            totalTonnage = totalTonnage,
-            cycleDay = 0,
-            durationMinutes = 0
-        )
+        // Перевіряємо, чи вже був запис цієї вправи сьогодні
+        val existingSetLog = analyticsDao.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)
 
-        val entities = validSets.map { input ->
-            ExerciseSetLogEntity(
-                sessionId = 0,
-                exerciseId = exerciseId,
-                weight = input.weight.toDoubleOrNull() ?: 0.0,
-                reps = input.reps.toIntOrNull() ?: 0,
-                isCompleted = true
+        if (existingSetLog != null) {
+            // Оновлюємо існуючу сесію замість створення нової
+            val sessionId = existingSetLog.sessionId
+            
+            // 1. Оновлюємо заголовок сесії (тоннаж та час)
+            analyticsDao.insertSessionLog(
+                WorkoutSessionLogEntity(
+                    sessionId = sessionId,
+                    questId = 0,
+                    timestamp = timestamp,
+                    totalTonnage = totalTonnage,
+                    cycleDay = 0,
+                    durationMinutes = 0
+                )
             )
+
+            // 2. Перезаписуємо підходи
+            analyticsDao.deleteSetsBySession(sessionId)
+            val entities = validSets.map { input ->
+                ExerciseSetLogEntity(
+                    sessionId = sessionId,
+                    exerciseId = exerciseId,
+                    weight = input.weight.toDoubleOrNull() ?: 0.0,
+                    reps = input.reps.toIntOrNull() ?: 0,
+                    isCompleted = true
+                )
+            }
+            analyticsDao.insertSetLogs(entities)
+        } else {
+            // Якщо записів сьогодні не було - створюємо нову сесію
+            val sessionLog = WorkoutSessionLogEntity(
+                questId = 0,
+                timestamp = timestamp,
+                totalTonnage = totalTonnage,
+                cycleDay = 0,
+                durationMinutes = 0
+            )
+
+            val entities = validSets.map { input ->
+                ExerciseSetLogEntity(
+                    sessionId = 0,
+                    exerciseId = exerciseId,
+                    weight = input.weight.toDoubleOrNull() ?: 0.0,
+                    reps = input.reps.toIntOrNull() ?: 0,
+                    isCompleted = true
+                )
+            }
+            analyticsDao.saveFullSessionLog(sessionLog, entities)
         }
         
-        analyticsDao.saveFullSessionLog(sessionLog, entities)
-        
-        val maxWeight = sets.mapNotNull { it.weight.toFloatOrNull() }.maxOrNull()
+        // Оновлюємо поточну вагу в матриці (беремо максимум з нових підходів)
+        val maxWeight = validSets.mapNotNull { it.weight.toFloatOrNull() }.maxOrNull()
         if (maxWeight != null) {
             updateCurrentWeight(exerciseId, maxWeight)
         }

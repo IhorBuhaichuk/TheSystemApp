@@ -29,16 +29,18 @@ class FinalizeSessionUseCase @Inject constructor(
         return runCatching {
             // 1. Зберегти сесію та сети
             val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
+            
+            // 2. Отримати актуальну вагу гравця для парсингу "BW" нормативів
             val playerWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
 
-            // 2. Отримати матрицю прогресії
+            // 3. Отримати матрицю прогресії (одноразовий запит)
             val matrix = try {
                 progressionMatrixRepository.getAllEntries().first()
             } catch (e: Exception) {
                 emptyList<ProgressionMatrixEntry>()
             }
 
-            // 3. Розрахувати тоннаж та оновити ранги вправ
+            // 4. Розрахувати тоннаж та оновити ранги вправ на основі нормативів
             val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
             
             sets.filter { it.isCompleted }.groupBy { it.exerciseId }.forEach { (exId, exerciseSets) ->
@@ -46,6 +48,7 @@ class FinalizeSessionUseCase @Inject constructor(
                 val matrixEntry = matrix.find { it.exerciseId.toString() == exId }
                 
                 if (matrixEntry != null) {
+                    // Використовуємо AnnualMatrixProvider для визначення рангу на основі РЕАЛЬНОЇ ваги
                     val newRank = AnnualMatrixProvider.getExerciseRank(
                         exerciseName = matrixEntry.exerciseName,
                         current1RM = maxWeight,
@@ -60,11 +63,11 @@ class FinalizeSessionUseCase @Inject constructor(
 
             val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
 
-            // 4. Розрахунок відновлення
+            // 5. Розрахунок відновлення
             val recoveryDuration = calculateRecovery(finalTonnage, isNightShift).getOrDefault(24.hours)
             val recoveryHours = recoveryDuration.inWholeHours.toDouble()
 
-            // 5. Запит до AI
+            // 6. Запит до AI
             val context = sets.joinToString("\n") { "- Вправа ${it.exerciseId}: ${it.weight}кг х ${it.reps}" }
             val prompt = "Швидкий аналіз для логу: $context. Поверни JSON з feedback_text та next_workout_targets."
             
@@ -95,14 +98,14 @@ class FinalizeSessionUseCase @Inject constructor(
                 generateFallbackReport(sets, matrix, recoveryHours)
             }
 
-            // 6. Валідація директив
+            // 7. Валідація директив
             val validatedDirectives = validateDirectives(report.nextWorkoutDirectives, matrix)
                 .getOrDefault(report.nextWorkoutDirectives)
 
-            // 7. Зберегти директиви
+            // 8. Зберегти директиви
             analyticsRepository.saveDirectives(validatedDirectives)
 
-            // 8. Оновити Глобальний Ранг
+            // 9. ФІНАЛЬНИЙ КРОК: Оновити Глобальний Ранг гравця на основі всіх нових даних
             recalculateGlobalRank()
 
             report.copy(

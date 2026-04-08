@@ -20,28 +20,28 @@ object AnnualMatrixProvider {
         MatrixRow("Підтягування", listOf("21", "24", "27", "30", "BW+2.5", "BW+3.5", "BW+4.5", "BW+5.5", "BW+6.5", "BW+7.5", "BW+8.5", "BW+9", "BW+10"))
     )
 
+    private fun parseTarget(targetStr: String, playerWeight: Double): Double {
+        if (targetStr.equals("BW", ignoreCase = true)) return playerWeight
+        if (targetStr.uppercase().startsWith("BW+")) {
+            val extraWeight = targetStr.uppercase().replace("BW+", "").toDoubleOrNull() ?: 0.0
+            return playerWeight + extraWeight
+        }
+        return targetStr.toDoubleOrNull() ?: 0.0
+    }
+
     /**
      * Повертає ранг вправи на основі 1RM та ваги гравця.
      */
     fun getExerciseRank(exerciseName: String, current1RM: Double, playerWeight: Double): Rank {
         val row = getMatrix().find { it.exercise.equals(exerciseName, ignoreCase = true) } ?: return Rank.E
-        val targets = row.targets.map { target ->
-            when {
-                target == "BW" -> playerWeight
-                target.startsWith("BW+") -> {
-                    val added = target.substringAfter("BW+").toDoubleOrNull() ?: 0.0
-                    playerWeight + added
-                }
-                else -> target.toDoubleOrNull() ?: 0.0
-            }
-        }
+        val targets = row.targets
 
         return when {
-            targets.size >= 11 && current1RM >= targets[10] -> Rank.S
-            targets.size >= 9 && current1RM >= targets[8] -> Rank.A
-            targets.size >= 7 && current1RM >= targets[6] -> Rank.B
-            targets.size >= 5 && current1RM >= targets[4] -> Rank.C
-            targets.size >= 3 && current1RM >= targets[2] -> Rank.D
+            targets.size >= 11 && current1RM >= parseTarget(targets[10], playerWeight) -> Rank.S
+            targets.size >= 9 && current1RM >= parseTarget(targets[8], playerWeight) -> Rank.A
+            targets.size >= 7 && current1RM >= parseTarget(targets[6], playerWeight) -> Rank.B
+            targets.size >= 5 && current1RM >= parseTarget(targets[4], playerWeight) -> Rank.C
+            targets.size >= 3 && current1RM >= parseTarget(targets[2], playerWeight) -> Rank.D
             else -> Rank.E
         }
     }

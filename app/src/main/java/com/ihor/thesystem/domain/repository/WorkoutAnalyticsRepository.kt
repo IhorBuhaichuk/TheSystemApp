@@ -6,6 +6,7 @@ import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutDirective
 import com.ihor.thesystem.domain.model.WorkoutSession
+import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -28,4 +29,10 @@ interface WorkoutAnalyticsRepository {
     
     // ОПТИМІЗАЦІЯ: Отримання всієї історії за один запит
     fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>>
+
+    // Нові методи для фіксу дублікатів
+    suspend fun getLogForExerciseOnDate(exerciseId: Int, startOfDay: Long, endOfDay: Long): ExerciseSetLogEntity?
+    suspend fun updateSetLog(log: ExerciseSetLogEntity)
+    suspend fun insertSetLog(log: ExerciseSetLogEntity): Long
+    suspend fun deleteSetsBySession(sessionId: Long)
 }

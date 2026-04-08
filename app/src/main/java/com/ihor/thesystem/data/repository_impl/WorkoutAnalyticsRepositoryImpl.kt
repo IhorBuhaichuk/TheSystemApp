@@ -55,6 +55,26 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         return dao.getAllWeightHistories()
     }
 
+    override suspend fun getLogForExerciseOnDate(
+        exerciseId: Int,
+        startOfDay: Long,
+        endOfDay: Long
+    ): ExerciseSetLogEntity? {
+        return dao.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)
+    }
+
+    override suspend fun updateSetLog(log: ExerciseSetLogEntity) {
+        dao.updateSetLog(log)
+    }
+
+    override suspend fun insertSetLog(log: ExerciseSetLogEntity): Long {
+        return dao.insertSetLog(log)
+    }
+
+    override suspend fun deleteSetsBySession(sessionId: Long) {
+        dao.deleteSetsBySession(sessionId)
+    }
+
     // =========================================
     // MAPPER ФУНКЦІЇ
     // =========================================
