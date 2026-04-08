@@ -22,7 +22,7 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
     }
 
     private val generativeModel = GenerativeModel(
-        modelName = "gemini-2.5-flash",
+        modelName = "gemini-3-flash",
         apiKey = BuildConfig.GEMINI_API_KEY,
         systemInstruction = content {
             text("Ти елітний фітнес-аналітик. Аналізуй поточний результат, історію (5 тренувань), вагу та фітбек гравця. Порівнюй з Річною Матрицею. Відповідай строго масивом об'єкт JSON. Кожен об'єкт має містити параметри на наступне тренування та поле aiFeedback (лише текст до 3 речень). СУВОРО ЗАБОРОНЕНО використовувати подвійні лапки (\"\") або переноси рядка (\\n) всередині aiFeedback. Використовуй одинарні лапки ('').")
