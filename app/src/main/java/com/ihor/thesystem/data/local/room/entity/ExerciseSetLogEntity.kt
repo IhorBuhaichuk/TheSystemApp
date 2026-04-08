@@ -24,5 +24,6 @@ data class ExerciseSetLogEntity(
     val exerciseId: Int,
     val weight: Double,
     val reps: Int,
-    val isCompleted: Boolean = true
+    val isCompleted: Boolean = true,
+    val userFeedback: String? = null
 )

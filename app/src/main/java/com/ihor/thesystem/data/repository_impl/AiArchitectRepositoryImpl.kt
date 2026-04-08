@@ -20,17 +20,16 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
         coerceInputValues = true
     }
 
-    // Модель gemini-2.5-flash
     private val generativeModel = GenerativeModel(
         modelName = "gemini-2.5-flash",
         apiKey = BuildConfig.GEMINI_API_KEY,
         systemInstruction = content {
-            text("Ти — жорсткий AI-тренер Системи. Твій стиль: кіберпанк, суворий, мотивуючий. " +
-                 "Ти аналізуєш тренування і даєш вказівки. " +
-                 "Для кожної вправи обов'язково рекомендуй параметри на НАСТУПНЕ тренування. " +
-                 "Базово - 3 підходи. При ефекті плато змінюй кількість підходів або повторень. " +
-                 "Повертай поля: nextWeight (число), nextSets (число), nextReps (формат '12/10/8'). " +
-                 "Відповідай СТРОГО у форматі JSON без зайвого тексту.")
+            text("Ти елітний персональний тренер-аналітик. Твій стиль: професійний, природний, підтримуючий, але об'єктивний та лаконічний. " +
+                 "ЗАБОРОНЕНО використовувати роботизований жаргон ('ІНІЦІАЛІЗАЦІЯ', 'СТАТУС', 'СИСТЕМА'), капслок для слів та надмірний пафос. " +
+                 "Спілкуйся як реальна людина-експерт. Твоє завдання: проаналізувати поточний результат вправи, історію останніх тренувань, " +
+                 "динаміку власної ваги гравця та його суб'єктивний фітбек. Порівняй цей прогрес із цільовими нормативами 'Річної Матриці Прогресії'. " +
+                 "Надай коротку текстову оцінку (aiFeedback) до 3-х речень та чітку рекомендацію на наступне тренування (nextWeight, nextSets, nextReps). " +
+                 "Відповідай СТРОГО у форматі JSON: {\"feedback_text\": \"Текст аналізу для користувача\", \"next_workout_targets\": [{\"exercise_id\": ID, \"nextWeight\": 0.0, \"nextSets\": 0, \"nextReps\": \"...\"}], \"aiFeedback\": \"Коротка оцінка для матриці (до 3 речень)\"}")
         }
     )
 
@@ -45,7 +44,7 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
         }
 
         return try {
-            withTimeout(30_000L) {
+            withTimeout(40_000L) {
                 val response = generativeModel.generateContent(prompt)
                 val rawText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
                 
@@ -68,7 +67,8 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
                             reps = it.recommendedReps
                         )
                     },
-                    isActionable = dto.nextWorkoutTargets.isNotEmpty()
+                    isActionable = dto.nextWorkoutTargets.isNotEmpty(),
+                    aiFeedback = dto.aiFeedback
                 )
             }
         } catch (e: Exception) {
@@ -76,7 +76,7 @@ class AiArchitectRepositoryImpl @Inject constructor() : AiArchitectRepository {
             val errorDetail = e.localizedMessage ?: e.message ?: "Unknown error"
             ChatMessage(
                 role = ChatRole.AI,
-                text = "Системна помилка зв'язку з архітектором. [Деталі: $errorDetail]. Спробуйте пізніше або перевірте налаштування моделі в AI Studio.",
+                text = "Виникла помилка під час аналізу. Спробуйте пізніше. [Error: $errorDetail]",
                 isActionable = false
             )
         }

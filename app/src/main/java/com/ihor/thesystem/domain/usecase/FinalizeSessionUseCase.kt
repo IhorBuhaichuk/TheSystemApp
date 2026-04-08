@@ -1,15 +1,12 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.*
-import com.ihor.thesystem.domain.repository.AiArchitectRepository
-import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
-import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
-import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
-import com.ihor.thesystem.domain.repository.PlayerRepository
+import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.feature.statistics.model.AnnualMatrixProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+import java.util.Calendar
 import kotlin.time.Duration.Companion.hours
 
 class FinalizeSessionUseCase @Inject constructor(
@@ -30,8 +27,13 @@ class FinalizeSessionUseCase @Inject constructor(
             // 1. Зберегти сесію та сети
             val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
             
-            // 2. Отримати актуальну вагу гравця для парсингу "BW" нормативів
+            // 2. Отримати актуальну вагу гравця та вагу 6 місяців тому
             val playerWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
+            
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.MONTH, -6)
+            val timestampSixMonthsAgo = calendar.timeInMillis
+            val weight6MonthsAgo = playerRepository.getWeightAtOrBefore(timestampSixMonthsAgo) ?: playerWeight.toFloat()
 
             // 3. Отримати матрицю прогресії (одноразовий запит)
             val matrix = try {
@@ -48,7 +50,6 @@ class FinalizeSessionUseCase @Inject constructor(
                 val matrixEntry = matrix.find { it.exerciseId.toString() == exId }
                 
                 if (matrixEntry != null) {
-                    // Використовуємо AnnualMatrixProvider для визначення рангу на основі РЕАЛЬНОЇ ваги
                     val newRank = AnnualMatrixProvider.getExerciseRank(
                         exerciseName = matrixEntry.exerciseName,
                         current1RM = maxWeight,
@@ -67,9 +68,30 @@ class FinalizeSessionUseCase @Inject constructor(
             val recoveryDuration = calculateRecovery(finalTonnage, isNightShift).getOrDefault(24.hours)
             val recoveryHours = recoveryDuration.inWholeHours.toDouble()
 
-            // 6. Запит до AI
-            val context = sets.joinToString("\n") { "- Вправа ${it.exerciseId}: ${it.weight}кг х ${it.reps}" }
-            val prompt = "Швидкий аналіз для логу: $context. Поверни JSON з feedback_text та next_workout_targets."
+            // 6. Формування розширеного промпту для кожної вправи (або загального контексту)
+            // Для спрощення чату формуємо детальний контекст для AI
+            val exerciseContexts = sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
+                val matrixEntry = matrix.find { it.exerciseId.toString() == exId }
+                val recentLogs = analyticsRepository.getRecentLogsForExercise(exId.toIntOrNull() ?: 0)
+                val annualGoals = AnnualMatrixProvider.getMatrix().find { it.exercise.equals(matrixEntry?.exerciseName, true) }?.targets?.joinToString(", ") ?: "немає"
+                
+                """
+                Вправа: ${matrixEntry?.exerciseName ?: "ID $exId"}
+                - Поточна вага тіла: $playerWeight кг (6 міс. тому: $weight6MonthsAgo кг)
+                - Цілі Річної матриці (M0-M12): $annualGoals
+                - Останні 10 тренувань: ${recentLogs.joinToString { "${it.weight}кг x ${it.reps}" }}
+                - Сьогодні виконано: ${exerciseSets.joinToString { "${it.weight}кг x ${it.reps}" }}
+                - Коментар користувача: ${exerciseSets.firstOrNull()?.userFeedback ?: "відсутній"}
+                """.trimIndent()
+            }.joinToString("\n\n")
+
+            val prompt = """
+                Аналіз тренування від персонального тренера.
+                
+                $exerciseContexts
+                
+                На основі цих даних надай коротку оцінку до 3 речень та чіткі рекомендації на наступне тренування у форматі JSON.
+            """.trimIndent()
             
             val report = try {
                 val chatMsg = aiRepository.getChatResponse(prompt)
@@ -105,7 +127,7 @@ class FinalizeSessionUseCase @Inject constructor(
             // 8. Зберегти директиви
             analyticsRepository.saveDirectives(validatedDirectives)
 
-            // 9. ФІНАЛЬНИЙ КРОК: Оновити Глобальний Ранг гравця на основі всіх нових даних
+            // 9. Оновити Глобальний Ранг
             recalculateGlobalRank()
 
             report.copy(

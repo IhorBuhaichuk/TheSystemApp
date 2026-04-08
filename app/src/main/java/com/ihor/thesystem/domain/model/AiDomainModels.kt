@@ -16,7 +16,8 @@ data class ChatMessage(
     val role: ChatRole,
     val text: String,
     val recommendations: List<AiWorkoutRecommendation> = emptyList(),
-    val isActionable: Boolean = false
+    val isActionable: Boolean = false,
+    val aiFeedback: String? = null
 )
 
 /**
@@ -36,7 +37,8 @@ data class ExerciseSet(
     val exerciseId: String,
     val weight: Double,
     val reps: Int,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
+    val userFeedback: String? = null
 )
 
 data class WorkoutDirective(

@@ -37,6 +37,10 @@ class PlayerRepositoryImpl @Inject constructor(
         val player = playerDao.getPlayer().firstOrNull() ?: return
         playerDao.insertOrUpdate(player.copy(currentCycleDay = day))
     }
+
+    override suspend fun getWeightAtOrBefore(timestamp: Long): Float? {
+        return weightLogDao.getWeightAtOrBefore(timestamp)?.weight
+    }
 }
 
 // ── Mappers ───────────────────────────────────────────────────────────────────

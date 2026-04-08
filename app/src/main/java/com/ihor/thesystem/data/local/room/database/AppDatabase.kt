@@ -34,7 +34,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ReferenceMatrixEntity::class,
         ProtocolTemplateEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -129,6 +129,13 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("INSERT INTO `workout_directives_new` (`exerciseId`, `targetWeight`, `targetSets`, `targetReps`) SELECT `exerciseId`, `targetWeight`, `targetSets`, CAST(`targetReps` AS TEXT) FROM `workout_directives`")
                 db.execSQL("DROP TABLE `workout_directives`")
                 db.execSQL("ALTER TABLE `workout_directives_new` RENAME TO `workout_directives`")
+            }
+        }
+
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE exercise_set_logs ADD COLUMN userFeedback TEXT")
+                db.execSQL("ALTER TABLE progression_matrix ADD COLUMN lastAiFeedback TEXT")
             }
         }
     }

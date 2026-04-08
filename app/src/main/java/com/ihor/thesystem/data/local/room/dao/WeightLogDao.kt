@@ -19,6 +19,9 @@ interface WeightLogDao {
     """)
     suspend fun getWeightByDate(dateMillis: Long): Float?
 
+    @Query("SELECT * FROM weight_log WHERE timestamp <= :targetTimestamp ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getWeightAtOrBefore(targetTimestamp: Long): WeightLogEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(log: WeightLogEntity)
 

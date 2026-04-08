@@ -75,6 +75,10 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         dao.deleteSetsBySession(sessionId)
     }
 
+    override suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSetLogEntity> {
+        return dao.getRecentLogsForExercise(exerciseId)
+    }
+
     // =========================================
     // MAPPER ФУНКЦІЇ
     // =========================================
@@ -94,7 +98,8 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         exerciseId = this.exerciseId.toIntOrNull() ?: 0,
         weight = this.weight,
         reps = this.reps,
-        isCompleted = this.isCompleted
+        isCompleted = this.isCompleted,
+        userFeedback = this.userFeedback
     )
 
     private fun WorkoutDirective.toEntity() = WorkoutDirectiveEntity(

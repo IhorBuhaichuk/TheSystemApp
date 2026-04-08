@@ -78,9 +78,11 @@ fun LogWorkoutSetsDialog(
     onUpdate: (Long, String, String) -> Unit,
     onAdd: () -> Unit,
     onRemove: () -> Unit,
-    onSave: () -> Unit,
+    onSave: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    var feedback by remember { mutableStateOf("") }
+
     Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -103,7 +105,7 @@ fun LogWorkoutSetsDialog(
                 fontSize = 12.sp
             )
             
-            Box(modifier = Modifier.heightIn(max = 300.dp)) {
+            Box(modifier = Modifier.heightIn(max = 250.dp)) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -137,6 +139,24 @@ fun LogWorkoutSetsDialog(
                 }
             }
 
+            OutlinedTextField(
+                value = feedback,
+                onValueChange = { feedback = it },
+                label = {
+                    Text("Ваші відчуття (біль, втома, легкість)...", fontFamily = RajdhaniFamily, fontSize = 11.sp)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 3,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = NeonCyan,
+                    unfocusedBorderColor = PanelBorder,
+                    focusedLabelColor = NeonCyan,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                textStyle = androidx.compose.ui.text.TextStyle(fontFamily = RajdhaniFamily, fontSize = 13.sp)
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -160,7 +180,7 @@ fun LogWorkoutSetsDialog(
             }
 
             Button(
-                onClick = onSave,
+                onClick = { onSave(feedback) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)

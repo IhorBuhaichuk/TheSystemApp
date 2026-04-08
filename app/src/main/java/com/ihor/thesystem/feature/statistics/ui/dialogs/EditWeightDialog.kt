@@ -19,11 +19,12 @@ import androidx.compose.ui.Alignment
 @Composable
 fun EditWeightDialog(
     entry: MatrixEntryUiModel,
-    onConfirm: (Float) -> Unit,
+    onConfirm: (Float, String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var input   by remember { mutableStateOf(entry.currentWeight.toString()) }
-    var isError by remember { mutableStateOf(false) }
+    var input    by remember { mutableStateOf(entry.currentWeight.toString()) }
+    var feedback by remember { mutableStateOf("") }
+    var isError  by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -41,7 +42,7 @@ fun EditWeightDialog(
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text       = entry.exerciseName,
                     color      = TextPrimary,
@@ -57,6 +58,7 @@ fun EditWeightDialog(
                     InfoChip("ЦІЛЬ",   entry.displayTarget)
                     InfoChip("+/тиж", "+${String.format("%.2f", entry.weeklyStep)}кг")
                 }
+                
                 OutlinedTextField(
                     value         = input,
                     onValueChange = {
@@ -78,17 +80,38 @@ fun EditWeightDialog(
                         unfocusedTextColor   = TextPrimary,
                         errorBorderColor     = NeonRed
                     ),
-                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace)
+                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
+                    modifier = Modifier.fillMaxWidth()
                 )
+                
                 if (isError) {
                     Text("Введіть коректне число", color = NeonRed,
                         fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 }
+
+                OutlinedTextField(
+                    value = feedback,
+                    onValueChange = { feedback = it },
+                    label = {
+                        Text("Ваші відчуття (біль, втома, легкість)...", fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor   = NeonCyan,
+                        unfocusedBorderColor = PanelBorder,
+                        focusedLabelColor    = NeonCyan,
+                        cursorColor          = NeonCyan,
+                        focusedTextColor     = TextPrimary,
+                        unfocusedTextColor   = TextPrimary
+                    ),
+                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                )
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { input.toFloatOrNull()?.let { onConfirm(it) } },
+                onClick = { input.toFloatOrNull()?.let { onConfirm(it, feedback) } },
                 enabled = !isError && input.isNotBlank()
             ) {
                 Text("ЗБЕРЕГТИ", color = NeonGreen, fontFamily = FontFamily.Monospace, fontSize = 11.sp)

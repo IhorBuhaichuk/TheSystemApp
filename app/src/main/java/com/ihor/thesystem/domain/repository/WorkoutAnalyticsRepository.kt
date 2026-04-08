@@ -27,12 +27,13 @@ interface WorkoutAnalyticsRepository {
     // Отримання історії для однієї вправи
     fun getWeightHistory(exerciseId: Int): Flow<List<ExerciseWeightHistory>>
     
-    // ОПТИМІЗАЦІЯ: Отримання всієї історії за один запит
+    // ОПТИМІЗАЦІЯ: Отримання всього списку історій за раз
     fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>>
 
-    // Нові методи для фіксу дублікатів
+    // Нові методи для фіксу дублікатів та контексту
     suspend fun getLogForExerciseOnDate(exerciseId: Int, startOfDay: Long, endOfDay: Long): ExerciseSetLogEntity?
     suspend fun updateSetLog(log: ExerciseSetLogEntity)
     suspend fun insertSetLog(log: ExerciseSetLogEntity): Long
     suspend fun deleteSetsBySession(sessionId: Long)
+    suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSetLogEntity>
 }

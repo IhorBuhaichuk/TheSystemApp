@@ -10,4 +10,5 @@ interface PlayerRepository {
     suspend fun logWeight(weight: Float)
     suspend fun updateHeight(height: Float)
     suspend fun updateCurrentCycleDay(day: Int)
+    suspend fun getWeightAtOrBefore(timestamp: Long): Float?
 }
