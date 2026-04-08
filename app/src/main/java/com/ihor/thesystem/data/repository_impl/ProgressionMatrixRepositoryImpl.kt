@@ -116,6 +116,13 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         recalculateGlobalRank()
     }
 
+    override suspend fun updateRank(exerciseId: Int, newRank: Rank) {
+        val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
+        if (existing.currentRank != newRank) {
+            matrixDao.update(existing.copy(currentRank = newRank))
+        }
+    }
+
     override suspend fun setPromotionPending(exerciseId: Int, pending: Boolean) {
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
         matrixDao.update(existing.copy(isPromotionPending = pending))

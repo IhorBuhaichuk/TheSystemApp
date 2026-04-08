@@ -19,6 +19,7 @@ interface ProgressionMatrixRepository {
     suspend fun recalculateGlobalRank()
     suspend fun setPromotionPending(exerciseId: Int, pending: Boolean)
     suspend fun promoteRank(exerciseId: Int)
+    suspend fun updateRank(exerciseId: Int, newRank: Rank)
 
     /**
      * Оновлює цільові показники вправи на основі рекомендацій ШІ.

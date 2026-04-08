@@ -5,7 +5,10 @@ import com.ihor.thesystem.domain.repository.AiArchitectRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
+import com.ihor.thesystem.domain.repository.PlayerRepository
+import com.ihor.thesystem.feature.statistics.model.AnnualMatrixProvider
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
 
@@ -13,14 +16,11 @@ class FinalizeSessionUseCase @Inject constructor(
     private val analyticsRepository: WorkoutAnalyticsRepository,
     private val aiRepository: AiArchitectRepository,
     private val progressionMatrixRepository: ProgressionMatrixRepository,
+    private val playerRepository: PlayerRepository,
+    private val recalculateGlobalRank: RecalculateGlobalRankUseCase,
     private val calculateRecovery: CalculateRecoveryWindowUseCase,
     private val validateDirectives: ValidateDirectivesUseCase
 ) {
-    /**
-     * @param session Дані сесії.
-     * @param sets Список виконаних підходів.
-     * @param isNightShift Чи була зміна нічною (для розрахунку відновлення ЦНС).
-     */
     suspend operator fun invoke(
         session: WorkoutSession,
         sets: List<ExerciseSet>,
@@ -29,7 +29,7 @@ class FinalizeSessionUseCase @Inject constructor(
         return runCatching {
             // 1. Зберегти сесію та сети
             val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
-            val currentSession = session.copy(sessionId = sessionId)
+            val playerWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
 
             // 2. Отримати матрицю прогресії
             val matrix = try {
@@ -38,22 +38,39 @@ class FinalizeSessionUseCase @Inject constructor(
                 emptyList<ProgressionMatrixEntry>()
             }
 
-            // 3. Розрахувати тоннаж
+            // 3. Розрахувати тоннаж та оновити ранги вправ
             val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
+            
+            sets.filter { it.isCompleted }.groupBy { it.exerciseId }.forEach { (exId, exerciseSets) ->
+                val maxWeight = exerciseSets.maxOf { it.weight }
+                val matrixEntry = matrix.find { it.exerciseId.toString() == exId }
+                
+                if (matrixEntry != null) {
+                    val newRank = AnnualMatrixProvider.getExerciseRank(
+                        exerciseName = matrixEntry.exerciseName,
+                        current1RM = maxWeight,
+                        playerWeight = playerWeight
+                    )
+                    
+                    if (newRank.value > matrixEntry.currentRank.value) {
+                        progressionMatrixRepository.updateRank(matrixEntry.exerciseId, newRank)
+                    }
+                }
+            }
+
             val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
 
             // 4. Розрахунок відновлення
             val recoveryDuration = calculateRecovery(finalTonnage, isNightShift).getOrDefault(24.hours)
             val recoveryHours = recoveryDuration.inWholeHours.toDouble()
 
-            // 5. Запит до AI (через новий метод чату для сумісності)
+            // 5. Запит до AI
             val context = sets.joinToString("\n") { "- Вправа ${it.exerciseId}: ${it.weight}кг х ${it.reps}" }
             val prompt = "Швидкий аналіз для логу: $context. Поверни JSON з feedback_text та next_workout_targets."
             
             val report = try {
                 val chatMsg = aiRepository.getChatResponse(prompt)
                 
-                // --- Збереження рекомендацій ШІ в матрицю прогресії ---
                 chatMsg.recommendations.forEach { rec ->
                     progressionMatrixRepository.updateTarget(
                         exerciseId = rec.exerciseId,
@@ -85,7 +102,9 @@ class FinalizeSessionUseCase @Inject constructor(
             // 7. Зберегти директиви
             analyticsRepository.saveDirectives(validatedDirectives)
 
-            // 8. Повернути фінальний звіт
+            // 8. Оновити Глобальний Ранг
+            recalculateGlobalRank()
+
             report.copy(
                 nextWorkoutDirectives = validatedDirectives,
                 recoveryWindowHours = recoveryHours

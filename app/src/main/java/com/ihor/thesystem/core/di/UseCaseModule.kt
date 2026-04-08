@@ -119,4 +119,10 @@ object UseCaseModule {
     fun provideApplyAiRecommendationsUseCase(
         matrixRepo: ProgressionMatrixRepository
     ) = ApplyAiRecommendationsUseCase(matrixRepo)
+
+    @Provides @Singleton
+    fun provideRecalculateGlobalRankUseCase(
+        matrixRepo: ProgressionMatrixRepository,
+        playerRepo: PlayerRepository
+    ) = RecalculateGlobalRankUseCase(matrixRepo, playerRepo)
 }
