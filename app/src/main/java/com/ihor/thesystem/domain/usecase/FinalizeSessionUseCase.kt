@@ -56,7 +56,8 @@ class FinalizeSessionUseCase @Inject constructor(
                         playerWeight = playerWeight
                     )
                     
-                    if (newRank.value > matrixEntry.currentRank.value) {
+                    // Використовуємо .weight для порівняння рангів
+                    if (newRank.weight > matrixEntry.currentRank.weight) {
                         progressionMatrixRepository.updateRank(matrixEntry.exerciseId, newRank)
                     }
                 }

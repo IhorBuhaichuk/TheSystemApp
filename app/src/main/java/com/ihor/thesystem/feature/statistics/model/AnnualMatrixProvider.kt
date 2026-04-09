@@ -20,7 +20,7 @@ object AnnualMatrixProvider {
         MatrixRow("Підтягування", listOf("21", "24", "27", "30", "BW+2.5", "BW+3.5", "BW+4.5", "BW+5.5", "BW+6.5", "BW+7.5", "BW+8.5", "BW+9", "BW+10"))
     )
 
-    private fun parseTarget(targetStr: String, playerWeight: Double): Double {
+    fun parseTarget(targetStr: String, playerWeight: Double): Double {
         if (targetStr.equals("BW", ignoreCase = true)) return playerWeight
         if (targetStr.uppercase().startsWith("BW+")) {
             val extraWeight = targetStr.uppercase().replace("BW+", "").toDoubleOrNull() ?: 0.0

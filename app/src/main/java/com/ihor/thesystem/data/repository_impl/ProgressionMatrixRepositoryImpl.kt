@@ -1,9 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
-import com.ihor.thesystem.data.local.room.dao.PlayerDao
-import com.ihor.thesystem.data.local.room.dao.ProgressionMatrixDao
-import com.ihor.thesystem.data.local.room.dao.WorkoutDao
-import com.ihor.thesystem.data.local.room.dao.WorkoutAnalyticsDao
+import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
@@ -21,7 +18,8 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     private val matrixDao:    ProgressionMatrixDao,
     private val workoutDao:   WorkoutDao,
     private val analyticsDao: WorkoutAnalyticsDao,
-    private val playerDao:    PlayerDao
+    private val playerDao:    PlayerDao,
+    private val weightLogDao: WeightLogDao
 ) : ProgressionMatrixRepository {
 
     override fun getAllEntries(): Flow<List<ProgressionMatrixEntry>> =
@@ -30,6 +28,11 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
                 item.entity.toDomain(item.exerciseName, matrixWeeks = 48)
             }
         }
+
+    override suspend fun getEntrySync(exerciseId: Int): ProgressionMatrixEntry? {
+        val item = matrixDao.getEntryWithExerciseName(exerciseId) ?: return null
+        return item.entity.toDomain(item.exerciseName, matrixWeeks = 48)
+    }
 
     override suspend fun updateCurrentWeight(exerciseId: Int, newWeight: Float) {
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
@@ -53,7 +56,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
         if (validSets.isEmpty()) return
 
-        // Визначаємо межі дня за допомогою java.time
+        // Визначаємо межі дня
         val zoneId = ZoneId.systemDefault()
         val today = LocalDate.now(zoneId)
         val startOfDay = today.atStartOfDay(zoneId).toInstant().toEpochMilli()
@@ -67,10 +70,8 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val existingSetLog = analyticsDao.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)
 
         if (existingSetLog != null) {
-            // Оновлюємо існуючу сесію замість створення нової
             val sessionId = existingSetLog.sessionId
             
-            // 1. Оновлюємо заголовок сесії (тоннаж та час)
             analyticsDao.insertSessionLog(
                 WorkoutSessionLogEntity(
                     sessionId = sessionId,
@@ -82,7 +83,6 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
                 )
             )
 
-            // 2. Перезаписуємо підходи
             analyticsDao.deleteSetsBySession(sessionId)
             val entities = validSets.map { input ->
                 ExerciseSetLogEntity(
@@ -96,7 +96,6 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
             }
             analyticsDao.insertSetLogs(entities)
         } else {
-            // Якщо записів сьогодні не було - створюємо нову сесію
             val sessionLog = WorkoutSessionLogEntity(
                 questId = 0,
                 timestamp = System.currentTimeMillis(),
@@ -118,7 +117,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
             analyticsDao.saveFullSessionLog(sessionLog, entities)
         }
         
-        // Оновлюємо поточну вагу в матриці (беремо максимум з нових підходів)
+        // Оновлюємо поточну вагу в матриці
         val maxWeight = validSets.mapNotNull { it.weight.toFloatOrNull() }.maxOrNull()
         if (maxWeight != null) {
             updateCurrentWeight(exerciseId, maxWeight)
@@ -176,8 +175,9 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val entries = matrixDao.getAllEntriesWithNames().first()
         if (entries.isEmpty()) return
         
-        val avgValue = entries.map { it.entity.currentRank.value }.average().roundToInt()
-        val globalRank = Rank.fromValue(avgValue)
+        val totalWeight = entries.sumOf { it.entity.currentRank.weight }
+        val avgWeight = (totalWeight.toDouble() / entries.size).roundToInt().coerceIn(1, 6)
+        val globalRank = Rank.fromValue(avgWeight)
         
         val player = playerDao.getPlayerSync() ?: return
         playerDao.update(player.copy(globalRank = globalRank))

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface ProgressionMatrixRepository {
     fun getAllEntries(): Flow<List<ProgressionMatrixEntry>>
+    suspend fun getEntrySync(exerciseId: Int): ProgressionMatrixEntry?
     suspend fun updateCurrentWeight(exerciseId: Int, newWeight: Float)
     suspend fun updateMatrixGoals(exerciseId: Int, startWeight: Float, targetWeight: Float)
     suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>)

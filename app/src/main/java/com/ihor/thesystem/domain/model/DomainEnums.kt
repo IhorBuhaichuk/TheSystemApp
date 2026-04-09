@@ -3,11 +3,14 @@ package com.ihor.thesystem.domain.model
 enum class DomainQuestType { DAILY, MAIN, PROMOTION }
 enum class DomainQuestStatus { ACTIVE, COMPLETED, FAILED, LOCKED }
 
-enum class Rank(val value: Int) {
-    E(0), D(1), C(2), B(3), A(4), S(5);
+enum class Rank(val weight: Int) {
+    E(1), D(2), C(3), B(4), A(5), S(6);
+
+    // Аліас для сумісності з існуючим кодом
+    val value: Int get() = weight
 
     companion object {
-        fun fromValue(value: Int): Rank = entries.find { it.value == value } ?: E
+        fun fromValue(value: Int): Rank = entries.find { it.weight == value } ?: E
     }
 }
 

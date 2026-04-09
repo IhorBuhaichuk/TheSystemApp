@@ -16,14 +16,14 @@ class RecalculateGlobalRankUseCase @Inject constructor(
         val entries = matrixRepo.getAllEntries().first()
         if (entries.isEmpty()) return
 
-        // 1. Отримуємо суму числових значень рангів (E=0..S=5)
-        val totalScore = entries.sumOf { it.currentRank.value }
+        // 1. Отримуємо суму числових значень рангів (E=1..S=6)
+        val totalScore = entries.sumOf { it.currentRank.weight }
         
-        // 2. Вираховуємо середнє арифметичне (захищено від ділення на 0 перевіркою isEmpty)
+        // 2. Вираховуємо середнє арифметичне
         val averageScore = totalScore.toDouble() / entries.size
         
         // 3. Конвертуємо результат назад у Rank (округлюємо до найближчого цілого)
-        val globalRankValue = averageScore.roundToInt().coerceIn(0, 5)
+        val globalRankValue = averageScore.roundToInt().coerceIn(1, 6)
         val newGlobalRank = Rank.fromValue(globalRankValue)
 
         // 4. Зберігаємо новий ранг у гравця

@@ -42,10 +42,10 @@ abstract class AiModule {
         @Named("ArchitectModel")
         fun provideArchitectGenerativeModel(): GenerativeModel {
             return GenerativeModel(
-                modelName = "gemini-3-flash",
+                modelName = "gemini-1.5-flash",
                 apiKey = BuildConfig.GEMINI_API_KEY,
                 systemInstruction = content {
-                    text("Ти елітний фітнес-аналітик. Аналізуй поточний результат, історію (5 тренувань), вагу та фітбек гравця. Порівнюй з Річною Матрицею. Відповідай строго масивом об'єктів JSON. Кожен об'єкт має містити параметри на наступне тренування та поле aiFeedback (лише текст до 3 речень). СУВОРО ЗАБОРОНЕНО використовувати подвійні лапки (\"\") або переноси рядка (\\n) всередині aiFeedback. Використовуй одинарні лапки ('').")
+                    text("Ти фітнес-аналітик. Відповідай СУВОРО масивом об'єктів JSON. Кожен об'єкт має містити параметри на наступне тренування та поле aiFeedback (текст до 3 речень). КРИТИЧНО: Стандарт JSON вимагає виключно подвійних лапок. Щоб не зламати парсер, всередині тексту aiFeedback КАТЕГОРИЧНО ЗАБОРОНЕНО використовувати будь-які лапки (ні подвійні, ні одинарні) та переноси рядків (\\n).")
                 }
             )
         }
@@ -55,7 +55,7 @@ abstract class AiModule {
         @Named("LiveCoachModel")
         fun provideLiveCoachGenerativeModel(): GenerativeModel {
             return GenerativeModel(
-                modelName = "gemini-3-flash",
+                modelName = "gemini-1.5-flash",
                 apiKey = BuildConfig.GEMINI_API_KEY,
                 systemInstruction = content {
                     text("Ти 'ТРЕНЕР' - елітний живий ШІ-наставник. Спілкуйся природно, як людина. Відповідай коротко і по суті на питання гравця щодо поточного тренування, техніки чи болю. НЕ використовуй JSON та маркдаун.")

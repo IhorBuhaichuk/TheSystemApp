@@ -11,6 +11,7 @@ import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
+import com.ihor.thesystem.domain.usecase.SaveExerciseSetsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,7 +30,8 @@ class StatisticsViewModel @Inject constructor(
     private val configRepo: SystemConfigRepository,
     private val scheduleRepo: ScheduleRepository,
     private val weightLogDao: WeightLogDao,
-    private val calculateCycleDay: CalculateCycleDayForDateUseCase
+    private val calculateCycleDay: CalculateCycleDayForDateUseCase,
+    private val saveExerciseSetsUseCase: SaveExerciseSetsUseCase
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -144,7 +146,8 @@ class StatisticsViewModel @Inject constructor(
         viewModelScope.launch {
             val date = viewingDateRepo.selectedDate.value
             val timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            matrixRepo.saveExerciseSetsWithDate(exerciseId, sets, timestamp, feedback)
+            // Використовуємо UseCase для збереження та автоматичного перерахунку рангу
+            saveExerciseSetsUseCase(exerciseId, sets, timestamp, feedback)
             onDismissDialog()
         }
     }

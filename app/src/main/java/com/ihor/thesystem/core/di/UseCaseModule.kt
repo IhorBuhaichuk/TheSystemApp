@@ -135,4 +135,11 @@ object UseCaseModule {
         chatDao: ChatDao,
         liveCoachRepository: LiveCoachRepository
     ) = SendChatMessageUseCase(chatDao, liveCoachRepository)
+
+    @Provides @Singleton
+    fun provideSaveExerciseSetsUseCase(
+        matrixRepo: ProgressionMatrixRepository,
+        playerRepo: PlayerRepository,
+        recalculateGlobalRank: RecalculateGlobalRankUseCase
+    ) = SaveExerciseSetsUseCase(matrixRepo, playerRepo, recalculateGlobalRank)
 }

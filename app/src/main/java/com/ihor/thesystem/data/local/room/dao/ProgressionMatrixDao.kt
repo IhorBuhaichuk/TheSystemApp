@@ -29,6 +29,14 @@ interface ProgressionMatrixDao {
     @Query("SELECT * FROM progression_matrix WHERE exerciseId = :exerciseId LIMIT 1")
     suspend fun getEntryForExerciseSync(exerciseId: Int): ProgressionMatrixEntity?
 
+    @Query("""
+        SELECT pm.*, e.name as exerciseName 
+        FROM progression_matrix pm
+        JOIN exercises e ON pm.exerciseId = e.id
+        WHERE pm.exerciseId = :exerciseId LIMIT 1
+    """)
+    suspend fun getEntryWithExerciseName(exerciseId: Int): ProgressionMatrixWithExercise?
+
     // --- Reference Matrix Operations ---
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReference(entry: ReferenceMatrixEntity)
