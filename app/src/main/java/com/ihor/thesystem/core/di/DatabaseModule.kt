@@ -14,7 +14,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Singleton
 
@@ -26,7 +25,8 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
-        readinessRepo: DatabaseReadinessRepository
+        readinessRepo: DatabaseReadinessRepository,
+        @ApplicationScope appScope: CoroutineScope
     ): AppDatabase {
         val database = Room.databaseBuilder(
             context,
@@ -62,7 +62,7 @@ object DatabaseModule {
             .build()
 
         // Заповнюємо базу в фоновому потоці та сигналізуємо про готовність
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+        appScope.launch(Dispatchers.IO) {
             try {
                 DatabasePopulator.populate(database)
             } catch (e: Exception) {
