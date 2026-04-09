@@ -16,7 +16,7 @@ class ValidateDirectivesUseCase @Inject constructor() {
         return runCatching {
             directives.map { directive ->
                 // Шукаємо ліміти для конкретної вправи у матриці прогресії
-                val matrixEntry = matrix.find { it.exerciseId.toString() == directive.exerciseId }
+                val matrixEntry = matrix.find { it.exerciseId == directive.exerciseId }
 
                 if (matrixEntry != null) {
                     // Якщо вправа є в матриці, затискаємо вагу в її межах

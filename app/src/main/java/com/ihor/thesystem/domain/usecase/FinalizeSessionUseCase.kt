@@ -46,7 +46,7 @@ class FinalizeSessionUseCase @Inject constructor(
             
             sets.filter { it.isCompleted }.groupBy { it.exerciseId }.forEach { (exId, exerciseSets) ->
                 val maxWeight = exerciseSets.maxOf { it.weight }
-                val matrixEntry = matrix.find { it.exerciseId.toString() == exId }
+                val matrixEntry = matrix.find { it.exerciseId == exId }
                 
                 if (matrixEntry != null) {
                     val newRank = AnnualMatrixProvider.getExerciseRank(
@@ -69,8 +69,8 @@ class FinalizeSessionUseCase @Inject constructor(
 
             // 6. Формування контексту для AI
             val exerciseContexts = sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
-                val matrixEntry = matrix.find { it.exerciseId.toString() == exId }
-                val recentLogs = analyticsRepository.getRecentLogsForExercise(exId.toIntOrNull() ?: 0)
+                val matrixEntry = matrix.find { it.exerciseId == exId }
+                val recentLogs = analyticsRepository.getRecentLogsForExercise(exId)
                 val annualGoals = AnnualMatrixProvider.getMatrix().find { it.exercise.equals(matrixEntry?.exerciseName, true) }?.targets?.joinToString(", ") ?: "немає"
                 
                 """
@@ -106,7 +106,7 @@ class FinalizeSessionUseCase @Inject constructor(
                     completedExercises = sets.map { it.exerciseId }.distinct(),
                     pendingExercises = emptyList(),
                     nextWorkoutDirectives = chatMsg.recommendations.map { 
-                        WorkoutDirective(it.exerciseId.toString(), it.weight.toDouble(), it.sets, it.reps)
+                        WorkoutDirective(it.exerciseId, it.weight.toDouble(), it.sets, it.reps)
                     },
                     recoveryWindowHours = recoveryHours,
                     isFallback = false
@@ -138,7 +138,7 @@ class FinalizeSessionUseCase @Inject constructor(
         recoveryHours: Double
     ): AiArchitectReport {
         val fallbackDirectives = sets.map { set ->
-            val entry = matrix.find { it.exerciseId.toString() == set.exerciseId }
+            val entry = matrix.find { it.exerciseId == set.exerciseId }
             WorkoutDirective(
                 exerciseId = set.exerciseId,
                 targetWeight = entry?.startWeight?.toDouble() ?: set.weight,

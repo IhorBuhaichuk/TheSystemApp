@@ -25,7 +25,7 @@ interface ProgressionMatrixRepository {
     /**
      * Оновлює цільові показники вправи на основі рекомендацій ШІ.
      */
-    suspend fun updateTarget(exerciseId: Long, weight: Double, sets: Int, reps: String, aiFeedback: String? = null)
+    suspend fun updateTarget(exerciseId: Int, weight: Double, sets: Int, reps: String, aiFeedback: String? = null)
 }
 
 data class ProgressionMatrixEntry(

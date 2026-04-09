@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "reference_matrix")
 data class ReferenceMatrixEntity(
     @PrimaryKey
-    val exerciseId: String,
+    val exerciseId: Int,
     val exerciseName: String,
     val weightType: WeightType,
     val progressionStep: Double,

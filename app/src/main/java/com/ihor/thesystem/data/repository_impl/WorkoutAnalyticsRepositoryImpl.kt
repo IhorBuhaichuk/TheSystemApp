@@ -101,7 +101,7 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
     private fun ExerciseSet.toLogEntity() = ExerciseSetLogEntity(
         setId = this.setId,
         sessionId = this.sessionId,
-        exerciseId = this.exerciseId.toIntOrNull() ?: 0,
+        exerciseId = this.exerciseId,
         weight = this.weight,
         reps = this.reps,
         isCompleted = this.isCompleted,
@@ -109,7 +109,7 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
     )
 
     private fun WorkoutDirective.toEntity() = WorkoutDirectiveEntity(
-        exerciseId = this.exerciseId.toIntOrNull() ?: 0,
+        exerciseId = this.exerciseId,
         targetWeight = this.targetWeight,
         targetSets = this.targetSets,
         targetReps = this.targetReps

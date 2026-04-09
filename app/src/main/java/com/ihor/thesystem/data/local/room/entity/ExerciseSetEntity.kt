@@ -21,7 +21,7 @@ data class ExerciseSetEntity(
     @PrimaryKey(autoGenerate = true)
     val setId: Long = 0L,
     val sessionId: Long,
-    val exerciseId: String,
+    val exerciseId: Int,
     val weight: Double,
     val reps: Int,
     val isCompleted: Boolean

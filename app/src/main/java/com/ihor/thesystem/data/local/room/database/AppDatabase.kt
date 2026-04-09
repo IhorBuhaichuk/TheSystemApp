@@ -35,7 +35,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class
     ],
-    version = 15,
+    version = 16,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -144,6 +144,15 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_14_15 = object : Migration(14, 15) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS `chat_message_table` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sessionId` INTEGER NOT NULL, `role` TEXT NOT NULL, `message` TEXT NOT NULL, `timestamp` INTEGER NOT NULL)")
+            }
+        }
+
+        val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE exercise_sets RENAME TO exercise_sets_old")
+                database.execSQL("CREATE TABLE exercise_sets (setId INTEGER PRIMARY KEY NOT NULL, sessionId INTEGER NOT NULL, exerciseId INTEGER NOT NULL, weight REAL NOT NULL, reps INTEGER NOT NULL, isCompleted INTEGER NOT NULL, FOREIGN KEY(sessionId) REFERENCES workout_sessions(sessionId) ON DELETE CASCADE)")
+                database.execSQL("INSERT INTO exercise_sets SELECT setId, sessionId, CAST(exerciseId AS INTEGER), weight, reps, isCompleted FROM exercise_sets_old")
+                database.execSQL("DROP TABLE exercise_sets_old")
             }
         }
     }

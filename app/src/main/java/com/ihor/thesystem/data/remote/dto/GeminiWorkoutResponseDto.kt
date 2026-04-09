@@ -12,7 +12,7 @@ data class GeminiWorkoutResponseDto(
 
 @Serializable
 data class WorkoutTargetDto(
-    @SerialName("exercise_id") val exerciseId: Long,
+    @SerialName("exercise_id") val exerciseId: Int,
     @SerialName("nextWeight") val weight: Float,
     @SerialName("nextSets") val recommendedSets: Int,
     @SerialName("nextReps") val recommendedReps: String,

@@ -5,7 +5,7 @@ import java.util.UUID
 enum class ChatRole { SYSTEM, USER, AI }
 
 data class AiWorkoutRecommendation(
-    val exerciseId: Long, 
+    val exerciseId: Int, 
     val weight: Float, 
     val sets: Int, 
     val reps: String,
@@ -35,7 +35,7 @@ data class WorkoutSession(
 data class ExerciseSet(
     val setId: Long = 0L,
     val sessionId: Long,
-    val exerciseId: String,
+    val exerciseId: Int,
     val weight: Double,
     val reps: Int,
     val isCompleted: Boolean,
@@ -43,7 +43,7 @@ data class ExerciseSet(
 )
 
 data class WorkoutDirective(
-    val exerciseId: String,
+    val exerciseId: Int,
     val targetWeight: Double,
     val targetSets: Int,
     val targetReps: String
@@ -56,8 +56,8 @@ data class WorkoutDirective(
 data class AiArchitectReport(
     val architectFeedback: String,
     val currentStageStatus: String,
-    val completedExercises: List<String>,
-    val pendingExercises: List<String>,
+    val completedExercises: List<Int>,
+    val pendingExercises: List<Int>,
     val nextWorkoutDirectives: List<WorkoutDirective>,
     val recoveryWindowHours: Double,
     val isFallback: Boolean
