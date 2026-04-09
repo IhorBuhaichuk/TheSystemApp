@@ -12,6 +12,7 @@ import com.ihor.thesystem.domain.usecase.ApplyAiRecommendationsUseCase
 import com.ihor.thesystem.domain.usecase.GetLastWorkoutContextUseCase
 import com.ihor.thesystem.domain.usecase.SendChatMessageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -96,6 +97,7 @@ class ArchitectViewModel @Inject constructor(
             try {
                 sendChatMessageUseCase(sessionId, text)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             } finally {
@@ -136,6 +138,7 @@ class ArchitectViewModel @Inject constructor(
                     isLoading = false
                 ) }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
                 
@@ -177,6 +180,7 @@ class ArchitectViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка застосування рекомендацій"))
                 _uiState.update { it.copy(isLoading = false) }

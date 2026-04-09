@@ -15,6 +15,7 @@ import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 import com.ihor.thesystem.domain.usecase.SaveExerciseSetsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -122,6 +123,7 @@ class StatisticsViewModel @Inject constructor(
                 recalculateGlobalRank()
                 onDismissDialog()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
@@ -133,6 +135,7 @@ class StatisticsViewModel @Inject constructor(
             try {
                 matrixRepo.recalculateGlobalRank()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка оновлення рангу"))
             }
@@ -155,6 +158,7 @@ class StatisticsViewModel @Inject constructor(
                     existingLog = existingLog
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка завантаження логів"))
             }
@@ -170,6 +174,7 @@ class StatisticsViewModel @Inject constructor(
                 saveExerciseSetsUseCase(exerciseId, sets, timestamp, feedback)
                 onDismissDialog()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка збереження результатів"))
             }

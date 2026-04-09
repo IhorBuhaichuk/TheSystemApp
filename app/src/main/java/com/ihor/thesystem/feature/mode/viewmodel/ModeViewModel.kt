@@ -16,6 +16,7 @@ import com.ihor.thesystem.feature.mode.ui.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -64,6 +65,7 @@ class ModeViewModel @Inject constructor(
             try {
                 generateQuests()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка ініціалізації квестів"))
             }
@@ -148,6 +150,7 @@ class ModeViewModel @Inject constructor(
                 val player = playerRepo.getPlayer().firstOrNull() ?: return@launch
                 loadDataForDay(day, player.currentCycleDay, player.isPenaltyActive)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError("Помилка перемикання дня"))
             }
@@ -166,6 +169,7 @@ class ModeViewModel @Inject constructor(
                 onDismissDialog()
                 _events.emit(ModeEvent.DayAdvanced)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка завершення дня"))
             }
@@ -179,6 +183,7 @@ class ModeViewModel @Inject constructor(
                 onDismissDialog()
                 _events.emit(ModeEvent.DayAdvanced)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка примусового завершення"))
             }
@@ -203,6 +208,7 @@ class ModeViewModel @Inject constructor(
                 onDismissDialog()
                 _events.emit(ModeEvent.CycleSynced)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка синхронізації циклу"))
             }

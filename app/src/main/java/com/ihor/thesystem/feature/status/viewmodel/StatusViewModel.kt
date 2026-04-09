@@ -14,8 +14,10 @@ import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import com.ihor.thesystem.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 sealed class StatusDialogState {
@@ -77,9 +79,15 @@ class StatusViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             // Чекаємо сигналізу про готовність БД замість delay(500)
-            databaseReadinessRepo.isDbReady
-                .filter { it }
-                .first()
+            val isReady = withTimeoutOrNull(10_000L) {
+                databaseReadinessRepo.isDbReady
+                    .filter { it }
+                    .first()
+            }
+            if (isReady == null) {
+                _uiEvents.emit(UiEvent.ShowError("Помилка ініціалізації бази даних. Перезапустіть додаток."))
+                return@launch
+            }
 
             generateDailyQuests()
         }
@@ -119,6 +127,7 @@ class StatusViewModel @Inject constructor(
                 updatePlayerName(player, newName)
                 onDismissDialog()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
@@ -131,6 +140,7 @@ class StatusViewModel @Inject constructor(
                 logWeight(weight)
                 onDismissDialog()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
@@ -143,6 +153,7 @@ class StatusViewModel @Inject constructor(
                 updateHeight(height)
                 onDismissDialog()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
@@ -154,6 +165,7 @@ class StatusViewModel @Inject constructor(
             try {
                 toggleQuestTask(task, questId)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
@@ -166,6 +178,7 @@ class StatusViewModel @Inject constructor(
             try {
                 questRepo.addTaskToQuest(questId, taskName)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
@@ -177,6 +190,7 @@ class StatusViewModel @Inject constructor(
             try {
                 questRepo.removeTask(taskId)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
@@ -188,6 +202,7 @@ class StatusViewModel @Inject constructor(
             try {
                 updateDebuff(debuff.copy(isActive = !debuff.isActive))
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
@@ -200,6 +215,7 @@ class StatusViewModel @Inject constructor(
                 updateSystemConfig(config)
                 onDismissDialog()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
