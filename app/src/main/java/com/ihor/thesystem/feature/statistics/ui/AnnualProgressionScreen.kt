@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.util.LockScreenOrientation
-import com.ihor.thesystem.feature.statistics.model.AnnualMatrixProvider
-import com.ihor.thesystem.feature.statistics.model.MatrixRow
+import com.ihor.thesystem.domain.model.AnnualMatrixProvider
+import com.ihor.thesystem.domain.model.MatrixRow
 
 @Composable
 fun AnnualProgressionScreen(navController: NavHostController) {

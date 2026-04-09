@@ -31,6 +31,11 @@ abstract class RepositoryModule {
     abstract fun bindProgressionMatrixRepository(
         impl: ProgressionMatrixRepositoryImpl
     ): ProgressionMatrixRepository
+
+    @Binds @Singleton
+    abstract fun bindDatabaseReadinessRepository(
+        impl: DatabaseReadinessRepositoryImpl
+    ): DatabaseReadinessRepository
     
     // ViewingDateRepository не потребує @Binds, оскільки він є Singleton класом
 }

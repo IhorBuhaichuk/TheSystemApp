@@ -3,6 +3,7 @@ package com.ihor.thesystem.data.repository_impl
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistoryWithId
 import com.ihor.thesystem.data.local.room.dao.WorkoutAnalyticsDao
+import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 import com.ihor.thesystem.domain.model.ExerciseSet
@@ -14,7 +15,8 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class WorkoutAnalyticsRepositoryImpl @Inject constructor(
-    private val dao: WorkoutAnalyticsDao
+    private val dao: WorkoutAnalyticsDao,
+    private val workoutDao: WorkoutDao
 ) : WorkoutAnalyticsRepository {
 
     override suspend fun saveSessionWithSets(
@@ -77,6 +79,10 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
 
     override suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSetLogEntity> {
         return dao.getRecentLogsForExercise(exerciseId)
+    }
+
+    override suspend fun getAllExercisesMap(): Map<Int, String> {
+        return workoutDao.getAllExercisesSync().associate { it.id to it.name }
     }
 
     // =========================================

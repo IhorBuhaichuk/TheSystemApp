@@ -2,10 +2,10 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.core.util.OneRepMaxCalculator
 import com.ihor.thesystem.domain.model.Rank
+import com.ihor.thesystem.domain.model.AnnualMatrixProvider
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.PlayerRepository
-import com.ihor.thesystem.feature.statistics.model.AnnualMatrixProvider
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull

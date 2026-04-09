@@ -6,13 +6,13 @@ import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.domain.model.DebuffConfig
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.SystemConfig
+import com.ihor.thesystem.domain.repository.DatabaseReadinessRepository
 import com.ihor.thesystem.domain.repository.DebuffRepository
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import com.ihor.thesystem.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -41,7 +41,8 @@ class StatusViewModel @Inject constructor(
     private val playerRepo:            PlayerRepository,
     private val questRepo:             QuestRepository,
     private val debuffRepo:            DebuffRepository,
-    private val systemConfigRepo:      SystemConfigRepository
+    private val systemConfigRepo:      SystemConfigRepository,
+    private val databaseReadinessRepo: DatabaseReadinessRepository
 ) : ViewModel() {
 
     // Додаємо невелику затримку або фільтрацію, щоб дати базі прокинутись
@@ -71,8 +72,11 @@ class StatusViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            // ПЕРЕВІРКА: Чекаємо трохи, поки DatabasePopulator завершить роботу
-            delay(500)
+            // Чекаємо сигналізу про готовність БД замість delay(500)
+            databaseReadinessRepo.isDbReady
+                .filter { it }
+                .first()
+
             generateDailyQuests()
         }
 

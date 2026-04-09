@@ -1,13 +1,11 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
-import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 
 class GetLastWorkoutContextUseCase @Inject constructor(
-    private val analyticsRepo: WorkoutAnalyticsRepository,
-    private val workoutDao: WorkoutDao
+    private val analyticsRepo: WorkoutAnalyticsRepository
 ) {
     suspend operator fun invoke(): String? {
         // 1. Отримуємо список останніх сесій (за замовчуванням Room повертає Flow)
@@ -19,8 +17,8 @@ class GetLastWorkoutContextUseCase @Inject constructor(
         val sameDaySessions = analyticsRepo.getSessionsByDate(mostRecent.session.timestamp).firstOrNull() ?: emptyList()
         if (sameDaySessions.isEmpty()) return null
         
-        // 3. Отримуємо всі вправи для мапінгу імен
-        val allExercises = workoutDao.getAllExercisesSync().associateBy { it.id }
+        // 3. Отримуємо всі вправи для мапінгу імен через репозиторій
+        val allExercises = analyticsRepo.getAllExercisesMap()
         
         val contextBuilder = StringBuilder()
         val totalDayTonnage = sameDaySessions.sumOf { it.session.totalTonnage }
@@ -31,7 +29,7 @@ class GetLastWorkoutContextUseCase @Inject constructor(
         // Сортуємо за часом виконання, щоб зберегти послідовність
         sameDaySessions.sortedBy { it.session.timestamp }.forEach { sessionWithSets ->
             sessionWithSets.sets.forEach { set ->
-                val name = allExercises[set.exerciseId]?.name ?: "Вправа ${set.exerciseId}"
+                val name = allExercises[set.exerciseId] ?: "Вправа ${set.exerciseId}"
                 contextBuilder.append("[ID: ${set.exerciseId}] $name: ${set.weight}кг х ${set.reps}\n")
             }
         }

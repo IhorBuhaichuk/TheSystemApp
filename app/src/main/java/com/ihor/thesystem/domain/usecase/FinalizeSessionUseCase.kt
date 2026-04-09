@@ -2,7 +2,6 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
-import com.ihor.thesystem.feature.statistics.model.AnnualMatrixProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
@@ -11,7 +10,7 @@ import kotlin.time.Duration.Companion.hours
 
 class FinalizeSessionUseCase @Inject constructor(
     private val analyticsRepository: WorkoutAnalyticsRepository,
-    private val aiRepository: AiArchitectRepository,
+    private val sendChatMessageUseCase: SendChatMessageUseCase,
     private val progressionMatrixRepository: ProgressionMatrixRepository,
     private val playerRepository: PlayerRepository,
     private val recalculateGlobalRank: RecalculateGlobalRankUseCase,
@@ -56,7 +55,6 @@ class FinalizeSessionUseCase @Inject constructor(
                         playerWeight = playerWeight
                     )
                     
-                    // Використовуємо .weight для порівняння рангів
                     if (newRank.weight > matrixEntry.currentRank.weight) {
                         progressionMatrixRepository.updateRank(matrixEntry.exerciseId, newRank)
                     }
@@ -69,8 +67,7 @@ class FinalizeSessionUseCase @Inject constructor(
             val recoveryDuration = calculateRecovery(finalTonnage, isNightShift).getOrDefault(24.hours)
             val recoveryHours = recoveryDuration.inWholeHours.toDouble()
 
-            // 6. Формування розширеного промпту для кожної вправи (або загального контексту)
-            // Для спрощення чату формуємо детальний контекст для AI
+            // 6. Формування контексту для AI
             val exerciseContexts = sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
                 val matrixEntry = matrix.find { it.exerciseId.toString() == exId }
                 val recentLogs = analyticsRepository.getRecentLogsForExercise(exId.toIntOrNull() ?: 0)
@@ -86,16 +83,13 @@ class FinalizeSessionUseCase @Inject constructor(
                 """.trimIndent()
             }.joinToString("\n\n")
 
-            val prompt = """
-                Аналіз тренування від персонального тренера.
-                
-                $exerciseContexts
-                
-                На основі цих даних надай коротку оцінку до 3 речень та чіткі рекомендації на наступне тренування у форматі JSON.
-            """.trimIndent()
-            
+            // 7. Виконання запиту через SendChatMessageUseCase для уніфікації промпту
             val report = try {
-                val chatMsg = aiRepository.getChatResponse(prompt)
+                val chatMsg = sendChatMessageUseCase(
+                    sessionId = sessionId,
+                    userMessage = "Аналіз завершеного тренування",
+                    workoutContext = exerciseContexts
+                )
                 
                 chatMsg.recommendations.forEach { rec ->
                     progressionMatrixRepository.updateTarget(
@@ -121,14 +115,14 @@ class FinalizeSessionUseCase @Inject constructor(
                 generateFallbackReport(sets, matrix, recoveryHours)
             }
 
-            // 7. Валідація директив
+            // 8. Валідація директив
             val validatedDirectives = validateDirectives(report.nextWorkoutDirectives, matrix)
                 .getOrDefault(report.nextWorkoutDirectives)
 
-            // 8. Зберегти директиви
+            // 9. Зберегти директиви
             analyticsRepository.saveDirectives(validatedDirectives)
 
-            // 9. Оновити Глобальний Ранг
+            // 10. Оновити Глобальний Ранг
             recalculateGlobalRank()
 
             report.copy(

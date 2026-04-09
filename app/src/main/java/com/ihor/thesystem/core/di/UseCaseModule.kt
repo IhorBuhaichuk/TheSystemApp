@@ -112,9 +112,8 @@ object UseCaseModule {
 
     @Provides @Singleton
     fun provideGetLastWorkoutContextUseCase(
-        analyticsRepo: WorkoutAnalyticsRepository,
-        workoutDao: WorkoutDao
-    ) = GetLastWorkoutContextUseCase(analyticsRepo, workoutDao)
+        analyticsRepo: WorkoutAnalyticsRepository
+    ) = GetLastWorkoutContextUseCase(analyticsRepo)
 
     @Provides @Singleton
     fun provideApplyAiRecommendationsUseCase(
@@ -133,8 +132,9 @@ object UseCaseModule {
     @Provides @Singleton
     fun provideSendChatMessageUseCase(
         chatDao: ChatDao,
-        liveCoachRepository: LiveCoachRepository
-    ) = SendChatMessageUseCase(chatDao, liveCoachRepository)
+        liveCoachRepository: LiveCoachRepository,
+        aiArchitectRepository: AiArchitectRepository
+    ) = SendChatMessageUseCase(chatDao, liveCoachRepository, aiArchitectRepository)
 
     @Provides @Singleton
     fun provideSaveExerciseSetsUseCase(

@@ -36,4 +36,9 @@ interface WorkoutAnalyticsRepository {
     suspend fun insertSetLog(log: ExerciseSetLogEntity): Long
     suspend fun deleteSetsBySession(sessionId: Long)
     suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSetLogEntity>
+
+    /**
+     * Повертає мапу вправ: ID -> Назва.
+     */
+    suspend fun getAllExercisesMap(): Map<Int, String>
 }

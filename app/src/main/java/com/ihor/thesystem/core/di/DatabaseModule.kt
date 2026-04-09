@@ -2,8 +2,11 @@ package com.ihor.thesystem.core.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ihor.thesystem.data.local.room.database.AppDatabase
 import com.ihor.thesystem.data.local.room.database.DatabasePopulator
+import com.ihor.thesystem.domain.repository.DatabaseReadinessRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +25,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
+        readinessRepo: DatabaseReadinessRepository
     ): AppDatabase {
         val database = Room.databaseBuilder(
             context,
@@ -44,14 +48,26 @@ object DatabaseModule {
                 AppDatabase.MIGRATION_13_14,
                 AppDatabase.MIGRATION_14_15
             )
+            .addCallback(object : RoomDatabase.Callback() {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    super.onCreate(db)
+                    // База створена вперше
+                }
+                override fun onOpen(db: SupportSQLiteDatabase) {
+                    super.onOpen(db)
+                    // База відкрита (кожен запуск)
+                }
+            })
             .build()
 
-        // ОДИН ВИКЛИК: Заповнюємо базу в фоновому потоці
+        // Заповнюємо базу в фоновому потоці та сигналізуємо про готовність
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
                 DatabasePopulator.populate(database)
             } catch (e: Exception) {
                 e.printStackTrace()
+            } finally {
+                readinessRepo.markAsReady()
             }
         }
 

@@ -7,7 +7,6 @@ import com.ihor.thesystem.data.local.room.entity.ChatMessageEntity
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
-import com.ihor.thesystem.domain.repository.AiArchitectRepository
 import com.ihor.thesystem.domain.usecase.ApplyAiRecommendationsUseCase
 import com.ihor.thesystem.domain.usecase.GetLastWorkoutContextUseCase
 import com.ihor.thesystem.domain.usecase.SendChatMessageUseCase
@@ -21,7 +20,6 @@ class ArchitectViewModel @Inject constructor(
     private val getLastWorkoutContext: GetLastWorkoutContextUseCase,
     private val applyAiRecommendations: ApplyAiRecommendationsUseCase,
     private val sendChatMessageUseCase: SendChatMessageUseCase,
-    private val aiRepository: AiArchitectRepository,
     private val chatDao: ChatDao
 ) : ViewModel() {
 
@@ -105,13 +103,14 @@ class ArchitectViewModel @Inject constructor(
      * Відправляє контекст останнього тренування на аналіз до ШІ.
      */
     fun sendForAnalysis() {
-        val context = _uiState.value.lastWorkoutContext ?: return
-        
         viewModelScope.launch {
-            // 1. Додаємо повідомлення користувача
+            // 1. Отримуємо актуальний контекст
+            val context = getLastWorkoutContext() ?: return@launch
+            
+            // 2. Додаємо повідомлення користувача
             val userMsg = ChatMessage(role = ChatRole.USER, text = "Надіслати результати на аналіз")
             
-            // 2. Вмикаємо завантаження та вимикаємо кнопку в попередньому системному повідомленні
+            // 3. Вмикаємо завантаження та вимикаємо кнопку в попередньому системному повідомленні
             _uiState.update { state ->
                 val updatedMessages = state.messages.map { it.copy(isActionable = false) }
                 state.copy(
@@ -120,21 +119,13 @@ class ArchitectViewModel @Inject constructor(
                 )
             }
 
-            // 3. Формуємо промпт
-            val prompt = """
-                Ти — жорсткий AI-тренер Системи. 
-                Проаналізуй результати останнього тренування: $context. 
-                Завдання: 
-                1) Дати оцінку тренуванню. 
-                2) Оцінити прогрес відносно довгострокового річного плану. 
-                3) Надати мотиваційний блок у кіберпанк-стилі. 
-                4) Запропонувати вагу та повторення на наступне тренування (збільш вагу на 2.5-5% при успіху). 
-                ВАЖЛИВО: Відповідь поверни СУВОРО у форматі JSON: {"feedback_text": "Твій текст з пунктами 1,2,3", "next_workout_targets": [{"exercise_id": ID, "weight": 50.0, "reps": 8}]}
-            """.trimIndent()
-
-            // 4. Запит до репозиторію з обробкою помилок
+            // 4. Запит через уніфікований UseCase
             try {
-                val aiResponse = aiRepository.getChatResponse(prompt)
+                val aiResponse = sendChatMessageUseCase(
+                    sessionId = 0L, 
+                    userMessage = "Аналіз тренування", 
+                    workoutContext = context
+                )
                 _uiState.update { it.copy(
                     messages = it.messages + aiResponse,
                     isLoading = false

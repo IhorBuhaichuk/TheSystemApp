@@ -2,6 +2,7 @@ package com.ihor.thesystem.domain.repository
 
 import com.ihor.thesystem.domain.model.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface SystemConfigRepository {
     fun getConfigFlow(): Flow<SystemConfig?>
@@ -16,4 +17,9 @@ interface DebuffRepository {
 
 interface ScheduleRepository {
     fun getScheduleForDay(day: Int): Flow<ScheduleDay?>
+}
+
+interface DatabaseReadinessRepository {
+    val isDbReady: StateFlow<Boolean>
+    fun markAsReady()
 }
