@@ -35,7 +35,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class
     ],
-    version = 16,
+    version = 17,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -143,7 +143,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_14_15 = object : Migration(14, 15) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("CREATE TABLE IF NOT EXISTS `chat_message_table` (`id` PRIMARY KEY AUTOINCREMENT NOT NULL, `sessionId` INTEGER NOT NULL, `role` TEXT NOT NULL, `message` TEXT NOT NULL, `timestamp` INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `chat_message_table` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sessionId` INTEGER NOT NULL, `role` TEXT NOT NULL, `message` TEXT NOT NULL, `timestamp` INTEGER NOT NULL)")
             }
         }
 
@@ -181,6 +181,34 @@ abstract class AppDatabase : RoomDatabase() {
                 
                 // 6. Clean up
                 database.execSQL("DROP TABLE `exercise_sets_old`")
+            }
+        }
+
+        val MIGRATION_16_17 = object : Migration(16, 17) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Fix reference_matrix exerciseId type from TEXT to INTEGER
+                db.execSQL("DROP TABLE IF EXISTS `reference_matrix_old`")
+                db.execSQL("ALTER TABLE `reference_matrix` RENAME TO `reference_matrix_old`")
+                db.execSQL("""
+                    CREATE TABLE `reference_matrix` (
+                        `exerciseId` INTEGER PRIMARY KEY NOT NULL,
+                        `exerciseName` TEXT NOT NULL,
+                        `weightType` TEXT NOT NULL,
+                        `progressionStep` REAL NOT NULL,
+                        `milestones` TEXT NOT NULL,
+                        `repsMilestones` TEXT
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    INSERT INTO `reference_matrix`
+                    SELECT CAST(`exerciseId` AS INTEGER), `exerciseName`,
+                           `weightType`, `progressionStep`, `milestones`, `repsMilestones`
+                    FROM `reference_matrix_old`
+                """.trimIndent())
+                db.execSQL("DROP TABLE `reference_matrix_old`")
+
+                // Add userFeedback column to exercise_sets
+                db.execSQL("ALTER TABLE `exercise_sets` ADD COLUMN `userFeedback` TEXT")
             }
         }
     }
