@@ -143,16 +143,44 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_14_15 = object : Migration(14, 15) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("CREATE TABLE IF NOT EXISTS `chat_message_table` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sessionId` INTEGER NOT NULL, `role` TEXT NOT NULL, `message` TEXT NOT NULL, `timestamp` INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `chat_message_table` (`id` PRIMARY KEY AUTOINCREMENT NOT NULL, `sessionId` INTEGER NOT NULL, `role` TEXT NOT NULL, `message` TEXT NOT NULL, `timestamp` INTEGER NOT NULL)")
             }
         }
 
         val MIGRATION_15_16 = object : Migration(15, 16) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE exercise_sets RENAME TO exercise_sets_old")
-                database.execSQL("CREATE TABLE exercise_sets (setId INTEGER PRIMARY KEY NOT NULL, sessionId INTEGER NOT NULL, exerciseId INTEGER NOT NULL, weight REAL NOT NULL, reps INTEGER NOT NULL, isCompleted INTEGER NOT NULL, FOREIGN KEY(sessionId) REFERENCES workout_sessions(sessionId) ON DELETE CASCADE)")
-                database.execSQL("INSERT INTO exercise_sets SELECT setId, sessionId, CAST(exerciseId AS INTEGER), weight, reps, isCompleted FROM exercise_sets_old")
-                database.execSQL("DROP TABLE exercise_sets_old")
+                // 1. Drop existing index to avoid global name collision in SQLite
+                database.execSQL("DROP INDEX IF EXISTS `index_exercise_sets_sessionId`")
+                
+                // 2. Safely rename the current table to backup
+                database.execSQL("DROP TABLE IF EXISTS `exercise_sets_old`")
+                database.execSQL("ALTER TABLE `exercise_sets` RENAME TO `exercise_sets_old`")
+                
+                // 3. Create the new table with INTEGER exerciseId and exact schema matching Room
+                database.execSQL("""
+                    CREATE TABLE `exercise_sets` (
+                        `setId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `sessionId` INTEGER NOT NULL, 
+                        `exerciseId` INTEGER NOT NULL, 
+                        `weight` REAL NOT NULL, 
+                        `reps` INTEGER NOT NULL, 
+                        `isCompleted` INTEGER NOT NULL, 
+                        FOREIGN KEY(`sessionId`) REFERENCES `workout_sessions`(`sessionId`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """.trimIndent())
+                
+                // 4. Create the index on the new table. Room validation requires this.
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_sets_sessionId` ON `exercise_sets` (`sessionId`)")
+
+                // 5. Copy data with type casting for exerciseId from TEXT to INTEGER
+                database.execSQL("""
+                    INSERT INTO `exercise_sets` (`setId`, `sessionId`, `exerciseId`, `weight`, `reps`, `isCompleted`) 
+                    SELECT `setId`, `sessionId`, CAST(`exerciseId` AS INTEGER), `weight`, `reps`, `isCompleted` 
+                    FROM `exercise_sets_old`
+                """.trimIndent())
+                
+                // 6. Clean up
+                database.execSQL("DROP TABLE `exercise_sets_old`")
             }
         }
     }

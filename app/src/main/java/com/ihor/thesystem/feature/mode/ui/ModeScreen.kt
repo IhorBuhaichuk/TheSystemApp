@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.mode.ui.components.*
@@ -41,6 +42,16 @@ fun ModeScreen(
                     snackbarHostState.showSnackbar("День завершено. Новий цикл розпочато!")
                 ModeEvent.CycleSynced ->
                     snackbarHostState.showSnackbar("Цикл синхронізовано з календарем")
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvents.collect { event ->
+            when (event) {
+                is UiEvent.ShowError -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
             }
         }
     }

@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.architect.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.data.local.room.dao.ChatDao
 import com.ihor.thesystem.data.local.room.entity.ChatMessageEntity
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
@@ -28,6 +29,9 @@ class ArchitectViewModel @Inject constructor(
 
     private val _chatHistory = MutableStateFlow<List<ChatMessageEntity>>(emptyList())
     val chatHistory: StateFlow<List<ChatMessageEntity>> = _chatHistory.asStateFlow()
+
+    private val _uiEvents = MutableSharedFlow<UiEvent>()
+    val uiEvents = _uiEvents.asSharedFlow()
 
     init {
         loadInitialContext()
@@ -93,6 +97,7 @@ class ArchitectViewModel @Inject constructor(
                 sendChatMessageUseCase(sessionId, text)
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
@@ -131,6 +136,9 @@ class ArchitectViewModel @Inject constructor(
                     isLoading = false
                 ) }
             } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
+                
                 val errorMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
                     text = "ПОМИЛКА МЕРЕЖІ: ${e.message ?: "Невідома помилка зв'язку з архітектором"}",
@@ -151,21 +159,27 @@ class ArchitectViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             
-            applyAiRecommendations(recs)
-            
-            val systemMsg = ChatMessage(
-                role = ChatRole.SYSTEM,
-                text = "Директиви отримано. Матрицю прогресії оновлено. Ваші цілі на наступне тренування скориговано."
-            )
-            
-            _uiState.update { state ->
-                val updatedMessages = state.messages.map { msg ->
-                    if (msg.recommendations == recs) msg.copy(isActionable = false) else msg
-                }
-                state.copy(
-                    messages = updatedMessages + systemMsg,
-                    isLoading = false
+            try {
+                applyAiRecommendations(recs)
+                
+                val systemMsg = ChatMessage(
+                    role = ChatRole.SYSTEM,
+                    text = "Директиви отримано. Матрицю прогресії оновлено. Ваші цілі на наступне тренування скориговано."
                 )
+                
+                _uiState.update { state ->
+                    val updatedMessages = state.messages.map { msg ->
+                        if (msg.recommendations == recs) msg.copy(isActionable = false) else msg
+                    }
+                    state.copy(
+                        messages = updatedMessages + systemMsg,
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка застосування рекомендацій"))
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

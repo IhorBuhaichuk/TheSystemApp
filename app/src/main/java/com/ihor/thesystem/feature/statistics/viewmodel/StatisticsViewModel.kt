@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.statistics.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistoryWithId
@@ -107,48 +108,71 @@ class StatisticsViewModel @Inject constructor(
     private val _dialogState = MutableStateFlow<StatisticsDialogState>(StatisticsDialogState.None)
     val dialogState: StateFlow<StatisticsDialogState> = _dialogState.asStateFlow()
 
+    private val _uiEvents = MutableSharedFlow<UiEvent>()
+    val uiEvents = _uiEvents.asSharedFlow()
+
     fun onOpenSetup(entry: MatrixEntryUiModel) {
         _dialogState.value = StatisticsDialogState.SetupMatrix(entry, entry.startWeight.toString(), entry.targetWeight.toString())
     }
 
     fun onConfirmSetup(exerciseId: Int, start: String, target: String) {
         viewModelScope.launch {
-            matrixRepo.updateMatrixGoals(exerciseId, start.toFloatOrNull() ?: 0f, target.toFloatOrNull() ?: 0f)
-            recalculateGlobalRank()
-            onDismissDialog()
+            try {
+                matrixRepo.updateMatrixGoals(exerciseId, start.toFloatOrNull() ?: 0f, target.toFloatOrNull() ?: 0f)
+                recalculateGlobalRank()
+                onDismissDialog()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
+            }
         }
     }
 
     private fun recalculateGlobalRank() {
         viewModelScope.launch {
-            matrixRepo.recalculateGlobalRank()
+            try {
+                matrixRepo.recalculateGlobalRank()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка оновлення рангу"))
+            }
         }
     }
 
     fun onOpenLogSets(entry: MatrixEntryUiModel) {
         if (!entry.isActive) return
         viewModelScope.launch {
-            val date = viewingDateRepo.selectedDate.value
-            val zoneId = ZoneId.systemDefault()
-            val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
-            val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
-            
-            val existingLog = analyticsRepo.getLogForExerciseOnDate(entry.exerciseId, startOfDay, endOfDay)
-            
-            _dialogState.value = StatisticsDialogState.LogWorkoutSets(
-                entry = entry,
-                existingLog = existingLog
-            )
+            try {
+                val date = viewingDateRepo.selectedDate.value
+                val zoneId = ZoneId.systemDefault()
+                val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
+                val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
+                
+                val existingLog = analyticsRepo.getLogForExerciseOnDate(entry.exerciseId, startOfDay, endOfDay)
+                
+                _dialogState.value = StatisticsDialogState.LogWorkoutSets(
+                    entry = entry,
+                    existingLog = existingLog
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка завантаження логів"))
+            }
         }
     }
 
     fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>, feedback: String) {
         viewModelScope.launch {
-            val date = viewingDateRepo.selectedDate.value
-            val timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-            // Використовуємо UseCase для збереження та автоматичного перерахунку рангу
-            saveExerciseSetsUseCase(exerciseId, sets, timestamp, feedback)
-            onDismissDialog()
+            try {
+                val date = viewingDateRepo.selectedDate.value
+                val timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                // Використовуємо UseCase для збереження та автоматичного перерахунку рангу
+                saveExerciseSetsUseCase(exerciseId, sets, timestamp, feedback)
+                onDismissDialog()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка збереження результатів"))
+            }
         }
     }
 

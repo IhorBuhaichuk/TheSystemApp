@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.status.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.domain.model.DebuffConfig
 import com.ihor.thesystem.domain.model.Player
@@ -70,6 +71,9 @@ class StatusViewModel @Inject constructor(
     private val _events = MutableSharedFlow<StatusOneOffEvent>()
     val events = _events.asSharedFlow()
 
+    private val _uiEvents = MutableSharedFlow<UiEvent>()
+    val uiEvents = _uiEvents.asSharedFlow()
+
     init {
         viewModelScope.launch {
             // Чекаємо сигналізу про готовність БД замість delay(500)
@@ -116,6 +120,7 @@ class StatusViewModel @Inject constructor(
                 onDismissDialog()
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
         }
     }
@@ -127,6 +132,7 @@ class StatusViewModel @Inject constructor(
                 onDismissDialog()
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
         }
     }
@@ -138,6 +144,7 @@ class StatusViewModel @Inject constructor(
                 onDismissDialog()
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
         }
     }
@@ -148,6 +155,7 @@ class StatusViewModel @Inject constructor(
                 toggleQuestTask(task, questId)
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
         }
     }
@@ -159,6 +167,7 @@ class StatusViewModel @Inject constructor(
                 questRepo.addTaskToQuest(questId, taskName)
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
         }
     }
@@ -169,6 +178,7 @@ class StatusViewModel @Inject constructor(
                 questRepo.removeTask(taskId)
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
         }
     }
@@ -179,6 +189,7 @@ class StatusViewModel @Inject constructor(
                 updateDebuff(debuff.copy(isActive = !debuff.isActive))
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
         }
     }
@@ -190,6 +201,7 @@ class StatusViewModel @Inject constructor(
                 onDismissDialog()
             } catch (e: Exception) {
                 e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
             }
         }
     }

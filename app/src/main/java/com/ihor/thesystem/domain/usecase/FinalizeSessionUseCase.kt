@@ -49,8 +49,8 @@ class FinalizeSessionUseCase @Inject constructor(
                 val matrixEntry = matrix.find { it.exerciseId == exId }
                 
                 if (matrixEntry != null) {
-                    val newRank = AnnualMatrixProvider.getExerciseRank(
-                        exerciseName = matrixEntry.exerciseName,
+                    val newRank = AnnualMatrixProvider.getExerciseRankById(
+                        exerciseId = matrixEntry.exerciseId,
                         current1RM = maxWeight,
                         playerWeight = playerWeight
                     )
@@ -71,7 +71,7 @@ class FinalizeSessionUseCase @Inject constructor(
             val exerciseContexts = sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
                 val matrixEntry = matrix.find { it.exerciseId == exId }
                 val recentLogs = analyticsRepository.getRecentLogsForExercise(exId)
-                val annualGoals = AnnualMatrixProvider.getMatrix().find { it.exercise.equals(matrixEntry?.exerciseName, true) }?.targets?.joinToString(", ") ?: "немає"
+                val annualGoals = AnnualMatrixProvider.getMatrix().find { it.exerciseId == exId }?.targets?.joinToString(", ") ?: "немає"
                 
                 """
                 Вправа: ${matrixEntry?.exerciseName ?: "ID $exId"}

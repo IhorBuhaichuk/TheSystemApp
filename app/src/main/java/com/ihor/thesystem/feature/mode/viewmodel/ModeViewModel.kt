@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.mode.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.domain.model.ScheduleDay
 import com.ihor.thesystem.domain.model.Quest
@@ -52,12 +53,20 @@ class ModeViewModel @Inject constructor(
     private val _events = MutableSharedFlow<ModeEvent>()
     val events = _events.asSharedFlow()
 
+    private val _uiEvents = MutableSharedFlow<UiEvent>()
+    val uiEvents = _uiEvents.asSharedFlow()
+
     private var scheduleJob: Job? = null
     private var selectedDay: Int = 1
 
     init {
         viewModelScope.launch {
-            generateQuests()
+            try {
+                generateQuests()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка ініціалізації квестів"))
+            }
             
             playerRepo.getPlayer().filterNotNull().collect { player ->
                 // При першому завантаженні або зміні поточного дня циклу оновлюємо вибраний день
@@ -121,7 +130,12 @@ class ModeViewModel @Inject constructor(
                         if(day == currentCycleDay) daily else null
                     )
                 )
-            }.collect { data ->
+            }
+            .catch { e ->
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError("Помилка завантаження розкладу"))
+            }
+            .collect { data ->
                 _uiState.value = UiState.Content(data)
             }
         }
@@ -130,8 +144,13 @@ class ModeViewModel @Inject constructor(
     fun onCycleDayTap(day: Int) {
         selectedDay = day
         viewModelScope.launch {
-            val player = playerRepo.getPlayer().firstOrNull() ?: return@launch
-            loadDataForDay(day, player.currentCycleDay, player.isPenaltyActive)
+            try {
+                val player = playerRepo.getPlayer().firstOrNull() ?: return@launch
+                loadDataForDay(day, player.currentCycleDay, player.isPenaltyActive)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError("Помилка перемикання дня"))
+            }
         }
     }
 
@@ -142,36 +161,51 @@ class ModeViewModel @Inject constructor(
 
     fun onConfirmAdvance() {
         viewModelScope.launch {
-            advanceCycleDay()
-            onDismissDialog()
-            _events.emit(ModeEvent.DayAdvanced)
+            try {
+                advanceCycleDay()
+                onDismissDialog()
+                _events.emit(ModeEvent.DayAdvanced)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка завершення дня"))
+            }
         }
     }
 
     fun onForceCompleteDay() {
         viewModelScope.launch {
-            advanceCycleDay(forceComplete = true)
-            onDismissDialog()
-            _events.emit(ModeEvent.DayAdvanced)
+            try {
+                advanceCycleDay(forceComplete = true)
+                onDismissDialog()
+                _events.emit(ModeEvent.DayAdvanced)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка примусового завершення"))
+            }
         }
     }
 
     fun onConfirmSync(day: Int) {
         viewModelScope.launch {
-            playerRepo.updateCurrentCycleDay(day)
-            
-            val currentConfig = configRepo.getConfigFlow().firstOrNull()
-            if (currentConfig != null) {
-                configRepo.updateConfig(
-                    currentConfig.copy(
-                        cycleAnchorDateTimestamp = LocalDate.now().toEpochDay(),
-                        cycleAnchorDay = day
+            try {
+                playerRepo.updateCurrentCycleDay(day)
+                
+                val currentConfig = configRepo.getConfigFlow().firstOrNull()
+                if (currentConfig != null) {
+                    configRepo.updateConfig(
+                        currentConfig.copy(
+                            cycleAnchorDateTimestamp = LocalDate.now().toEpochDay(),
+                            cycleAnchorDay = day
+                        )
                     )
-                )
-            }
+                }
 
-            onDismissDialog()
-            _events.emit(ModeEvent.CycleSynced)
+                onDismissDialog()
+                _events.emit(ModeEvent.CycleSynced)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка синхронізації циклу"))
+            }
         }
     }
 }

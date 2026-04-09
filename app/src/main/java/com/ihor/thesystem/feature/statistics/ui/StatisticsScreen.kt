@@ -1,5 +1,6 @@
 package com.ihor.thesystem.feature.statistics.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -16,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.navigation.Routes
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.*
 import com.ihor.thesystem.feature.statistics.ui.components.*
@@ -27,8 +30,19 @@ fun StatisticsScreen(
     navController: NavHostController,
     viewModel: StatisticsViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val uiState     by viewModel.uiState.collectAsState()
     val dialogState by viewModel.dialogState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvents.collect { event ->
+            when (event) {
+                is UiEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -212,7 +226,7 @@ fun StatisticsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text       = "[ ПОМИЛКА: ${(state as UiState.Error).message} ]",
+                        text       = "[ ПОМИЛКА: ${state.message} ]",
                         color      = NeonRed,
                         fontFamily = RajdhaniFamily
                     )

@@ -34,7 +34,7 @@ class SaveExerciseSetsUseCase @Inject constructor(
         // 1. Збереження логу підходів
         matrixRepo.saveExerciseSetsWithDate(exerciseId, sets, timestamp, userFeedback)
 
-        // 2. Алгоритм автоматичного підвищення рангу (Завдання 3)
+        // 2. Алгоритм автоматичного підвищення рангу
         val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
         if (validSets.isEmpty()) return
 
@@ -49,8 +49,8 @@ class SaveExerciseSetsUseCase @Inject constructor(
         val entry = matrixRepo.getEntrySync(exerciseId) ?: return
         val playerWeight = playerRepo.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
 
-        // - Визнач newRank за допомогою AnnualMatrixProvider
-        val newRank = AnnualMatrixProvider.getExerciseRank(entry.exerciseName, current1RM, playerWeight)
+        // - Визнач newRank за допомогою AnnualMatrixProvider через exerciseId
+        val newRank = AnnualMatrixProvider.getExerciseRankById(exerciseId, current1RM, playerWeight)
 
         // - Перевір математичну вагу (weight: E=1..S=6)
         if (newRank.weight > entry.currentRank.weight) {

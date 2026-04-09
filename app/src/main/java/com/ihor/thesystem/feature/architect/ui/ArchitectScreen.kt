@@ -1,5 +1,6 @@
 package com.ihor.thesystem.feature.architect.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,11 +14,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.components.GlitchText
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.domain.model.ChatMessage
@@ -32,9 +35,20 @@ fun ArchitectScreen(
     viewModel: ArchitectViewModel = hiltViewModel(),
     onAcknowledge: () -> Unit
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val chatHistory by viewModel.chatHistory.collectAsState()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvents.collect { event ->
+            when (event) {
+                is UiEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
