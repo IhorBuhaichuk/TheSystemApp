@@ -1,7 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.DomainQuestStatus
-import com.ihor.thesystem.domain.model.DomainQuestType
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
@@ -11,9 +10,7 @@ import javax.inject.Inject
 class AdvanceCycleDayUseCase @Inject constructor(
     private val playerRepo:       PlayerRepository,
     private val questRepo:        QuestRepository,
-    private val generateQuests:   GenerateDailyQuestsUseCase,
-    private val levelUp:          LevelUpUseCase,
-    private val checkPenalty:     CheckPenaltyZoneUseCase
+    private val generateQuests:   GenerateDailyQuestsUseCase
 ) {
     suspend operator fun invoke(forceComplete: Boolean = false) {
         val player = playerRepo.getPlayer().firstOrNull() ?: return
@@ -37,14 +34,6 @@ class AdvanceCycleDayUseCase @Inject constructor(
             val status  = if (allDone || forceComplete) DomainQuestStatus.COMPLETED
             else DomainQuestStatus.FAILED
             questRepo.updateQuestStatus(it.id, status)
-
-            // LevelUp тільки при успішному завершенні Main Quest
-            if (status == DomainQuestStatus.COMPLETED) {
-                levelUp()
-            }
-
-            // Перевіряємо штрафну зону після кожного Main Quest
-            checkPenalty()
         }
 
         // ── Перехід до наступного дня ─────────────────────────────────

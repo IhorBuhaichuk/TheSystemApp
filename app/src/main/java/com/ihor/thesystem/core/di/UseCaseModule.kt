@@ -39,17 +39,6 @@ object UseCaseModule {
     ) = GenerateDailyQuestsUseCase(questRepo, scheduleRepo, playerRepo, matrixRepo, calculateRecommendation)
 
     @Provides @Singleton
-    fun provideLevelUpUseCase(
-        playerRepo: PlayerRepository
-    ) = LevelUpUseCase(playerRepo)
-
-    @Provides @Singleton
-    fun provideCheckPenaltyZoneUseCase(
-        playerRepo: PlayerRepository,
-        questRepo:  QuestRepository
-    ) = CheckPenaltyZoneUseCase(playerRepo, questRepo)
-
-    @Provides @Singleton
     fun provideActivatePenaltyManuallyUseCase(
         playerRepo: PlayerRepository
     ) = ActivatePenaltyManuallyUseCase(playerRepo)
@@ -58,10 +47,8 @@ object UseCaseModule {
     fun provideAdvanceCycleDayUseCase(
         playerRepo:     PlayerRepository,
         questRepo:      QuestRepository,
-        generateQuests: GenerateDailyQuestsUseCase,
-        levelUp:        LevelUpUseCase,
-        checkPenalty:   CheckPenaltyZoneUseCase
-    ) = AdvanceCycleDayUseCase(playerRepo, questRepo, generateQuests, levelUp, checkPenalty)
+        generateQuests: GenerateDailyQuestsUseCase
+    ) = AdvanceCycleDayUseCase(playerRepo, questRepo, generateQuests)
 
     @Provides @Singleton
     fun provideGetStatusScreenDataUseCase(
