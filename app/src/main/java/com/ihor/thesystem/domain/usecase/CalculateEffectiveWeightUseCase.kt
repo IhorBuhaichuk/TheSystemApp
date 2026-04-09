@@ -27,10 +27,16 @@ class CalculateEffectiveWeightUseCase @Inject constructor(
         totalPenaltyPercent += activeDebuffs.sumOf { it.penaltyPercent }
 
         // Max penalty is 50% (Floor)
-        val finalPenaltyFactor = (totalPenaltyPercent.toDouble() / 100.0).coerceAtMost(0.5)
+        val finalPenaltyFactor = (totalPenaltyPercent.toDouble() / PERCENT_DIVISOR).coerceAtMost(MAX_PENALTY_FACTOR)
         val effectiveWeight = baseWeight * (1.0 - finalPenaltyFactor)
 
         // Round to nearest 0.25
-        return round(effectiveWeight * 4) / 4
+        return round(effectiveWeight * ROUNDING_GRANULARITY) / ROUNDING_GRANULARITY
+    }
+
+    companion object {
+        private const val PERCENT_DIVISOR      = 100.0
+        private const val MAX_PENALTY_FACTOR   = 0.5
+        private const val ROUNDING_GRANULARITY = 4.0  // округлення до 0.25 кг
     }
 }

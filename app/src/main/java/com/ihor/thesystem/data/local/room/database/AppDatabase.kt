@@ -36,7 +36,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ChatMessageEntity::class
     ],
     version = 16,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

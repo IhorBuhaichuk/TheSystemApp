@@ -93,19 +93,26 @@ class StatusViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            var prevClass: String?   = null
-            var prevPenalty: Boolean? = null
             playerRepo.getPlayer()
                 .filterNotNull()
-                .collect { player ->
-                    if (prevClass != null && prevClass != player.playerClass) {
-                        _events.emit(StatusOneOffEvent.ShowLevelUp(player.playerClass, player.currentMonth))
+                .scan(Pair<Player?, Player?>(null, null)) { (_, prev), current ->
+                    Pair(prev, current)
+                }
+                .filter { (prev, current) -> prev != null && current != null }
+                .collect { (prev, current) ->
+                    requireNotNull(prev); requireNotNull(current)
+                    
+                    if (prev.playerClass != current.playerClass) {
+                        _events.emit(
+                            StatusOneOffEvent.ShowLevelUp(current.playerClass, current.currentMonth)
+                        )
                     }
-                    if (prevPenalty == false && player.isPenaltyActive) {
+                    if (!prev.isPenaltyActive && current.isPenaltyActive) {
                         _events.emit(StatusOneOffEvent.ShowPenaltyActivated)
                     }
-                    prevClass   = player.playerClass
-                    prevPenalty = player.isPenaltyActive
+                    if (prev.isPenaltyActive && !current.isPenaltyActive) {
+                        _events.emit(StatusOneOffEvent.ShowPenaltyDeactivated)
+                    }
                 }
         }
     }
