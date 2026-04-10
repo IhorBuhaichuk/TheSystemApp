@@ -4,7 +4,6 @@ import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.ihor.thesystem.BuildConfig
 import com.ihor.thesystem.data.remote.dto.GeminiWorkoutResponseDto
-import com.ihor.thesystem.data.remote.dto.WorkoutTargetDto
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
@@ -38,25 +37,14 @@ class AiArchitectRepositoryImpl @Inject constructor(
                 val response = generativeModel.generateContent(prompt)
                 val responseText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
                 
-                // Оскільки використовується responseMimeType = "application/json", 
-                // відповідь приходить у чистому вигляді без маркдаун-обгорток.
                 val cleanJson = responseText.trim()
 
-                val targets = try {
-                    json.decodeFromString<List<WorkoutTargetDto>>(cleanJson)
-                } catch (e: Exception) {
-                    // Fallback на випадок якщо AI загорнув це в об'єкт з полем next_workout_targets
-                    try {
-                        json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson).nextWorkoutTargets
-                    } catch (e2: Exception) {
-                        Log.e("AiArchitect", "Failed to parse JSON: $cleanJson")
-                        throw e2
-                    }
-                }
+                val dto = json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
+                val targets = dto.nextWorkoutTargets
                 
                 ChatMessage(
                     role = ChatRole.AI,
-                    text = "Аналіз завершено. Директиви вправ оновлено.",
+                    text = dto.feedbackText.ifBlank { "Аналіз завершено." },
                     recommendations = targets.map { 
                         AiWorkoutRecommendation(
                             exerciseId = it.exerciseId, 

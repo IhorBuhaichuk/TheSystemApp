@@ -8,5 +8,6 @@ import com.ihor.thesystem.domain.model.ChatMessage
 data class ArchitectUiState(
     val messages: List<ChatMessage> = emptyList(),
     val isLoading: Boolean = false,
-    val lastWorkoutContext: String? = null
+    val lastWorkoutContext: String? = null,
+    val analysisAlreadySent: Boolean = false
 )

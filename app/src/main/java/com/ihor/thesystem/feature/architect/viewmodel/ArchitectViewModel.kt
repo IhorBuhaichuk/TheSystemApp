@@ -43,6 +43,10 @@ class ArchitectViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             val context = getLastWorkoutContext()
             
+            // Перевірка чи вже був відправлений аналіз (наявність відповіді від моделі)
+            val history = chatDao.getChatHistory(0L).first()
+            val analysisAlreadySent = history.any { it.role == "model" }
+
             if (context != null) {
                 val initialMessages = listOf(
                     ChatMessage(
@@ -55,7 +59,8 @@ class ArchitectViewModel @Inject constructor(
                     it.copy(
                         messages = initialMessages, 
                         lastWorkoutContext = context,
-                        isLoading = false
+                        isLoading = false,
+                        analysisAlreadySent = analysisAlreadySent
                     ) 
                 }
             } else {
@@ -135,7 +140,8 @@ class ArchitectViewModel @Inject constructor(
                 )
                 _uiState.update { it.copy(
                     messages = it.messages + aiResponse,
-                    isLoading = false
+                    isLoading = false,
+                    analysisAlreadySent = true
                 ) }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e

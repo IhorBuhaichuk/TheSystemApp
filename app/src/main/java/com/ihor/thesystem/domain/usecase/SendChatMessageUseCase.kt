@@ -64,8 +64,9 @@ class SendChatMessageUseCase @Inject constructor(
             )
             chatDao.insertChatMessage(userEntity)
 
-            // 2. Беремо історію з БД для цього sessionId
-            val historyEntities = chatDao.getChatHistory(sessionId).first()
+            // 2. Беремо історію з БД для цього sessionId (обмежено 6 повідомленнями)
+            val historyEntities = chatDao.getRecentChatHistory(sessionId).first()
+                .sortedBy { it.timestamp }
 
             // 3. Конвертуємо об'єкти у формат Content для Gemini
             val history = historyEntities.map { entity ->

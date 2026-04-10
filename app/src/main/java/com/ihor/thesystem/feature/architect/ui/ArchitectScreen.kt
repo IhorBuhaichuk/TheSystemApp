@@ -160,7 +160,8 @@ private fun ArchitectView(
             ChatBubble(
                 message = message,
                 onAnalyzeClick = { viewModel.sendForAnalysis() },
-                onApplyClick = { viewModel.applyRecommendations(it) }
+                onApplyClick = { viewModel.applyRecommendations(it) },
+                isAnalyzeEnabled = !uiState.analysisAlreadySent
             )
         }
 
@@ -189,7 +190,8 @@ private fun ArchitectView(
 fun ChatBubble(
     message: ChatMessage,
     onAnalyzeClick: () -> Unit,
-    onApplyClick: (List<AiWorkoutRecommendation>) -> Unit
+    onApplyClick: (List<AiWorkoutRecommendation>) -> Unit,
+    isAnalyzeEnabled: Boolean = true
 ) {
     val alignment = when (message.role) {
         ChatRole.USER -> Alignment.CenterEnd
@@ -272,7 +274,8 @@ fun ChatBubble(
                     CyberButton(
                         text = "НАДІСЛАТИ РЕЗУЛЬТАТИ",
                         color = NeonCyan,
-                        onClick = onAnalyzeClick
+                        onClick = onAnalyzeClick,
+                        enabled = isAnalyzeEnabled
                     )
                 } else if (message.role == ChatRole.AI) {
                     CyberButton(
@@ -290,15 +293,17 @@ fun ChatBubble(
 fun CyberButton(
     text: String,
     color: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
             .height(44.dp)
-            .sciPanel(borderColor = color, backgroundColor = color.copy(0.1f), cornerCut = 6.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            .sciPanel(borderColor = if (enabled) color else color.copy(0.2f), backgroundColor = color.copy(0.1f), cornerCut = 6.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, disabledContainerColor = Color.Transparent),
         contentPadding = PaddingValues(0.dp)
     ) {
         Text(
@@ -306,7 +311,7 @@ fun CyberButton(
             fontFamily = RajdhaniFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
-            color = color
+            color = if (enabled) color else color.copy(0.4f)
         )
     }
 }

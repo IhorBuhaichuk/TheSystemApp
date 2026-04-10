@@ -13,4 +13,7 @@ interface ChatDao {
 
     @Query("SELECT * FROM chat_message_table WHERE sessionId = :sessionId ORDER BY timestamp ASC")
     fun getChatHistory(sessionId: Long): Flow<List<ChatMessageEntity>>
+
+    @Query("SELECT * FROM chat_message_table WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT 6")
+    fun getRecentChatHistory(sessionId: Long): Flow<List<ChatMessageEntity>>
 }
