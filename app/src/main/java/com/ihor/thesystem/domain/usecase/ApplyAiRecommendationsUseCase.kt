@@ -43,9 +43,9 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
                 "exercise_id": $id,
                 "name": "${entry.exerciseName}",
                 "annual_goals": "$annualGoals",
-                "recent_history": [${recentLogs.joinToString { "{\"w\": ${it.weight}, \"r\": ${it.reps}, \"f\": \"${it.userFeedback ?: ""}\"}" }}],
+                "recent_history": [${recentLogs.joinToString { "{\"w\": ${it.weight}, \"r\": ${it.reps}, \"f\": \"${it.userFeedback?.replace("\"", "'") ?: ""}\"}" }}],
                 "current_weight": ${entry.currentWeight},
-                "user_feedback": "${todayLog?.userFeedback ?: ""}"
+                "user_feedback": "${todayLog?.userFeedback?.replace("\"", "'") ?: ""}"
             }
             """.trimIndent()
         }.joinToString(",\n")
@@ -63,9 +63,10 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             1. Нову вагу (nextWeight)
             2. Кількість підходів (nextSets)
             3. Діапазон повторень (nextReps, наприклад "8-10")
-            4. Коротка оцінка aiFeedback (до 3 речень, БЕЗ подвійних лапок всередині тексту, використовуй одинарні).
+            4. Коротка оцінка aiFeedback (до 3 речень).
             
-            Відповідай СУВОРО масивом JSON об'єктів.
+            Відповідай СУВОРО масивом JSON об'єктів. 
+            КРИТИЧНО: У тексті aiFeedback КАТЕГОРИЧНО ЗАБОРОНЕНО використовувати будь-які лапки (ні подвійні, ні одинарні) та символи переносу рядка (\\n).
         """.trimIndent()
 
         // 3. Виконання єдиного пакетного запиту до ШІ
