@@ -16,5 +16,8 @@ data class PlayerEntity(
     val currentCycleDay: Int = 1,
     val consecutiveMainQuestFailures: Int = 0,
     val isPenaltyActive: Boolean = false,
-    val globalRank: Rank = Rank.E
+    val globalRank: Rank = Rank.E,
+    val strAttribute: Int = 0,
+    val endAttribute: Int = 0,
+    val disAttribute: Int = 0
 )

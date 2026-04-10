@@ -55,7 +55,10 @@ private fun PlayerEntity.toDomain() = Player(
     currentCycleDay = currentCycleDay,
     consecutiveMainQuestFailures = consecutiveMainQuestFailures, 
     isPenaltyActive = isPenaltyActive,
-    globalRank = globalRank
+    globalRank = globalRank,
+    strAttribute = strAttribute,
+    endAttribute = endAttribute,
+    disAttribute = disAttribute
 )
 
 private fun Player.toEntity() = PlayerEntity(
@@ -69,5 +72,8 @@ private fun Player.toEntity() = PlayerEntity(
     currentCycleDay = currentCycleDay,
     consecutiveMainQuestFailures = consecutiveMainQuestFailures, 
     isPenaltyActive = isPenaltyActive,
-    globalRank = globalRank
+    globalRank = globalRank,
+    strAttribute = strAttribute,
+    endAttribute = endAttribute,
+    disAttribute = disAttribute
 )

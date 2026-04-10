@@ -3,6 +3,7 @@ package com.ihor.thesystem.feature.statistics.ui.components
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -35,6 +36,9 @@ import com.ihor.thesystem.feature.status.viewmodel.StatusUiData
 @Composable
 fun PlayerLeftPanel(
     data: StatusUiData,
+    strAttribute: Int = 0,
+    endAttribute: Int = 0,
+    disAttribute: Int = 0,
     modifier: Modifier = Modifier,
     onNameTap: () -> Unit = {},
     onDebuffEdit: () -> Unit = {}
@@ -87,6 +91,24 @@ fun PlayerLeftPanel(
             color      = TextSecondary,
             fontSize   = 10.sp,
             fontFamily = RajdhaniFamily
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Тонкий роздільник
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(0.5.dp)
+                .background(PanelBorder.copy(alpha = 0.3f))
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        AttributePanel(
+            strValue = strAttribute,
+            endValue = endAttribute,
+            disValue = disAttribute
         )
 
         // --- Progress bar ---

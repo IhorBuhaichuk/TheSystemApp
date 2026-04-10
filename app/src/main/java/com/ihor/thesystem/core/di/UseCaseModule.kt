@@ -1,6 +1,7 @@
 package com.ihor.thesystem.core.di
 
 import com.ihor.thesystem.data.local.room.dao.ChatDao
+import com.ihor.thesystem.data.local.room.dao.QuestLogDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.*
@@ -94,8 +95,9 @@ object UseCaseModule {
     fun provideFinalizeDayUseCase(
         playerRepo: PlayerRepository,
         questRepo: QuestRepository,
-        generateDailyQuestsUseCase: GenerateDailyQuestsUseCase
-    ) = FinalizeDayUseCase(playerRepo, questRepo, generateDailyQuestsUseCase)
+        generateDailyQuestsUseCase: GenerateDailyQuestsUseCase,
+        calculateAttributes: CalculateAttributesUseCase
+    ) = FinalizeDayUseCase(playerRepo, questRepo, generateDailyQuestsUseCase, calculateAttributes)
 
     @Provides @Singleton
     fun provideGetLastWorkoutContextUseCase(
@@ -129,4 +131,11 @@ object UseCaseModule {
         playerRepo: PlayerRepository,
         recalculateGlobalRank: RecalculateGlobalRankUseCase
     ) = SaveExerciseSetsUseCase(matrixRepo, playerRepo, recalculateGlobalRank)
+
+    @Provides @Singleton
+    fun provideCalculateAttributesUseCase(
+        matrixRepo: ProgressionMatrixRepository,
+        questLogDao: QuestLogDao,
+        playerRepo: PlayerRepository
+    ) = CalculateAttributesUseCase(matrixRepo, questLogDao, playerRepo)
 }

@@ -4,14 +4,14 @@ import com.ihor.thesystem.domain.model.DomainQuestType
 import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 
 class FinalizeDayUseCase @Inject constructor(
     private val playerRepo: PlayerRepository,
     private val questRepo: QuestRepository,
-    private val generateDailyQuestsUseCase: GenerateDailyQuestsUseCase
+    private val generateDailyQuestsUseCase: GenerateDailyQuestsUseCase,
+    private val calculateAttributes: CalculateAttributesUseCase
 ) {
     /**
      * Повертає Event, який View model має показати (LevelUp або Penalty)
@@ -83,6 +83,9 @@ class FinalizeDayUseCase @Inject constructor(
         // 6. Архівуємо старі квести та генеруємо нові (Генератор візьме новий день з БД)
         questRepo.archiveActiveQuests()
         generateDailyQuestsUseCase.invoke()
+
+        // 7. Перераховуємо атрибути
+        calculateAttributes()
 
         return when {
             levelUpTriggered -> DayFinalizationResult.LevelUp

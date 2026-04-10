@@ -11,7 +11,10 @@ data class Player(
     val currentCycleDay: Int,
     val consecutiveMainQuestFailures: Int,
     val isPenaltyActive: Boolean,
-    val globalRank: Rank = Rank.E
+    val globalRank: Rank = Rank.E,
+    val strAttribute: Int = 0,
+    val endAttribute: Int = 0,
+    val disAttribute: Int = 0
 )
 
 data class Quest(

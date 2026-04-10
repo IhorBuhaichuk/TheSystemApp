@@ -45,7 +45,8 @@ class StatusViewModel @Inject constructor(
     private val questRepo:             QuestRepository,
     private val debuffRepo:            DebuffRepository,
     private val systemConfigRepo:      SystemConfigRepository,
-    private val databaseReadinessRepo: DatabaseReadinessRepository
+    private val databaseReadinessRepo: DatabaseReadinessRepository,
+    private val calculateAttributes:   CalculateAttributesUseCase
 ) : ViewModel() {
 
     // Додаємо невелику затримку або фільтрацію, щоб дати базі прокинутись
@@ -90,6 +91,7 @@ class StatusViewModel @Inject constructor(
             }
 
             generateDailyQuests()
+            calculateAttributes()
         }
 
         viewModelScope.launch {

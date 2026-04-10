@@ -35,7 +35,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class
     ],
-    version = 17,
+    version = 18,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -209,6 +209,14 @@ abstract class AppDatabase : RoomDatabase() {
 
                 // Add userFeedback column to exercise_sets
                 db.execSQL("ALTER TABLE `exercise_sets` ADD COLUMN `userFeedback` TEXT")
+            }
+        }
+
+        val MIGRATION_17_18 = object : Migration(17, 18) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE player ADD COLUMN strAttribute INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE player ADD COLUMN endAttribute INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE player ADD COLUMN disAttribute INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

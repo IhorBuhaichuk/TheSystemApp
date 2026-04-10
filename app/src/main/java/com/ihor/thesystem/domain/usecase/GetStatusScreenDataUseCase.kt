@@ -50,7 +50,10 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     dailyQuest             = daily?.toUiModel(),
                     mainQuest              = main?.toUiModel(),
                     promotionQuests        = promotions.map { it.toUiModel() }.toImmutableList(),
-                    globalRank             = player.globalRank
+                    globalRank             = player.globalRank,
+                    strAttribute           = player.strAttribute,
+                    endAttribute           = player.endAttribute,
+                    disAttribute           = player.disAttribute
                 )
             }
         }

@@ -107,6 +107,9 @@ fun StatusScreen(
                     ) {
                         PlayerLeftPanel(
                             data         = data,
+                            strAttribute = data.strAttribute,
+                            endAttribute = data.endAttribute,
+                            disAttribute = data.disAttribute,
                             modifier     = Modifier.fillMaxWidth(),
                             onNameTap    = { viewModel.onNameTap() },
                             onDebuffEdit = { viewModel.onDebuffTap() }

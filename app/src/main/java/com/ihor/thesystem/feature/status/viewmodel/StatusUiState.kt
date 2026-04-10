@@ -18,7 +18,10 @@ data class StatusUiData(
     val dailyQuest: QuestUiModel?     = null,
     val mainQuest: QuestUiModel?      = null,
     val promotionQuests: ImmutableList<QuestUiModel> = persistentListOf(),
-    val globalRank: Rank              = Rank.E
+    val globalRank: Rank              = Rank.E,
+    val strAttribute: Int = 0,
+    val endAttribute: Int = 0,
+    val disAttribute: Int = 0
 )
 
 data class DebuffUiModel(
