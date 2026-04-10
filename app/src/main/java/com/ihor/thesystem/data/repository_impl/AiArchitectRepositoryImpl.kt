@@ -38,11 +38,9 @@ class AiArchitectRepositoryImpl @Inject constructor(
                 val response = generativeModel.generateContent(prompt)
                 val responseText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
                 
-                // Очищення JSON за запитом
-                val cleanJson = responseText
-                    .replace("```json", "")
-                    .replace("```", "")
-                    .trim()
+                // Оскільки використовується responseMimeType = "application/json", 
+                // відповідь приходить у чистому вигляді без маркдаун-обгорток.
+                val cleanJson = responseText.trim()
 
                 val targets = try {
                     json.decodeFromString<List<WorkoutTargetDto>>(cleanJson)

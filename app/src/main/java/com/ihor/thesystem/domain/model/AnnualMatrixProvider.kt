@@ -23,10 +23,10 @@ object AnnualMatrixProvider {
     fun parseTarget(targetStr: String, playerWeight: Double): Double {
         if (targetStr.equals("BW", ignoreCase = true)) return playerWeight
         if (targetStr.uppercase().startsWith("BW+")) {
-            val extraWeight = targetStr.uppercase().replace("BW+", "").toDoubleOrNull() ?: 0.0
+            val extraWeight = targetStr.uppercase().replace("BW+", "").replace(",", ".").toDoubleOrNull() ?: 0.0
             return playerWeight + extraWeight
         }
-        return targetStr.toDoubleOrNull() ?: 0.0
+        return targetStr.replace(",", ".").toDoubleOrNull() ?: 0.0
     }
 
     /**
