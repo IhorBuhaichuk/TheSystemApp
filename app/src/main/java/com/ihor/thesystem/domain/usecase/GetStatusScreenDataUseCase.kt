@@ -4,22 +4,18 @@ import com.ihor.thesystem.data.local.room.dao.QuestLogDao
 import com.ihor.thesystem.data.local.room.entity.QuestLogEntity
 import com.ihor.thesystem.data.local.room.entity.QuestType
 import com.ihor.thesystem.domain.model.*
-import com.ihor.thesystem.domain.repository.DebuffRepository
-import com.ihor.thesystem.domain.repository.PlayerRepository
-import com.ihor.thesystem.domain.repository.QuestRepository
+import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.feature.status.viewmodel.*
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class GetStatusScreenDataUseCase @Inject constructor(
     private val playerRepo: PlayerRepository,
     private val questRepo: QuestRepository,
     private val debuffRepo: DebuffRepository,
-    private val questLogDao: QuestLogDao
+    private val questLogDao: QuestLogDao,
+    private val scheduleRepo: ScheduleRepository
 ) {
     @Suppress("UNCHECKED_CAST")
     operator fun invoke(): Flow<StatusUiData> =
@@ -29,6 +25,9 @@ class GetStatusScreenDataUseCase @Inject constructor(
             val dailyQuestsFlow = questRepo.getDailyQuestsForDate(System.currentTimeMillis())
             val promotionQuestsFlow = questRepo.getActivePromotionQuests()
             
+            // Отримуємо розклад для всіх 4 днів циклу
+            val scheduleFlows = (1..4).map { scheduleRepo.getScheduleForDay(it) }
+            
             combine(
                 listOf(
                     dailyQuestsFlow,
@@ -36,13 +35,14 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     debuffRepo.getActiveDebuffs(),
                     playerRepo.getLatestWeight(),
                     questLogDao.getFullHistory()
-                )
+                ) + scheduleFlows
             ) { args ->
                 val dailyQuests = args[0] as List<Quest>
                 val promotionQuests = args[1] as List<Quest>
                 val debuffs = args[2] as List<DebuffConfig>
                 val weight = args[3] as Float?
                 val questHistory = args[4] as List<QuestLogEntity>
+                val schedules = args.slice(5..8) as List<ScheduleDay?>
 
                 val allQuests = dailyQuests + promotionQuests
                 
@@ -54,6 +54,10 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     it.questType == QuestType.MAIN && it.wasSuccessful
                 }
 
+                // Розрахунок загальної кількості тренувань у місяці (4 тижні)
+                val trainingDaysPerCycle = schedules.count { it?.workoutTemplateName != null }
+                val monthWorkoutsTotal = trainingDaysPerCycle * 4
+
                 StatusUiData(
                     playerName             = player.name,
                     playerClass            = player.playerClass,
@@ -63,7 +67,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     height                 = player.height.takeIf { it > 0f } ?: 182f,
                     cycleDay               = player.currentCycleDay,
                     monthWorkoutsCompleted = completedMainThisMonth,
-                    monthWorkoutsTotal     = 13,
+                    monthWorkoutsTotal     = monthWorkoutsTotal,
                     activeDebuffs          = debuffs.map { it.toUiModel() }.toImmutableList(),
                     dailyQuest             = daily?.toUiModel(),
                     mainQuest              = main?.toUiModel(),

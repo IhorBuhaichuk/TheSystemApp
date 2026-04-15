@@ -55,8 +55,9 @@ object UseCaseModule {
         playerRepo: PlayerRepository,
         questRepo:  QuestRepository,
         debuffRepo: DebuffRepository,
-        questLogDao: QuestLogDao
-    ) = GetStatusScreenDataUseCase(playerRepo, questRepo, debuffRepo, questLogDao)
+        questLogDao: QuestLogDao,
+        scheduleRepo: ScheduleRepository
+    ) = GetStatusScreenDataUseCase(playerRepo, questRepo, debuffRepo, questLogDao, scheduleRepo)
 
     @Provides @Singleton
     fun provideGetProgressionMatrixUseCase(
