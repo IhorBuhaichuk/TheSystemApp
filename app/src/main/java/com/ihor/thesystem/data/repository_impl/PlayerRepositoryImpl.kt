@@ -29,12 +29,12 @@ class PlayerRepositoryImpl @Inject constructor(
         weightLogDao.insert(WeightLogEntity(weight = weight))
 
     override suspend fun updateHeight(height: Float) {
-        val player = playerDao.getPlayer().firstOrNull() ?: return
+        val player = playerDao.getPlayerSync() ?: return
         playerDao.insertOrUpdate(player.copy(height = height))
     }
 
     override suspend fun updateCurrentCycleDay(day: Int) {
-        val player = playerDao.getPlayer().firstOrNull() ?: return
+        val player = playerDao.getPlayerSync() ?: return
         playerDao.insertOrUpdate(player.copy(currentCycleDay = day))
     }
 
@@ -58,7 +58,11 @@ private fun PlayerEntity.toDomain() = Player(
     globalRank = globalRank,
     strAttribute = strAttribute,
     endAttribute = endAttribute,
-    disAttribute = disAttribute
+    disAttribute = disAttribute,
+    currentStreak = currentStreak,
+    maxStreak = maxStreak,
+    xpTotal = xpTotal,
+    xpThisWeek = xpThisWeek
 )
 
 private fun Player.toEntity() = PlayerEntity(
@@ -75,5 +79,9 @@ private fun Player.toEntity() = PlayerEntity(
     globalRank = globalRank,
     strAttribute = strAttribute,
     endAttribute = endAttribute,
-    disAttribute = disAttribute
+    disAttribute = disAttribute,
+    currentStreak = currentStreak,
+    maxStreak = maxStreak,
+    xpTotal = xpTotal,
+    xpThisWeek = xpThisWeek
 )

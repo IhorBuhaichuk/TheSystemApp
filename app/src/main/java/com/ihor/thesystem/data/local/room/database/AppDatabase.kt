@@ -35,7 +35,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class
     ],
-    version = 18,
+    version = 19,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -149,14 +149,9 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_15_16 = object : Migration(15, 16) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // 1. Drop existing index to avoid global name collision in SQLite
                 database.execSQL("DROP INDEX IF EXISTS `index_exercise_sets_sessionId`")
-                
-                // 2. Safely rename the current table to backup
                 database.execSQL("DROP TABLE IF EXISTS `exercise_sets_old`")
                 database.execSQL("ALTER TABLE `exercise_sets` RENAME TO `exercise_sets_old`")
-                
-                // 3. Create the new table with INTEGER exerciseId and exact schema matching Room
                 database.execSQL("""
                     CREATE TABLE `exercise_sets` (
                         `setId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
@@ -168,25 +163,18 @@ abstract class AppDatabase : RoomDatabase() {
                         FOREIGN KEY(`sessionId`) REFERENCES `workout_sessions`(`sessionId`) ON UPDATE NO ACTION ON DELETE CASCADE
                     )
                 """.trimIndent())
-                
-                // 4. Create the index on the new table. Room validation requires this.
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_sets_sessionId` ON `exercise_sets` (`sessionId`)")
-
-                // 5. Copy data with type casting for exerciseId from TEXT to INTEGER
                 database.execSQL("""
                     INSERT INTO `exercise_sets` (`setId`, `sessionId`, `exerciseId`, `weight`, `reps`, `isCompleted`) 
                     SELECT `setId`, `sessionId`, CAST(`exerciseId` AS INTEGER), `weight`, `reps`, `isCompleted` 
                     FROM `exercise_sets_old`
                 """.trimIndent())
-                
-                // 6. Clean up
                 database.execSQL("DROP TABLE `exercise_sets_old`")
             }
         }
 
         val MIGRATION_16_17 = object : Migration(16, 17) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Fix reference_matrix exerciseId type from TEXT to INTEGER
                 db.execSQL("DROP TABLE IF EXISTS `reference_matrix_old`")
                 db.execSQL("ALTER TABLE `reference_matrix` RENAME TO `reference_matrix_old`")
                 db.execSQL("""
@@ -206,8 +194,6 @@ abstract class AppDatabase : RoomDatabase() {
                     FROM `reference_matrix_old`
                 """.trimIndent())
                 db.execSQL("DROP TABLE `reference_matrix_old`")
-
-                // Add userFeedback column to exercise_sets
                 db.execSQL("ALTER TABLE `exercise_sets` ADD COLUMN `userFeedback` TEXT")
             }
         }
@@ -217,6 +203,29 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE player ADD COLUMN strAttribute INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE player ADD COLUMN endAttribute INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE player ADD COLUMN disAttribute INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE player ADD COLUMN currentStreak INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE player ADD COLUMN maxStreak INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE player ADD COLUMN xpTotal INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE player ADD COLUMN xpThisWeek INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_18_19 = object : Migration(18, 19) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val cursor = db.query("PRAGMA table_info(player)")
+                val columns = mutableSetOf<String>()
+                while (cursor.moveToNext()) {
+                    columns.add(cursor.getString(cursor.getColumnIndexOrThrow("name")))
+                }
+                cursor.close()
+
+                if (!columns.contains("strAttribute")) db.execSQL("ALTER TABLE player ADD COLUMN strAttribute INTEGER NOT NULL DEFAULT 0")
+                if (!columns.contains("endAttribute")) db.execSQL("ALTER TABLE player ADD COLUMN endAttribute INTEGER NOT NULL DEFAULT 0")
+                if (!columns.contains("disAttribute")) db.execSQL("ALTER TABLE player ADD COLUMN disAttribute INTEGER NOT NULL DEFAULT 0")
+                if (!columns.contains("currentStreak")) db.execSQL("ALTER TABLE player ADD COLUMN currentStreak INTEGER NOT NULL DEFAULT 0")
+                if (!columns.contains("maxStreak")) db.execSQL("ALTER TABLE player ADD COLUMN maxStreak INTEGER NOT NULL DEFAULT 0")
+                if (!columns.contains("xpTotal")) db.execSQL("ALTER TABLE player ADD COLUMN xpTotal INTEGER NOT NULL DEFAULT 0")
+                if (!columns.contains("xpThisWeek")) db.execSQL("ALTER TABLE player ADD COLUMN xpThisWeek INTEGER NOT NULL DEFAULT 0")
             }
         }
     }
