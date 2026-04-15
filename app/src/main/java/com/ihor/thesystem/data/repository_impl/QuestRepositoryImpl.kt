@@ -1,6 +1,7 @@
 package com.ihor.thesystem.data.repository_impl
 
 import com.ihor.thesystem.data.local.room.dao.QuestDao
+import com.ihor.thesystem.data.local.room.dao.QuestLogDao
 import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.data.local.room.relations.QuestWithTasks
 import com.ihor.thesystem.domain.model.*
@@ -10,7 +11,8 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class QuestRepositoryImpl @Inject constructor(
-    private val questDao: QuestDao
+    private val questDao: QuestDao,
+    private val questLogDao: QuestLogDao
 ) : QuestRepository {
 
     override fun getActiveDailyQuest(): Flow<Quest?> =
@@ -129,6 +131,21 @@ class QuestRepositoryImpl @Inject constructor(
         questDao.getActiveQuestsWithTasks(EntityQuestStatus.ACTIVE).map { list ->
             list.filter { it.quest.type == EntityQuestType.PROMOTION }.map { it.toDomain() } 
         }
+
+    override suspend fun logQuestResult(
+        questId: Int,
+        questType: com.ihor.thesystem.data.local.room.entity.QuestType,
+        wasSuccessful: Boolean
+    ) {
+        questLogDao.insert(
+            QuestLogEntity(
+                questId = questId,
+                questType = questType,
+                wasSuccessful = wasSuccessful,
+                completedAt = System.currentTimeMillis()
+            )
+        )
+    }
 }
 
 private typealias EntityQuestType   = com.ihor.thesystem.data.local.room.entity.QuestType

@@ -1,5 +1,8 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.data.local.room.dao.QuestLogDao
+import com.ihor.thesystem.data.local.room.entity.QuestLogEntity
+import com.ihor.thesystem.data.local.room.entity.QuestType
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.DebuffRepository
 import com.ihor.thesystem.domain.repository.PlayerRepository
@@ -15,8 +18,10 @@ import javax.inject.Inject
 class GetStatusScreenDataUseCase @Inject constructor(
     private val playerRepo: PlayerRepository,
     private val questRepo: QuestRepository,
-    private val debuffRepo: DebuffRepository
+    private val debuffRepo: DebuffRepository,
+    private val questLogDao: QuestLogDao
 ) {
+    @Suppress("UNCHECKED_CAST")
     operator fun invoke(): Flow<StatusUiData> =
         playerRepo.getPlayer().flatMapLatest { player ->
             if (player == null) return@flatMapLatest flowOf(StatusUiData())
@@ -25,16 +30,29 @@ class GetStatusScreenDataUseCase @Inject constructor(
             val promotionQuestsFlow = questRepo.getActivePromotionQuests()
             
             combine(
-                dailyQuestsFlow,
-                promotionQuestsFlow,
-                debuffRepo.getActiveDebuffs(),
-                playerRepo.getLatestWeight()
-            ) { dailyQuests, promotionQuests, debuffs, weight ->
+                listOf(
+                    dailyQuestsFlow,
+                    promotionQuestsFlow,
+                    debuffRepo.getActiveDebuffs(),
+                    playerRepo.getLatestWeight(),
+                    questLogDao.getFullHistory()
+                )
+            ) { args ->
+                val dailyQuests = args[0] as List<Quest>
+                val promotionQuests = args[1] as List<Quest>
+                val debuffs = args[2] as List<DebuffConfig>
+                val weight = args[3] as Float?
+                val questHistory = args[4] as List<QuestLogEntity>
+
                 val allQuests = dailyQuests + promotionQuests
                 
                 val daily = allQuests.find { it.type == DomainQuestType.DAILY }
                 val main = allQuests.find { it.type == DomainQuestType.MAIN }
                 val promotions = allQuests.filter { it.type == DomainQuestType.PROMOTION }
+
+                val completedMainThisMonth = questHistory.count {
+                    it.questType == QuestType.MAIN && it.wasSuccessful
+                }
 
                 StatusUiData(
                     playerName             = player.name,
@@ -44,7 +62,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     currentWeight          = weight ?: 80f,
                     height                 = player.height.takeIf { it > 0f } ?: 182f,
                     cycleDay               = player.currentCycleDay,
-                    monthWorkoutsCompleted = 0,  // TODO: Phase 3 — з QuestLog
+                    monthWorkoutsCompleted = completedMainThisMonth,
                     monthWorkoutsTotal     = 13,
                     activeDebuffs          = debuffs.map { it.toUiModel() }.toImmutableList(),
                     dailyQuest             = daily?.toUiModel(),
@@ -53,7 +71,11 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     globalRank             = player.globalRank,
                     strAttribute           = player.strAttribute,
                     endAttribute           = player.endAttribute,
-                    disAttribute           = player.disAttribute
+                    disAttribute           = player.disAttribute,
+                    currentStreak          = player.currentStreak,
+                    maxStreak              = player.maxStreak,
+                    xpTotal                = player.xpTotal,
+                    xpThisWeek             = player.xpThisWeek
                 )
             }
         }

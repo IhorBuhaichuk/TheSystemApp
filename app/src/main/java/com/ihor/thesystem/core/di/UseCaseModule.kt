@@ -47,16 +47,16 @@ object UseCaseModule {
     @Provides @Singleton
     fun provideAdvanceCycleDayUseCase(
         playerRepo:     PlayerRepository,
-        questRepo:      QuestRepository,
-        generateQuests: GenerateDailyQuestsUseCase
-    ) = AdvanceCycleDayUseCase(playerRepo, questRepo, generateQuests)
+        questRepo:      QuestRepository
+    ) = AdvanceCycleDayUseCase(playerRepo, questRepo)
 
     @Provides @Singleton
     fun provideGetStatusScreenDataUseCase(
         playerRepo: PlayerRepository,
         questRepo:  QuestRepository,
-        debuffRepo: DebuffRepository
-    ) = GetStatusScreenDataUseCase(playerRepo, questRepo, debuffRepo)
+        debuffRepo: DebuffRepository,
+        questLogDao: QuestLogDao
+    ) = GetStatusScreenDataUseCase(playerRepo, questRepo, debuffRepo, questLogDao)
 
     @Provides @Singleton
     fun provideGetProgressionMatrixUseCase(

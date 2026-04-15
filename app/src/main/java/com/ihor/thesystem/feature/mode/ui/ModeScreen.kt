@@ -1,5 +1,6 @@
 package com.ihor.thesystem.feature.mode.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -8,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,7 @@ fun ModeScreen(
     navController: NavHostController,
     viewModel: ModeViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val uiState     by viewModel.uiState.collectAsState()
     val dialogState by viewModel.dialogState.collectAsState()
 
@@ -42,6 +45,10 @@ fun ModeScreen(
                     snackbarHostState.showSnackbar("День завершено. Новий цикл розпочато!")
                 ModeEvent.CycleSynced ->
                     snackbarHostState.showSnackbar("Цикл синхронізовано з календарем")
+                ModeEvent.LevelUp ->
+                    Toast.makeText(context, "LEVEL UP!", Toast.LENGTH_SHORT).show()
+                ModeEvent.PenaltyActivated ->
+                    Toast.makeText(context, "ШТРАФНА ЗОНА АКТИВОВАНА", Toast.LENGTH_SHORT).show()
             }
         }
     }

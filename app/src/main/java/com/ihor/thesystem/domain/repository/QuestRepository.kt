@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.repository
 
+import com.ihor.thesystem.data.local.room.entity.QuestType
 import com.ihor.thesystem.domain.model.*
 import kotlinx.coroutines.flow.Flow
 
@@ -32,4 +33,6 @@ interface QuestRepository {
     fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>>
     fun getPendingPromotionQuests(): Flow<List<Quest>>
     fun getActivePromotionQuests(): Flow<List<Quest>>
+
+    suspend fun logQuestResult(questId: Int, questType: QuestType, wasSuccessful: Boolean)
 }

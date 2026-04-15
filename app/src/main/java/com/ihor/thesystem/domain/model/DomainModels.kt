@@ -14,7 +14,11 @@ data class Player(
     val globalRank: Rank = Rank.E,
     val strAttribute: Int = 0,
     val endAttribute: Int = 0,
-    val disAttribute: Int = 0
+    val disAttribute: Int = 0,
+    val currentStreak: Int = 0,
+    val maxStreak: Int = 0,
+    val xpTotal: Int = 0,
+    val xpThisWeek: Int = 0
 )
 
 data class Quest(

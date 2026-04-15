@@ -11,6 +11,8 @@ import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import com.ihor.thesystem.domain.usecase.AdvanceCycleDayUseCase
+import com.ihor.thesystem.domain.usecase.DayFinalizationResult
+import com.ihor.thesystem.domain.usecase.FinalizeDayUseCase
 import com.ihor.thesystem.domain.usecase.GenerateDailyQuestsUseCase
 import com.ihor.thesystem.feature.mode.ui.components.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +35,8 @@ sealed class ModeDialogState {
 sealed class ModeEvent {
     object DayAdvanced : ModeEvent()
     object CycleSynced : ModeEvent()
+    object LevelUp : ModeEvent()
+    object PenaltyActivated : ModeEvent()
 }
 
 @HiltViewModel
@@ -42,7 +46,8 @@ class ModeViewModel @Inject constructor(
     private val scheduleRepo:    ScheduleRepository,
     private val configRepo:      SystemConfigRepository,
     private val advanceCycleDay: AdvanceCycleDayUseCase,
-    private val generateQuests:  GenerateDailyQuestsUseCase
+    private val generateQuests:  GenerateDailyQuestsUseCase,
+    private val finalizeDay:     FinalizeDayUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<ModeUiData>>(UiState.Loading)
@@ -166,8 +171,16 @@ class ModeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 advanceCycleDay()
+                val result = finalizeDay()
                 onDismissDialog()
-                _events.emit(ModeEvent.DayAdvanced)
+                
+                when (result) {
+                    is DayFinalizationResult.LevelUp ->
+                        _events.emit(ModeEvent.LevelUp)
+                    is DayFinalizationResult.PenaltyZoneEntered ->
+                        _events.emit(ModeEvent.PenaltyActivated)
+                    else -> _events.emit(ModeEvent.DayAdvanced)
+                }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
@@ -180,8 +193,16 @@ class ModeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 advanceCycleDay(forceComplete = true)
+                val result = finalizeDay()
                 onDismissDialog()
-                _events.emit(ModeEvent.DayAdvanced)
+                
+                when (result) {
+                    is DayFinalizationResult.LevelUp ->
+                        _events.emit(ModeEvent.LevelUp)
+                    is DayFinalizationResult.PenaltyZoneEntered ->
+                        _events.emit(ModeEvent.PenaltyActivated)
+                    else -> _events.emit(ModeEvent.DayAdvanced)
+                }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
