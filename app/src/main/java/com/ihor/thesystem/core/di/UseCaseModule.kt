@@ -135,11 +135,18 @@ object UseCaseModule {
     ) = SendLiveCoachMessageUseCase(liveCoachRepository, chatRepository)
 
     @Provides @Singleton
+    fun provideGetLogForDateUseCase(
+        analyticsRepo: WorkoutAnalyticsRepository,
+        clock: AppClock
+    ) = GetLogForDateUseCase(analyticsRepo, clock)
+
+    @Provides @Singleton
     fun provideSaveExerciseSetsUseCase(
         matrixRepo: ProgressionMatrixRepository,
         playerRepo: PlayerRepository,
-        recalculateGlobalRank: RecalculateGlobalRankUseCase
-    ) = SaveExerciseSetsUseCase(matrixRepo, playerRepo, recalculateGlobalRank)
+        recalculateGlobalRank: RecalculateGlobalRankUseCase,
+        clock: AppClock
+    ) = SaveExerciseSetsUseCase(matrixRepo, playerRepo, recalculateGlobalRank, clock)
 
     @Provides @Singleton
     fun provideCalculateAttributesUseCase(

@@ -6,6 +6,7 @@ import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.repository.*
+import com.ihor.thesystem.domain.usecase.GetLogForDateUseCase
 import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
 import com.ihor.thesystem.domain.usecase.SaveExerciseSetsUseCase
@@ -15,15 +16,14 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.time.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     private val matrixRepo: ProgressionMatrixRepository,
-    private val analyticsRepo: WorkoutAnalyticsRepository,
     private val viewingDateRepo: ViewingDateRepository,
     private val getStatisticsDataUseCase: GetStatisticsDataUseCase,
+    private val getLogForDateUseCase: GetLogForDateUseCase,
     private val saveExerciseSetsUseCase: SaveExerciseSetsUseCase,
     private val recalculateGlobalRankUseCase: RecalculateGlobalRankUseCase
 ) : ViewModel() {
@@ -79,11 +79,7 @@ class StatisticsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val date = viewingDateRepo.selectedDate.value
-                val zoneId = ZoneId.systemDefault()
-                val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
-                val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
-                
-                val existingLog = analyticsRepo.getLogForExerciseOnDate(entry.exerciseId, startOfDay, endOfDay)
+                val existingLog = getLogForDateUseCase(entry.exerciseId, date)
                 
                 _dialogState.value = StatisticsDialogState.LogWorkoutSets(
                     entry = entry,
@@ -101,9 +97,8 @@ class StatisticsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val date = viewingDateRepo.selectedDate.value
-                val timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                // Використовуємо UseCase для збереження та автоматичного перерахунку рангу
-                saveExerciseSetsUseCase(exerciseId, sets, timestamp, feedback)
+                // UseCase handles timestamp calculation via AppClock internally
+                saveExerciseSetsUseCase(exerciseId, sets, date, feedback)
                 onDismissDialog()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e

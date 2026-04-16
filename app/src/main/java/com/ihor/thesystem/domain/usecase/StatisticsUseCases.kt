@@ -1,14 +1,18 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.util.OneRepMaxCalculator
+import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.AnnualMatrixProvider
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.PlayerRepository
+import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import java.time.LocalDate
 import javax.inject.Inject
 
 class GetProgressionMatrixUseCase @Inject constructor(
@@ -25,12 +29,27 @@ class UpdateExerciseWeightUseCase @Inject constructor(
     }
 }
 
+class GetLogForDateUseCase @Inject constructor(
+    private val analyticsRepo: WorkoutAnalyticsRepository,
+    private val clock: AppClock
+) {
+    suspend operator fun invoke(exerciseId: Int, date: LocalDate): ExerciseSetLogEntity? {
+        val zoneId = clock.zoneId()
+        val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
+        return analyticsRepo.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)
+    }
+}
+
 class SaveExerciseSetsUseCase @Inject constructor(
     private val matrixRepo: ProgressionMatrixRepository,
     private val playerRepo: PlayerRepository,
-    private val recalculateGlobalRank: RecalculateGlobalRankUseCase
+    private val recalculateGlobalRank: RecalculateGlobalRankUseCase,
+    private val clock: AppClock
 ) {
-    suspend operator fun invoke(exerciseId: Int, sets: List<WorkoutSetInput>, timestamp: Long, userFeedback: String?) {
+    suspend operator fun invoke(exerciseId: Int, sets: List<WorkoutSetInput>, date: LocalDate, userFeedback: String?) {
+        val timestamp = date.atStartOfDay(clock.zoneId()).toInstant().toEpochMilli()
+
         // 1. Збереження логу підходів
         matrixRepo.saveExerciseSetsWithDate(exerciseId, sets, timestamp, userFeedback)
 
