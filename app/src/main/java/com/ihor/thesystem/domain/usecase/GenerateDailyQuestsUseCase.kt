@@ -83,7 +83,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         pendingPromotions.forEach { pending ->
             val allActiveQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
             val alreadyExists = allActiveQuests.any { q -> 
-                q.type == DomainQuestType.PROMOTION && q.scheduleId == pending.exerciseId 
+                q.type == DomainQuestType.PROMOTION && q.targetExerciseId == pending.exerciseId
             }
             
             if (!alreadyExists) {

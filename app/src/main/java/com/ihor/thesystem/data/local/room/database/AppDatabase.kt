@@ -35,7 +35,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class
     ],
-    version = 22,
+    version = 23,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -257,9 +257,6 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_21_22 = object : Migration(21, 22) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Ця міграція виправляє можливу невідповідність хешу ідентичності,
-                // переконуючись, що всі поля існують.
-                
                 val questCursor = db.query("PRAGMA table_info(quest)")
                 val questColumns = mutableSetOf<String>()
                 while (questCursor.moveToNext()) {
@@ -278,6 +275,23 @@ abstract class AppDatabase : RoomDatabase() {
                 debuffCursor.close()
                 if (!debuffColumns.contains("cycleDay")) {
                     db.execSQL("ALTER TABLE debuff_config ADD COLUMN cycleDay INTEGER")
+                }
+            }
+        }
+
+        val MIGRATION_22_23 = object : Migration(22, 23) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Міграція для додавання targetExerciseId, якщо він ще не існує
+                val cursor = db.query("PRAGMA table_info(quest)")
+                var exists = false
+                while (cursor.moveToNext()) {
+                    if (cursor.getString(cursor.getColumnIndexOrThrow("name")) == "targetExerciseId") {
+                        exists = true; break
+                    }
+                }
+                cursor.close()
+                if (!exists) {
+                    db.execSQL("ALTER TABLE quest ADD COLUMN targetExerciseId INTEGER")
                 }
             }
         }
