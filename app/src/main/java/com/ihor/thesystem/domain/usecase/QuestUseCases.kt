@@ -3,18 +3,17 @@ package com.ihor.thesystem.domain.usecase
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
-import com.ihor.thesystem.feature.status.viewmodel.TaskUiModel
 import javax.inject.Inject
 
 class ToggleQuestTaskUseCase @Inject constructor(
     private val repo: QuestRepository,
     private val matrixRepo: ProgressionMatrixRepository
 ) {
-    suspend operator fun invoke(task: TaskUiModel, questId: Int) {
+    suspend operator fun invoke(taskId: Int, questId: Int, currentCompletedState: Boolean) {
         repo.toggleTaskCompletion(
-            taskId      = task.id,
+            taskId      = taskId,
             questId     = questId,
-            isCompleted = !task.isCompleted
+            isCompleted = !currentCompletedState
         )
 
         // Перевіряємо, чи цей квест є PROMOTION і чи він завершений

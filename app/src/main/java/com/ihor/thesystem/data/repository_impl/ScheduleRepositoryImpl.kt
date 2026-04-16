@@ -1,7 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
 import com.ihor.thesystem.data.local.room.dao.ScheduleDao
-import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ScheduleDay
 import com.ihor.thesystem.domain.repository.ScheduleRepository
@@ -10,13 +9,12 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class ScheduleRepositoryImpl @Inject constructor(
-    private val scheduleDao: ScheduleDao,
-    private val workoutDao: WorkoutDao
+    private val scheduleDao: ScheduleDao
 ) : ScheduleRepository {
 
     override fun getScheduleForDay(day: Int): Flow<ScheduleDay?> =
         scheduleDao.getScheduleForDay(day).map { details ->
-            if (details != null) mapToDomain(details) else null
+            details?.let { mapToDomain(it) }
         }
 
     override fun getSchedulesForDays(days: List<Int>): Flow<List<ScheduleDay>> =
@@ -24,18 +22,14 @@ class ScheduleRepositoryImpl @Inject constructor(
             list.map { mapToDomain(it) }
         }
 
-    private suspend fun mapToDomain(details: com.ihor.thesystem.data.local.room.relations.ScheduleWithDetails): ScheduleDay {
-        val templateId = details.schedule.workoutTemplateId
-        val templateName = templateId?.let { workoutDao.getTemplateNameSync(it) }
-        val exercises = templateId?.let { workoutDao.getExercisesForTemplateSync(it) } ?: emptyList()
-        
+    private fun mapToDomain(details: com.ihor.thesystem.data.local.room.relations.ScheduleWithDetails): ScheduleDay {
         return ScheduleDay(
             id                  = details.schedule.id,
             cycleDay            = details.schedule.cycleDay,
-            workoutTemplateId   = templateId,
-            workoutTemplateName = templateName,
+            workoutTemplateId   = details.schedule.workoutTemplateId,
+            workoutTemplateName = details.workoutTemplate?.name,
             dailyTaskNames      = details.dailyTasks.map { it.name },
-            exercises           = exercises.map { ExerciseDetails(it.id, it.name) }
+            exercises           = details.exercises.map { ExerciseDetails(it.id, it.name) }
         )
     }
 }

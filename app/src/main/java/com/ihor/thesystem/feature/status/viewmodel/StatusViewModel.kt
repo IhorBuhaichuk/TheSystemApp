@@ -174,7 +174,7 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onTaskToggled(task: TaskUiModel, questId: Int) = launchCatching {
-        toggleQuestTask(task, questId)
+        toggleQuestTask(task.id, questId, task.isCompleted)
     }
 
     fun onAddTask(questId: Int, taskName: String) = launchCatching {
