@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.util.AppLogger
 import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
@@ -16,7 +17,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -43,7 +43,8 @@ class ModeViewModel @Inject constructor(
     private val debuffRepo:      DebuffRepository,
     private val advanceCycleDay: AdvanceCycleDayUseCase,
     private val generateQuests:  GenerateDailyQuestsUseCase,
-    private val finalizeDay:     FinalizeDayUseCase
+    private val finalizeDay:     FinalizeDayUseCase,
+    private val logger:          AppLogger
 ) : ViewModel() {
 
     private val _selectedDay = MutableStateFlow(1)
@@ -107,12 +108,12 @@ class ModeViewModel @Inject constructor(
                 generateQuests()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Timber.e(e, "Помилка ініціалізації квестів")
+                logger.e(e, "Помилка ініціалізації квестів")
             }
         }
     }
     .catch { e ->
-        Timber.e(e, "Помилка реактивного потоку ModeViewModel")
+        logger.e(e, "Помилка реактивного потоку ModeViewModel")
         emit(UiState.Error("Помилка завантаження даних: ${e.localizedMessage}"))
     }
     .stateIn(
@@ -156,7 +157,7 @@ class ModeViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Timber.e(e, "Помилка завершення дня")
+                logger.e(e, "Помилка завершення дня")
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка завершення дня"))
             }
         }
@@ -180,7 +181,7 @@ class ModeViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Timber.e(e, "Помилка примусового завершення дня")
+                logger.e(e, "Помилка примусового завершення дня")
                 _uiEvents.emit(UiEvent.ShowError("Помилка примусового завершення"))
             }
         }
@@ -205,7 +206,7 @@ class ModeViewModel @Inject constructor(
                 _events.emit(ModeEvent.CycleSynced)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Timber.e(e, "Помилка синхронізації циклу")
+                logger.e(e, "Помилка синхронізації циклу")
                 _uiEvents.emit(UiEvent.ShowError("Помилка синхронізації циклу"))
             }
         }
