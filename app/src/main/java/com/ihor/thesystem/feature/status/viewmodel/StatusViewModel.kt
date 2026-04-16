@@ -17,7 +17,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 sealed class StatusDialogState {
@@ -66,16 +65,8 @@ class StatusViewModel @Inject constructor(
     val uiEvents = _uiEvents.asSharedFlow()
 
     init {
+        // БД гарантовано готова на момент старту екрану (контролюється навігацією)
         viewModelScope.launch {
-            val isReady = withTimeoutOrNull(10_000L) {
-                databaseReadinessRepo.isDbReady
-                    .filter { it }
-                    .first()
-            }
-            if (isReady == null) {
-                return@launch
-            }
-
             useCases.generateDailyQuests()
             useCases.calculateAttributes()
         }
@@ -166,10 +157,6 @@ class StatusViewModel @Inject constructor(
 
     fun onAddTask(questId: Int, taskName: String) = launchCatching {
         useCases.addTaskToQuest(questId, taskName)
-    }
-
-    fun onReorderTask(taskId: Int, from: Int, to: Int) = launchCatching {
-        // useCases.reorderQuestTask(taskId, from, to)
     }
 
     fun onRemoveTask(taskId: Int) = launchCatching {
