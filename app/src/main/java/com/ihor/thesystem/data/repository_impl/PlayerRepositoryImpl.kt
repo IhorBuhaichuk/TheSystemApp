@@ -24,58 +24,44 @@ class PlayerRepositoryImpl @Inject constructor(
     override fun getLatestWeight(): Flow<Float?> =
         weightLogDao.getLatestLog().map { it?.weight }
 
-    override suspend fun updatePlayer(player: Player): Result<Unit, DataError.Local> {
-        return try {
-            playerDao.insertOrUpdate(player.toEntity())
-            Result.Success(Unit)
-        } catch (e: SQLiteException) {
-            Result.Error(DataError.Local.SQLITE_EXCEPTION)
-        } catch (e: Exception) {
-            Result.Error(DataError.Local.UNKNOWN)
+    override suspend fun updatePlayer(player: Player): Result<Unit, DataError.Local> = runDbCatching {
+        playerDao.insertOrUpdate(player.toEntity())
+    }
+
+    override suspend fun logWeight(weight: Float): Result<Unit, DataError.Local> = runDbCatching {
+        weightLogDao.insert(WeightLogEntity(weight = weight))
+    }
+
+    override suspend fun updateHeight(height: Float): Result<Unit, DataError.Local> = runDbCatching {
+        val player = playerDao.getPlayerSync() ?: return@runDbCatching Result.Error(DataError.Local.NOT_FOUND)
+        playerDao.insertOrUpdate(player.copy(height = height))
+        Result.Success(Unit)
+    }.let { result ->
+        // Since runDbCatching returns Result<Result<...>>, we flatten it
+        when (result) {
+            is Result.Success -> result.data
+            is Result.Error -> result
         }
     }
 
-    override suspend fun logWeight(weight: Float): Result<Unit, DataError.Local> {
-        return try {
-            weightLogDao.insert(WeightLogEntity(weight = weight))
-            Result.Success(Unit)
-        } catch (e: SQLiteException) {
-            Result.Error(DataError.Local.SQLITE_EXCEPTION)
-        } catch (e: Exception) {
-            Result.Error(DataError.Local.UNKNOWN)
+    override suspend fun updateCurrentCycleDay(day: Int): Result<Unit, DataError.Local> = runDbCatching {
+        val player = playerDao.getPlayerSync() ?: return@runDbCatching Result.Error(DataError.Local.NOT_FOUND)
+        playerDao.insertOrUpdate(player.copy(currentCycleDay = day))
+        Result.Success(Unit)
+    }.let { result ->
+        when (result) {
+            is Result.Success -> result.data
+            is Result.Error -> result
         }
     }
 
-    override suspend fun updateHeight(height: Float): Result<Unit, DataError.Local> {
-        return try {
-            val player = playerDao.getPlayerSync() 
-                ?: return Result.Error(DataError.Local.NOT_FOUND)
-            playerDao.insertOrUpdate(player.copy(height = height))
-            Result.Success(Unit)
-        } catch (e: SQLiteException) {
-            Result.Error(DataError.Local.SQLITE_EXCEPTION)
-        } catch (e: Exception) {
-            Result.Error(DataError.Local.UNKNOWN)
-        }
+    override suspend fun getWeightAtOrBefore(timestamp: Long): Result<Float?, DataError.Local> = runDbCatching {
+        weightLogDao.getWeightAtOrBefore(timestamp)?.weight
     }
 
-    override suspend fun updateCurrentCycleDay(day: Int): Result<Unit, DataError.Local> {
+    private suspend inline fun <T> runDbCatching(crossinline block: suspend () -> T): Result<T, DataError.Local> {
         return try {
-            val player = playerDao.getPlayerSync()
-                ?: return Result.Error(DataError.Local.NOT_FOUND)
-            playerDao.insertOrUpdate(player.copy(currentCycleDay = day))
-            Result.Success(Unit)
-        } catch (e: SQLiteException) {
-            Result.Error(DataError.Local.SQLITE_EXCEPTION)
-        } catch (e: Exception) {
-            Result.Error(DataError.Local.UNKNOWN)
-        }
-    }
-
-    override suspend fun getWeightAtOrBefore(timestamp: Long): Result<Float?, DataError.Local> {
-        return try {
-            val weight = weightLogDao.getWeightAtOrBefore(timestamp)?.weight
-            Result.Success(weight)
+            Result.Success(block())
         } catch (e: SQLiteException) {
             Result.Error(DataError.Local.SQLITE_EXCEPTION)
         } catch (e: Exception) {

@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.architect.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
@@ -46,14 +47,13 @@ class ArchitectViewModel @Inject constructor(
             val context = getLastWorkoutContext()
             
             // Перевірка чи вже був відправлений аналіз (наявність відповіді від моделі)
-            val history = chatRepository.getChatHistory(0L).first()
-            val analysisAlreadySent = history.any { it.role == ChatRole.AI }
+            val analysisAlreadySent = chatRepository.hasAiResponse(0L)
 
             if (context != null) {
                 val initialMessages = listOf(
                     ChatMessage(
                         role = ChatRole.SYSTEM,
-                        text = "Вітаю. Ось результати вашого останнього тренування:\n$context\n\nБажаєте надіслати ці результати на аналіз Архітектору?",
+                        uiText = UiText.StringResource(R.string.architect_initial_message, context),
                         isActionable = true
                     )
                 )
@@ -69,7 +69,7 @@ class ArchitectViewModel @Inject constructor(
                 val initialMessages = listOf(
                     ChatMessage(
                         role = ChatRole.SYSTEM,
-                        text = "СИСТЕМА: Відсутні дані для аналізу. Завершіть хоча б один тренувальний цикл, щоб Архітектор міг проаналізувати прогрес.",
+                        uiText = UiText.StringResource(R.string.architect_no_data),
                         isActionable = false
                     )
                 )

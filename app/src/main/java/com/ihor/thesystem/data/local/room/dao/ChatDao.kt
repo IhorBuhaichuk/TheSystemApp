@@ -16,4 +16,7 @@ interface ChatDao {
 
     @Query("SELECT * FROM chat_message_table WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT 6")
     fun getRecentChatHistory(sessionId: Long): Flow<List<ChatMessageEntity>>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM chat_message_table WHERE sessionId = :sessionId AND role = 'AI' LIMIT 1)")
+    suspend fun hasAiResponse(sessionId: Long): Boolean
 }

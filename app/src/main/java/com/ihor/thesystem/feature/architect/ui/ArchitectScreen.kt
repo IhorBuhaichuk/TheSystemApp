@@ -241,8 +241,9 @@ fun ChatBubble(
             )
 
             Column(modifier = bubbleModifier) {
+                val contentText = message.uiText?.asString() ?: message.text
                 Text(
-                    text = message.text,
+                    text = contentText,
                     color = TextPrimary,
                     fontFamily = RajdhaniFamily,
                     fontSize = 14.sp,

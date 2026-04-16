@@ -44,6 +44,10 @@ class ChatRepositoryImpl @Inject constructor(
             .map { it.toDomain() }
     }
 
+    override suspend fun hasAiResponse(sessionId: Long): Boolean {
+        return chatDao.hasAiResponse(sessionId)
+    }
+
     private fun ChatMessageEntity.toDomain(): ChatMessage {
         return ChatMessage(
             id = id.toString(),

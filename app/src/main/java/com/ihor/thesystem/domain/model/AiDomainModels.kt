@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.model
 
+import com.ihor.thesystem.core.ui.UiText
 import java.util.UUID
 
 enum class ChatRole { SYSTEM, USER, AI }
@@ -15,7 +16,8 @@ data class AiWorkoutRecommendation(
 data class ChatMessage(
     val id: String = UUID.randomUUID().toString(),
     val role: ChatRole,
-    val text: String,
+    val text: String = "",
+    val uiText: UiText? = null,
     val recommendations: List<AiWorkoutRecommendation> = emptyList(),
     val isActionable: Boolean = false,
     val aiFeedback: String? = null

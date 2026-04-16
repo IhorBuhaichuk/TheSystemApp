@@ -28,6 +28,10 @@
     <string name="cycle_day_4">ВИХІДНИЙ</string>
     <string name="cycle_day_default">ДЕНЬ %1$d</string>
 
+    <!-- Architect Messages -->
+    <string name="architect_initial_message">Вітаю. Ось результати вашого останнього тренування:\n%1$s\n\nБажаєте надіслати ці результати на аналіз Архітектору?</string>
+    <string name="architect_no_data">СИСТЕМА: Відсутні дані для аналізу. Завершіть хоча б один тренувальний цикл, щоб Архітектор міг проаналізувати прогрес.</string>
+
     <!-- Error Messages -->
     <string name="error_invalid_name">Некоректне значення: ім\'я має бути від 1 до 50 символів</string>
     <string name="error_invalid_weight">Некоректне значення: допустима вага від 20 до 500 кг</string>

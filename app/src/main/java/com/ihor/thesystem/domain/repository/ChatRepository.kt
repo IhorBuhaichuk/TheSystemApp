@@ -8,4 +8,5 @@ interface ChatRepository {
     fun getChatHistory(sessionId: Long): Flow<List<ChatMessage>>
     suspend fun saveChatMessage(sessionId: Long, role: ChatRole, text: String)
     suspend fun getRecentHistory(sessionId: Long, limit: Int = 6): List<ChatMessage>
+    suspend fun hasAiResponse(sessionId: Long): Boolean
 }
