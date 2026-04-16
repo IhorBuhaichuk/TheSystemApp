@@ -27,13 +27,18 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // WARNING: Storing API keys in BuildConfig is insecure as they can be easily extracted 
+        // through reverse engineering. 
+        // RECOMMENDED ARCHITECTURE: Move API calls to a secure backend proxy that manages 
+        // the API key and handles requests from the mobile app.
         val geminiKey = properties.getProperty("GEMINI_API_KEY") ?: "null"
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }

@@ -32,12 +32,13 @@ class AiArchitectRepositoryImpl @Inject constructor(
             )
         }
 
+        var responseText = ""
         return try {
             withTimeout(60_000L) {
                 val response = generativeModel.generateContent(prompt)
-                val responseText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
+                responseText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
                 
-                val cleanJson = responseText.trim()
+                val cleanJson = extractJson(responseText)
 
                 val dto = json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
                 val targets = dto.nextWorkoutTargets
@@ -59,7 +60,10 @@ class AiArchitectRepositoryImpl @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            Log.e("AiArchitect", "Помилка Gemini: ${e.message}")
+            Log.e("AiArchitect", "Помилка парсингу або запиту Gemini: ${e.message}")
+            if (responseText.isNotBlank()) {
+                Log.e("AiArchitect", "Оригінальна відповідь AI (Raw Response): $responseText")
+            }
             val errorDetail = e.localizedMessage ?: e.message ?: "Unknown error"
             ChatMessage(
                 role = ChatRole.AI,
@@ -67,5 +71,18 @@ class AiArchitectRepositoryImpl @Inject constructor(
                 isActionable = false
             )
         }
+    }
+
+    private fun extractJson(input: String): String {
+        // Регулярний вираз для пошуку JSON блоку всередині Markdown
+        val regex = Regex("""```json\s*([\s\S]*?)\s*```|```\s*([\s\S]*?)\s*```""")
+        val matchResult = regex.find(input)
+        
+        return if (matchResult != null) {
+            // Беремо вміст першої або другої групи захоплення (залежно від того, яка спрацювала)
+            matchResult.groups[1]?.value ?: matchResult.groups[2]?.value ?: input
+        } else {
+            input
+        }.trim()
     }
 }

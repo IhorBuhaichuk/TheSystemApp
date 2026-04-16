@@ -123,6 +123,18 @@ class StatusViewModel @Inject constructor(
         }
     }
 
+    private inline fun launchCatching(crossinline block: suspend () -> Unit) {
+        viewModelScope.launch {
+            try {
+                block()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
+            }
+        }
+    }
+
     fun onNameTap()         { _dialogState.value = StatusDialogState.EditName }
     fun onWeightTap()       { _dialogState.value = StatusDialogState.LogWeight }
     fun onHeightTap()       { _dialogState.value = StatusDialogState.EditHeight }
@@ -133,118 +145,54 @@ class StatusViewModel @Inject constructor(
     }
     fun onDismissDialog()   { _dialogState.value = StatusDialogState.None }
 
-    fun onNameConfirmed(newName: String) {
-        viewModelScope.launch {
-            if (newName.isBlank() || newName.length > 50) {
-                _uiEvents.emit(UiEvent.ShowError("Некоректне значення: ім'я має бути від 1 до 50 символів"))
-                return@launch
-            }
-            try {
-                val player = playerRepo.getPlayer().firstOrNull() ?: return@launch
-                updatePlayerName(player, newName)
-                onDismissDialog()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
-            }
+    fun onNameConfirmed(newName: String) = launchCatching {
+        if (newName.isBlank() || newName.length > 50) {
+            _uiEvents.emit(UiEvent.ShowError("Некоректне значення: ім'я має бути від 1 до 50 символів"))
+            return@launchCatching
         }
+        val player = playerRepo.getPlayer().firstOrNull() ?: return@launchCatching
+        updatePlayerName(player, newName)
+        onDismissDialog()
     }
 
-    fun onWeightConfirmed(weight: Float) {
-        viewModelScope.launch {
-            if (weight < 20f || weight > 500f) {
-                _uiEvents.emit(UiEvent.ShowError("Некоректне значення: допустима вага від 20 до 500 кг"))
-                return@launch
-            }
-            try {
-                logWeight(weight)
-                onDismissDialog()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
-            }
+    fun onWeightConfirmed(weight: Float) = launchCatching {
+        if (weight < 20f || weight > 500f) {
+            _uiEvents.emit(UiEvent.ShowError("Некоректне значення: допустима вага від 20 до 500 кг"))
+            return@launchCatching
         }
+        logWeight(weight)
+        onDismissDialog()
     }
 
-    fun onHeightConfirmed(height: Float) {
-        viewModelScope.launch {
-            if (height < 50f || height > 300f) {
-                _uiEvents.emit(UiEvent.ShowError("Некоректне значення: допустимий зріст від 50 до 300 см"))
-                return@launch
-            }
-            try {
-                updateHeight(height)
-                onDismissDialog()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
-            }
+    fun onHeightConfirmed(height: Float) = launchCatching {
+        if (height < 50f || height > 300f) {
+            _uiEvents.emit(UiEvent.ShowError("Некоректне значення: допустимий зріст від 50 до 300 см"))
+            return@launchCatching
         }
+        updateHeight(height)
+        onDismissDialog()
     }
 
-    fun onTaskToggled(task: TaskUiModel, questId: Int) {
-        viewModelScope.launch {
-            try {
-                toggleQuestTask(task, questId)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
-            }
-        }
+    fun onTaskToggled(task: TaskUiModel, questId: Int) = launchCatching {
+        toggleQuestTask(task, questId)
     }
 
-    fun onAddTask(questId: Int, taskName: String) {
-        if (taskName.isBlank()) return
-        viewModelScope.launch {
-            try {
-                questRepo.addTaskToQuest(questId, taskName)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
-            }
-        }
+    fun onAddTask(questId: Int, taskName: String) = launchCatching {
+        if (taskName.isBlank()) return@launchCatching
+        questRepo.addTaskToQuest(questId, taskName)
     }
 
-    fun onRemoveTask(taskId: Int) {
-        viewModelScope.launch {
-            try {
-                questRepo.removeTask(taskId)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
-            }
-        }
+    fun onRemoveTask(taskId: Int) = launchCatching {
+        questRepo.removeTask(taskId)
     }
 
-    fun onDebuffToggled(debuff: DebuffConfig) {
-        viewModelScope.launch {
-            try {
-                updateDebuff(debuff.copy(isActive = !debuff.isActive))
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
-            }
-        }
+    fun onDebuffToggled(debuff: DebuffConfig) = launchCatching {
+        updateDebuff(debuff.copy(isActive = !debuff.isActive))
     }
 
-    fun onSystemConfigConfirmed(config: SystemConfig) {
-        viewModelScope.launch {
-            try {
-                updateSystemConfig(config)
-                onDismissDialog()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
-            }
-        }
+    fun onSystemConfigConfirmed(config: SystemConfig) = launchCatching {
+        updateSystemConfig(config)
+        onDismissDialog()
     }
 
     suspend fun getCurrentPlayer(): Player? = playerRepo.getPlayer().firstOrNull()
