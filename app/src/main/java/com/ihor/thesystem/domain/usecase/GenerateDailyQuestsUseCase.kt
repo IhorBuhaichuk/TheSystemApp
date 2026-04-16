@@ -1,26 +1,27 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import kotlin.math.round
-import java.util.Locale
 
 class GenerateDailyQuestsUseCase @Inject constructor(
     private val questRepo: QuestRepository,
     private val scheduleRepo: ScheduleRepository,
     private val playerRepo: PlayerRepository,
     private val matrixRepo: ProgressionMatrixRepository,
-    private val calculateRecommendation: CalculateRecommendedSetUseCase
+    private val calculateRecommendation: CalculateRecommendedSetUseCase,
+    private val clock: AppClock
 ) {
     suspend operator fun invoke() {
         val player = playerRepo.getPlayer().firstOrNull() ?: return
         val cycleDay = player.currentCycleDay
         
         // 1. Отримуємо всі квести на сьогодні
-        val todayQuests = questRepo.getDailyQuestsForDate(System.currentTimeMillis()).first()
+        val todayQuests = questRepo.getDailyQuestsForDate(clock.now()).first()
         
         // 2. ФІКС: Розблоковуємо застряглі квести, але не перериваємо виконання
         todayQuests.filter { it.status == DomainQuestStatus.LOCKED }.forEach { lockedQuest ->

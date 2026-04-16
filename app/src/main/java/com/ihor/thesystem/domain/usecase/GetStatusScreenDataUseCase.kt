@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.QuestLogDao
 import com.ihor.thesystem.data.local.room.entity.QuestLogEntity
 import com.ihor.thesystem.data.local.room.entity.QuestType
@@ -15,14 +16,15 @@ class GetStatusScreenDataUseCase @Inject constructor(
     private val questRepo: QuestRepository,
     private val debuffRepo: DebuffRepository,
     private val questLogDao: QuestLogDao,
-    private val scheduleRepo: ScheduleRepository
+    private val scheduleRepo: ScheduleRepository,
+    private val clock: AppClock
 ) {
     @Suppress("UNCHECKED_CAST")
     operator fun invoke(): Flow<StatusUiData> =
         playerRepo.getPlayer().flatMapLatest { player ->
             if (player == null) return@flatMapLatest flowOf(StatusUiData())
             
-            val dailyQuestsFlow = questRepo.getDailyQuestsForDate(System.currentTimeMillis())
+            val dailyQuestsFlow = questRepo.getDailyQuestsForDate(clock.now())
             val promotionQuestsFlow = questRepo.getActivePromotionQuests()
             
             // Отримуємо розклад для всіх 4 днів циклу

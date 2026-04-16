@@ -1,5 +1,6 @@
 package com.ihor.thesystem.core.di
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.QuestLogDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.domain.repository.*
@@ -35,8 +36,9 @@ object UseCaseModule {
         scheduleRepo: ScheduleRepository,
         playerRepo:   PlayerRepository,
         matrixRepo:   ProgressionMatrixRepository,
-        calculateRecommendation: CalculateRecommendedSetUseCase
-    ) = GenerateDailyQuestsUseCase(questRepo, scheduleRepo, playerRepo, matrixRepo, calculateRecommendation)
+        calculateRecommendation: CalculateRecommendedSetUseCase,
+        clock:        AppClock
+    ) = GenerateDailyQuestsUseCase(questRepo, scheduleRepo, playerRepo, matrixRepo, calculateRecommendation, clock)
 
     @Provides @Singleton
     fun provideActivatePenaltyManuallyUseCase(
@@ -55,8 +57,9 @@ object UseCaseModule {
         questRepo:  QuestRepository,
         debuffRepo: DebuffRepository,
         questLogDao: QuestLogDao,
-        scheduleRepo: ScheduleRepository
-    ) = GetStatusScreenDataUseCase(playerRepo, questRepo, debuffRepo, questLogDao, scheduleRepo)
+        scheduleRepo: ScheduleRepository,
+        clock: AppClock
+    ) = GetStatusScreenDataUseCase(playerRepo, questRepo, debuffRepo, questLogDao, scheduleRepo, clock)
 
     @Provides @Singleton
     fun provideGetProgressionMatrixUseCase(

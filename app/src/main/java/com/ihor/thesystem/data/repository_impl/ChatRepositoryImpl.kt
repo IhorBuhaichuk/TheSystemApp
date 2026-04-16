@@ -1,5 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.ChatDao
 import com.ihor.thesystem.data.local.room.entity.ChatMessageEntity
 import com.ihor.thesystem.domain.model.ChatMessage
@@ -11,7 +12,8 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class ChatRepositoryImpl @Inject constructor(
-    private val chatDao: ChatDao
+    private val chatDao: ChatDao,
+    private val clock: AppClock
 ) : ChatRepository {
 
     override fun getChatHistory(sessionId: Long): Flow<List<ChatMessage>> {
@@ -29,14 +31,13 @@ class ChatRepositoryImpl @Inject constructor(
                 ChatRole.SYSTEM -> "system"
             },
             message = text,
-            timestamp = System.currentTimeMillis()
+            timestamp = clock.now()
         )
         chatDao.insertChatMessage(entity)
     }
 
     override suspend fun getRecentHistory(sessionId: Long, limit: Int): List<ChatMessage> {
         val entities = chatDao.getRecentChatHistory(sessionId).first()
-        // DAO returns 6 newest (DESC). Sort chronologically for AI context.
         return entities
             .sortedBy { it.timestamp }
             .takeLast(limit)

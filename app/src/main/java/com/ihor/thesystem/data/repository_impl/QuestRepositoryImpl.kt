@@ -1,5 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.QuestDao
 import com.ihor.thesystem.data.local.room.dao.QuestLogDao
 import com.ihor.thesystem.data.local.room.entity.*
@@ -12,7 +13,8 @@ import javax.inject.Inject
 
 class QuestRepositoryImpl @Inject constructor(
     private val questDao: QuestDao,
-    private val questLogDao: QuestLogDao
+    private val questLogDao: QuestLogDao,
+    private val clock: AppClock
 ) : QuestRepository {
 
     override fun getActiveDailyQuest(): Flow<Quest?> =
@@ -47,7 +49,13 @@ class QuestRepositoryImpl @Inject constructor(
         title: String, tasks: List<String>, scheduleId: Int?
     ) {
         val questId = questDao.insertQuest(
-            QuestEntity(title = title, type = EntityQuestType.DAILY, scheduleId = scheduleId, status = EntityQuestStatus.ACTIVE)
+            QuestEntity(
+                title = title, 
+                type = EntityQuestType.DAILY, 
+                scheduleId = scheduleId, 
+                status = EntityQuestStatus.ACTIVE,
+                date = clock.now()
+            )
         ).toInt()
         tasks.forEach { taskName ->
             questDao.insertQuestTask(QuestTaskEntity(questId = questId, name = taskName))
@@ -58,7 +66,13 @@ class QuestRepositoryImpl @Inject constructor(
         title: String, exercises: List<ExerciseRecommendation>, scheduleId: Int?
     ) {
         val questId = questDao.insertQuest(
-            QuestEntity(title = title, type = EntityQuestType.MAIN, scheduleId = scheduleId, status = EntityQuestStatus.ACTIVE)
+            QuestEntity(
+                title = title, 
+                type = EntityQuestType.MAIN, 
+                scheduleId = scheduleId, 
+                status = EntityQuestStatus.ACTIVE,
+                date = clock.now()
+            )
         ).toInt()
         exercises.forEach { rec ->
             questDao.insertQuestTask(
@@ -82,7 +96,13 @@ class QuestRepositoryImpl @Inject constructor(
         targetReps: Int?
     ) {
         val questId = questDao.insertQuest(
-            QuestEntity(title = title, type = EntityQuestType.PROMOTION, scheduleId = exerciseId, status = EntityQuestStatus.ACTIVE)
+            QuestEntity(
+                title = title, 
+                type = EntityQuestType.PROMOTION, 
+                scheduleId = exerciseId, 
+                status = EntityQuestStatus.ACTIVE,
+                date = clock.now()
+            )
         ).toInt()
         questDao.insertQuestTask(
             QuestTaskEntity(
@@ -142,7 +162,7 @@ class QuestRepositoryImpl @Inject constructor(
                 questId = questId,
                 questType = questType,
                 wasSuccessful = wasSuccessful,
-                completedAt = System.currentTimeMillis()
+                completedAt = clock.now()
             )
         )
     }

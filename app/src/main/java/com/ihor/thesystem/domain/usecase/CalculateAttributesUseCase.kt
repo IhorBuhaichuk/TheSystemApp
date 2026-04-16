@@ -32,8 +32,8 @@ class CalculateAttributesUseCase @Inject constructor(
         val recentLogs = questLogDao.getLastNLogs(20)
         val mainLogs = recentLogs.filter { it.questType == QuestType.MAIN }
         
-        val calculatedEnd = if (mainLogs.size < 5) {
-            50
+        val calculatedEnd = if (mainLogs.isEmpty()) {
+            0
         } else {
             val successfulCount = mainLogs.count { it.wasSuccessful }
             (successfulCount.toDouble() / mainLogs.size * 100).toInt().coerceIn(0, 100)
@@ -49,6 +49,9 @@ class CalculateAttributesUseCase @Inject constructor(
         val calculatedDis = if (player.isPenaltyActive) minOf(disBase, 40) else disBase
 
         // ─── Збереження ───
+        if (player.strAttribute == calculatedStr && player.endAttribute == calculatedEnd 
+            && player.disAttribute == calculatedDis) return Triple(calculatedStr, calculatedEnd, calculatedDis)
+
         val updatedPlayer = player.copy(
             strAttribute = calculatedStr,
             endAttribute = calculatedEnd,

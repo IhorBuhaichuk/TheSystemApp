@@ -2,6 +2,8 @@ package com.ihor.thesystem.core.di
 
 import android.app.Application
 import com.ihor.thesystem.TheSystemApp
+import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.core.util.RealClock
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,4 +26,8 @@ object AppScopeModule {
     fun provideApplicationScope(app: Application): CoroutineScope {
         return (app as TheSystemApp).applicationScope
     }
+
+    @Provides
+    @Singleton
+    fun provideAppClock(): AppClock = RealClock()
 }
