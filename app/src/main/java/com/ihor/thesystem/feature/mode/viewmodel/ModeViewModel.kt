@@ -63,12 +63,12 @@ class ModeViewModel @Inject constructor(
     val uiState: StateFlow<UiState<ModeUiData>> = _selectedDay.flatMapLatest { selDay ->
         combine(
             playerRepo.getPlayer().filterNotNull(),
-            scheduleRepo.getSchedulesForDays(listOf(1, 2, 3, 4)),
+            scheduleRepo.getSchedulesForDays(CycleConfig.MICROCYCLE_DAYS),
             questRepo.getActiveDailyQuest(),
             questRepo.getActiveMainQuest(),
             debuffRepo.getDebuffsForCycleDay(selDay)
         ) { player, schedules, daily, main, debuffs ->
-            val allDays = (1..4).map { d -> schedules.find { it.cycleDay == d } }
+            val allDays = CycleConfig.MICROCYCLE_DAYS.map { d -> schedules.find { it.cycleDay == d } }
             val currentSelectedSchedule = allDays.getOrNull(selDay - 1)
 
             val exercises = if (selDay == player.currentCycleDay) {
@@ -102,16 +102,6 @@ class ModeViewModel @Inject constructor(
             UiState.Content(data) as UiState<ModeUiData>
         }
     }
-    .onStart { 
-        viewModelScope.launch {
-            try {
-                generateQuests()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                logger.e(e, "Помилка ініціалізації квестів")
-            }
-        }
-    }
     .catch { e ->
         logger.e(e, "Помилка реактивного потоку ModeViewModel")
         emit(UiState.Error("Помилка завантаження даних: ${e.localizedMessage}"))
@@ -123,6 +113,15 @@ class ModeViewModel @Inject constructor(
     )
 
     init {
+        viewModelScope.launch {
+            try {
+                generateQuests()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                logger.e(e, "Помилка ініціалізації квестів")
+            }
+        }
+
         viewModelScope.launch {
             playerRepo.getPlayer().filterNotNull().firstOrNull()?.let {
                 _selectedDay.value = it.currentCycleDay
@@ -141,49 +140,35 @@ class ModeViewModel @Inject constructor(
 
     fun onConfirmAdvance() {
         viewModelScope.launch {
-            try {
-                advanceCycleDay()
-                val result = finalizeDay()
-                onDismissDialog()
-                
-                if (result is Result.Success) {
-                    when (result.data) {
-                        is DayFinalizationResult.LevelUp ->
-                            _events.emit(ModeEvent.LevelUp)
-                        is DayFinalizationResult.PenaltyZoneEntered ->
-                            _events.emit(ModeEvent.PenaltyActivated)
-                        else -> _events.emit(ModeEvent.DayAdvanced)
-                    }
-                }
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                logger.e(e, "Помилка завершення дня")
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка завершення дня"))
-            }
+            advanceAndFinalize(forceComplete = false)
         }
     }
 
     fun onForceCompleteDay() {
         viewModelScope.launch {
-            try {
-                advanceCycleDay(forceComplete = true)
-                val result = finalizeDay()
-                onDismissDialog()
-                
-                if (result is Result.Success) {
-                    when (result.data) {
-                        is DayFinalizationResult.LevelUp ->
-                            _events.emit(ModeEvent.LevelUp)
-                        is DayFinalizationResult.PenaltyZoneEntered ->
-                            _events.emit(ModeEvent.PenaltyActivated)
-                        else -> _events.emit(ModeEvent.DayAdvanced)
-                    }
+            advanceAndFinalize(forceComplete = true)
+        }
+    }
+
+    private suspend fun advanceAndFinalize(forceComplete: Boolean) {
+        try {
+            advanceCycleDay(forceComplete = forceComplete)
+            val result = finalizeDay()
+            onDismissDialog()
+            
+            if (result is Result.Success) {
+                when (result.data) {
+                    is DayFinalizationResult.LevelUp ->
+                        _events.emit(ModeEvent.LevelUp)
+                    is DayFinalizationResult.PenaltyZoneEntered ->
+                        _events.emit(ModeEvent.PenaltyActivated)
+                    else -> _events.emit(ModeEvent.DayAdvanced)
                 }
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                logger.e(e, "Помилка примусового завершення дня")
-                _uiEvents.emit(UiEvent.ShowError("Помилка примусового завершення"))
             }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            logger.e(e, "Помилка завершення дня (force=$forceComplete)")
+            _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка завершення дня"))
         }
     }
 

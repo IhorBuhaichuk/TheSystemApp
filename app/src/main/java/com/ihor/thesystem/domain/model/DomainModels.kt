@@ -1,5 +1,10 @@
 package com.ihor.thesystem.domain.model
 
+object CycleConfig {
+    val MICROCYCLE_DAYS = listOf(1, 2, 3, 4)
+    val MICROCYCLE_DAY_RANGE = 1..4
+}
+
 data class Player(
     val id: Int,
     val name: String,
