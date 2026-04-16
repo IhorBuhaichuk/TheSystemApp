@@ -14,7 +14,6 @@ data class ModeUiData(
 
 data class CycleDayUiModel(
     val dayNumber: Int,
-    val label: String,
     val type: DayType,
     val isActive: Boolean,
     val isSelected: Boolean = false,

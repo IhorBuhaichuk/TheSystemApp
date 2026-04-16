@@ -100,6 +100,9 @@ dependencies {
     implementation(libs.generativeai)
     implementation(libs.kotlinx.serialization.json)
 
+    // Timber
+    implementation(libs.timber)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

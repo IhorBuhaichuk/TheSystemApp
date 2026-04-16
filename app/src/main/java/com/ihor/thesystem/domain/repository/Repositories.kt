@@ -17,6 +17,7 @@ interface DebuffRepository {
 
 interface ScheduleRepository {
     fun getScheduleForDay(day: Int): Flow<ScheduleDay?>
+    fun getSchedulesForDays(days: List<Int>): Flow<List<ScheduleDay>>
 }
 
 sealed class DatabaseStatus {

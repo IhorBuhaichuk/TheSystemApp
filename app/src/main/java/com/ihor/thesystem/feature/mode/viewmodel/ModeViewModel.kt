@@ -22,6 +22,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -71,12 +72,11 @@ class ModeViewModel @Inject constructor(
                 generateQuests()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка ініціалізації квестів"))
+                Timber.e(e, "Помилка ініціалізації квестів")
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Не вдалося згенерувати квести на сьогодні"))
             }
             
             playerRepo.getPlayer().filterNotNull().collect { player ->
-                // При першому завантаженні або зміні поточного дня циклу оновлюємо вибраний день
                 val isFirstLoad = _uiState.value is UiState.Loading
                 if (isFirstLoad) {
                     selectedDay = player.currentCycleDay
@@ -89,27 +89,14 @@ class ModeViewModel @Inject constructor(
     private fun loadDataForDay(day: Int, currentCycleDay: Int, isPenaltyActive: Boolean) {
         scheduleJob?.cancel()
         scheduleJob = viewModelScope.launch {
-            val d1Flow = scheduleRepo.getScheduleForDay(1)
-            val d2Flow = scheduleRepo.getScheduleForDay(2)
-            val d3Flow = scheduleRepo.getScheduleForDay(3)
-            val d4Flow = scheduleRepo.getScheduleForDay(4)
+            val schedulesFlow = scheduleRepo.getSchedulesForDays(listOf(1, 2, 3, 4))
             val dailyFlow = questRepo.getActiveDailyQuest()
             val mainFlow = questRepo.getActiveMainQuest()
 
-            combine(listOf(d1Flow, d2Flow, d3Flow, d4Flow, dailyFlow, mainFlow)) { array ->
-                val d1 = array[0] as? ScheduleDay
-                val d2 = array[1] as? ScheduleDay
-                val d3 = array[2] as? ScheduleDay
-                val d4 = array[3] as? ScheduleDay
-                val daily = array[4] as? Quest
-                val main = array[5] as? Quest
-
-                val allDays = listOf(d1, d2, d3, d4)
+            combine(schedulesFlow, dailyFlow, mainFlow) { schedules, daily, main ->
+                val allDays = (1..4).map { d -> schedules.find { it.cycleDay == d } }
                 val currentSelected = allDays.getOrNull(day - 1)
                 
-                // Вправи показуємо:
-                // 1. Якщо це поточний день циклу - з активного Main квесту (там актуальні ваги)
-                // 2. Якщо інший день - просто назви з шаблону розкладу
                 val exercises = if (day == currentCycleDay) {
                     main?.tasks?.map { task ->
                         val recStr = if (task.recommendedWeight != null) {
@@ -139,8 +126,8 @@ class ModeViewModel @Inject constructor(
                 )
             }
             .catch { e ->
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError("Помилка завантаження розкладу"))
+                Timber.e(e, "Помилка завантаження розкладу для дня $day")
+                _uiEvents.emit(UiEvent.ShowError("Не вдалося завантажити дані розкладу: ${e.localizedMessage}"))
             }
             .collect { data ->
                 _uiState.value = UiState.Content(data)
@@ -156,8 +143,8 @@ class ModeViewModel @Inject constructor(
                 loadDataForDay(day, player.currentCycleDay, player.isPenaltyActive)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError("Помилка перемикання дня"))
+                Timber.e(e, "Помилка перемикання на день $day")
+                _uiEvents.emit(UiEvent.ShowError("Помилка перемикання дня: ${e.localizedMessage}"))
             }
         }
     }
@@ -183,8 +170,8 @@ class ModeViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка завершення дня"))
+                Timber.e(e, "Помилка завершення дня")
+                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Не вдалося завершити день. Перевірте з'єднання або дані."))
             }
         }
     }
@@ -205,7 +192,7 @@ class ModeViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
+                Timber.e(e, "Помилка примусового завершення дня")
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка примусового завершення"))
             }
         }
@@ -230,7 +217,7 @@ class ModeViewModel @Inject constructor(
                 _events.emit(ModeEvent.CycleSynced)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
+                Timber.e(e, "Помилка синхронізації циклу на день $day")
                 _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка синхронізації циклу"))
             }
         }
@@ -240,13 +227,6 @@ class ModeViewModel @Inject constructor(
 private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean, isSelected: Boolean) =
     CycleDayUiModel(
         dayNumber   = dayNum,
-        label       = when(dayNum) {
-            1 -> "ДЕНЬ"
-            2 -> "НІЧ"
-            3 -> "ВІДСИПНИЙ"
-            4 -> "ВИХІДНИЙ"
-            else -> "ДЕНЬ $dayNum"
-        },
         type        = if (workoutTemplateId != null) DayType.WORKOUT else DayType.REST,
         isActive    = isActive,
         isSelected  = isSelected,

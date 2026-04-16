@@ -13,9 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
 import com.ihor.thesystem.feature.mode.viewmodel.CycleDayUiModel
@@ -51,12 +53,20 @@ private fun CycleDayHex(
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val (icon: ImageVector, label: String) = when (day.dayNumber) {
-        1    -> Icons.Filled.WbSunny to "День"
-        2    -> Icons.Filled.NightsStay to "Ніч"
-        3    -> Icons.Filled.Bedtime to "Відсипний"
-        4    -> Icons.Filled.Weekend to "Вихідний"
-        else -> Icons.Filled.Circle to "День"
+    val icon: ImageVector = when (day.dayNumber) {
+        1    -> Icons.Filled.WbSunny
+        2    -> Icons.Filled.NightsStay
+        3    -> Icons.Filled.Bedtime
+        4    -> Icons.Filled.Weekend
+        else -> Icons.Filled.Circle
+    }
+
+    val label = when (day.dayNumber) {
+        1 -> stringResource(R.string.cycle_day_1)
+        2 -> stringResource(R.string.cycle_day_2)
+        3 -> stringResource(R.string.cycle_day_3)
+        4 -> stringResource(R.string.cycle_day_4)
+        else -> stringResource(R.string.cycle_day_default, day.dayNumber)
     }
 
     val accentColor = when {

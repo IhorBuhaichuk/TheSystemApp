@@ -17,6 +17,10 @@ interface ScheduleDao {
     @Query("SELECT * FROM schedule WHERE cycleDay = :day")
     fun getScheduleForDay(day: Int): Flow<ScheduleWithDetails?>
 
+    @Transaction
+    @Query("SELECT * FROM schedule WHERE cycleDay IN (:days) ORDER BY cycleDay ASC")
+    fun getSchedulesForDays(days: List<Int>): Flow<List<ScheduleWithDetails>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSchedule(schedule: ScheduleEntity): Long
 
