@@ -10,5 +10,6 @@ data class QuestEntity(
     val type: QuestType,
     val date: Long          = System.currentTimeMillis(),
     val status: QuestStatus = QuestStatus.ACTIVE,
-    val scheduleId: Int?    = null
+    val scheduleId: Int?    = null,
+    val targetExerciseId: Int? = null
 )

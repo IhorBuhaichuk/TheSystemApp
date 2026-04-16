@@ -99,7 +99,8 @@ class QuestRepositoryImpl @Inject constructor(
             QuestEntity(
                 title = title, 
                 type = EntityQuestType.PROMOTION, 
-                scheduleId = exerciseId, 
+                scheduleId = null, // Раніше тут зберігався exerciseId
+                targetExerciseId = exerciseId, // Тепер використовуємо спеціальне поле
                 status = EntityQuestStatus.ACTIVE,
                 date = clock.now()
             )
@@ -178,6 +179,7 @@ private fun QuestWithTasks.toDomain() = Quest(
     date   = quest.date,
     status = quest.status.toDomain(),
     scheduleId = quest.scheduleId,
+    targetExerciseId = quest.targetExerciseId,
     tasks  = tasks.map { 
         QuestTask(
             id = it.id, 

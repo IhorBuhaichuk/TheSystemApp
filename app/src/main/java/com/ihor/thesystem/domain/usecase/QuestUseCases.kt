@@ -20,7 +20,7 @@ class ToggleQuestTaskUseCase @Inject constructor(
         // Перевіряємо, чи цей квест є PROMOTION і чи він завершений
         val quest = repo.getQuestById(questId)
         if (quest != null && quest.type == DomainQuestType.PROMOTION && quest.status == DomainQuestStatus.COMPLETED) {
-            val exerciseId = quest.scheduleId // Ми зберегли exerciseId у scheduleId при створенні
+            val exerciseId = quest.targetExerciseId
             if (exerciseId != null) {
                 // 1. Скидаємо прапорець очікування
                 matrixRepo.setPromotionPending(exerciseId, false)

@@ -35,7 +35,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class
     ],
-    version = 20,
+    version = 21,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -245,6 +245,12 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE system_config ADD COLUMN cycleDaysPerMicrocycle INTEGER NOT NULL DEFAULT 4")
                 db.execSQL("ALTER TABLE system_config ADD COLUMN microCyclesPerMonth INTEGER NOT NULL DEFAULT 4")
+            }
+        }
+
+        val MIGRATION_20_21 = object : Migration(20, 21) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE quest ADD COLUMN targetExerciseId INTEGER")
             }
         }
     }
