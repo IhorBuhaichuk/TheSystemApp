@@ -20,6 +20,8 @@
     <string name="text_system_version">СИСТЕМА v1.0</string>
     <string name="text_loading">ЗАВАНТАЖЕННЯ СИСТЕМИ...</string>
     <string name="text_error">ПОМИЛКА</string>
+    <string name="text_annual_matrix">РІЧНА МАТРИЦЯ ПРОГРЕСІЇ</string>
+    <string name="text_tap_log_flag_setup">TAP = LOG | FLAG = SETUP</string>
 
     <!-- Cycle Days -->
     <string name="cycle_day_1">ДЕНЬ</string>
