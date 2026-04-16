@@ -9,7 +9,8 @@ import com.ihor.thesystem.domain.model.ChatRole
 import com.ihor.thesystem.domain.repository.ChatRepository
 import com.ihor.thesystem.domain.usecase.ApplyAiRecommendationsUseCase
 import com.ihor.thesystem.domain.usecase.GetLastWorkoutContextUseCase
-import com.ihor.thesystem.domain.usecase.SendChatMessageUseCase
+import com.ihor.thesystem.domain.usecase.SendArchitectAnalysisUseCase
+import com.ihor.thesystem.domain.usecase.SendLiveCoachMessageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
@@ -20,7 +21,8 @@ import javax.inject.Inject
 class ArchitectViewModel @Inject constructor(
     private val getLastWorkoutContext: GetLastWorkoutContextUseCase,
     private val applyAiRecommendations: ApplyAiRecommendationsUseCase,
-    private val sendChatMessageUseCase: SendChatMessageUseCase,
+    private val sendArchitectAnalysis: SendArchitectAnalysisUseCase,
+    private val sendLiveCoachMessage: SendLiveCoachMessageUseCase,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
@@ -99,7 +101,7 @@ class ArchitectViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                sendChatMessageUseCase(sessionId, text)
+                sendLiveCoachMessage(sessionId, text)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
@@ -130,13 +132,9 @@ class ArchitectViewModel @Inject constructor(
                 )
             }
 
-            // 4. Запит через уніфікований UseCase
+            // 4. Запит через UseCase аналізу
             try {
-                val aiResponse = sendChatMessageUseCase(
-                    sessionId = 0L, 
-                    userMessage = "Аналіз тренування", 
-                    workoutContext = context
-                )
+                val aiResponse = sendArchitectAnalysis(context)
                 _uiState.update { it.copy(
                     messages = it.messages + aiResponse,
                     isLoading = false,

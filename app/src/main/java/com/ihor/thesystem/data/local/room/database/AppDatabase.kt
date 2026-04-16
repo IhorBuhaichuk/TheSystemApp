@@ -96,16 +96,16 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
         
-        val MIGRATION_7_8 = object : Migration(7, 8) { 
+        val MIGRATION_7_8 = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE quest_task ADD COLUMN exerciseId INTEGER")
                 db.execSQL("ALTER TABLE quest_task ADD COLUMN targetWeight REAL")
                 db.execSQL("ALTER TABLE quest_task ADD COLUMN targetSets INTEGER")
                 db.execSQL("ALTER TABLE quest_task ADD COLUMN targetReps INTEGER")
-            } 
+            }
         }
 
-        val MIGRATION_8_9 = object : Migration(8, 9) { 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE system_config ADD COLUMN cycleAnchorDay INTEGER NOT NULL DEFAULT 1")
             }

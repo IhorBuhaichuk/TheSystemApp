@@ -119,11 +119,16 @@ object UseCaseModule {
     ) = RecalculateGlobalRankUseCase(matrixRepo, playerRepo)
 
     @Provides @Singleton
-    fun provideSendChatMessageUseCase(
-        chatRepository: ChatRepository,
+    fun provideSendArchitectAnalysisUseCase(
+        aiArchitectRepository: AiArchitectRepository,
+        chatRepository: ChatRepository
+    ) = SendArchitectAnalysisUseCase(aiArchitectRepository, chatRepository)
+
+    @Provides @Singleton
+    fun provideSendLiveCoachMessageUseCase(
         liveCoachRepository: LiveCoachRepository,
-        aiArchitectRepository: AiArchitectRepository
-    ) = SendChatMessageUseCase(chatRepository, liveCoachRepository, aiArchitectRepository)
+        chatRepository: ChatRepository
+    ) = SendLiveCoachMessageUseCase(liveCoachRepository, chatRepository)
 
     @Provides @Singleton
     fun provideSaveExerciseSetsUseCase(

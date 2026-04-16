@@ -2,6 +2,7 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
+import com.ihor.thesystem.domain.util.sanitizeForPrompt
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
@@ -10,7 +11,7 @@ import kotlin.time.Duration.Companion.hours
 
 class FinalizeSessionUseCase @Inject constructor(
     private val analyticsRepository: WorkoutAnalyticsRepository,
-    private val sendChatMessageUseCase: SendChatMessageUseCase,
+    private val sendArchitectAnalysis: SendArchitectAnalysisUseCase,
     private val progressionMatrixRepository: ProgressionMatrixRepository,
     private val playerRepository: PlayerRepository,
     private val recalculateGlobalRank: RecalculateGlobalRankUseCase,
@@ -73,23 +74,22 @@ class FinalizeSessionUseCase @Inject constructor(
                 val recentLogs = analyticsRepository.getRecentLogsForExercise(exId)
                 val annualGoals = AnnualMatrixProvider.getMatrix().find { it.exerciseId == exId }?.targets?.joinToString(", ") ?: "немає"
                 
+                val sanitizedExerciseName = (matrixEntry?.exerciseName ?: "ID $exId").sanitizeForPrompt()
+                val sanitizedFeedback = (exerciseSets.firstOrNull()?.userFeedback ?: "відсутній").sanitizeForPrompt()
+
                 """
-                Вправа: ${matrixEntry?.exerciseName ?: "ID $exId"}
+                Вправа: $sanitizedExerciseName
                 - Поточна вага тіла: $playerWeight кг (6 міс. тому: $weight6MonthsAgo кг)
                 - Цілі Річної матриці (M0-M12): $annualGoals
                 - Останні 10 тренувань: ${recentLogs.joinToString { "${it.weight}кг x ${it.reps}" }}
                 - Сьогодні виконано: ${exerciseSets.joinToString { "${it.weight}кг x ${it.reps}" }}
-                - Коментар користувача: ${exerciseSets.firstOrNull()?.userFeedback ?: "відсутній"}
+                - Коментар користувача: $sanitizedFeedback
                 """.trimIndent()
             }.joinToString("\n\n")
 
-            // 7. Виконання запиту через SendChatMessageUseCase для уніфікації промпту
+            // 7. Виконання запиту через SendArchitectAnalysisUseCase
             val report = try {
-                val chatMsg = sendChatMessageUseCase(
-                    sessionId = sessionId,
-                    userMessage = "Аналіз завершеного тренування",
-                    workoutContext = exerciseContexts
-                )
+                val chatMsg = sendArchitectAnalysis(exerciseContexts)
                 
                 chatMsg.recommendations.forEach { rec ->
                     progressionMatrixRepository.updateTarget(
