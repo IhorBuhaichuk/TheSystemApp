@@ -100,7 +100,7 @@ class StatisticsViewModel @Inject constructor(
         )
     }
     .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
-    .catch { emit(UiState.Error(it.message ?: "Помилка")) }
+    .catch { emit(UiState.Error(UiText.DynamicString(it.message ?: "Помилка"))) }
     .stateIn(
         scope        = viewModelScope,
         started      = SharingStarted.WhileSubscribed(5_000),

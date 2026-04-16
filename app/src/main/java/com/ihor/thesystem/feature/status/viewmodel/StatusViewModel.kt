@@ -43,7 +43,7 @@ class StatusViewModel @Inject constructor(
         .map<StatusUiData, UiState<StatusUiData>> { UiState.Content(it) }
         .catch { 
             it.printStackTrace()
-            emit(UiState.Error("Завантаження системи...")) 
+            emit(UiState.Error(UiText.DynamicString("Завантаження системи...")))
         }
         .stateIn(
             scope        = viewModelScope,

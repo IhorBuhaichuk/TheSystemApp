@@ -3,6 +3,7 @@ package com.ihor.thesystem.domain.usecase
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.util.sanitizeForPrompt
+import com.ihor.thesystem.core.util.getOrNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
@@ -33,35 +34,15 @@ class FinalizeSessionUseCase @Inject constructor(
             val calendar = Calendar.getInstance()
             calendar.add(Calendar.MONTH, -6)
             val timestampSixMonthsAgo = calendar.timeInMillis
-            val weight6MonthsAgo = playerRepository.getWeightAtOrBefore(timestampSixMonthsAgo) ?: playerWeight.toFloat()
+            val weight6MonthsAgo = playerRepository.getWeightAtOrBefore(timestampSixMonthsAgo).getOrNull() ?: playerWeight.toFloat()
 
-            // 3. Отримати матрицю прогресії (одноразовий запит)
-            val matrix = try {
-                progressionMatrixRepository.getAllEntries().first()
-            } catch (e: Exception) {
-                emptyList<ProgressionMatrixEntry>()
-            }
+            // 3. Отримати матрицю прогресії
+            val matrix = progressionMatrixRepository.getAllEntries().first()
 
-            // 4. Розрахувати тоннаж та оновити ранги вправ на основі нормативів
+            // 4. Оновити ранги вправ
+            updateExerciseRanks(sets, matrix, playerWeight)
+
             val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
-            
-            sets.filter { it.isCompleted }.groupBy { it.exerciseId }.forEach { (exId, exerciseSets) ->
-                val maxWeight = exerciseSets.maxOf { it.weight }
-                val matrixEntry = matrix.find { it.exerciseId == exId }
-                
-                if (matrixEntry != null) {
-                    val newRank = AnnualMatrixProvider.getExerciseRankById(
-                        exerciseId = matrixEntry.exerciseId,
-                        current1RM = maxWeight,
-                        playerWeight = playerWeight
-                    )
-                    
-                    if (newRank.weight > matrixEntry.currentRank.weight) {
-                        progressionMatrixRepository.updateRank(matrixEntry.exerciseId, newRank)
-                    }
-                }
-            }
-
             val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
 
             // 5. Розрахунок відновлення
@@ -69,23 +50,7 @@ class FinalizeSessionUseCase @Inject constructor(
             val recoveryHours = recoveryDuration.inWholeHours.toDouble()
 
             // 6. Формування контексту для AI
-            val exerciseContexts = sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
-                val matrixEntry = matrix.find { it.exerciseId == exId }
-                val recentLogs = analyticsRepository.getRecentLogsForExercise(exId)
-                val annualGoals = AnnualMatrixProvider.getMatrix().find { it.exerciseId == exId }?.targets?.joinToString(", ") ?: "немає"
-                
-                val sanitizedExerciseName = (matrixEntry?.exerciseName ?: "ID $exId").sanitizeForPrompt()
-                val sanitizedFeedback = (exerciseSets.firstOrNull()?.userFeedback ?: "відсутній").sanitizeForPrompt()
-
-                """
-                Вправа: $sanitizedExerciseName
-                - Поточна вага тіла: $playerWeight кг (6 міс. тому: $weight6MonthsAgo кг)
-                - Цілі Річної матриці (M0-M12): $annualGoals
-                - Останні 10 тренувань: ${recentLogs.joinToString { "${it.weight}кг x ${it.reps}" }}
-                - Сьогодні виконано: ${exerciseSets.joinToString { "${it.weight}кг x ${it.reps}" }}
-                - Коментар користувача: $sanitizedFeedback
-                """.trimIndent()
-            }.joinToString("\n\n")
+            val exerciseContexts = generateAiPrompt(sets, matrix, playerWeight, weight6MonthsAgo)
 
             // 7. Виконання запиту через SendArchitectAnalysisUseCase
             val report = try {
@@ -129,6 +94,54 @@ class FinalizeSessionUseCase @Inject constructor(
                 nextWorkoutDirectives = validatedDirectives,
                 recoveryWindowHours = recoveryHours
             )
+        }
+    }
+
+    private suspend fun generateAiPrompt(
+        sets: List<ExerciseSet>,
+        matrix: List<ProgressionMatrixEntry>,
+        playerWeight: Double,
+        weight6MonthsAgo: Float
+    ): String {
+        return sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
+            val matrixEntry = matrix.find { it.exerciseId == exId }
+            val recentLogs = analyticsRepository.getRecentLogsForExercise(exId)
+            val annualGoals = AnnualMatrixProvider.getMatrix().find { it.exerciseId == exId }?.targets?.joinToString(", ") ?: "немає"
+            
+            val sanitizedExerciseName = (matrixEntry?.exerciseName ?: "ID $exId").sanitizeForPrompt()
+            val sanitizedFeedback = (exerciseSets.firstOrNull()?.userFeedback ?: "відсутній").sanitizeForPrompt()
+
+            """
+            Вправа: $sanitizedExerciseName
+            - Поточна вага тіла: $playerWeight кг (6 міс. тому: $weight6MonthsAgo кг)
+            - Цілі Річної матриці (M0-M12): $annualGoals
+            - Останні 10 тренувань: ${recentLogs.joinToString { "${it.weight}кг x ${it.reps}" }}
+            - Сьогодні виконано: ${exerciseSets.joinToString { "${it.weight}кг x ${it.reps}" }}
+            - Коментар користувача: $sanitizedFeedback
+            """.trimIndent()
+        }.joinToString("\n\n")
+    }
+
+    private suspend fun updateExerciseRanks(
+        sets: List<ExerciseSet>,
+        matrix: List<ProgressionMatrixEntry>,
+        playerWeight: Double
+    ) {
+        sets.filter { it.isCompleted }.groupBy { it.exerciseId }.forEach { (exId, exerciseSets) ->
+            val maxWeight = exerciseSets.maxOf { it.weight }
+            val matrixEntry = matrix.find { it.exerciseId == exId }
+            
+            if (matrixEntry != null) {
+                val newRank = AnnualMatrixProvider.getExerciseRankById(
+                    exerciseId = matrixEntry.exerciseId,
+                    current1RM = maxWeight,
+                    playerWeight = playerWeight
+                )
+                
+                if (newRank.weight > matrixEntry.currentRank.weight) {
+                    progressionMatrixRepository.updateRank(matrixEntry.exerciseId, newRank)
+                }
+            }
         }
     }
 

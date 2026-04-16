@@ -105,7 +105,7 @@ class ModeViewModel @Inject constructor(
     }
     .catch { e ->
         logger.e(e, "Помилка реактивного потоку ModeViewModel")
-        emit(UiState.Error("Помилка завантаження даних: ${e.localizedMessage}"))
+        emit(UiState.Error(UiText.DynamicString("Помилка завантаження даних: ${e.localizedMessage}")))
     }
     .stateIn(
         scope = viewModelScope,

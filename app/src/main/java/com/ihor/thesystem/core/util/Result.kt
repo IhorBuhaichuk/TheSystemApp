@@ -17,3 +17,10 @@ inline fun <D, E : DomainError, T> Result<D, E>.map(transform: (D) -> T): Result
 fun <D, E : DomainError> Result<D, E>.asEmptyResult(): Result<Unit, E> {
     return map { }
 }
+
+fun <D, E : DomainError> Result<D, E>.getOrNull(): D? {
+    return when (this) {
+        is Result.Success -> data
+        is Result.Error -> null
+    }
+}
