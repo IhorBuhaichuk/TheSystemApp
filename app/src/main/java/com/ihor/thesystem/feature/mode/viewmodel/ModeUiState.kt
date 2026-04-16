@@ -22,6 +22,8 @@ data class CycleDayUiModel(
 
 enum class DayType { REST, WORKOUT }
 
+enum class DebuffType { WEAKNESS, CNS, NONE }
+
 data class ActiveDayUiModel(
     val dayNumber: Int,
     val debuffName: String?,
