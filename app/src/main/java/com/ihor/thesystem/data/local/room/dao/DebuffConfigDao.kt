@@ -12,6 +12,9 @@ interface DebuffConfigDao {
     @Query("SELECT * FROM debuff_config WHERE isActive = 1")
     fun getActiveDebuffs(): Flow<List<DebuffConfigEntity>>
 
+    @Query("SELECT * FROM debuff_config WHERE cycleDay = :day")
+    fun getDebuffsForCycleDay(day: Int): Flow<List<DebuffConfigEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(debuff: DebuffConfigEntity)
 

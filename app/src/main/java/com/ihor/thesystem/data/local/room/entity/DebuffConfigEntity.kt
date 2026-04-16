@@ -9,5 +9,6 @@ data class DebuffConfigEntity(
     val condition: String,
     val text: String,
     val penaltyPercent: Int = 0,
-    val isActive: Boolean   = false
+    val isActive: Boolean   = false,
+    val cycleDay: Int?      = null
 )

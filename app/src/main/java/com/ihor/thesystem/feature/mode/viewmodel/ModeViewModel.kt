@@ -6,10 +6,12 @@ import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.domain.model.ScheduleDay
 import com.ihor.thesystem.domain.model.Quest
+import com.ihor.thesystem.domain.model.DebuffConfig
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
+import com.ihor.thesystem.domain.repository.DebuffRepository
 import com.ihor.thesystem.domain.usecase.AdvanceCycleDayUseCase
 import com.ihor.thesystem.domain.usecase.DayFinalizationResult
 import com.ihor.thesystem.domain.usecase.FinalizeDayUseCase
@@ -46,6 +48,7 @@ class ModeViewModel @Inject constructor(
     private val questRepo:       QuestRepository,
     private val scheduleRepo:    ScheduleRepository,
     private val configRepo:      SystemConfigRepository,
+    private val debuffRepo:      DebuffRepository,
     private val advanceCycleDay: AdvanceCycleDayUseCase,
     private val generateQuests:  GenerateDailyQuestsUseCase,
     private val finalizeDay:     FinalizeDayUseCase
@@ -92,8 +95,9 @@ class ModeViewModel @Inject constructor(
             val schedulesFlow = scheduleRepo.getSchedulesForDays(listOf(1, 2, 3, 4))
             val dailyFlow = questRepo.getActiveDailyQuest()
             val mainFlow = questRepo.getActiveMainQuest()
+            val debuffsFlow = debuffRepo.getDebuffsForCycleDay(day)
 
-            combine(schedulesFlow, dailyFlow, mainFlow) { schedules, daily, main ->
+            combine(schedulesFlow, dailyFlow, mainFlow, debuffsFlow) { schedules, daily, main, debuffs ->
                 val allDays = (1..4).map { d -> schedules.find { it.cycleDay == d } }
                 val currentSelected = allDays.getOrNull(day - 1)
                 
@@ -121,7 +125,8 @@ class ModeViewModel @Inject constructor(
                     }.toImmutableList(),
                     activeDayData = currentSelected?.toActiveDayUiModel(
                         exercises.toImmutableList(), 
-                        if(day == currentCycleDay) daily else null
+                        if(day == currentCycleDay) daily else null,
+                        debuffs
                     )
                 )
             }
@@ -235,11 +240,12 @@ private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean, isSele
 
 private fun ScheduleDay.toActiveDayUiModel(
     exercises: ImmutableList<ExerciseWorkoutUiModel>,
-    dailyQuest: Quest?
+    dailyQuest: Quest?,
+    debuffs: List<DebuffConfig>
 ): ActiveDayUiModel {
     return ActiveDayUiModel(
         dayNumber   = cycleDay,
-        debuffName  = if (cycleDay == 1) "СЛАБКІСТЬ" else if (cycleDay == 2) "ЦНС" else null,
+        debuffName  = debuffs.firstOrNull()?.condition,
         dailyTasks  = (if (dailyQuest != null) listOf(dailyQuest) else emptyList<Quest>()).toImmutableList(),
         workoutName = workoutTemplateName,
         exercises   = exercises

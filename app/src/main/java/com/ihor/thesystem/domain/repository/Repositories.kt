@@ -12,6 +12,7 @@ interface SystemConfigRepository {
 interface DebuffRepository {
     fun getAllDebuffs(): Flow<List<DebuffConfig>>
     fun getActiveDebuffs(): Flow<List<DebuffConfig>>
+    fun getDebuffsForCycleDay(day: Int): Flow<List<DebuffConfig>>
     suspend fun updateDebuff(debuff: DebuffConfig)
 }
 

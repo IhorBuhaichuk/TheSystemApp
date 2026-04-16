@@ -62,7 +62,8 @@ data class DebuffConfig(
     val condition: String,
     val text: String,
     val penaltyPercent: Int,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val cycleDay: Int? = null
 ) {
     val penaltyPercentage: Double get() = penaltyPercent.toDouble()
 }

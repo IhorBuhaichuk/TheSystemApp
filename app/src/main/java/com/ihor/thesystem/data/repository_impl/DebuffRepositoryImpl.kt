@@ -18,12 +18,15 @@ class DebuffRepositoryImpl @Inject constructor(
     override fun getActiveDebuffs(): Flow<List<DebuffConfig>> =
         dao.getActiveDebuffs().map { list -> list.map { it.toDomain() } }
 
+    override fun getDebuffsForCycleDay(day: Int): Flow<List<DebuffConfig>> =
+        dao.getDebuffsForCycleDay(day).map { list -> list.map { it.toDomain() } }
+
     override suspend fun updateDebuff(debuff: DebuffConfig) =
         dao.update(debuff.toEntity())
 }
 
 private fun DebuffConfigEntity.toDomain() =
-    DebuffConfig(id, condition, text, penaltyPercent, isActive)
+    DebuffConfig(id, condition, text, penaltyPercent, isActive, cycleDay)
 
 private fun DebuffConfig.toEntity() =
-    DebuffConfigEntity(id, condition, text, penaltyPercent, isActive)
+    DebuffConfigEntity(id, condition, text, penaltyPercent, isActive, cycleDay)
