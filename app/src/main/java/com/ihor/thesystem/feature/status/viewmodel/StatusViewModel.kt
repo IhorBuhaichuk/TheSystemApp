@@ -38,12 +38,11 @@ class StatusViewModel @Inject constructor(
 
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
 
-    // Додаємо невелику затримку або фільтрацію, щоб дати базі прокинутись
     val uiState: StateFlow<UiState<StatusUiData>> = useCases.getStatusData()
         .map<StatusUiData, UiState<StatusUiData>> { UiState.Content(it) }
         .catch { 
             it.printStackTrace()
-            emit(UiState.Error(UiText.DynamicString("Завантаження системи...")))
+            emit(UiState.Error(UiText.StringResource(R.string.system_loading)))
         }
         .stateIn(
             scope        = viewModelScope,
@@ -68,15 +67,12 @@ class StatusViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            // Чекаємо сигналізу про готовність БД замість delay(500)
             val isReady = withTimeoutOrNull(10_000L) {
                 databaseReadinessRepo.isDbReady
                     .filter { it }
                     .first()
             }
             if (isReady == null) {
-                // If not ready within timeout, we might still be loading or failed.
-                // The UI will handle the Failed state via databaseStatus.
                 return@launch
             }
 
@@ -170,6 +166,10 @@ class StatusViewModel @Inject constructor(
 
     fun onAddTask(questId: Int, taskName: String) = launchCatching {
         useCases.addTaskToQuest(questId, taskName)
+    }
+
+    fun onReorderTask(taskId: Int, from: Int, to: Int) = launchCatching {
+        // useCases.reorderQuestTask(taskId, from, to)
     }
 
     fun onRemoveTask(taskId: Int) = launchCatching {
