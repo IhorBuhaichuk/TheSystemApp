@@ -7,19 +7,14 @@ import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-import kotlin.math.roundToInt
 import java.time.LocalDate
 import java.time.ZoneId
 
 class ProgressionMatrixRepositoryImpl @Inject constructor(
     private val matrixDao:    ProgressionMatrixDao,
-    private val workoutDao:   WorkoutDao,
-    private val analyticsDao: WorkoutAnalyticsDao,
-    private val playerDao:    PlayerDao,
-    private val weightLogDao: WeightLogDao
+    private val analyticsDao: WorkoutAnalyticsDao
 ) : ProgressionMatrixRepository {
 
     override fun getAllEntries(): Flow<List<ProgressionMatrixEntry>> =
@@ -156,7 +151,6 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
             isPromotionPending = false,
             currentRank = nextRank
         ))
-        recalculateGlobalRank()
     }
 
     override suspend fun updateRank(exerciseId: Int, newRank: Rank) {
@@ -169,18 +163,6 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     override suspend fun setPromotionPending(exerciseId: Int, pending: Boolean) {
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
         matrixDao.update(existing.copy(isPromotionPending = pending))
-    }
-
-    override suspend fun recalculateGlobalRank() {
-        val entries = matrixDao.getAllEntriesWithNames().first()
-        if (entries.isEmpty()) return
-        
-        val totalWeight = entries.sumOf { it.entity.currentRank.weight }
-        val avgWeight = (totalWeight.toDouble() / entries.size).roundToInt().coerceIn(1, 6)
-        val globalRank = Rank.fromValue(avgWeight)
-        
-        val player = playerDao.getPlayerSync() ?: return
-        playerDao.update(player.copy(globalRank = globalRank))
     }
 
     override suspend fun updateTarget(exerciseId: Int, weight: Double, sets: Int, reps: String, aiFeedback: String?) {

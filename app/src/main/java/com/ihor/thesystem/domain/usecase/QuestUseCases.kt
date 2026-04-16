@@ -7,7 +7,8 @@ import javax.inject.Inject
 
 class ToggleQuestTaskUseCase @Inject constructor(
     private val repo: QuestRepository,
-    private val matrixRepo: ProgressionMatrixRepository
+    private val matrixRepo: ProgressionMatrixRepository,
+    private val recalculateGlobalRank: RecalculateGlobalRankUseCase
 ) {
     suspend operator fun invoke(taskId: Int, questId: Int, currentCompletedState: Boolean) {
         repo.toggleTaskCompletion(
@@ -26,7 +27,7 @@ class ToggleQuestTaskUseCase @Inject constructor(
                 // 2. Підвищуємо ранг вправи
                 matrixRepo.promoteRank(exerciseId)
                 // 3. Перераховуємо глобальний ранг гравця
-                matrixRepo.recalculateGlobalRank()
+                recalculateGlobalRank()
             }
         }
     }

@@ -13,6 +13,7 @@ import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
+import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
 import com.ihor.thesystem.domain.usecase.SaveExerciseSetsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
@@ -34,7 +35,8 @@ class StatisticsViewModel @Inject constructor(
     private val scheduleRepo: ScheduleRepository,
     private val weightLogDao: WeightLogDao,
     private val calculateCycleDay: CalculateCycleDayForDateUseCase,
-    private val saveExerciseSetsUseCase: SaveExerciseSetsUseCase
+    private val saveExerciseSetsUseCase: SaveExerciseSetsUseCase,
+    private val recalculateGlobalRankUseCase: RecalculateGlobalRankUseCase
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -134,7 +136,7 @@ class StatisticsViewModel @Inject constructor(
     private fun recalculateGlobalRank() {
         viewModelScope.launch {
             try {
-                matrixRepo.recalculateGlobalRank()
+                recalculateGlobalRankUseCase()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()

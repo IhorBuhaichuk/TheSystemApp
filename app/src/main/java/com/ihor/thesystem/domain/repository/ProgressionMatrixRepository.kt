@@ -18,7 +18,6 @@ interface ProgressionMatrixRepository {
     fun getAllReferences(): Flow<List<ReferenceMatrixEntity>>
     
     suspend fun completeCycle(exerciseId: Int)
-    suspend fun recalculateGlobalRank()
     suspend fun setPromotionPending(exerciseId: Int, pending: Boolean)
     suspend fun promoteRank(exerciseId: Int)
     suspend fun updateRank(exerciseId: Int, newRank: Rank)
