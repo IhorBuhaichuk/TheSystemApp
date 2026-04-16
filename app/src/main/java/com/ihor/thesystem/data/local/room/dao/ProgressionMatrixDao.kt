@@ -3,6 +3,7 @@ package com.ihor.thesystem.data.local.room.dao
 import androidx.room.*
 import com.ihor.thesystem.data.local.room.entity.ProgressionMatrixEntity
 import com.ihor.thesystem.data.local.room.entity.ReferenceMatrixEntity
+import com.ihor.thesystem.domain.model.ExerciseCategory
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -36,6 +37,9 @@ interface ProgressionMatrixDao {
         WHERE pm.exerciseId = :exerciseId LIMIT 1
     """)
     suspend fun getEntryWithExerciseName(exerciseId: Int): ProgressionMatrixWithExercise?
+
+    @Query("SELECT id FROM exercises WHERE category = :category")
+    suspend fun getExerciseIdsByCategory(category: ExerciseCategory): List<Int>
 
     // --- Reference Matrix Operations ---
     @Insert(onConflict = OnConflictStrategy.REPLACE)

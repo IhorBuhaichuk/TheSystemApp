@@ -5,6 +5,7 @@ import com.ihor.thesystem.data.local.room.dao.QuestLogDao
 import com.ihor.thesystem.data.local.room.entity.QuestType
 import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.Rank
+import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import kotlinx.coroutines.flow.first
@@ -21,16 +22,26 @@ class CalculateAttributesUseCase @Inject constructor(
             ?: return Result.Success(Triple(0, 0, 0))
 
         // ─── STR (Сила, 0-100) ───
-        val strengthExerciseIds = listOf(6, 8, 12, 13)
+        val strengthExerciseIds = matrixRepo.getExerciseIdsByCategory(ExerciseCategory.STRENGTH)
         val matrixEntries = matrixRepo.getAllEntries().first()
         
         var totalRankWeight = 0
-        strengthExerciseIds.forEach { id ->
-            val entry = matrixEntries.find { it.exerciseId == id }
-            totalRankWeight += entry?.currentRank?.weight ?: Rank.E.weight
+        if (strengthExerciseIds.isNotEmpty()) {
+            strengthExerciseIds.forEach { id ->
+                val entry = matrixEntries.find { it.exerciseId == id }
+                totalRankWeight += entry?.currentRank?.weight ?: Rank.E.weight
+            }
+            // 24.0 (4 вправи * макс. ранг 6) замінюємо на динамічний розрахунок
+            val maxPossibleWeight = strengthExerciseIds.size * 6.0
+            val calculatedStr = (totalRankWeight / maxPossibleWeight * 100).toInt().coerceIn(0, 100)
+            
+            return processRemainingAttributes(player, calculatedStr)
+        } else {
+            return processRemainingAttributes(player, 0)
         }
-        val calculatedStr = (totalRankWeight / 24.0 * 100).toInt().coerceIn(0, 100)
+    }
 
+    private suspend fun processRemainingAttributes(player: com.ihor.thesystem.domain.model.Player, calculatedStr: Int): Result<Triple<Int, Int, Int>, DomainError> {
         // ─── END (Витривалість, 0-100) ───
         val recentLogs = questLogDao.getLastNLogs(20)
         val mainLogs = recentLogs.filter { it.questType == QuestType.MAIN }

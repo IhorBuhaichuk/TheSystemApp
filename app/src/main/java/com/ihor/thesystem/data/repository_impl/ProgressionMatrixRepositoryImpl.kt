@@ -3,6 +3,7 @@ package com.ihor.thesystem.data.repository_impl
 import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.domain.model.Rank
+import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
@@ -51,7 +52,6 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
         if (validSets.isEmpty()) return
 
-        // Визначаємо межі дня
         val zoneId = ZoneId.systemDefault()
         val today = LocalDate.now(zoneId)
         val startOfDay = today.atStartOfDay(zoneId).toInstant().toEpochMilli()
@@ -61,7 +61,6 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
             (it.weight.toDoubleOrNull() ?: 0.0) * (it.reps.toIntOrNull() ?: 0)
         }
 
-        // Перевіряємо, чи вже був запис цієї вправи сьогодні
         val existingSetLog = analyticsDao.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)
 
         if (existingSetLog != null) {
@@ -112,7 +111,6 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
             analyticsDao.saveFullSessionLog(sessionLog, entities)
         }
         
-        // Оновлюємо поточну вагу в матриці
         val maxWeight = validSets.mapNotNull { it.weight.toFloatOrNull() }.maxOrNull()
         if (maxWeight != null) {
             updateCurrentWeight(exerciseId, maxWeight)
@@ -163,6 +161,10 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     override suspend fun setPromotionPending(exerciseId: Int, pending: Boolean) {
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
         matrixDao.update(existing.copy(isPromotionPending = pending))
+    }
+
+    override suspend fun getExerciseIdsByCategory(category: ExerciseCategory): List<Int> {
+        return matrixDao.getExerciseIdsByCategory(category)
     }
 
     override suspend fun updateTarget(exerciseId: Int, weight: Double, sets: Int, reps: String, aiFeedback: String?) {
