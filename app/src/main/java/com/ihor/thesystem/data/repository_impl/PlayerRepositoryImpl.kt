@@ -33,26 +33,13 @@ class PlayerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateHeight(height: Float): Result<Unit, DataError.Local> = runDbCatching {
-        val player = playerDao.getPlayerSync() ?: return@runDbCatching Result.Error(DataError.Local.NOT_FOUND)
+        val player = playerDao.getPlayerSync() ?: throw NoSuchElementException()
         playerDao.insertOrUpdate(player.copy(height = height))
-        Result.Success(Unit)
-    }.let { result ->
-        // Since runDbCatching returns Result<Result<...>>, we flatten it
-        when (result) {
-            is Result.Success -> result.data
-            is Result.Error -> result
-        }
     }
 
     override suspend fun updateCurrentCycleDay(day: Int): Result<Unit, DataError.Local> = runDbCatching {
-        val player = playerDao.getPlayerSync() ?: return@runDbCatching Result.Error(DataError.Local.NOT_FOUND)
+        val player = playerDao.getPlayerSync() ?: throw NoSuchElementException()
         playerDao.insertOrUpdate(player.copy(currentCycleDay = day))
-        Result.Success(Unit)
-    }.let { result ->
-        when (result) {
-            is Result.Success -> result.data
-            is Result.Error -> result
-        }
     }
 
     override suspend fun getWeightAtOrBefore(timestamp: Long): Result<Float?, DataError.Local> = runDbCatching {
@@ -62,6 +49,8 @@ class PlayerRepositoryImpl @Inject constructor(
     private suspend inline fun <T> runDbCatching(crossinline block: suspend () -> T): Result<T, DataError.Local> {
         return try {
             Result.Success(block())
+        } catch (e: NoSuchElementException) {
+            Result.Error(DataError.Local.NOT_FOUND)
         } catch (e: SQLiteException) {
             Result.Error(DataError.Local.SQLITE_EXCEPTION)
         } catch (e: Exception) {
