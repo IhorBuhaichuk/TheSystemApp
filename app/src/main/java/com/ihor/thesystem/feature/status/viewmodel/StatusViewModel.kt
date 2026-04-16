@@ -29,27 +29,14 @@ sealed class StatusDialogState {
 
 @HiltViewModel
 class StatusViewModel @Inject constructor(
-    private val getStatusData:         GetStatusScreenDataUseCase,
-    private val updatePlayerName:      UpdatePlayerNameUseCase,
-    private val logWeight:             LogWeightUseCase,
-    private val updateHeight:          UpdatePlayerHeightUseCase,
-    private val toggleQuestTask:       ToggleQuestTaskUseCase,
-    private val updateDebuff:          UpdateDebuffUseCase,
-    private val generateDailyQuests:   GenerateDailyQuestsUseCase,
-    private val getSystemConfig:       GetSystemConfigUseCase,
-    private val updateSystemConfig:    UpdateSystemConfigUseCase,
-    private val getPlayerFlow:         GetPlayerFlowUseCase,
-    private val addTaskToQuest:        AddTaskToQuestUseCase,
-    private val removeQuestTask:       RemoveQuestTaskUseCase,
-    private val getAllDebuffs:         GetAllDebuffsUseCase,
-    private val databaseReadinessRepo: DatabaseReadinessRepository,
-    private val calculateAttributes:   CalculateAttributesUseCase
+    private val useCases:              StatusUseCases,
+    private val databaseReadinessRepo: DatabaseReadinessRepository
 ) : ViewModel() {
 
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
 
     // Додаємо невелику затримку або фільтрацію, щоб дати базі прокинутись
-    val uiState: StateFlow<UiState<StatusUiData>> = getStatusData()
+    val uiState: StateFlow<UiState<StatusUiData>> = useCases.getStatusData()
         .map<StatusUiData, UiState<StatusUiData>> { UiState.Content(it) }
         .catch { 
             it.printStackTrace()
@@ -64,10 +51,10 @@ class StatusViewModel @Inject constructor(
     private val _dialogState = MutableStateFlow<StatusDialogState>(StatusDialogState.None)
     val dialogState: StateFlow<StatusDialogState> = _dialogState.asStateFlow()
 
-    val allDebuffs: StateFlow<List<DebuffConfig>> = getAllDebuffs()
+    val allDebuffs: StateFlow<List<DebuffConfig>> = useCases.getAllDebuffs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val systemConfig: StateFlow<SystemConfig?> = getSystemConfig()
+    val systemConfig: StateFlow<SystemConfig?> = useCases.getSystemConfig()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val _events = MutableSharedFlow<StatusOneOffEvent>()
@@ -90,12 +77,12 @@ class StatusViewModel @Inject constructor(
                 return@launch
             }
 
-            generateDailyQuests()
-            calculateAttributes()
+            useCases.generateDailyQuests()
+            useCases.calculateAttributes()
         }
 
         viewModelScope.launch {
-            getPlayerFlow()
+            useCases.getPlayerFlow()
                 .filterNotNull()
                 .scan(Pair<Player?, Player?>(null, null)) { (_, prev), current ->
                     Pair(prev, current)
@@ -142,8 +129,8 @@ class StatusViewModel @Inject constructor(
     fun onDismissDialog()   { _dialogState.value = StatusDialogState.None }
 
     fun onNameConfirmed(newName: String) = launchCatching {
-        val player = getPlayerFlow().firstOrNull() ?: return@launchCatching
-        updatePlayerName(player, newName).onSuccess {
+        val player = useCases.getPlayerFlow().firstOrNull() ?: return@launchCatching
+        useCases.updatePlayerName(player, newName).onSuccess {
             onDismissDialog()
         }.onFailure { e ->
             _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка"))
@@ -151,7 +138,7 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onWeightConfirmed(weight: Float) = launchCatching {
-        logWeight(weight).onSuccess {
+        useCases.logWeight(weight).onSuccess {
             onDismissDialog()
         }.onFailure { e ->
             _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка"))
@@ -159,7 +146,7 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onHeightConfirmed(height: Float) = launchCatching {
-        updateHeight(height).onSuccess {
+        useCases.updateHeight(height).onSuccess {
             onDismissDialog()
         }.onFailure { e ->
             _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка"))
@@ -167,25 +154,25 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onTaskToggled(task: TaskUiModel, questId: Int) = launchCatching {
-        toggleQuestTask(task.id, questId, task.isCompleted)
+        useCases.toggleQuestTask(task.id, questId, task.isCompleted)
     }
 
     fun onAddTask(questId: Int, taskName: String) = launchCatching {
-        addTaskToQuest(questId, taskName)
+        useCases.addTaskToQuest(questId, taskName)
     }
 
     fun onRemoveTask(taskId: Int) = launchCatching {
-        removeQuestTask(taskId)
+        useCases.removeQuestTask(taskId)
     }
 
     fun onDebuffToggled(debuff: DebuffConfig) = launchCatching {
-        updateDebuff(debuff.copy(isActive = !debuff.isActive))
+        useCases.updateDebuff(debuff.copy(isActive = !debuff.isActive))
     }
 
     fun onSystemConfigConfirmed(config: SystemConfig) = launchCatching {
-        updateSystemConfig(config)
+        useCases.updateSystemConfig(config)
         onDismissDialog()
     }
 
-    suspend fun getCurrentPlayer(): Player? = getPlayerFlow().firstOrNull()
+    suspend fun getCurrentPlayer(): Player? = useCases.getPlayerFlow().firstOrNull()
 }
