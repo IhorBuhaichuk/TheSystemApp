@@ -1,7 +1,9 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.data.local.room.dao.QuestLogDao
 import com.ihor.thesystem.data.local.room.entity.QuestType
+import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
@@ -14,8 +16,9 @@ class CalculateAttributesUseCase @Inject constructor(
     private val questLogDao: QuestLogDao,
     private val playerRepo: PlayerRepository
 ) {
-    suspend operator fun invoke(): Triple<Int, Int, Int> {
-        val player = playerRepo.getPlayer().firstOrNull() ?: return Triple(0, 0, 0)
+    suspend operator fun invoke(): Result<Triple<Int, Int, Int>, DomainError> {
+        val player = playerRepo.getPlayer().firstOrNull() 
+            ?: return Result.Success(Triple(0, 0, 0))
 
         // ─── STR (Сила, 0-100) ───
         val strengthExerciseIds = listOf(6, 8, 12, 13)
@@ -48,17 +51,21 @@ class CalculateAttributesUseCase @Inject constructor(
         }
         val calculatedDis = if (player.isPenaltyActive) minOf(disBase, 40) else disBase
 
+        val resultValues = Triple(calculatedStr, calculatedEnd, calculatedDis)
+
         // ─── Збереження ───
         if (player.strAttribute == calculatedStr && player.endAttribute == calculatedEnd 
-            && player.disAttribute == calculatedDis) return Triple(calculatedStr, calculatedEnd, calculatedDis)
+            && player.disAttribute == calculatedDis) return Result.Success(resultValues)
 
         val updatedPlayer = player.copy(
             strAttribute = calculatedStr,
             endAttribute = calculatedEnd,
             disAttribute = calculatedDis
         )
-        playerRepo.updatePlayer(updatedPlayer)
-
-        return Triple(calculatedStr, calculatedEnd, calculatedDis)
+        
+        return when (val updateResult = playerRepo.updatePlayer(updatedPlayer)) {
+            is Result.Error -> Result.Error(updateResult.error)
+            is Result.Success -> Result.Success(resultValues)
+        }
     }
 }

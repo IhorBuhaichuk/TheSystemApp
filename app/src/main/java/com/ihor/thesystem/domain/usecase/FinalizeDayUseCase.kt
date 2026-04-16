@@ -1,5 +1,7 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.DomainQuestType
 import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.model.SystemConfig
@@ -19,8 +21,8 @@ class FinalizeDayUseCase @Inject constructor(
     /**
      * Повертає Event, який View model має показати (LevelUp або Penalty)
      */
-    suspend operator fun invoke(): DayFinalizationResult {
-        val player = playerRepo.getPlayer().firstOrNull() ?: return DayFinalizationResult.None
+    suspend operator fun invoke(): Result<DayFinalizationResult, DomainError> {
+        val player = playerRepo.getPlayer().firstOrNull() ?: return Result.Success(DayFinalizationResult.None)
         val config = configRepo.getConfigFlow().firstOrNull() ?: SystemConfig(
             defaultPenalty = 20,
             targetSets = 3,
@@ -104,20 +106,24 @@ class FinalizeDayUseCase @Inject constructor(
         }
 
         // 5. РОБИМО ЄДИНИЙ ЗАПИС У БАЗУ ДАНИХ (Абсолютна стабільність)
-        playerRepo.updatePlayer(updatedPlayer)
+        val updateResult = playerRepo.updatePlayer(updatedPlayer)
+        if (updateResult is Result.Error) return Result.Error(updateResult.error)
 
         // 6. Архівуємо старі квести та генеруємо нові (Генератор візьме новий день з БД)
         questRepo.archiveActiveQuests()
         generateDailyQuestsUseCase.invoke()
 
         // 7. Перераховуємо атрибути
-        calculateAttributes()
+        val attrResult = calculateAttributes()
+        if (attrResult is Result.Error) return Result.Error(attrResult.error)
 
-        return when {
+        val finalResult = when {
             levelUpTriggered -> DayFinalizationResult.LevelUp
             penaltyActivated -> DayFinalizationResult.PenaltyZoneEntered
             else -> DayFinalizationResult.Success
         }
+        
+        return Result.Success(finalResult)
     }
 }
 

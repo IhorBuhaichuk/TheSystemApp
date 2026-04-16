@@ -35,7 +35,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class
     ],
-    version = 21,
+    version = 22,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -251,6 +251,34 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_20_21 = object : Migration(20, 21) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE quest ADD COLUMN targetExerciseId INTEGER")
+                db.execSQL("ALTER TABLE debuff_config ADD COLUMN cycleDay INTEGER")
+            }
+        }
+
+        val MIGRATION_21_22 = object : Migration(21, 22) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Ця міграція виправляє можливу невідповідність хешу ідентичності,
+                // переконуючись, що всі поля існують.
+                
+                val questCursor = db.query("PRAGMA table_info(quest)")
+                val questColumns = mutableSetOf<String>()
+                while (questCursor.moveToNext()) {
+                    questColumns.add(questCursor.getString(questCursor.getColumnIndexOrThrow("name")))
+                }
+                questCursor.close()
+                if (!questColumns.contains("targetExerciseId")) {
+                    db.execSQL("ALTER TABLE quest ADD COLUMN targetExerciseId INTEGER")
+                }
+
+                val debuffCursor = db.query("PRAGMA table_info(debuff_config)")
+                val debuffColumns = mutableSetOf<String>()
+                while (debuffCursor.moveToNext()) {
+                    debuffColumns.add(debuffCursor.getString(debuffCursor.getColumnIndexOrThrow("name")))
+                }
+                debuffCursor.close()
+                if (!debuffColumns.contains("cycleDay")) {
+                    db.execSQL("ALTER TABLE debuff_config ADD COLUMN cycleDay INTEGER")
+                }
             }
         }
     }

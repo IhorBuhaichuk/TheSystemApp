@@ -1,6 +1,8 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.data.local.room.entity.QuestType
+import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.DomainQuestStatus
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
@@ -16,7 +18,7 @@ class AdvanceCycleDayUseCase @Inject constructor(
     private val playerRepo:       PlayerRepository,
     private val questRepo:        QuestRepository
 ) {
-    suspend operator fun invoke(forceComplete: Boolean = false) {
+    suspend operator fun invoke(forceComplete: Boolean = false): Result<Unit, DomainError> {
         val daily = questRepo.getActiveDailyQuest().firstOrNull()
         val main  = questRepo.getActiveMainQuest().firstOrNull()
 
@@ -49,6 +51,8 @@ class AdvanceCycleDayUseCase @Inject constructor(
                 wasSuccessful = isSuccess
             )
         }
+        
+        return Result.Success(Unit)
     }
 }
 
