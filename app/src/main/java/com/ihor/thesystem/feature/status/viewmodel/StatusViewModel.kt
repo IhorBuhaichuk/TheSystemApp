@@ -135,6 +135,10 @@ class StatusViewModel @Inject constructor(
 
     fun onNameConfirmed(newName: String) {
         viewModelScope.launch {
+            if (newName.isBlank() || newName.length > 50) {
+                _uiEvents.emit(UiEvent.ShowError("Некоректне значення: ім'я має бути від 1 до 50 символів"))
+                return@launch
+            }
             try {
                 val player = playerRepo.getPlayer().firstOrNull() ?: return@launch
                 updatePlayerName(player, newName)
@@ -149,6 +153,10 @@ class StatusViewModel @Inject constructor(
 
     fun onWeightConfirmed(weight: Float) {
         viewModelScope.launch {
+            if (weight < 20f || weight > 500f) {
+                _uiEvents.emit(UiEvent.ShowError("Некоректне значення: допустима вага від 20 до 500 кг"))
+                return@launch
+            }
             try {
                 logWeight(weight)
                 onDismissDialog()
@@ -162,6 +170,10 @@ class StatusViewModel @Inject constructor(
 
     fun onHeightConfirmed(height: Float) {
         viewModelScope.launch {
+            if (height < 50f || height > 300f) {
+                _uiEvents.emit(UiEvent.ShowError("Некоректне значення: допустимий зріст від 50 до 300 см"))
+                return@launch
+            }
             try {
                 updateHeight(height)
                 onDismissDialog()

@@ -2,14 +2,17 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.DomainQuestType
 import com.ihor.thesystem.domain.model.PlayerRank
+import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
+import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 
 class FinalizeDayUseCase @Inject constructor(
     private val playerRepo: PlayerRepository,
     private val questRepo: QuestRepository,
+    private val configRepo: SystemConfigRepository,
     private val generateDailyQuestsUseCase: GenerateDailyQuestsUseCase,
     private val calculateAttributes: CalculateAttributesUseCase
 ) {
@@ -18,6 +21,12 @@ class FinalizeDayUseCase @Inject constructor(
      */
     suspend operator fun invoke(): DayFinalizationResult {
         val player = playerRepo.getPlayer().firstOrNull() ?: return DayFinalizationResult.None
+        val config = configRepo.getConfigFlow().firstOrNull() ?: SystemConfig(
+            defaultPenalty = 20,
+            targetSets = 3,
+            targetReps = 12,
+            matrixWeeks = 48
+        )
         val todayQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
 
         val mainQuests = todayQuests.filter { it.type == DomainQuestType.MAIN }
@@ -62,11 +71,11 @@ class FinalizeDayUseCase @Inject constructor(
         var newWeek = updatedPlayer.currentWeek
         var newMonth = updatedPlayer.currentMonth
 
-        if (newCycleDay > 4) {
+        if (newCycleDay > config.cycleDaysPerMicrocycle) {
             newCycleDay = 1 // Скидаємо мікроцикл
             newWeek += 1    // Переходимо на наступний тиждень
             
-            if (newWeek > 4) {
+            if (newWeek > config.microCyclesPerMonth) {
                 newWeek = 1 // Скидаємо тиждень
                 newMonth += 1 // Переходимо на новий місяць
                 levelUpTriggered = true

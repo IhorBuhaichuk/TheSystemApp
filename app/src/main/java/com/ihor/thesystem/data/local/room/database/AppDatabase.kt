@@ -35,7 +35,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class
     ],
-    version = 19,
+    version = 20,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -238,6 +238,13 @@ abstract class AppDatabase : RoomDatabase() {
                 if (!columns.contains("maxStreak")) db.execSQL("ALTER TABLE player ADD COLUMN maxStreak INTEGER NOT NULL DEFAULT 0")
                 if (!columns.contains("xpTotal")) db.execSQL("ALTER TABLE player ADD COLUMN xpTotal INTEGER NOT NULL DEFAULT 0")
                 if (!columns.contains("xpThisWeek")) db.execSQL("ALTER TABLE player ADD COLUMN xpThisWeek INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_19_20 = object : Migration(19, 20) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE system_config ADD COLUMN cycleDaysPerMicrocycle INTEGER NOT NULL DEFAULT 4")
+                db.execSQL("ALTER TABLE system_config ADD COLUMN microCyclesPerMonth INTEGER NOT NULL DEFAULT 4")
             }
         }
     }

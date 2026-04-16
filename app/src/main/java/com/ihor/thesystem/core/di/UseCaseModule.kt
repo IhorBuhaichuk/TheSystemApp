@@ -95,9 +95,10 @@ object UseCaseModule {
     fun provideFinalizeDayUseCase(
         playerRepo: PlayerRepository,
         questRepo: QuestRepository,
+        configRepo: SystemConfigRepository,
         generateDailyQuestsUseCase: GenerateDailyQuestsUseCase,
         calculateAttributes: CalculateAttributesUseCase
-    ) = FinalizeDayUseCase(playerRepo, questRepo, generateDailyQuestsUseCase, calculateAttributes)
+    ) = FinalizeDayUseCase(playerRepo, questRepo, configRepo, generateDailyQuestsUseCase, calculateAttributes)
 
     @Provides @Singleton
     fun provideGetLastWorkoutContextUseCase(

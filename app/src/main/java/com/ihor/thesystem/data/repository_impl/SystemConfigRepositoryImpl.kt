@@ -20,7 +20,27 @@ class SystemConfigRepositoryImpl @Inject constructor(
 }
 
 private fun SystemConfigEntity.toDomain() =
-    SystemConfig(id, defaultPenalty, targetSets, targetReps, matrixWeeks, cycleAnchorDateTimestamp, cycleAnchorDay)
+    SystemConfig(
+        id = id,
+        defaultPenalty = defaultPenalty,
+        targetSets = targetSets,
+        targetReps = targetReps,
+        matrixWeeks = matrixWeeks,
+        cycleAnchorDateTimestamp = cycleAnchorDateTimestamp,
+        cycleAnchorDay = cycleAnchorDay,
+        cycleDaysPerMicrocycle = cycleDaysPerMicrocycle,
+        microCyclesPerMonth = microCyclesPerMonth
+    )
 
 private fun SystemConfig.toEntity() =
-    SystemConfigEntity(id, defaultPenalty, targetSets, targetReps, matrixWeeks, cycleAnchorDateTimestamp, cycleAnchorDay)
+    SystemConfigEntity(
+        id = id,
+        defaultPenalty = defaultPenalty,
+        targetSets = targetSets,
+        targetReps = targetReps,
+        matrixWeeks = matrixWeeks,
+        cycleAnchorDateTimestamp = cycleAnchorDateTimestamp,
+        cycleAnchorDay = cycleAnchorDay,
+        cycleDaysPerMicrocycle = cycleDaysPerMicrocycle,
+        microCyclesPerMonth = microCyclesPerMonth
+    )
