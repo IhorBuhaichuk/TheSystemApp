@@ -142,31 +142,28 @@ class StatusViewModel @Inject constructor(
     fun onDismissDialog()   { _dialogState.value = StatusDialogState.None }
 
     fun onNameConfirmed(newName: String) = launchCatching {
-        if (newName.isBlank() || newName.length > 50) {
-            _uiEvents.emit(UiEvent.ShowError("Некоректне значення: ім'я має бути від 1 до 50 символів"))
-            return@launchCatching
-        }
         val player = getPlayerFlow().firstOrNull() ?: return@launchCatching
-        updatePlayerName(player, newName)
-        onDismissDialog()
+        updatePlayerName(player, newName).onSuccess {
+            onDismissDialog()
+        }.onFailure { e ->
+            _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка"))
+        }
     }
 
     fun onWeightConfirmed(weight: Float) = launchCatching {
-        if (weight < 20f || weight > 500f) {
-            _uiEvents.emit(UiEvent.ShowError("Некоректне значення: допустима вага від 20 до 500 кг"))
-            return@launchCatching
+        logWeight(weight).onSuccess {
+            onDismissDialog()
+        }.onFailure { e ->
+            _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка"))
         }
-        logWeight(weight)
-        onDismissDialog()
     }
 
     fun onHeightConfirmed(height: Float) = launchCatching {
-        if (height < 50f || height > 300f) {
-            _uiEvents.emit(UiEvent.ShowError("Некоректне значення: допустимий зріст від 50 до 300 см"))
-            return@launchCatching
+        updateHeight(height).onSuccess {
+            onDismissDialog()
+        }.onFailure { e ->
+            _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка"))
         }
-        updateHeight(height)
-        onDismissDialog()
     }
 
     fun onTaskToggled(task: TaskUiModel, questId: Int) = launchCatching {
