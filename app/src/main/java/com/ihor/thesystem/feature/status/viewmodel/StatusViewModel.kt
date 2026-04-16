@@ -8,6 +8,7 @@ import com.ihor.thesystem.domain.model.DebuffConfig
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.DatabaseReadinessRepository
+import com.ihor.thesystem.domain.repository.DatabaseStatus
 import com.ihor.thesystem.domain.repository.DebuffRepository
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
@@ -49,6 +50,8 @@ class StatusViewModel @Inject constructor(
     private val calculateAttributes:   CalculateAttributesUseCase
 ) : ViewModel() {
 
+    val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
+
     // Додаємо невелику затримку або фільтрацію, щоб дати базі прокинутись
     val uiState: StateFlow<UiState<StatusUiData>> = getStatusData()
         .map<StatusUiData, UiState<StatusUiData>> { UiState.Content(it) }
@@ -86,7 +89,8 @@ class StatusViewModel @Inject constructor(
                     .first()
             }
             if (isReady == null) {
-                _uiEvents.emit(UiEvent.ShowError("Помилка ініціалізації бази даних. Перезапустіть додаток."))
+                // If not ready within timeout, we might still be loading or failed.
+                // The UI will handle the Failed state via databaseStatus.
                 return@launch
             }
 

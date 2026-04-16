@@ -5,20 +5,25 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.ui.components.GlitchText
+import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.domain.model.DomainQuestType
+import com.ihor.thesystem.domain.repository.DatabaseStatus
 
 // --- Імпорти з пакета statistics ---
 import com.ihor.thesystem.feature.statistics.ui.components.EmptyQuestCard
@@ -36,6 +41,7 @@ import com.ihor.thesystem.feature.status.ui.components.dialogs.LevelUpDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.PenaltyActivatedDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.PenaltyDeactivatedDialog
 import com.ihor.thesystem.feature.status.viewmodel.*
+import kotlin.system.exitProcess
 
 @Composable
 fun StatusScreen(
@@ -46,6 +52,13 @@ fun StatusScreen(
     val uiState      by viewModel.uiState.collectAsState()
     val dialogState  by viewModel.dialogState.collectAsState()
     val allDebuffs   by viewModel.allDebuffs.collectAsState()
+    val dbStatus     by viewModel.databaseStatus.collectAsState()
+
+    // Handle Database Failure
+    if (dbStatus is DatabaseStatus.Failed) {
+        DatabaseErrorScreen(reason = (dbStatus as DatabaseStatus.Failed).reason)
+        return
+    }
 
     // ── One-off events ────────────────────────────────────────────────
     var levelUpEvent   by remember { mutableStateOf<StatusOneOffEvent.ShowLevelUp?>(null) }
@@ -257,5 +270,52 @@ fun StatusScreen(
     }
     if (showPenaltyOff) {
         PenaltyDeactivatedDialog(onDismiss = { showPenaltyOff = false })
+    }
+}
+
+@Composable
+fun DatabaseErrorScreen(reason: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundDeep)
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            GlitchText(
+                text = "КРИТИЧНА ПОМИЛКА СИСТЕМИ",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    color = NeonRed,
+                    fontFamily = TekoFamily
+                )
+            )
+            
+            Text(
+                text = "Ініціалізація бази даних не вдалася:\n$reason",
+                color = TextPrimary,
+                fontFamily = RajdhaniFamily,
+                textAlign = TextAlign.Center
+            )
+
+            Button(
+                onClick = { exitProcess(0) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .sciPanel(borderColor = NeonRed.copy(0.3f), backgroundColor = Color.Transparent, cornerCut = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+            ) {
+                Text(
+                    text = "[ ПЕРЕЗАПУСТИТИ ]",
+                    fontFamily = RajdhaniFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = NeonRed
+                )
+            }
+        }
     }
 }

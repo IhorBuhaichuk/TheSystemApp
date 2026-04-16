@@ -17,7 +17,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
-import com.ihor.thesystem.data.local.room.entity.ChatMessageEntity
+import com.ihor.thesystem.domain.model.ChatMessage
+import com.ihor.thesystem.domain.model.ChatRole
 import kotlinx.coroutines.launch
 
 /**
@@ -26,25 +27,20 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun LiveChatView(
-    history: List<ChatMessageEntity>,
+    history: List<ChatMessage>,
     sessionId: Long,
     onSendMessage: (Long, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Завдання 1: Збереження стану тексту при рекомпозиції чи повороті екрану
     var messageText by rememberSaveable { mutableStateOf("") }
-    
-    // Завдання 2: Стан списку для керування скролом
     val listState = rememberLazyListState()
 
-    // Завдання 2: Автоматичний плавний скрол до останнього повідомлення при зміні історії
     LaunchedEffect(history.size) {
         if (history.isNotEmpty()) {
             listState.animateScrollToItem(history.size - 1)
         }
     }
 
-    // Завдання 1: imePadding() гарантує, що поле вводу підніметься над клавіатурою
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -123,8 +119,8 @@ fun LiveChatView(
 }
 
 @Composable
-private fun ChatBubble(msg: ChatMessageEntity) {
-    val isUser = msg.role == "user"
+private fun ChatBubble(msg: ChatMessage) {
+    val isUser = msg.role == ChatRole.USER
     val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
     
     // Кольорова схема у стилі Sci-Fi
@@ -150,7 +146,7 @@ private fun ChatBubble(msg: ChatMessageEntity) {
                 .widthIn(max = 300.dp)
         ) {
             Text(
-                text = msg.message,
+                text = msg.text,
                 color = TextPrimary,
                 modifier = Modifier.padding(12.dp),
                 fontFamily = RajdhaniFamily,

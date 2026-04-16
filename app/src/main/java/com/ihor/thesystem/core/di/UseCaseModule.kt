@@ -1,6 +1,5 @@
 package com.ihor.thesystem.core.di
 
-import com.ihor.thesystem.data.local.room.dao.ChatDao
 import com.ihor.thesystem.data.local.room.dao.QuestLogDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.domain.repository.*
@@ -121,10 +120,10 @@ object UseCaseModule {
 
     @Provides @Singleton
     fun provideSendChatMessageUseCase(
-        chatDao: ChatDao,
+        chatRepository: ChatRepository,
         liveCoachRepository: LiveCoachRepository,
         aiArchitectRepository: AiArchitectRepository
-    ) = SendChatMessageUseCase(chatDao, liveCoachRepository, aiArchitectRepository)
+    ) = SendChatMessageUseCase(chatRepository, liveCoachRepository, aiArchitectRepository)
 
     @Provides @Singleton
     fun provideSaveExerciseSetsUseCase(

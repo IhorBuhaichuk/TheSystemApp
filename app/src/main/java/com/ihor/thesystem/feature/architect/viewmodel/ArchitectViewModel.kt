@@ -3,11 +3,10 @@ package com.ihor.thesystem.feature.architect.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiEvent
-import com.ihor.thesystem.data.local.room.dao.ChatDao
-import com.ihor.thesystem.data.local.room.entity.ChatMessageEntity
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
+import com.ihor.thesystem.domain.repository.ChatRepository
 import com.ihor.thesystem.domain.usecase.ApplyAiRecommendationsUseCase
 import com.ihor.thesystem.domain.usecase.GetLastWorkoutContextUseCase
 import com.ihor.thesystem.domain.usecase.SendChatMessageUseCase
@@ -22,14 +21,14 @@ class ArchitectViewModel @Inject constructor(
     private val getLastWorkoutContext: GetLastWorkoutContextUseCase,
     private val applyAiRecommendations: ApplyAiRecommendationsUseCase,
     private val sendChatMessageUseCase: SendChatMessageUseCase,
-    private val chatDao: ChatDao
+    private val chatRepository: ChatRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ArchitectUiState())
     val uiState: StateFlow<ArchitectUiState> = _uiState.asStateFlow()
 
-    private val _chatHistory = MutableStateFlow<List<ChatMessageEntity>>(emptyList())
-    val chatHistory: StateFlow<List<ChatMessageEntity>> = _chatHistory.asStateFlow()
+    private val _chatHistory = MutableStateFlow<List<ChatMessage>>(emptyList())
+    val chatHistory: StateFlow<List<ChatMessage>> = _chatHistory.asStateFlow()
 
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
@@ -44,8 +43,8 @@ class ArchitectViewModel @Inject constructor(
             val context = getLastWorkoutContext()
             
             // Перевірка чи вже був відправлений аналіз (наявність відповіді від моделі)
-            val history = chatDao.getChatHistory(0L).first()
-            val analysisAlreadySent = history.any { it.role == "model" }
+            val history = chatRepository.getChatHistory(0L).first()
+            val analysisAlreadySent = history.any { it.role == ChatRole.AI }
 
             if (context != null) {
                 val initialMessages = listOf(
@@ -86,7 +85,7 @@ class ArchitectViewModel @Inject constructor(
      */
     fun loadChatHistory(sessionId: Long) {
         viewModelScope.launch {
-            chatDao.getChatHistory(sessionId).collect { history ->
+            chatRepository.getChatHistory(sessionId).collect { history ->
                 _chatHistory.value = history
             }
         }

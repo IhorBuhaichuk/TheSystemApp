@@ -36,6 +36,9 @@ abstract class RepositoryModule {
     abstract fun bindDatabaseReadinessRepository(
         impl: DatabaseReadinessRepositoryImpl
     ): DatabaseReadinessRepository
+
+    @Binds @Singleton
+    abstract fun bindChatRepository(impl: ChatRepositoryImpl): ChatRepository
     
     // ViewingDateRepository не потребує @Binds, оскільки він є Singleton класом
 }

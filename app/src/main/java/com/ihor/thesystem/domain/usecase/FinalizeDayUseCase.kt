@@ -33,7 +33,10 @@ class FinalizeDayUseCase @Inject constructor(
         if (mainQuests.isNotEmpty()) {
             if (!allMainCompleted) {
                 val newFailures = updatedPlayer.consecutiveMainQuestFailures + 1
-                updatedPlayer = updatedPlayer.copy(consecutiveMainQuestFailures = newFailures)
+                updatedPlayer = updatedPlayer.copy(
+                    consecutiveMainQuestFailures = newFailures,
+                    currentStreak = 0
+                )
                 
                 // Активуємо штраф, якщо 2 провали і він ще не активний
                 if (newFailures >= 2 && !updatedPlayer.isPenaltyActive) {
@@ -42,9 +45,14 @@ class FinalizeDayUseCase @Inject constructor(
                 }
             } else {
                 // Успіх - знімаємо штрафи і обнуляємо лічильник провалів
+                val newStreak = updatedPlayer.currentStreak + 1
                 updatedPlayer = updatedPlayer.copy(
                     isPenaltyActive = false, 
-                    consecutiveMainQuestFailures = 0
+                    consecutiveMainQuestFailures = 0,
+                    currentStreak = newStreak,
+                    maxStreak = if (newStreak > updatedPlayer.maxStreak) newStreak else updatedPlayer.maxStreak,
+                    xpTotal = updatedPlayer.xpTotal + 100,
+                    xpThisWeek = updatedPlayer.xpThisWeek + 100
                 )
             }
         }
@@ -74,7 +82,16 @@ class FinalizeDayUseCase @Inject constructor(
 
         if (levelUpTriggered) {
             val newRank = PlayerRank.resolveByMonth(newMonth)
-            updatedPlayer = updatedPlayer.copy(playerClass = newRank.title)
+            updatedPlayer = updatedPlayer.copy(
+                playerClass = newRank.title,
+                xpTotal = updatedPlayer.xpTotal + 200,
+                xpThisWeek = updatedPlayer.xpThisWeek + 200
+            )
+        }
+
+        // Reset xpThisWeek to 0 when starting a new microcycle (newCycleDay == 1 && newWeek == 1)
+        if (newCycleDay == 1 && newWeek == 1) {
+            updatedPlayer = updatedPlayer.copy(xpThisWeek = 0)
         }
 
         // 5. РОБИМО ЄДИНИЙ ЗАПИС У БАЗУ ДАНИХ (Абсолютна стабільність)

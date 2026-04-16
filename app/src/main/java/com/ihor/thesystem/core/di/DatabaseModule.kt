@@ -55,23 +55,20 @@ object DatabaseModule {
             .addCallback(object : RoomDatabase.Callback() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
-                    // База створена вперше
                 }
                 override fun onOpen(db: SupportSQLiteDatabase) {
                     super.onOpen(db)
-                    // База відкрита (кожен запуск)
                 }
             })
             .build()
 
-        // Заповнюємо базу в фоновому потоці та сигналізуємо про готовність
         appScope.launch(Dispatchers.IO) {
             try {
                 DatabasePopulator.populate(database)
+                readinessRepo.markAsReady()
             } catch (e: Exception) {
                 e.printStackTrace()
-            } finally {
-                readinessRepo.markAsReady()
+                readinessRepo.markAsFailed(e.message ?: "Unknown error")
             }
         }
 

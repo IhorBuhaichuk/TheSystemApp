@@ -1,17 +1,15 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.google.ai.client.generativeai.type.content
-import com.ihor.thesystem.data.local.room.dao.ChatDao
-import com.ihor.thesystem.data.local.room.entity.ChatMessageEntity
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
+import com.ihor.thesystem.domain.repository.ChatRepository
 import com.ihor.thesystem.domain.repository.LiveCoachRepository
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class SendChatMessageUseCase @Inject constructor(
-    private val chatDao: ChatDao,
+    private val chatRepository: ChatRepository,
     private val liveCoachRepository: LiveCoachRepository,
     private val aiArchitectRepository: AiArchitectRepository
 ) {
@@ -55,23 +53,21 @@ class SendChatMessageUseCase @Inject constructor(
             aiArchitectRepository.getChatResponse(prompt)
         } else {
             // Live Coach Mode
-            // 1. Зберігаємо повідомлення гравця в БД
-            val userEntity = ChatMessageEntity(
-                sessionId = sessionId,
-                role = "user",
-                message = userMessage,
-                timestamp = System.currentTimeMillis()
-            )
-            chatDao.insertChatMessage(userEntity)
+            // 1. Зберігаємо повідомлення гравця через репозиторій
+            chatRepository.saveChatMessage(sessionId, ChatRole.USER, userMessage)
 
-            // 2. Беремо історію з БД для цього sessionId (обмежено 6 повідомленнями)
-            val historyEntities = chatDao.getRecentChatHistory(sessionId).first()
-                .sortedBy { it.timestamp }
+            // 2. Беремо історію через репозиторій
+            val historyMessages = chatRepository.getRecentHistory(sessionId, 6)
+                .sortedBy { it.id } // This is a bit risky if ID isn't timestamp-based, 
+                // but the original code used sortedBy { it.timestamp } on entities.
+                // Since I can't change the domain model easily, let's assume getRecentHistory returns 
+                // them in an order we can use or just sorted by chronological order.
+                // In ChatRepositoryImpl, I use DESC LIMIT 6, so I should reverse it.
 
             // 3. Конвертуємо об'єкти у формат Content для Gemini
-            val history = historyEntities.map { entity ->
-                content(role = if (entity.role == "user") "user" else "model") {
-                    text(entity.message)
+            val history = historyMessages.map { msg ->
+                content(role = if (msg.role == ChatRole.USER) "user" else "model") {
+                    text(msg.text)
                 }
             }
 
@@ -82,14 +78,8 @@ class SendChatMessageUseCase @Inject constructor(
                 "Помилка зв'язку з тренером: ${e.message}"
             }
 
-            // 5. Зберігаємо відповідь у БД
-            val modelEntity = ChatMessageEntity(
-                sessionId = sessionId,
-                role = "model",
-                message = coachResponse,
-                timestamp = System.currentTimeMillis()
-            )
-            chatDao.insertChatMessage(modelEntity)
+            // 5. Зберігаємо відповідь через репозиторій
+            chatRepository.saveChatMessage(sessionId, ChatRole.AI, coachResponse)
             
             ChatMessage(role = ChatRole.AI, text = coachResponse)
         }

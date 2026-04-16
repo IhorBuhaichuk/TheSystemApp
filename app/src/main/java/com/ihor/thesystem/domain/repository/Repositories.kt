@@ -19,7 +19,16 @@ interface ScheduleRepository {
     fun getScheduleForDay(day: Int): Flow<ScheduleDay?>
 }
 
+sealed class DatabaseStatus {
+    object Idle : DatabaseStatus()
+    object Loading : DatabaseStatus()
+    object Ready : DatabaseStatus()
+    data class Failed(val reason: String) : DatabaseStatus()
+}
+
 interface DatabaseReadinessRepository {
     val isDbReady: StateFlow<Boolean>
+    val status: StateFlow<DatabaseStatus>
     fun markAsReady()
+    fun markAsFailed(reason: String)
 }
