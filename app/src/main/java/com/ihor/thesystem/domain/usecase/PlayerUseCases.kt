@@ -1,25 +1,26 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.core.util.Result
-import com.ihor.thesystem.domain.model.DataError
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.repository.PlayerRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class UpdatePlayerNameUseCase @Inject constructor(
     private val repo: PlayerRepository
 ) {
-    suspend operator fun invoke(currentPlayer: Player, newName: String): Result<Unit, DataError.Local> {
-        if (newName.isBlank()) return Result.Success(Unit)
-        return repo.updatePlayer(currentPlayer.copy(name = newName.trim().uppercase()))
+    suspend operator fun invoke(player: Player, newName: String) {
+        repo.updatePlayer(player.copy(name = newName))
     }
+}
+
+class GetPlayerFlowUseCase @Inject constructor(
+    private val repo: PlayerRepository
+) {
+    operator fun invoke(): Flow<Player?> = repo.getPlayer()
 }
 
 class LogWeightUseCase @Inject constructor(
     private val repo: PlayerRepository
 ) {
-    suspend operator fun invoke(weight: Float): Result<Unit, DataError.Local> {
-        if (weight <= 0f) return Result.Success(Unit)
-        return repo.logWeight(weight)
-    }
+    suspend operator fun invoke(weight: Float) = repo.logWeight(weight)
 }

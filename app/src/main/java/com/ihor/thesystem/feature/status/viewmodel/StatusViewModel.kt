@@ -9,10 +9,6 @@ import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.DatabaseReadinessRepository
 import com.ihor.thesystem.domain.repository.DatabaseStatus
-import com.ihor.thesystem.domain.repository.DebuffRepository
-import com.ihor.thesystem.domain.repository.PlayerRepository
-import com.ihor.thesystem.domain.repository.QuestRepository
-import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import com.ihor.thesystem.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -42,10 +38,10 @@ class StatusViewModel @Inject constructor(
     private val generateDailyQuests:   GenerateDailyQuestsUseCase,
     private val getSystemConfig:       GetSystemConfigUseCase,
     private val updateSystemConfig:    UpdateSystemConfigUseCase,
-    private val playerRepo:            PlayerRepository,
-    private val questRepo:             QuestRepository,
-    private val debuffRepo:            DebuffRepository,
-    private val systemConfigRepo:      SystemConfigRepository,
+    private val getPlayerFlow:         GetPlayerFlowUseCase,
+    private val addTaskToQuest:        AddTaskToQuestUseCase,
+    private val removeQuestTask:       RemoveQuestTaskUseCase,
+    private val getAllDebuffs:         GetAllDebuffsUseCase,
     private val databaseReadinessRepo: DatabaseReadinessRepository,
     private val calculateAttributes:   CalculateAttributesUseCase
 ) : ViewModel() {
@@ -68,7 +64,7 @@ class StatusViewModel @Inject constructor(
     private val _dialogState = MutableStateFlow<StatusDialogState>(StatusDialogState.None)
     val dialogState: StateFlow<StatusDialogState> = _dialogState.asStateFlow()
 
-    val allDebuffs: StateFlow<List<DebuffConfig>> = debuffRepo.getAllDebuffs()
+    val allDebuffs: StateFlow<List<DebuffConfig>> = getAllDebuffs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val systemConfig: StateFlow<SystemConfig?> = getSystemConfig()
@@ -99,7 +95,7 @@ class StatusViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            playerRepo.getPlayer()
+            getPlayerFlow()
                 .filterNotNull()
                 .scan(Pair<Player?, Player?>(null, null)) { (_, prev), current ->
                     Pair(prev, current)
@@ -150,7 +146,7 @@ class StatusViewModel @Inject constructor(
             _uiEvents.emit(UiEvent.ShowError("Некоректне значення: ім'я має бути від 1 до 50 символів"))
             return@launchCatching
         }
-        val player = playerRepo.getPlayer().firstOrNull() ?: return@launchCatching
+        val player = getPlayerFlow().firstOrNull() ?: return@launchCatching
         updatePlayerName(player, newName)
         onDismissDialog()
     }
@@ -178,12 +174,11 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onAddTask(questId: Int, taskName: String) = launchCatching {
-        if (taskName.isBlank()) return@launchCatching
-        questRepo.addTaskToQuest(questId, taskName)
+        addTaskToQuest(questId, taskName)
     }
 
     fun onRemoveTask(taskId: Int) = launchCatching {
-        questRepo.removeTask(taskId)
+        removeQuestTask(taskId)
     }
 
     fun onDebuffToggled(debuff: DebuffConfig) = launchCatching {
@@ -195,5 +190,5 @@ class StatusViewModel @Inject constructor(
         onDismissDialog()
     }
 
-    suspend fun getCurrentPlayer(): Player? = playerRepo.getPlayer().firstOrNull()
+    suspend fun getCurrentPlayer(): Player? = getPlayerFlow().firstOrNull()
 }

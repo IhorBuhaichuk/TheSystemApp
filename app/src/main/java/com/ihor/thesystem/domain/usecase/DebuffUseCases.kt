@@ -2,10 +2,17 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.DebuffConfig
 import com.ihor.thesystem.domain.repository.DebuffRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class UpdateDebuffUseCase @Inject constructor(
     private val repo: DebuffRepository
 ) {
     suspend operator fun invoke(debuff: DebuffConfig) = repo.updateDebuff(debuff)
+}
+
+class GetAllDebuffsUseCase @Inject constructor(
+    private val repo: DebuffRepository
+) {
+    operator fun invoke(): Flow<List<DebuffConfig>> = repo.getAllDebuffs()
 }

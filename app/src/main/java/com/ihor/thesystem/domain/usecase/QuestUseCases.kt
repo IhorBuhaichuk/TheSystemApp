@@ -31,3 +31,21 @@ class ToggleQuestTaskUseCase @Inject constructor(
         }
     }
 }
+
+class AddTaskToQuestUseCase @Inject constructor(
+    private val repo: QuestRepository
+) {
+    suspend operator fun invoke(questId: Int, taskName: String) {
+        if (taskName.isNotBlank()) {
+            repo.addTaskToQuest(questId, taskName)
+        }
+    }
+}
+
+class RemoveQuestTaskUseCase @Inject constructor(
+    private val repo: QuestRepository
+) {
+    suspend operator fun invoke(taskId: Int) {
+        repo.removeTask(taskId)
+    }
+}
