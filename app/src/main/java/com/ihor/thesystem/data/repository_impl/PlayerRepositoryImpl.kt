@@ -33,13 +33,11 @@ class PlayerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateHeight(height: Float): Result<Unit, DataError.Local> = runDbCatching {
-        val player = playerDao.getPlayerSync() ?: throw NoSuchElementException()
-        playerDao.insertOrUpdate(player.copy(height = height))
+        playerDao.updateHeight(height)
     }
 
     override suspend fun updateCurrentCycleDay(day: Int): Result<Unit, DataError.Local> = runDbCatching {
-        val player = playerDao.getPlayerSync() ?: throw NoSuchElementException()
-        playerDao.insertOrUpdate(player.copy(currentCycleDay = day))
+        playerDao.updateCurrentCycleDay(day)
     }
 
     override suspend fun getWeightAtOrBefore(timestamp: Long): Result<Float?, DataError.Local> = runDbCatching {
