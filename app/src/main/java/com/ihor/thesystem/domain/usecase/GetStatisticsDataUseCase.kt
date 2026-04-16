@@ -1,12 +1,9 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
-import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistoryWithId
 import com.ihor.thesystem.data.local.room.dao.WeightLogDao
 import com.ihor.thesystem.data.local.room.entity.ReferenceMatrixEntity
 import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
-import com.ihor.thesystem.domain.model.Player
-import com.ihor.thesystem.domain.model.SystemConfig
+import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
@@ -42,7 +39,7 @@ class GetStatisticsDataUseCase @Inject constructor(
             val player = args[0] as Player
             val matrix = args[1] as List<ProgressionMatrixEntry>
             val references = args[2] as List<ReferenceMatrixEntity>
-            val allHistories = args[3] as List<ExerciseWeightHistoryWithId>
+            val allHistories = args[3] as List<WeightHistoryWithId>
             val selectedDate = args[4] as LocalDate
             val config = args[5] as SystemConfig
             val weightHistory = args[6] as List<WeightLogEntity>
@@ -67,7 +64,7 @@ class GetStatisticsDataUseCase @Inject constructor(
                 val m12 = ref?.milestones?.get("M12")?.toFloat() ?: entry.targetWeight
                 
                 val history = historiesMap[entry.exerciseId]?.map { 
-                    ExerciseWeightHistory(it.weight, it.timestamp) 
+                    WeightHistoryEntry(it.weight, it.timestamp) 
                 } ?: emptyList()
 
                 entry.toUiModel(isExerciseActive, orderIndex, history).copy(
@@ -91,7 +88,7 @@ class GetStatisticsDataUseCase @Inject constructor(
         }.flowOn(Dispatchers.Default)
     }
 
-    private fun ProgressionMatrixEntry.toUiModel(isActive: Boolean, orderIndex: Int, history: List<ExerciseWeightHistory>) = MatrixEntryUiModel(
+    private fun ProgressionMatrixEntry.toUiModel(isActive: Boolean, orderIndex: Int, history: List<WeightHistoryEntry>) = MatrixEntryUiModel(
         exerciseId       = exerciseId,
         exerciseName     = exerciseName,
         startWeight      = startWeight,

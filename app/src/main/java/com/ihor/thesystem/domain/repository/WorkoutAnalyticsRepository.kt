@@ -1,13 +1,11 @@
 package com.ihor.thesystem.domain.repository
 
-import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
-import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistoryWithId
-import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutDirective
 import com.ihor.thesystem.domain.model.WorkoutSession
-import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
-import com.ihor.thesystem.data.local.room.entity.WorkoutSessionLogEntity
+import com.ihor.thesystem.domain.model.WorkoutLog
+import com.ihor.thesystem.domain.model.WeightHistoryEntry
+import com.ihor.thesystem.domain.model.WeightHistoryWithId
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -22,26 +20,26 @@ interface WorkoutAnalyticsRepository {
     suspend fun saveSessionWithSets(session: WorkoutSession, sets: List<ExerciseSet>): Long
     suspend fun saveDirectives(directives: List<WorkoutDirective>)
     fun getDailyTonnageStatsForMonth(monthStart: Long, monthEnd: Long): Flow<List<DailyTonnageStats>>
-    fun getSessionsByDate(dateMillis: Long): Flow<List<SessionWithSets>>
-    fun getAllLogs(): Flow<List<SessionWithSets>>
+    fun getSessionsByDate(dateMillis: Long): Flow<List<WorkoutLog>>
+    fun getAllLogs(): Flow<List<WorkoutLog>>
     
     // Отримання історії для однієї вправи
-    fun getWeightHistory(exerciseId: Int): Flow<List<ExerciseWeightHistory>>
+    fun getWeightHistory(exerciseId: Int): Flow<List<WeightHistoryEntry>>
     
     // ОПТИМІЗАЦІЯ: Отримання всього списку історій за раз
-    fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>>
+    fun getAllWeightHistories(): Flow<List<WeightHistoryWithId>>
 
     // Нові методи для фіксу дублікатів та контексту
-    suspend fun getLogForExerciseOnDate(exerciseId: Int, startOfDay: Long, endOfDay: Long): ExerciseSetLogEntity?
-    suspend fun updateSetLog(log: ExerciseSetLogEntity)
-    suspend fun insertSetLog(log: ExerciseSetLogEntity): Long
-    suspend fun saveSetLogs(logs: List<ExerciseSetLogEntity>)
+    suspend fun getLogForExerciseOnDate(exerciseId: Int, startOfDay: Long, endOfDay: Long): ExerciseSet?
+    suspend fun updateSetLog(log: ExerciseSet)
+    suspend fun insertSetLog(log: ExerciseSet): Long
+    suspend fun saveSetLogs(logs: List<ExerciseSet>)
     suspend fun deleteSetsBySession(sessionId: Long)
-    suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSetLogEntity>
+    suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSet>
 
     // Методи для роботи з сесіями (Business logic move)
-    suspend fun updateSessionLog(session: WorkoutSessionLogEntity)
-    suspend fun saveFullSessionLog(session: WorkoutSessionLogEntity, sets: List<ExerciseSetLogEntity>): Long
+    suspend fun updateSessionLog(session: WorkoutSession)
+    suspend fun saveFullSessionLog(session: WorkoutSession, sets: List<ExerciseSet>): Long
 
     /**
      * Повертає мапу вправ: ID -> Назва.

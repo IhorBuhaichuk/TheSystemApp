@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.ihor.thesystem.core.theme.NeonCyan
 import com.ihor.thesystem.core.theme.PanelBorder
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
-import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
+import com.ihor.thesystem.domain.model.WeightHistoryEntry
 
 /**
  * ГРАФІК ПРОГРЕСУ (Custom Canvas Implementation)
@@ -25,7 +25,7 @@ import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
  */
 @Composable
 fun ExerciseProgressChart(
-    history: List<ExerciseWeightHistory>,
+    history: List<WeightHistoryEntry>,
     modifier: Modifier = Modifier,
     accentColor: Color = NeonCyan
 ) {

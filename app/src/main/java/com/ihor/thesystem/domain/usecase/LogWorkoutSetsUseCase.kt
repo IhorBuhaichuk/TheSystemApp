@@ -1,13 +1,12 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.core.util.AppClock
-import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
-import com.ihor.thesystem.data.local.room.entity.WorkoutSessionLogEntity
+import com.ihor.thesystem.domain.model.ExerciseSet
+import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 
@@ -26,7 +25,6 @@ class LogWorkoutSetsUseCase @Inject constructor(
         if (validSets.isEmpty()) return
 
         // Визначаємо межі дня на основі наданого timestamp та системного ZoneId
-        // (Для повної чистоти ZoneId також можна було б винести в AppClock, але поки що обмежимося цим)
         val zoneId = ZoneId.systemDefault()
         val date = Instant.ofEpochMilli(timestamp).atZone(zoneId).toLocalDate()
         val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
@@ -42,7 +40,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
         if (existingSetLog != null) {
             val sessionId = existingSetLog.sessionId
             
-            val sessionUpdate = WorkoutSessionLogEntity(
+            val sessionUpdate = WorkoutSession(
                 sessionId = sessionId,
                 questId = 0,
                 timestamp = clock.now(),
@@ -54,7 +52,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
 
             analyticsRepo.deleteSetsBySession(sessionId)
             val entities = validSets.map { input ->
-                ExerciseSetLogEntity(
+                ExerciseSet(
                     sessionId = sessionId,
                     exerciseId = exerciseId,
                     weight = input.weight.toDoubleOrNull() ?: 0.0,
@@ -65,7 +63,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
             }
             analyticsRepo.saveSetLogs(entities)
         } else {
-            val sessionLog = WorkoutSessionLogEntity(
+            val sessionLog = WorkoutSession(
                 questId = 0,
                 timestamp = clock.now(),
                 totalTonnage = totalTonnage,
@@ -74,7 +72,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
             )
 
             val entities = validSets.map { input ->
-                ExerciseSetLogEntity(
+                ExerciseSet(
                     sessionId = 0,
                     exerciseId = exerciseId,
                     weight = input.weight.toDoubleOrNull() ?: 0.0,

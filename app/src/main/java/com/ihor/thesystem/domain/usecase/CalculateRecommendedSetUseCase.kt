@@ -1,6 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.data.local.room.relations.SessionWithSets
+import com.ihor.thesystem.domain.model.WorkoutLog
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import kotlinx.coroutines.flow.first
@@ -18,11 +18,11 @@ class CalculateRecommendedSetUseCase @Inject constructor(
     private val matrixRepo: ProgressionMatrixRepository
 ) {
     suspend operator fun invoke(exerciseId: Int, exerciseName: String): SetRecommendation {
-        // 1. Отримуємо всі логі (getAllLogs повертає Flow<List<SessionWithSets>>)
-        val allSessions: List<SessionWithSets> = analyticsRepo.getAllLogs().first()
+        // 1. Отримуємо всі логі (getAllLogs повертає Flow<List<WorkoutLog>>)
+        val allSessions: List<WorkoutLog> = analyticsRepo.getAllLogs().first()
         
         // 2. Фільтруємо підходи для конкретної вправи
-        // Логі повернуті в порядку DESC (останні спочатку), тому беремо перші 3 підходи цієї вправи
+        // Логі повернуті в порядку DESC (останні спочатку), тому беремо останні підходи цієї вправи
         val lastSets = allSessions
             .flatMap { it.sets }
             .filter { it.exerciseId == exerciseId }
@@ -48,7 +48,7 @@ class CalculateRecommendedSetUseCase @Inject constructor(
         val lastWeight = lastSets.first().weight
 
         return if (wasSuccessful) {
-            // Якщо закрили 3х12 - підвищуємо вагу, скидаємо повтори до 8 (діапазон 8-12)
+            // Якщо закрили 3х12 - підвищуємо вагу, скидаємо повтори до 8
             SetRecommendation(
                 weight = lastWeight + progressionStep,
                 reps = 8, 

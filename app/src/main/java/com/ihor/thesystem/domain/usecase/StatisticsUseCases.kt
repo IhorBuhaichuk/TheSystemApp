@@ -2,8 +2,7 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.util.OneRepMaxCalculator
-import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
-import com.ihor.thesystem.domain.model.Rank
+import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.AnnualMatrixProvider
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
@@ -33,7 +32,7 @@ class GetLogForDateUseCase @Inject constructor(
     private val analyticsRepo: WorkoutAnalyticsRepository,
     private val clock: AppClock
 ) {
-    suspend operator fun invoke(exerciseId: Int, date: LocalDate): ExerciseSetLogEntity? {
+    suspend operator fun invoke(exerciseId: Int, date: LocalDate): ExerciseSet? {
         val zoneId = clock.zoneId()
         val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
         val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1

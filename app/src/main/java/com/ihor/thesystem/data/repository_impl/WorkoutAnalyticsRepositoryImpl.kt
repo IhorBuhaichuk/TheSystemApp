@@ -1,17 +1,16 @@
 package com.ihor.thesystem.data.repository_impl
 
-import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
-import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistoryWithId
 import com.ihor.thesystem.data.local.room.dao.WorkoutAnalyticsDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
-import com.ihor.thesystem.data.local.room.entity.*
+import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
+import com.ihor.thesystem.data.local.room.entity.WorkoutDirectiveEntity
+import com.ihor.thesystem.data.local.room.entity.WorkoutSessionLogEntity
 import com.ihor.thesystem.data.local.room.relations.SessionWithSets
-import com.ihor.thesystem.domain.model.ExerciseSet
-import com.ihor.thesystem.domain.model.WorkoutDirective
-import com.ihor.thesystem.domain.model.WorkoutSession
+import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class WorkoutAnalyticsRepositoryImpl @Inject constructor(
@@ -24,8 +23,8 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         sets: List<ExerciseSet>
     ): Long {
         return dao.saveFullSessionLog(
-            session = session.toLogEntity(),
-            sets = sets.map { it.toLogEntity() }
+            session = session.toEntity(),
+            sets = sets.map { it.toEntity() }
         )
     }
 
@@ -40,59 +39,67 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         return dao.getDailyTonnageStats(monthStart, monthEnd)
     }
 
-    override fun getSessionsByDate(dateMillis: Long): Flow<List<SessionWithSets>> {
-        return dao.getSessionLogsByDate(dateMillis)
+    override fun getSessionsByDate(dateMillis: Long): Flow<List<WorkoutLog>> {
+        return dao.getSessionLogsByDate(dateMillis).map { list ->
+            list.map { it.toDomain() }
+        }
     }
 
-    override fun getAllLogs(): Flow<List<SessionWithSets>> {
-        return dao.getAllSessionLogs()
+    override fun getAllLogs(): Flow<List<WorkoutLog>> {
+        return dao.getAllSessionLogs().map { list ->
+            list.map { it.toDomain() }
+        }
     }
 
-    override fun getWeightHistory(exerciseId: Int): Flow<List<ExerciseWeightHistory>> {
-        return dao.getWeightHistoryForExercise(exerciseId)
+    override fun getWeightHistory(exerciseId: Int): Flow<List<WeightHistoryEntry>> {
+        return dao.getWeightHistoryForExercise(exerciseId).map { list ->
+            list.map { WeightHistoryEntry(it.weight, it.timestamp) }
+        }
     }
 
-    override fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>> {
-        return dao.getAllWeightHistories()
+    override fun getAllWeightHistories(): Flow<List<WeightHistoryWithId>> {
+        return dao.getAllWeightHistories().map { list ->
+            list.map { WeightHistoryWithId(it.weight, it.timestamp, it.exerciseId) }
+        }
     }
 
     override suspend fun getLogForExerciseOnDate(
         exerciseId: Int,
         startOfDay: Long,
         endOfDay: Long
-    ): ExerciseSetLogEntity? {
-        return dao.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)
+    ): ExerciseSet? {
+        return dao.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)?.toDomain()
     }
 
-    override suspend fun updateSetLog(log: ExerciseSetLogEntity) {
-        dao.updateSetLog(log)
+    override suspend fun updateSetLog(log: ExerciseSet) {
+        dao.updateSetLog(log.toEntity())
     }
 
-    override suspend fun insertSetLog(log: ExerciseSetLogEntity): Long {
-        return dao.insertSetLog(log)
+    override suspend fun insertSetLog(log: ExerciseSet): Long {
+        return dao.insertSetLog(log.toEntity())
     }
 
-    override suspend fun saveSetLogs(logs: List<ExerciseSetLogEntity>) {
-        dao.insertSetLogs(logs)
+    override suspend fun saveSetLogs(logs: List<ExerciseSet>) {
+        dao.insertSetLogs(logs.map { it.toEntity() })
     }
 
     override suspend fun deleteSetsBySession(sessionId: Long) {
         dao.deleteSetsBySession(sessionId)
     }
 
-    override suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSetLogEntity> {
-        return dao.getRecentLogsForExercise(exerciseId)
+    override suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSet> {
+        return dao.getRecentLogsForExercise(exerciseId).map { it.toDomain() }
     }
 
-    override suspend fun updateSessionLog(session: WorkoutSessionLogEntity) {
-        dao.insertSessionLog(session)
+    override suspend fun updateSessionLog(session: WorkoutSession) {
+        dao.insertSessionLog(session.toEntity())
     }
 
     override suspend fun saveFullSessionLog(
-        session: WorkoutSessionLogEntity,
-        sets: List<ExerciseSetLogEntity>
+        session: WorkoutSession,
+        sets: List<ExerciseSet>
     ): Long {
-        return dao.saveFullSessionLog(session, sets)
+        return dao.saveFullSessionLog(session.toEntity(), sets.map { it.toEntity() })
     }
 
     override suspend fun getAllExercisesMap(): Map<Int, String> {
@@ -103,16 +110,35 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
     // MAPPER ФУНКЦІЇ
     // =========================================
 
-    private fun WorkoutSession.toLogEntity() = WorkoutSessionLogEntity(
+    private fun WorkoutSession.toEntity() = WorkoutSessionLogEntity(
         sessionId = this.sessionId,
         questId = this.questId,
         timestamp = this.timestamp,
         totalTonnage = this.totalTonnage,
         cycleDay = this.cycleDay,
-        durationMinutes = 0
+        durationMinutes = this.durationMinutes
     )
 
-    private fun ExerciseSet.toLogEntity() = ExerciseSetLogEntity(
+    private fun WorkoutSessionLogEntity.toDomain() = WorkoutSession(
+        sessionId = this.sessionId,
+        questId = this.questId,
+        timestamp = this.timestamp,
+        totalTonnage = this.totalTonnage,
+        cycleDay = this.cycleDay,
+        durationMinutes = this.durationMinutes
+    )
+
+    private fun ExerciseSet.toEntity() = ExerciseSetLogEntity(
+        setId = this.setId,
+        sessionId = this.sessionId,
+        exerciseId = this.exerciseId,
+        weight = this.weight,
+        reps = this.reps,
+        isCompleted = this.isCompleted,
+        userFeedback = this.userFeedback
+    )
+
+    private fun ExerciseSetLogEntity.toDomain() = ExerciseSet(
         setId = this.setId,
         sessionId = this.sessionId,
         exerciseId = this.exerciseId,
@@ -127,5 +153,10 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         targetWeight = this.targetWeight,
         targetSets = this.targetSets,
         targetReps = this.targetReps
+    )
+
+    private fun SessionWithSets.toDomain() = WorkoutLog(
+        session = this.session.toDomain(),
+        sets = this.sets.map { it.toDomain() }
     )
 }

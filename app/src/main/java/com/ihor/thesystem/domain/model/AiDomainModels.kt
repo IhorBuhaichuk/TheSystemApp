@@ -24,14 +24,15 @@ data class ChatMessage(
 )
 
 /**
- * Базові моделі тренувань, що використовуються для аналізу Архітектором.
+ * Базові моделі тренувань, що використовуються для аналізу Архітектором та в аналітиці.
  */
 data class WorkoutSession(
     val sessionId: Long = 0L,
     val questId: Long,
     val timestamp: Long,
     val totalTonnage: Double,
-    val cycleDay: Int
+    val cycleDay: Int,
+    val durationMinutes: Int = 0
 )
 
 data class ExerciseSet(
@@ -42,6 +43,22 @@ data class ExerciseSet(
     val reps: Int,
     val isCompleted: Boolean,
     val userFeedback: String? = null
+)
+
+data class WorkoutLog(
+    val session: WorkoutSession,
+    val sets: List<ExerciseSet>
+)
+
+data class WeightHistoryEntry(
+    val weight: Double,
+    val timestamp: Long
+)
+
+data class WeightHistoryWithId(
+    val weight: Double,
+    val timestamp: Long,
+    val exerciseId: Int
 )
 
 data class WorkoutDirective(

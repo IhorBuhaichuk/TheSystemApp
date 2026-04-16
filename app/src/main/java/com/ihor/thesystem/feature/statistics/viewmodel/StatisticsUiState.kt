@@ -1,9 +1,9 @@
 package com.ihor.thesystem.feature.statistics.viewmodel
 
-import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
-import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
+import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.Rank
+import com.ihor.thesystem.domain.model.WeightHistoryEntry
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -35,7 +35,7 @@ data class MatrixEntryUiModel(
     val completedCycles: Int = 0,
     val isActive: Boolean = true,
     val orderIndex: Int = 999,
-    val weightHistory: ImmutableList<ExerciseWeightHistory> = persistentListOf(),
+    val weightHistory: ImmutableList<WeightHistoryEntry> = persistentListOf(),
     val nextRecommendedWeight: Double? = null,
     val nextRecommendedSets: Int? = null,
     val nextRecommendedReps: String? = null,
@@ -72,6 +72,6 @@ sealed class StatisticsDialogState {
             WorkoutSetInput(),
             WorkoutSetInput()
         ),
-        val existingLog: ExerciseSetLogEntity? = null
+        val existingLog: ExerciseSet? = null
     ) : StatisticsDialogState()
 }

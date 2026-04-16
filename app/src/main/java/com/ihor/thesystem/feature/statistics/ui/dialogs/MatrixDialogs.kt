@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.sciPanel
-import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
+import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 
 @Composable
@@ -92,7 +92,7 @@ fun LogWorkoutSetsDialog(
     onRemove: () -> Unit,
     onSave: (String) -> Unit,
     onDismiss: () -> Unit,
-    existingLog: ExerciseSetLogEntity? = null
+    existingLog: ExerciseSet? = null
 ) {
     // Завдання 2: Правильна ініціалізація стану фітбеку
     var feedback by remember(existingLog) { mutableStateOf(existingLog?.userFeedback ?: "") }
