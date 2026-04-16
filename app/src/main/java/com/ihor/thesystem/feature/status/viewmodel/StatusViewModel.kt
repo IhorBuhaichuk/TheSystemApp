@@ -2,8 +2,11 @@ package com.ihor.thesystem.feature.status.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ihor.thesystem.R
+import com.ihor.thesystem.core.ui.StringResourceException
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.DebuffConfig
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.SystemConfig
@@ -113,7 +116,7 @@ class StatusViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_unknown)))
             }
         }
     }
@@ -133,7 +136,7 @@ class StatusViewModel @Inject constructor(
         useCases.updatePlayerName(player, newName).onSuccess {
             onDismissDialog()
         }.onFailure { e ->
-            _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка"))
+            handleError(e)
         }
     }
 
@@ -141,7 +144,7 @@ class StatusViewModel @Inject constructor(
         useCases.logWeight(weight).onSuccess {
             onDismissDialog()
         }.onFailure { e ->
-            _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка"))
+            handleError(e)
         }
     }
 
@@ -149,7 +152,15 @@ class StatusViewModel @Inject constructor(
         useCases.updateHeight(height).onSuccess {
             onDismissDialog()
         }.onFailure { e ->
-            _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка"))
+            handleError(e)
+        }
+    }
+
+    private suspend fun handleError(e: Throwable) {
+        if (e is StringResourceException) {
+            _uiEvents.emit(UiEvent.ShowError(e.uiText))
+        } else {
+            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_unknown)))
         }
     }
 

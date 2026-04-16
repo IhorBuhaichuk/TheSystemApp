@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.util.AppLogger
 import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.domain.model.*
@@ -168,7 +169,7 @@ class ModeViewModel @Inject constructor(
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             logger.e(e, "Помилка завершення дня (force=$forceComplete)")
-            _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка завершення дня"))
+            _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка завершення дня")))
         }
     }
 
@@ -192,7 +193,7 @@ class ModeViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 logger.e(e, "Помилка синхронізації циклу")
-                _uiEvents.emit(UiEvent.ShowError("Помилка синхронізації циклу"))
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString("Помилка синхронізації циклу")))
             }
         }
     }

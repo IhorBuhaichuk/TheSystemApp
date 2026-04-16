@@ -79,7 +79,7 @@ fun StatusScreen(
         viewModel.uiEvents.collect { event ->
             when (event) {
                 is UiEvent.ShowError -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
                 }
             }
         }

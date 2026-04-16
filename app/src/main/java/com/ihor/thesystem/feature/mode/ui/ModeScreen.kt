@@ -57,7 +57,7 @@ fun ModeScreen(
         viewModel.uiEvents.collect { event ->
             when (event) {
                 is UiEvent.ShowError -> {
-                    snackbarHostState.showSnackbar(event.message)
+                    snackbarHostState.showSnackbar(event.uiText.asString(context))
                 }
             }
         }

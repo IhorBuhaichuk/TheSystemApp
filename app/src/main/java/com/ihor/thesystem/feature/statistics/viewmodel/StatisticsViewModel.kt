@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistory
 import com.ihor.thesystem.data.local.room.dao.ExerciseWeightHistoryWithId
 import com.ihor.thesystem.data.local.room.dao.WeightLogDao
@@ -125,7 +126,7 @@ class StatisticsViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка операції")))
             }
         }
     }
@@ -137,7 +138,7 @@ class StatisticsViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка оновлення рангу"))
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка оновлення рангу")))
             }
         }
     }
@@ -160,7 +161,7 @@ class StatisticsViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка завантаження логів"))
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка завантаження логів")))
             }
         }
     }
@@ -176,7 +177,7 @@ class StatisticsViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка збереження результатів"))
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка збереження результатів")))
             }
         }
     }

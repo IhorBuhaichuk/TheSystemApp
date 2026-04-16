@@ -3,6 +3,7 @@ package com.ihor.thesystem.feature.architect.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiEvent
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
@@ -105,7 +106,7 @@ class ArchitectViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка операції")))
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
@@ -143,7 +144,7 @@ class ArchitectViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка операції"))
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка операції")))
                 
                 val errorMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
@@ -185,7 +186,7 @@ class ArchitectViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(e.localizedMessage ?: "Помилка застосування рекомендацій"))
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка застосування рекомендацій")))
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
