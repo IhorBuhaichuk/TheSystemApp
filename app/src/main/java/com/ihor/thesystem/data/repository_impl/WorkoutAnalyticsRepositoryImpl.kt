@@ -52,7 +52,6 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         return dao.getWeightHistoryForExercise(exerciseId)
     }
 
-    // ОПТИМІЗАЦІЯ: Отримання всього списку історій за раз
     override fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>> {
         return dao.getAllWeightHistories()
     }
@@ -73,12 +72,27 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         return dao.insertSetLog(log)
     }
 
+    override suspend fun saveSetLogs(logs: List<ExerciseSetLogEntity>) {
+        dao.insertSetLogs(logs)
+    }
+
     override suspend fun deleteSetsBySession(sessionId: Long) {
         dao.deleteSetsBySession(sessionId)
     }
 
     override suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSetLogEntity> {
         return dao.getRecentLogsForExercise(exerciseId)
+    }
+
+    override suspend fun updateSessionLog(session: WorkoutSessionLogEntity) {
+        dao.insertSessionLog(session)
+    }
+
+    override suspend fun saveFullSessionLog(
+        session: WorkoutSessionLogEntity,
+        sets: List<ExerciseSetLogEntity>
+    ): Long {
+        return dao.saveFullSessionLog(session, sets)
     }
 
     override suspend fun getAllExercisesMap(): Map<Int, String> {

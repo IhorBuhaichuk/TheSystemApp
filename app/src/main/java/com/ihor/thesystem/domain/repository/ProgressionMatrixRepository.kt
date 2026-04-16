@@ -10,9 +10,10 @@ interface ProgressionMatrixRepository {
     suspend fun getEntrySync(exerciseId: Int): ProgressionMatrixEntry?
     suspend fun updateCurrentWeight(exerciseId: Int, newWeight: Float)
     suspend fun updateMatrixGoals(exerciseId: Int, startWeight: Float, targetWeight: Float)
+    
     suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>)
     suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<WorkoutSetInput>, timestamp: Long, userFeedback: String? = null)
-    
+
     suspend fun getReferenceForExercise(name: String): ReferenceMatrixEntity?
     fun getAllReferences(): Flow<List<ReferenceMatrixEntity>>
     

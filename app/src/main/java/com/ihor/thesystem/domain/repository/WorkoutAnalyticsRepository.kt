@@ -7,6 +7,7 @@ import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutDirective
 import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
+import com.ihor.thesystem.data.local.room.entity.WorkoutSessionLogEntity
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -34,8 +35,13 @@ interface WorkoutAnalyticsRepository {
     suspend fun getLogForExerciseOnDate(exerciseId: Int, startOfDay: Long, endOfDay: Long): ExerciseSetLogEntity?
     suspend fun updateSetLog(log: ExerciseSetLogEntity)
     suspend fun insertSetLog(log: ExerciseSetLogEntity): Long
+    suspend fun saveSetLogs(logs: List<ExerciseSetLogEntity>)
     suspend fun deleteSetsBySession(sessionId: Long)
     suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSetLogEntity>
+
+    // Методи для роботи з сесіями (Business logic move)
+    suspend fun updateSessionLog(session: WorkoutSessionLogEntity)
+    suspend fun saveFullSessionLog(session: WorkoutSessionLogEntity, sets: List<ExerciseSetLogEntity>): Long
 
     /**
      * Повертає мапу вправ: ID -> Назва.
