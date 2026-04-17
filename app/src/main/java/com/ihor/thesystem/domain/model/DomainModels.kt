@@ -24,7 +24,85 @@ data class Player(
     val maxStreak: Int = 0,
     val xpTotal: Int = 0,
     val xpThisWeek: Int = 0
-)
+) {
+    /**
+     * Оцінює виконання головних квестів, оновлює серії та нараховує досвід.
+     * Активує штрафний режим при повторних провалах.
+     */
+    fun evaluateQuests(mainQuests: List<Quest>): Player {
+        if (mainQuests.isEmpty()) return this
+        val allCompleted = mainQuests.all { it.isCompleted }
+
+        return if (!allCompleted) {
+            val newFailures = consecutiveMainQuestFailures + 1
+            copy(
+                consecutiveMainQuestFailures = newFailures,
+                currentStreak = 0,
+                isPenaltyActive = isPenaltyActive || newFailures >= 2
+            )
+        } else {
+            val newStreak = currentStreak + 1
+            copy(
+                isPenaltyActive = false,
+                consecutiveMainQuestFailures = 0,
+                currentStreak = newStreak,
+                maxStreak = maxOf(maxStreak, newStreak),
+                xpTotal = xpTotal + 100,
+                xpThisWeek = xpThisWeek + 100
+            )
+        }
+    }
+
+    /**
+     * Просуває час у системі: дні мікроциклу, тижні та місяці.
+     */
+    fun advanceTime(config: SystemConfig): Player {
+        var newCycleDay = currentCycleDay + 1
+        var newWeek = currentWeek
+        var newMonth = currentMonth
+
+        if (newCycleDay > config.cycleDaysPerMicrocycle) {
+            newCycleDay = 1
+            newWeek += 1
+            if (newWeek > config.microCyclesPerMonth) {
+                newWeek = 1
+                newMonth += 1
+            }
+        }
+
+        return copy(
+            currentCycleDay = newCycleDay,
+            currentWeek = newWeek,
+            currentMonth = newMonth
+        )
+    }
+
+    /**
+     * Перевіряє можливість підвищення рангу та скидає тижневий досвід при новому місяці.
+     * @return Пара: Оновлений гравець та прапорець LevelUp.
+     */
+    fun checkLevelUp(): Pair<Player, Boolean> {
+        val newRank = PlayerRank.resolveByMonth(currentMonth)
+        val levelUpTriggered = playerClass != newRank.title
+        val isNewMonthStart = currentCycleDay == 1 && currentWeek == 1
+
+        var updatedPlayer = this
+        if (levelUpTriggered) {
+            updatedPlayer = updatedPlayer.copy(
+                playerClass = newRank.title,
+                xpTotal = xpTotal + 200,
+                xpThisWeek = xpThisWeek + 200
+            )
+        }
+
+        // Скидання тижневого прогресу при переході на новий місяць
+        if (isNewMonthStart) {
+            updatedPlayer = updatedPlayer.copy(xpThisWeek = 0)
+        }
+
+        return updatedPlayer to levelUpTriggered
+    }
+}
 
 data class Quest(
     val id: Int,
