@@ -52,7 +52,8 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             }
 
             // ГЕНЕРУЄМО ОСНОВНЕ ТРЕНУВАННЯ, ЯКЩО ЙОГО НЕМАЄ ТА ВОНО ПЕРЕДБАЧЕНЕ (не день відпочинку)
-            if (!hasMainWorkout && schedule.workoutTemplateName != null) {
+            val workoutTemplateName = schedule.workoutTemplateName
+            if (!hasMainWorkout && workoutTemplateName != null) {
                 val recommendedExercises = schedule.exercises.map { exercise ->
                     val rec = calculateRecommendation(exercise.id, exercise.name)
                     ExerciseRecommendation(
@@ -65,7 +66,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
                 }
 
                 questRepo.createMainQuest(
-                    title = schedule.workoutTemplateName.uppercase(),
+                    title = workoutTemplateName.uppercase(),
                     exercises = recommendedExercises,
                     scheduleId = schedule.id
                 )

@@ -3,14 +3,17 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+kotlin {
+    jvmToolchain(17)
+    sourceSets {
+        main {
+            kotlin.srcDirs("src/main/java")
+        }
+    }
 }
 
 dependencies {
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.coroutines.core)
     implementation("javax.inject:javax.inject:1")
-    // Note: If you need coroutines in domain, add kotlinx-coroutines-core to libs.versions.toml
-    // implementation(libs.kotlinx.coroutines.core)
 }
