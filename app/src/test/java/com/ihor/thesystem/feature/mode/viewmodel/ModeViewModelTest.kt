@@ -1,6 +1,7 @@
 package com.ihor.thesystem.feature.mode.viewmodel
 
 import app.cash.turbine.test
+import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.util.AppLogger
 import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.domain.model.*
@@ -10,9 +11,11 @@ import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -31,17 +34,17 @@ class ModeViewModelTest {
     private lateinit var viewModel: ModeViewModel
     private val testDispatcher = StandardTestDispatcher()
 
+    private val mockPlayer = Player(
+        id = 1, name = "Test", level = 1, playerClass = "Novice",
+        height = 180f, currentMonth = 1, currentWeek = 1, currentCycleDay = 1,
+        consecutiveMainQuestFailures = 0, isPenaltyActive = false
+    )
+
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         
-        // Default mocks to avoid initialization crashes
-        val mockPlayer = Player(
-            id = 1, name = "Test", level = 1, playerClass = "Novice",
-            height = 180f, currentMonth = 1, currentWeek = 1, currentCycleDay = 1,
-            consecutiveMainQuestFailures = 0, isPenaltyActive = false
-        )
-        
+        // Default mocks
         every { playerRepo.getPlayer() } returns flowOf(mockPlayer)
         every { scheduleRepo.getSchedulesForDays(any()) } returns flowOf(emptyList())
         every { questRepo.getActiveDailyQuest() } returns flowOf(null)
@@ -61,15 +64,47 @@ class ModeViewModelTest {
     }
 
     @Test
+    fun `uiState initially maps repository data to Content`() = runTest {
+        // Оскільки uiState використовує WhileSubscribed, нам потрібно почати збір
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect {}
+        }
+
+        viewModel.uiState.test {
+            val state = awaitItem()
+            assertTrue(state is UiState.Content)
+            val content = (state as UiState.Content).data
+            assertEquals(1, content.currentCycleDay)
+            assertEquals(1, content.selectedDay)
+        }
+    }
+
+    @Test
+    fun `onCycleDayTap updates selectedDay in uiState`() = runTest {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect {}
+        }
+
+        viewModel.uiState.test {
+            // Initial state
+            val initialState = awaitItem() as UiState.Content
+            assertEquals(1, initialState.data.selectedDay)
+
+            // WHEN
+            viewModel.onCycleDayTap(3)
+
+            // THEN
+            val updatedState = awaitItem() as UiState.Content
+            assertEquals(3, updatedState.data.selectedDay)
+        }
+    }
+
+    @Test
     fun `onConfirmAdvance triggers LevelUp event when transaction succeeds with LevelUp`() = runTest {
-        // GIVEN
         coEvery { finalizeDayTransaction(forceComplete = false) } returns Result.Success(DayFinalizationResult.LevelUp)
 
-        // WHEN
         viewModel.events.test {
             viewModel.onConfirmAdvance()
-            
-            // THEN
             assertEquals(ModeEvent.LevelUp, awaitItem())
         }
     }
