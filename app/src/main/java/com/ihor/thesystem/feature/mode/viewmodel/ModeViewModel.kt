@@ -6,6 +6,7 @@ import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.util.AppLogger
+import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.core.util.safeCall
 import com.ihor.thesystem.domain.model.*
@@ -45,6 +46,7 @@ class ModeViewModel @Inject constructor(
     private val debuffRepo:      DebuffRepository,
     private val generateQuests:  GenerateDailyQuestsUseCase,
     private val finalizeDayTransaction: FinalizeDayTransactionUseCase,
+    private val dispatchers:     DispatcherProvider,
     private val logger:          AppLogger
 ) : ViewModel() {
 
@@ -107,6 +109,7 @@ class ModeViewModel @Inject constructor(
         logger.e(e, "Помилка реактивного потоку ModeViewModel")
         emit(UiState.Error(UiText.DynamicString("Помилка завантаження даних: ${e.localizedMessage}")))
     }
+    .flowOn(dispatchers.io)
     .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -114,7 +117,7 @@ class ModeViewModel @Inject constructor(
     )
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             try {
                 generateQuests()
             } catch (e: Exception) {
@@ -123,7 +126,7 @@ class ModeViewModel @Inject constructor(
             }
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.mainImmediate) {
             playerRepo.getPlayer().filterNotNull().firstOrNull()?.let {
                 _selectedDay.value = it.currentCycleDay
             }
@@ -140,13 +143,13 @@ class ModeViewModel @Inject constructor(
     fun onDismissDialog()           { _dialogState.value = ModeDialogState.None }
 
     fun onConfirmAdvance() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.mainImmediate) {
             advanceAndFinalize(forceComplete = false)
         }
     }
 
     fun onForceCompleteDay() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.mainImmediate) {
             advanceAndFinalize(forceComplete = true)
         }
     }
@@ -176,8 +179,8 @@ class ModeViewModel @Inject constructor(
     }
 
     fun onConfirmSync(day: Int) {
-        viewModelScope.launch {
-            try {
+        viewModelScope.launch(dispatchers.mainImmediate) {
+            val result = safeCall {
                 playerRepo.updateCurrentCycleDay(day)
                 
                 val currentConfig = configRepo.getConfigFlow().firstOrNull()
@@ -188,14 +191,21 @@ class ModeViewModel @Inject constructor(
                             cycleAnchorDay = day
                         )
                     )
+                } else {
+                    Result.Error(DataError.Local.NOT_FOUND)
                 }
+                
+                Result.Success(Unit)
+            }
 
-                onDismissDialog()
-                _events.emit(ModeEvent.CycleSynced)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                logger.e(e, "Помилка синхронізації циклу")
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString("Помилка синхронізації циклу")))
+            onDismissDialog()
+
+            when (result) {
+                is Result.Success -> _events.emit(ModeEvent.CycleSynced)
+                is Result.Error -> {
+                    logger.e(null, "Помилка синхронізації циклу: ${result.error}")
+                    _uiEvents.emit(UiEvent.ShowError(result.error.asUiText()))
+                }
             }
         }
     }
