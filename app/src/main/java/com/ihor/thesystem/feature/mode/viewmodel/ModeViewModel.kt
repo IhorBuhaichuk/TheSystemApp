@@ -42,9 +42,8 @@ class ModeViewModel @Inject constructor(
     private val scheduleRepo:    ScheduleRepository,
     private val configRepo:      SystemConfigRepository,
     private val debuffRepo:      DebuffRepository,
-    private val advanceCycleDay: AdvanceCycleDayUseCase,
     private val generateQuests:  GenerateDailyQuestsUseCase,
-    private val finalizeDay:     FinalizeDayUseCase,
+    private val finalizeDayTransaction: FinalizeDayTransactionUseCase,
     private val logger:          AppLogger
 ) : ViewModel() {
 
@@ -153,8 +152,7 @@ class ModeViewModel @Inject constructor(
 
     private suspend fun advanceAndFinalize(forceComplete: Boolean) {
         try {
-            advanceCycleDay(forceComplete = forceComplete)
-            val result = finalizeDay()
+            val result = finalizeDayTransaction(forceComplete = forceComplete)
             onDismissDialog()
             
             if (result is Result.Success) {
@@ -165,6 +163,8 @@ class ModeViewModel @Inject constructor(
                         _events.emit(ModeEvent.PenaltyActivated)
                     else -> _events.emit(ModeEvent.DayAdvanced)
                 }
+            } else if (result is Result.Error) {
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString("Помилка фіналізації: ${result.error}")))
             }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
