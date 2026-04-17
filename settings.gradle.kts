@@ -18,3 +18,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "The System"
 include(":app")
+include(":domain")

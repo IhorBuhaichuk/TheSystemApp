@@ -27,10 +27,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // WARNING: Storing API keys in BuildConfig is insecure as they can be easily extracted 
-        // through reverse engineering. 
-        // RECOMMENDED ARCHITECTURE: Move API calls to a secure backend proxy that manages 
-        // the API key and handles requests from the mobile app.
         val geminiKey = properties.getProperty("GEMINI_API_KEY") ?: "null"
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
     }
@@ -50,16 +46,11 @@ android {
         compose = true
         buildConfig = true
     }
-
-    sourceSets {
-        getByName("main") {
-            kotlin.directories.add("src/main/java")
-            kotlin.directories.add("../domain")
-        }
-    }
 }
 
 dependencies {
+    implementation(project(":domain"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
