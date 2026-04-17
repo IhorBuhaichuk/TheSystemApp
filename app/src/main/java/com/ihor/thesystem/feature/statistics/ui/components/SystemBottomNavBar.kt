@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.ihor.thesystem.core.navigation.Routes
@@ -23,7 +24,7 @@ import com.ihor.thesystem.core.theme.*
 @Composable
 fun SystemBottomNavBar(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute   = backStackEntry?.destination?.route
+    val destination = backStackEntry?.destination
 
     Box(
         modifier = Modifier
@@ -38,55 +39,55 @@ fun SystemBottomNavBar(navController: NavHostController) {
         ) {
             NavIconButton(
                 icon       = Icons.Filled.Home,
-                isSelected = currentRoute == Routes.Status.route,
+                isSelected = destination?.hasRoute<Routes.Status>() == true,
                 modifier   = Modifier.weight(1f),
                 onClick    = {
-                    navController.navigate(Routes.Status.route) {
-                        popUpTo(Routes.Status.route) { inclusive = false }
+                    navController.navigate(Routes.Status) {
+                        popUpTo<Routes.Status> { inclusive = false }
                         launchSingleTop = true
                     }
                 }
             )
             NavIconButton(
                 icon       = Icons.Filled.FitnessCenter,
-                isSelected = currentRoute == Routes.Mode.route,
+                isSelected = destination?.hasRoute<Routes.Mode>() == true,
                 modifier   = Modifier.weight(1f),
                 onClick    = {
-                    navController.navigate(Routes.Mode.route) {
-                        popUpTo(Routes.Status.route) { inclusive = false }
+                    navController.navigate(Routes.Mode) {
+                        popUpTo<Routes.Status> { inclusive = false }
                         launchSingleTop = true
                     }
                 }
             )
             NavIconButton(
                 icon       = Icons.Filled.CalendarMonth,
-                isSelected = currentRoute == Routes.Calendar.route,
+                isSelected = destination?.hasRoute<Routes.Calendar>() == true,
                 modifier   = Modifier.weight(1f),
                 onClick    = {
-                    navController.navigate(Routes.Calendar.route) {
-                        popUpTo(Routes.Status.route) { inclusive = false }
+                    navController.navigate(Routes.Calendar) {
+                        popUpTo<Routes.Status> { inclusive = false }
                         launchSingleTop = true
                     }
                 }
             )
             NavIconButton(
                 icon       = Icons.Filled.Person,
-                isSelected = currentRoute == Routes.Statistics.route,
+                isSelected = destination?.hasRoute<Routes.Statistics>() == true,
                 modifier   = Modifier.weight(1f),
                 onClick    = {
-                    navController.navigate(Routes.Statistics.route) {
-                        popUpTo(Routes.Status.route) { inclusive = false }
+                    navController.navigate(Routes.Statistics) {
+                        popUpTo<Routes.Status> { inclusive = false }
                         launchSingleTop = true
                     }
                 }
             )
             NavIconButton(
                 icon       = Icons.Filled.AutoAwesome,
-                isSelected = currentRoute == Routes.Architect.route,
+                isSelected = destination?.hasRoute<Routes.Architect>() == true,
                 modifier   = Modifier.weight(1f),
                 onClick    = {
-                    navController.navigate(Routes.Architect.route) {
-                        popUpTo(Routes.Status.route) { inclusive = false }
+                    navController.navigate(Routes.Architect) {
+                        popUpTo<Routes.Status> { inclusive = false }
                         launchSingleTop = true
                     }
                 }

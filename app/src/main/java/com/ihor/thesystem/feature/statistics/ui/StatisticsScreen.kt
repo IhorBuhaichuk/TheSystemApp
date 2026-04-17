@@ -108,7 +108,7 @@ fun StatisticsScreen(
                         // ── Annual Matrix Button ───────────────────────────
                         item {
                             Button(
-                                onClick = { navController.navigate(Routes.AnnualMatrix.route) },
+                                onClick = { navController.navigate(Routes.AnnualMatrix) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(48.dp)

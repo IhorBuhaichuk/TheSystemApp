@@ -24,29 +24,29 @@ fun AppNavGraph(navController: NavHostController) {
     ) { paddingValues ->
         NavHost(
             navController    = navController,
-            startDestination = Routes.Status.route,
+            startDestination = Routes.Status,
             modifier         = Modifier.padding(paddingValues)
         ) {
-            composable(Routes.Status.route) {
+            composable<Routes.Status> {
                 StatusScreen(navController = navController)
             }
-            composable(Routes.Mode.route) {
+            composable<Routes.Mode> {
                 ModeScreen(navController = navController)
             }
-            composable(Routes.Calendar.route) {
+            composable<Routes.Calendar> {
                 CalendarScreen()
             }
-            composable(Routes.Statistics.route) {
+            composable<Routes.Statistics> {
                 StatisticsScreen(navController = navController)
             }
-            composable(Routes.Architect.route) {
+            composable<Routes.Architect> {
                 ArchitectScreen(
                     onAcknowledge = {
                         navController.popBackStack()
                     }
                 )
             }
-            composable(Routes.AnnualMatrix.route) {
+            composable<Routes.AnnualMatrix> {
                 AnnualProgressionScreen(navController = navController)
             }
         }
