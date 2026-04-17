@@ -1,6 +1,7 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.model.DataError
 import com.ihor.thesystem.domain.model.DayFinalizationResult
 import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.DomainQuestType
@@ -22,14 +23,10 @@ class FinalizeDayUseCase @Inject constructor(
      * Виконує фіналізацію дня, делегуючи бізнес-логіку доменній моделі Player.
      */
     suspend operator fun invoke(): Result<DayFinalizationResult, DomainError> {
-        val player = playerRepo.getPlayer().firstOrNull() ?: return Result.Success(DayFinalizationResult.None)
+        val player = playerRepo.getPlayer().firstOrNull() 
+            ?: return Result.Error(DataError.Local.NOT_FOUND)
         
-        val config = configRepo.getConfigFlow().firstOrNull() ?: SystemConfig(
-            defaultPenalty = 20,
-            targetSets = 3,
-            targetReps = 12,
-            matrixWeeks = 48
-        )
+        val config = configRepo.getConfigFlow().firstOrNull() ?: SystemConfig()
         
         val todayQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
         val mainQuests = todayQuests.filter { it.type == DomainQuestType.MAIN }

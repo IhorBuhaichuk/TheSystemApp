@@ -130,10 +130,10 @@ data class QuestTask(
 
 data class SystemConfig(
     val id: Int = 1,
-    val defaultPenalty: Int,
-    val targetSets: Int,
-    val targetReps: Int,
-    val matrixWeeks: Int,
+    val defaultPenalty: Int = 20,
+    val targetSets: Int = 3,
+    val targetReps: Int = 12,
+    val matrixWeeks: Int = 48,
     val cycleAnchorDateTimestamp: Long = 0L, // Epoch Day
     val cycleAnchorDay: Int = 1,              // Який це був день циклу (1..4)
     val cycleDaysPerMicrocycle: Int = 4,
