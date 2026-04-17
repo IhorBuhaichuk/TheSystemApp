@@ -1,6 +1,5 @@
 package com.ihor.thesystem.feature.mode.viewmodel
 
-import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiEvent
@@ -153,14 +152,7 @@ class ModeViewModel @Inject constructor(
     }
 
     private suspend fun advanceAndFinalize(forceComplete: Boolean) {
-        val result = safeCall(
-            errorMapper = { exception ->
-                when (exception) {
-                    is SQLiteException -> DataError.Local.SQLITE_EXCEPTION
-                    else -> AppError.Message(exception.localizedMessage ?: "Unknown Error")
-                }
-            }
-        ) {
+        val result = safeCall {
             finalizeDayTransaction(forceComplete = forceComplete)
         }
         
@@ -212,7 +204,7 @@ class ModeViewModel @Inject constructor(
 private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean, isSelected: Boolean) =
     CycleDayUiModel(
         dayNumber   = dayNum,
-        type        = if (workoutTemplateId != null) DayType.WORKOUT else DayType.REST,
+        type        = if (isWorkoutDay) DayType.WORKOUT else DayType.REST,
         isActive    = isActive,
         isSelected  = isSelected,
         workoutName = workoutTemplateName

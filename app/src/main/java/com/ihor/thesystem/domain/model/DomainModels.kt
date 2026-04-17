@@ -158,7 +158,9 @@ data class ScheduleDay(
     val workoutTemplateName: String?,
     val dailyTaskNames: List<String>,
     val exercises: List<ExerciseDetails>
-)
+) {
+    val isWorkoutDay: Boolean get() = workoutTemplateId != null
+}
 
 data class ExerciseDetails(
     val id: Int,
