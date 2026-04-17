@@ -1,5 +1,6 @@
 package com.ihor.thesystem.feature.mode.viewmodel
 
+import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiEvent
@@ -152,7 +153,14 @@ class ModeViewModel @Inject constructor(
     }
 
     private suspend fun advanceAndFinalize(forceComplete: Boolean) {
-        val result = safeCall { 
+        val result = safeCall(
+            errorMapper = { exception ->
+                when (exception) {
+                    is SQLiteException -> DataError.Local.SQLITE_EXCEPTION
+                    else -> AppError.Message(exception.localizedMessage ?: "Unknown Error")
+                }
+            }
+        ) {
             finalizeDayTransaction(forceComplete = forceComplete)
         }
         

@@ -5,16 +5,20 @@ import com.ihor.thesystem.domain.model.DomainError
 import kotlinx.coroutines.CancellationException
 
 /**
- * Універсальна обгортка для безпечного виконання корутин.
- * Перехоплює всі Exception, повертаючи Result.Error(AppError.Message),
- * але коректно прокидає CancellationException для правильної роботи Coroutines.
+ * Універсальна обгортка для безпечного виконання корутин з деталізацією помилок.
+ *
+ * @param errorMapper Функція для перетворення Exception у специфічний DomainError.
+ * @param action Основна дія, що повертає Result.
  */
-suspend fun <T> safeCall(action: suspend () -> Result<T, DomainError>): Result<T, DomainError> {
+suspend fun <T> safeCall(
+    errorMapper: (Exception) -> DomainError = { AppError.Message(it.localizedMessage ?: "Unknown Error") },
+    action: suspend () -> Result<T, DomainError>
+): Result<T, DomainError> {
     return try {
         action()
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        Result.Error(AppError.Message(e.localizedMessage ?: "Unknown Error"))
+        Result.Error(errorMapper(e))
     }
 }
