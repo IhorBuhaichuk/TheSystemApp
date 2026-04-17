@@ -7,6 +7,7 @@ import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.util.AppLogger
 import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.core.util.safeCall
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.*
@@ -151,11 +152,14 @@ class ModeViewModel @Inject constructor(
     }
 
     private suspend fun advanceAndFinalize(forceComplete: Boolean) {
-        try {
-            val result = finalizeDayTransaction(forceComplete = forceComplete)
-            onDismissDialog()
-            
-            if (result is Result.Success) {
+        val result = safeCall { 
+            finalizeDayTransaction(forceComplete = forceComplete)
+        }
+        
+        onDismissDialog()
+        
+        when (result) {
+            is Result.Success -> {
                 when (result.data) {
                     is DayFinalizationResult.LevelUp ->
                         _events.emit(ModeEvent.LevelUp)
@@ -163,13 +167,11 @@ class ModeViewModel @Inject constructor(
                         _events.emit(ModeEvent.PenaltyActivated)
                     else -> _events.emit(ModeEvent.DayAdvanced)
                 }
-            } else if (result is Result.Error) {
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString("Помилка фіналізації: ${result.error}")))
             }
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            logger.e(e, "Помилка завершення дня (force=$forceComplete)")
-            _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка завершення дня")))
+            is Result.Error -> {
+                logger.e(null, "Помилка фіналізації: ${result.error}")
+                _uiEvents.emit(UiEvent.ShowError(result.error.asUiText()))
+            }
         }
     }
 
