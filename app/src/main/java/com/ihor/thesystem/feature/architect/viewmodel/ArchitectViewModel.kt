@@ -106,7 +106,9 @@ class ArchitectViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка операції")))
+                _uiEvents.emit(UiEvent.ShowError(
+                    UiText.StringResource(R.string.error_operation_failed)
+                ))
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
@@ -122,7 +124,10 @@ class ArchitectViewModel @Inject constructor(
             val context = getLastWorkoutContext() ?: return@launch
             
             // 2. Додаємо повідомлення користувача
-            val userMsg = ChatMessage(role = ChatRole.USER, text = "Надіслати результати на аналіз")
+            val userMsg = ChatMessage(
+                role = ChatRole.USER, 
+                uiText = UiText.StringResource(R.string.architect_btn_send_analysis)
+            )
             
             // 3. Вмикаємо завантаження та вимикаємо кнопку в попередньому системному повідомленні
             _uiState.update { state ->
@@ -144,11 +149,16 @@ class ArchitectViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка операції")))
+                _uiEvents.emit(UiEvent.ShowError(
+                    UiText.StringResource(R.string.error_operation_failed)
+                ))
                 
                 val errorMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
-                    text = "ПОМИЛКА МЕРЕЖІ: ${e.message ?: "Невідома помилка зв'язку з архітектором"}",
+                    uiText = UiText.StringResource(
+                        R.string.error_network_architect, 
+                        e.message ?: ""
+                    ),
                     isActionable = false
                 )
                 _uiState.update { it.copy(
@@ -171,7 +181,7 @@ class ArchitectViewModel @Inject constructor(
                 
                 val systemMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
-                    text = "Директиви отримано. Матрицю прогресії оновлено. Ваші цілі на наступне тренування скориговано."
+                    uiText = UiText.StringResource(R.string.architect_directives_applied)
                 )
                 
                 _uiState.update { state ->
@@ -186,7 +196,9 @@ class ArchitectViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка застосування рекомендацій")))
+                _uiEvents.emit(UiEvent.ShowError(
+                    UiText.StringResource(R.string.error_apply_recommendations_failed)
+                ))
                 _uiState.update { it.copy(isLoading = false) }
             }
         }

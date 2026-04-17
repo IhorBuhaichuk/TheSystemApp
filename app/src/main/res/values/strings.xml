@@ -37,12 +37,22 @@
     <!-- Architect Messages -->
     <string name="architect_initial_message">Вітаю. Ось результати вашого останнього тренування:\n%1$s\n\nБажаєте надіслати ці результати на аналіз Архітектору?</string>
     <string name="architect_no_data">СИСТЕМА: Відсутні дані для аналізу. Завершіть хоча б один тренувальний цикл, щоб Архітектор міг проаналізувати прогрес.</string>
+    <string name="architect_btn_send_analysis">Надіслати результати на аналіз</string>
+    <string name="architect_directives_applied">Директиви отримано. Матрицю прогресії оновлено. Ваші цілі на наступне тренування скориговано.</string>
 
     <!-- Error Messages -->
     <string name="error_invalid_name">Некоректне значення: ім\'я має бути від 1 до 50 символів</string>
     <string name="error_invalid_weight">Некоректне значення: допустима вага від 20 до 500 кг</string>
     <string name="error_invalid_height">Некоректне значення: допустимий зріст від 50 до 300 см</string>
     <string name="error_unknown">Невідома помилка</string>
+    <string name="error_operation_failed">Помилка операції</string>
+    <string name="error_network_architect">ПОМИЛКА МЕРЕЖІ: %1$s</string>
+    <string name="error_unknown_architect">Невідома помилка зв\'язку з архітектором</string>
+    <string name="error_apply_recommendations_failed">Помилка застосування рекомендацій</string>
+    <string name="error_no_internet">Відсутнє підключення до інтернету</string>
+    <string name="error_server_error">Помилка сервера</string>
+    <string name="error_timeout">Час очікування вичерпано</string>
+    <string name="error_disk_full">Пам\'ять пристрою заповнена</string>
 
     <array name="com_google_android_gms_fonts_certs">
         <item>@array/com_google_android_gms_fonts_certs_dev</item>
