@@ -1,7 +1,11 @@
 package com.ihor.thesystem.feature.statistics.ui.components
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Psychology
@@ -11,6 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.OneRepMaxText
 import com.ihor.thesystem.core.ui.components.RankBadge
-import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 
 @Composable
@@ -38,9 +44,29 @@ fun MatrixEntryCard(
         modifier = modifier
             .fillMaxWidth()
             .alpha(if (entry.isActive) 1f else 0.4f)
-            .sciPanel(accentColor.copy(0.35f), PanelSurface, 8.dp)
+            .clip(RoundedCornerShape(32.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFF1A1A2E), Color(0xFF0F0F1A)),
+                    start = Offset(0f, 0f),
+                    end = Offset(1000f, 1000f)
+                )
+            )
+            .border(
+                BorderStroke(
+                    1.dp,
+                    Brush.sweepGradient(
+                        listOf(
+                            accentColor.copy(alpha = 0.2f),
+                            Color(0xFFB257FF).copy(alpha = 0.2f),
+                            accentColor.copy(alpha = 0.2f)
+                        )
+                    )
+                ),
+                RoundedCornerShape(32.dp)
+            )
             .clickable(enabled = entry.isActive) { onCardClick() }
-            .padding(12.dp),
+            .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // --- Top Row: Name + Rank Badge ---

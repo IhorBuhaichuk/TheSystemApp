@@ -37,6 +37,15 @@ import com.ihor.thesystem.feature.mode.viewmodel.ModeViewModel
 import com.ihor.thesystem.feature.statistics.ui.dialogs.LogWorkoutSetsDialog
 import com.ihor.thesystem.feature.statistics.ui.dialogs.SetupMatrixDialog
 
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+
 @Composable
 fun ModeScreen(
     navController: NavHostController,
@@ -90,7 +99,7 @@ fun ModeScreen(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize().background(BackgroundDeep)) {
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF020408))) {
             // Shared dynamic background
             AnimatedModeBackground()
 
@@ -99,7 +108,7 @@ fun ModeScreen(
                     Box(
                         modifier         = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
-                    ) { CircularProgressIndicator(color = NeonGold) }
+                    ) { CircularProgressIndicator(color = NeonCyan) }
                 }
 
                 is UiState.Content -> {
@@ -115,45 +124,69 @@ fun ModeScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 24.dp)
+                                .padding(top = 40.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
                         ) {
-                            IconButton(
-                                onClick = { navController.popBackStack() },
-                                modifier = Modifier
-                                    .padding(bottom = 16.dp)
-                                    .size(40.dp)
-                                    .background(Color.White.copy(alpha = 0.05f), CircleShape)
-                                    .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .clip(CircleShape)
+                                                .background(NeonCyan)
+                                                .shadow(4.dp, CircleShape, spotColor = NeonCyan)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "PROTOCOL VIEW",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                color = NeonCyan,
+                                                letterSpacing = 2.sp,
+                                                fontWeight = FontWeight.Black
+                                            )
+                                        )
+                                    }
+                                    Text(
+                                        text = "РЕЖИМ ЦИКЛУ",
+                                        style = MaterialTheme.typography.headlineMedium.copy(
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    )
+                                    Text(
+                                        text = "${data.days.size}-ДЕННИЙ ЦИКЛ ПІДГОТОВКИ",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = Color.White.copy(alpha = 0.3f),
+                                            letterSpacing = 1.sp
+                                        )
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = { navController.popBackStack() },
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .background(Color.White.copy(alpha = 0.05f), CircleShape)
+                                        .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape)
+                                ) {
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                             }
-                            
-                            Text(
-                                text = "РЕЖИМ ЦИКЛУ",
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 24.sp,
-                                letterSpacing = 1.sp
-                            )
-                            Text(
-                                text = "${data.days.size}-денний протокол",
-                                color = Color.White.copy(alpha = 0.4f),
-                                fontFamily = RajdhaniFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp,
-                                letterSpacing = 1.sp
-                            )
                         }
 
                         Column(
                             modifier            = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
+                                .padding(horizontal = 24.dp)
                                 .padding(bottom = 120.dp), // Space for sticky button
                             verticalArrangement = Arrangement.spacedBy(24.dp)
                         ) {
@@ -169,25 +202,17 @@ fun ModeScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(PanelSurface)
-                                        .border(1.dp, NeonRed.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                                        .padding(16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(Color(0xFF2D0D0D).copy(alpha = 0.6f))
+                                        .border(1.dp, NeonRed.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
+                                        .padding(20.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                                     verticalAlignment     = Alignment.CenterVertically
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .background(NeonRed.copy(alpha = 0.1f), CircleShape)
-                                            .border(1.dp, NeonRed.copy(alpha = 0.3f), CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text("!", color = NeonRed, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                                    }
+                                    Icon(Icons.Default.Warning, contentDescription = null, tint = NeonRed, modifier = Modifier.size(24.dp))
                                     Column {
                                         Text(
-                                            text       = "ШТРАФНА ЗОНА АКТИВНА",
+                                            text       = "СИСТЕМНЕ ОБМЕЖЕННЯ: ШТРАФ",
                                             color      = NeonRed,
                                             fontFamily = TekoFamily,
                                             fontWeight = FontWeight.Bold,
@@ -195,8 +220,8 @@ fun ModeScreen(
                                             letterSpacing = 1.sp
                                         )
                                         Text(
-                                            text       = "Ваги знижені. Виконай 2 Main Quest для відновлення.",
-                                            color = Color.White.copy(alpha = 0.6f),
+                                            text       = "Ваги знижені на 20%. Виконай Main Quest для відновлення.",
+                                            color = Color.White.copy(alpha = 0.5f),
                                             fontFamily = RajdhaniFamily,
                                             fontSize = 12.sp
                                         )
@@ -219,7 +244,7 @@ fun ModeScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(start = 24.dp, end = 24.dp, bottom = 28.dp),
+                            .padding(horizontal = 24.dp, vertical = 28.dp),
                         contentAlignment = Alignment.BottomCenter
                     ) {
                         NextDayButton(
@@ -227,6 +252,7 @@ fun ModeScreen(
                             onClick    = { viewModel.onNextDayTap() }
                         )
                     }
+
 
                     // ── Dialogs ───────────────────────────────────────
                     when (val dialog = dialogState) {

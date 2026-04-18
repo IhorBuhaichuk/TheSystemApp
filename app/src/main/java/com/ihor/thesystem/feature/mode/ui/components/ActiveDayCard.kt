@@ -1,5 +1,7 @@
 package com.ihor.thesystem.feature.mode.ui.components
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -26,25 +28,26 @@ fun ActiveDayCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(32.dp))
-            .background(PanelSurface)
-            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
-            .padding(16.dp),
+            .padding(vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         if (data.matrixEntries.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(240.dp),
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(32.dp))
+                    .background(Color.White.copy(alpha = 0.02f))
+                    .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(32.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "RECOVERY PROTOCOL ACTIVE",
-                    color = TextSecondary.copy(alpha = 0.2f),
-                    fontFamily = RajdhaniFamily,
-                    fontSize = 14.sp,
-                    letterSpacing = 4.sp
+                    color = Color.White.copy(alpha = 0.2f),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        letterSpacing = 4.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 )
             }
         } else {
@@ -58,3 +61,4 @@ fun ActiveDayCard(
         }
     }
 }
+
