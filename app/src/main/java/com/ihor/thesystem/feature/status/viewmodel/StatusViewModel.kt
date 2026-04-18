@@ -28,6 +28,7 @@ sealed class StatusDialogState {
     object EditSystemConfig                                           : StatusDialogState()
     data class QuestChecklist(val questId: Int, val isDaily: Boolean) : StatusDialogState()
     data class AddTask(val questId: Int)                             : StatusDialogState()
+    object MainQuestWorkout                                          : StatusDialogState()
 }
 
 @HiltViewModel
@@ -116,6 +117,9 @@ class StatusViewModel @Inject constructor(
     fun onSystemConfigTap() { _dialogState.value = StatusDialogState.EditSystemConfig }
     fun onQuestTap(questId: Int, isDaily: Boolean) {
         _dialogState.value = StatusDialogState.QuestChecklist(questId, isDaily)
+    }
+    fun onMainQuestWorkoutTap() {
+        _dialogState.value = StatusDialogState.MainQuestWorkout
     }
     fun onDismissDialog()   { _dialogState.value = StatusDialogState.None }
 

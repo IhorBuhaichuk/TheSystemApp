@@ -39,6 +39,7 @@ import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.ui.components.GlitchText
 import com.ihor.thesystem.feature.status.ui.components.dialogs.AddTaskDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.LevelUpDialog
+import com.ihor.thesystem.feature.status.ui.components.dialogs.MainQuestWorkoutDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.PenaltyActivatedDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.PenaltyDeactivatedDialog
 import com.ihor.thesystem.feature.status.viewmodel.*
@@ -85,7 +86,10 @@ fun StatusScreen(
                     
                     HeaderSection(data)
                     
-                    MainWorkoutCardPremium(data)
+                    MainWorkoutCardPremium(
+                        data = data,
+                        onStartWorkout = { viewModel.onMainQuestWorkoutTap() }
+                    )
 
                     DailyQuestsSectionPremium(
                         data = data,
@@ -115,6 +119,9 @@ fun StatusScreen(
         when (val dState = dialogState) {
             is StatusDialogState.AddTask -> AddTaskDialog(
                 onConfirm = { viewModel.onAddTaskConfirmed(dState.questId, it) },
+                onDismiss = { viewModel.onDismissDialog() }
+            )
+            is StatusDialogState.MainQuestWorkout -> MainQuestWorkoutDialog(
                 onDismiss = { viewModel.onDismissDialog() }
             )
             else -> {}
@@ -268,7 +275,10 @@ private fun XpProgressBarPremium(data: StatusUiData) {
 }
 
 @Composable
-private fun MainWorkoutCardPremium(data: StatusUiData) {
+private fun MainWorkoutCardPremium(
+    data: StatusUiData,
+    onStartWorkout: () -> Unit
+) {
     val mainQuest = data.mainQuest ?: return
 
     Box(
@@ -351,7 +361,7 @@ private fun MainWorkoutCardPremium(data: StatusUiData) {
                 )
                 
                 Button(
-                    onClick = { /* Handle workout */ },
+                    onClick = onStartWorkout,
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (mainQuest.isCompleted) Color(0xFF00F0FF).copy(alpha = 0.1f) else Color(0xFF00F0FF),
