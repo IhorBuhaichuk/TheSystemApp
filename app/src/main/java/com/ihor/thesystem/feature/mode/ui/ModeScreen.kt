@@ -1,14 +1,24 @@
 package com.ihor.thesystem.feature.mode.ui
 
 import android.widget.Toast
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +29,7 @@ import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.ui.components.GlitchText
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.mode.ui.components.*
 import com.ihor.thesystem.feature.mode.ui.dialogs.ConfirmAdvanceDialog
@@ -67,172 +78,243 @@ fun ModeScreen(
     }
 
     Scaffold(
-        containerColor = BackgroundDeep,
+        containerColor = Color.Transparent,
         snackbarHost   = {
             SnackbarHost(snackbarHostState) { data ->
                 Snackbar(
                     snackbarData   = data,
-                    containerColor = PanelSurface,
+                    containerColor = Color.Black.copy(alpha = 0.8f),
                     contentColor   = NeonCyan,
-                    actionColor    = NeonGold
+                    actionColor    = NeonGold,
+                    modifier = Modifier.border(1.dp, NeonCyan.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
                 )
             }
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BackgroundDeep)
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            // ── Header ────────────────────────────────────────────────
-            Row(
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF020408))) {
+            // Shared dynamic background
+            AnimatedModeBackground()
+
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 18.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment     = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
             ) {
-                Text(
-                    text          = "РЕЖИМ ЦИКЛУ",
-                    color         = NeonGold,
-                    fontFamily    = FontFamily.Monospace,
-                    fontWeight    = FontWeight.Bold,
-                    fontSize      = 18.sp,
-                    letterSpacing = 3.sp
-                )
-                Text(
-                    text       = "4-ДЕННИЙ ПРОТОКОЛ",
-                    color      = TextSecondary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize   = 10.sp
-                )
-            }
+                // ── Header ────────────────────────────────────────────────
+                ModeHeader(onBack = { navController.popBackStack() })
 
-            when (val state = uiState) {
-                is UiState.Loading -> {
-                    Box(
-                        modifier         = Modifier.fillMaxWidth().height(300.dp),
-                        contentAlignment = Alignment.Center
-                    ) { CircularProgressIndicator(color = NeonGold) }
-                }
+                when (val state = uiState) {
+                    is UiState.Loading -> {
+                        Box(
+                            modifier         = Modifier.fillMaxWidth().height(300.dp),
+                            contentAlignment = Alignment.Center
+                        ) { CircularProgressIndicator(color = NeonGold) }
+                    }
 
-                is UiState.Content -> {
-                    val data = state.data
+                    is UiState.Content -> {
+                        val data = state.data
 
-                    Column(
-                        modifier            = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        // ── Cycle Day Selector ────────────────────────
                         Column(
-                            modifier = Modifier
+                            modifier            = Modifier
                                 .fillMaxWidth()
-                                .sciPanel(PanelBorder, PanelSurface.copy(alpha = 0.9f), 12.dp)
-                                .padding(14.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                                .padding(horizontal = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
                         ) {
-                            Text(
-                                text          = "ПОТОЧНИЙ ЦИКЛ",
-                                color         = TextSecondary,
-                                fontFamily    = FontFamily.Monospace,
-                                fontSize      = 10.sp,
-                                letterSpacing = 2.sp
-                            )
-                            CycleDaySelector(
-                                days = data.days,
-                                onTap = { viewModel.onCycleDayTap(it) },
-                                onLongPress = { viewModel.onCycleDayLongPress(it) }
-                            )
-                        }
-
-                        // ── Penalty Warning ───────────────────────────
-                        if (data.isPenaltyActive) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .sciPanel(NeonRed, NeonRed.copy(alpha = 0.1f), 8.dp)
-                                    .padding(12.dp),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                verticalAlignment     = Alignment.CenterVertically
-                            ) {
-                                Text("⚠", color = NeonRed, fontSize = 18.sp)
-                                Column {
-                                    Text(
-                                        text       = "ШТРАФНА ЗОНА АКТИВНА",
-                                        color      = NeonRed,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize   = 12.sp
-                                    )
-                                    Text(
-                                        text       = "Ваги знижені. Виконай 2 Main Quest для відновлення.",
-                                        color = NeonRed.copy(alpha = 0.7f),
-                                        fontFamily = FontFamily.Monospace,
-                                        fontSize = 10.sp
-                                    )
-                                }
-                            }
-                        }
-
-                        // ── Active Day Card ───────────────────────────
-                        data.activeDayData?.let { dayData ->
+                            // ── Cycle Day Selector ────────────────────────
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .sciPanel(NeonCyan.copy(0.5f), PanelSurface, 12.dp)
-                                    .padding(14.dp)
+                                    .sciPanel(
+                                        borderColor = Color.White.copy(alpha = 0.1f),
+                                        backgroundColor = Color.White.copy(alpha = 0.03f),
+                                        cornerCut = 16.dp
+                                    )
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text          = "ПОТОЧНИЙ ЦИКЛ",
+                                        color         = Color.White.copy(alpha = 0.5f),
+                                        fontFamily    = RajdhaniFamily,
+                                        fontWeight    = FontWeight.Bold,
+                                        fontSize      = 12.sp,
+                                        letterSpacing = 2.sp
+                                    )
+                                    Text(
+                                        text       = "STATUS: ACTIVE",
+                                        color      = NeonGreen.copy(alpha = 0.7f),
+                                        fontFamily = RajdhaniFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize   = 10.sp
+                                    )
+                                }
+                                CycleDaySelector(
+                                    days = data.days,
+                                    onTap = { viewModel.onCycleDayTap(it) },
+                                    onLongPress = { viewModel.onCycleDayLongPress(it) }
+                                )
+                            }
+
+                            // ── Penalty Warning ───────────────────────────
+                            if (data.isPenaltyActive) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .sciPanel(NeonRed.copy(0.5f), NeonRed.copy(alpha = 0.05f), 12.dp)
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                    verticalAlignment     = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .background(NeonRed.copy(alpha = 0.1f), CircleShape)
+                                            .border(1.dp, NeonRed.copy(alpha = 0.3f), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("!", color = NeonRed, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                    }
+                                    Column {
+                                        Text(
+                                            text       = "ШТРАФНА ЗОНА АКТИВНА",
+                                            color      = NeonRed,
+                                            fontFamily = TekoFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize   = 16.sp,
+                                            letterSpacing = 1.sp
+                                        )
+                                        Text(
+                                            text       = "Ваги знижені. Виконай 2 Main Quest для відновлення.",
+                                            color = Color.White.copy(alpha = 0.6f),
+                                            fontFamily = RajdhaniFamily,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                            }
+
+                            // ── Active Day Card ───────────────────────────
+                            data.activeDayData?.let { dayData ->
                                 ActiveDayCard(data = dayData)
                             }
+
+                            // ── Next Day Button ───────────────────────────
+                            NextDayButton(
+                                currentDay = data.currentCycleDay,
+                                onClick    = { viewModel.onNextDayTap() }
+                            )
+
+                            Spacer(Modifier.height(24.dp))
                         }
 
-                        // ── Next Day Button ───────────────────────────
-                        NextDayButton(
-                            currentDay = data.currentCycleDay,
-                            onClick    = { viewModel.onNextDayTap() }
-                        )
-
-                        Spacer(Modifier.height(8.dp))
+                        // ── Dialogs ───────────────────────────────────────
+                        when (val dialog = dialogState) {
+                            is ModeDialogState.ConfirmAdvance -> {
+                                ConfirmAdvanceDialog(
+                                    currentDay      = data.currentCycleDay,
+                                    onConfirm       = { viewModel.onConfirmAdvance() },
+                                    onForceComplete = { viewModel.onForceCompleteDay() },
+                                    onDismiss       = { viewModel.onDismissDialog() }
+                                )
+                            }
+                            is ModeDialogState.SyncAnchor -> {
+                                SyncAnchorDialog(
+                                    dayNumber = dialog.day,
+                                    onConfirm = { viewModel.onConfirmSync(dialog.day) },
+                                    onDismiss = { viewModel.onDismissDialog() }
+                                )
+                            }
+                            else -> Unit
+                        }
                     }
 
-                    // ── Dialogs ───────────────────────────────────────
-                    when (val dialog = dialogState) {
-                        is ModeDialogState.ConfirmAdvance -> {
-                            ConfirmAdvanceDialog(
-                                currentDay      = data.currentCycleDay,
-                                onConfirm       = { viewModel.onConfirmAdvance() },
-                                onForceComplete = { viewModel.onForceCompleteDay() },
-                                onDismiss       = { viewModel.onDismissDialog() }
+                    is UiState.Error -> {
+                        Box(
+                            modifier         = Modifier.fillMaxWidth().height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text       = "[ SYSTEM ERROR: ${(state as UiState.Error).message} ]",
+                                color      = NeonRed,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 14.sp
                             )
                         }
-                        is ModeDialogState.SyncAnchor -> {
-                            SyncAnchorDialog(
-                                dayNumber = dialog.day,
-                                onConfirm = { viewModel.onConfirmSync(dialog.day) },
-                                onDismiss = { viewModel.onDismissDialog() }
-                            )
-                        }
-                        else -> Unit
-                    }
-                }
-
-                is UiState.Error -> {
-                    Box(
-                        modifier         = Modifier.fillMaxWidth().height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text       = "[ ПОМИЛКА: ${(state as UiState.Error).message} ]",
-                            color      = NeonRed,
-                            fontFamily = FontFamily.Monospace
-                        )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ModeHeader(onBack: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 20.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier
+                .size(40.dp)
+                .background(Color.White.copy(alpha = 0.05f), CircleShape)
+                .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape)
+        ) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+        }
+
+        GlitchText(
+            text = "РЕЖИМ ЦИКЛУ",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontFamily = TekoFamily,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 4.sp
+            ),
+            primaryColor = NeonGold
+        )
+
+        Box(modifier = Modifier.size(40.dp))
+    }
+}
+
+@Composable
+private fun AnimatedModeBackground() {
+    val infiniteTransition = rememberInfiniteTransition(label = "mode_bg")
+    val colorShift by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(12000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "shift"
+    )
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        drawRect(Color(0xFF020408))
+        
+        // Neon Gold Glow
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(NeonGold.copy(alpha = 0.06f), Color.Transparent),
+                center = Offset(size.width * 0.15f + (size.width * 0.1f * colorShift), size.height * 0.25f),
+                radius = 700.dp.toPx()
+            )
+        )
+        
+        // Neon Cyan Glow
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(NeonCyan.copy(alpha = 0.06f), Color.Transparent),
+                center = Offset(size.width * 0.85f - (size.width * 0.1f * colorShift), size.height * 0.75f),
+                radius = 800.dp.toPx()
+            )
+        )
     }
 }

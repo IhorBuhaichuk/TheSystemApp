@@ -14,8 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,23 +28,23 @@ fun NextDayButton(
     onClick: () -> Unit
 ) {
     val nextDay = if (currentDay >= 4) 1 else currentDay + 1
-    val borderAlpha by rememberInfiniteTransition(label = "pulse")
-        .animateFloat(
-            initialValue   = 0.5f,
-            targetValue    = 1.0f,
-            animationSpec  = infiniteRepeatable(
-                animation  = tween(1200, easing = EaseInOutSine),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label          = "borderAlpha"
-        )
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val borderAlpha by infiniteTransition.animateFloat(
+        initialValue   = 0.3f,
+        targetValue    = 0.8f,
+        animationSpec  = infiniteRepeatable(
+            animation  = tween(1500, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label          = "borderAlpha"
+    )
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(60.dp)
             .drawBehind {
-                val cut  = 14.dp.toPx()
+                val cut  = 16.dp.toPx()
                 val path = Path().apply {
                     moveTo(cut, 0f)
                     lineTo(size.width, 0f)
@@ -54,30 +54,29 @@ fun NextDayButton(
                     lineTo(0f, cut)
                     close()
                 }
-                drawPath(path, NeonCyan.copy(alpha = 0.12f))
+                drawPath(path, NeonCyan.copy(alpha = 0.08f))
                 drawPath(path, NeonCyan.copy(alpha = borderAlpha), style = Stroke(2.dp.toPx()))
             }
-            .background(androidx.compose.ui.graphics.Color.Transparent)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment     = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector        = Icons.Filled.ArrowForward,
                 contentDescription = null,
                 tint               = NeonCyan,
-                modifier           = Modifier.size(18.dp)
+                modifier           = Modifier.size(20.dp)
             )
             Text(
-                text          = "ЗАВЕРШИТИ ДЕНЬ ${currentDay} → ДЕНЬ ${nextDay}",
+                text          = "ПРОТОКОЛ: ЗАВЕРШИТИ ДЕНЬ $currentDay",
                 color         = NeonCyan,
-                fontFamily    = FontFamily.Monospace,
+                fontFamily    = TekoFamily,
                 fontWeight    = FontWeight.Bold,
-                fontSize      = 12.sp,
-                letterSpacing = 0.5.sp
+                fontSize      = 18.sp,
+                letterSpacing = 2.sp
             )
         }
     }

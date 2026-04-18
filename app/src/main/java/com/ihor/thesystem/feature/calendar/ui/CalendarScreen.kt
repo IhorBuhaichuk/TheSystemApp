@@ -1,17 +1,23 @@
 package com.ihor.thesystem.feature.calendar.ui
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -41,89 +47,160 @@ fun CalendarScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundDeep)
-            .verticalScroll(scrollState)
-            .padding(16.dp)
-    ) {
-        // ── Header ────────────────────────────────────────────────
-        Text(
-            text = "КОНТРОЛЬ ЦИКЛУ",
-            color = NeonCyan,
-            fontFamily = RajdhaniFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            letterSpacing = 2.sp
-        )
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF020408))) {
+        // Shared dynamic background
+        AnimatedCalendarBackground()
 
-        uiState.todayInfo?.let { today ->
-            Text(
-                text = "СЬОГОДНІ: ${today.label.uppercase()}",
-                color = when(today.cycleDay) {
-                    1 -> NeonGold
-                    2 -> NeonCyan
-                    else -> TextSecondary
-                },
-                fontFamily = RajdhaniFamily,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        // ── Month Selector ────────────────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 24.dp)
         ) {
-            IconButton(onClick = { viewModel.onMonthChange(uiState.currentMonth.minusMonths(1)) }) {
-                Text("<", color = NeonCyan, fontFamily = RajdhaniFamily)
+            // ── Header ────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "КОНТРОЛЬ ЦИКЛУ",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = Color.White,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 4.sp
+                        )
+                    )
+                    uiState.todayInfo?.let { today ->
+                        Text(
+                            text = "СЬОГОДНІ: ${today.label.uppercase()}",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = when(today.cycleDay) {
+                                    1 -> NeonGold
+                                    2 -> NeonCyan
+                                    else -> Color.White.copy(alpha = 0.3f)
+                                },
+                                letterSpacing = 2.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+                
+                Surface(
+                    color = NeonCyan.copy(alpha = 0.1f),
+                    shape = CircleShape,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, NeonCyan.copy(alpha = 0.2f))
+                ) {
+                    Icon(
+                        androidx.compose.material.icons.Icons.Default.CalendarMonth,
+                        contentDescription = null,
+                        tint = NeonCyan,
+                        modifier = Modifier.padding(8.dp).size(20.dp)
+                    )
+                }
             }
-            Text(
-                text = uiState.currentMonth.month.getDisplayName(TextStyle.FULL_STANDALONE, Locale("uk")).uppercase() + 
-                       " ${uiState.currentMonth.year}",
-                color = TextPrimary,
-                fontFamily = RajdhaniFamily,
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center
+
+            // ── Month Selector ────────────────────────────────────────
+            Surface(
+                color = Color.White.copy(alpha = 0.03f),
+                shape = RoundedCornerShape(20.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = { viewModel.onMonthChange(uiState.currentMonth.minusMonths(1)) },
+                        modifier = Modifier.background(Color.White.copy(alpha = 0.05f), CircleShape)
+                    ) {
+                        Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack, null, tint = NeonCyan, modifier = Modifier.size(18.dp))
+                    }
+                    Text(
+                        text = uiState.currentMonth.month.getDisplayName(TextStyle.FULL_STANDALONE, Locale("uk")).uppercase() + 
+                               " ${uiState.currentMonth.year}",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp,
+                            fontFamily = RajdhaniFamily
+                        )
+                    )
+                    IconButton(
+                        onClick = { viewModel.onMonthChange(uiState.currentMonth.plusMonths(1)) },
+                        modifier = Modifier.background(Color.White.copy(alpha = 0.05f), CircleShape)
+                    ) {
+                        Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowForward, null, tint = NeonCyan, modifier = Modifier.size(18.dp))
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            // ── Calendar Grid ─────────────────────────────────────────
+            CalendarGrid(
+                days = uiState.days,
+                currentMonth = uiState.currentMonth,
+                selectedDate = uiState.selectedDate,
+                onDateClick = { viewModel.onDateSelected(it) }
             )
-            IconButton(onClick = { viewModel.onMonthChange(uiState.currentMonth.plusMonths(1)) }) {
-                Text(">", color = NeonCyan, fontFamily = RajdhaniFamily)
+
+            // ── Details Section ───────────────────────────────────────
+            uiState.selectedDate?.let { date ->
+                val selectedDayModel = uiState.days.find { it.date == date }
+                if (selectedDayModel != null) {
+                    Spacer(Modifier.height(24.dp))
+                    DailyScheduleSection(
+                        date = date,
+                        dayModel = selectedDayModel,
+                        results = uiState.workoutResults,
+                        recommendations = uiState.nextWorkoutRecommendations,
+                        loggedWeight = uiState.loggedWeightForDate,
+                        onDismiss = { viewModel.onDateSelected(null) },
+                        viewModel = viewModel
+                    )
+                }
             }
+
+            Spacer(Modifier.height(100.dp))
         }
+    }
+}
 
-        Spacer(Modifier.height(16.dp))
+@Composable
+private fun AnimatedCalendarBackground() {
+    val infiniteTransition = rememberInfiniteTransition()
+    val colorShift by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(20000, easing = LinearEasing), RepeatMode.Reverse)
+    )
 
-        // ── Calendar Grid ─────────────────────────────────────────
-        CalendarGrid(
-            days = uiState.days,
-            currentMonth = uiState.currentMonth,
-            selectedDate = uiState.selectedDate,
-            onDateClick = { viewModel.onDateSelected(it) }
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        drawRect(Color(0xFF020408))
+        
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(NeonCyan.copy(alpha = 0.05f), Color.Transparent),
+                center = Offset(size.width * 0.9f, size.height * 0.1f + (size.height * 0.2f * colorShift)),
+                radius = 800.dp.toPx()
+            )
         )
-
-        // ── Details Section ───────────────────────────────────────
-        uiState.selectedDate?.let { date ->
-            val selectedDayModel = uiState.days.find { it.date == date }
-            if (selectedDayModel != null) {
-                Spacer(Modifier.height(24.dp))
-                DailyScheduleSection(
-                    date = date,
-                    dayModel = selectedDayModel,
-                    results = uiState.workoutResults,
-                    recommendations = uiState.nextWorkoutRecommendations,
-                    loggedWeight = uiState.loggedWeightForDate,
-                    onDismiss = { viewModel.onDateSelected(null) },
-                    viewModel = viewModel
-                )
-            }
-        }
-
-        Spacer(Modifier.height(32.dp))
+        
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(NeonGold.copy(alpha = 0.03f), Color.Transparent),
+                center = Offset(size.width * 0.1f, size.height * 0.9f - (size.height * 0.2f * colorShift)),
+                radius = 700.dp.toPx()
+            )
+        )
     }
 }
 

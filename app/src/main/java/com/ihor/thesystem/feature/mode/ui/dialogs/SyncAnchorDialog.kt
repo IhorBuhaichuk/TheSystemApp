@@ -1,11 +1,12 @@
 package com.ihor.thesystem.feature.mode.ui.dialogs
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -20,33 +21,40 @@ fun SyncAnchorDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = PanelSurface,
-        shape = RoundedCornerShape(8.dp),
+        containerColor = Color(0xFF020408),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.border(1.dp, NeonCyan.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
         title = {
             Text(
-                text = "[ СИНХРОНІЗАЦІЯ ЦИКЛУ ]",
+                text = "СИНХРОНІЗАЦІЯ ЦИКЛУ",
                 color = NeonCyan,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = TekoFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontSize = 22.sp,
+                letterSpacing = 2.sp
             )
         },
         text = {
             Text(
-                text = "Призначити День $dayNumber циклу поточним? Це оновить ваш розклад відповідно до сьогоднішньої дати.",
-                color = TextPrimary,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Start
+                text = "Призначити День $dayNumber циклу як активний? Це синхронізує розклад тренувань із системним календарем.",
+                color = Color.White.copy(alpha = 0.8f),
+                fontFamily = RajdhaniFamily,
+                fontSize   = 15.sp,
+                textAlign  = TextAlign.Start
             )
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = NeonCyan.copy(alpha = 0.2f)),
+                shape = RoundedCornerShape(8.dp)
+            ) {
                 Text(
                     text = "ПІДТВЕРДИТИ",
                     color = NeonCyan,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold
+                    fontFamily = RajdhaniFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
                 )
             }
         },
@@ -54,8 +62,9 @@ fun SyncAnchorDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     text = "СКАСУВАТИ",
-                    color = TextSecondary,
-                    fontFamily = FontFamily.Monospace
+                    color = Color.White.copy(alpha = 0.5f),
+                    fontFamily = RajdhaniFamily,
+                    fontSize = 14.sp
                 )
             }
         }

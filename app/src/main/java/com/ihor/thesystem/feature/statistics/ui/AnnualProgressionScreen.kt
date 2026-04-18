@@ -1,20 +1,28 @@
 package com.ihor.thesystem.feature.statistics.ui
 
 import android.content.pm.ActivityInfo
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,48 +40,83 @@ fun AnnualProgressionScreen(navController: NavHostController) {
     val matrixData = AnnualMatrixProvider.getMatrix()
     val horizontalScrollState = rememberScrollState()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDeep)
+            .background(Color(0xFF020408))
     ) {
-        // --- Top Bar ---
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "РІЧНА МАТРИЦЯ ПРОГРЕСІЇ",
-                color = NeonGreen,
-                fontFamily = TekoFamily,
-                fontSize = 24.sp,
-                letterSpacing = 2.sp
-            )
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.Default.Close, contentDescription = "Close", tint = NeonRed)
-            }
-        }
+        // Shared dynamic background for consistency
+        AnimatedAnnualBackground()
 
-        // --- Table Wrapper ---
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(horizontalScrollState)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.fillMaxSize()
         ) {
-            // 1. СТАТИЧНА ШАПКА (Header Row) - завжди видима зверху
-            MatrixHeaderRow()
-
-            // 2. ВЕРТИКАЛЬНИЙ СПИСОК (Дані)
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp)
+            // --- Top Bar ---
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp, vertical = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                items(matrixData) { row ->
-                    MatrixDataRow(row)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.White.copy(alpha = 0.05f), CircleShape)
+                            .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(20.dp))
+                    Text(
+                        text = "РІЧНА МАТРИЦЯ ПРОГРЕСІЇ",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = Color.White,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 2.sp
+                        )
+                    )
+                }
+                
+                Surface(
+                    color = NeonGreen.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, NeonGreen.copy(alpha = 0.2f))
+                ) {
+                    Text(
+                        text = "RANK-S PROJECTION",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall.copy(color = NeonGreen, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    )
+                }
+            }
+
+            // --- Table Wrapper ---
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color.White.copy(alpha = 0.02f))
+                    .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(horizontalScrollState)
+                ) {
+                    MatrixHeaderRow()
+
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 32.dp)
+                    ) {
+                        items(matrixData) { row ->
+                            MatrixDataRow(row)
+                        }
+                    }
                 }
             }
         }
@@ -81,47 +124,71 @@ fun AnnualProgressionScreen(navController: NavHostController) {
 }
 
 @Composable
+private fun AnimatedAnnualBackground() {
+    val infiniteTransition = rememberInfiniteTransition()
+    val colorShift by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(15000, easing = LinearEasing), RepeatMode.Reverse)
+    )
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        drawRect(Color(0xFF020408))
+        
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(NeonGreen.copy(alpha = 0.05f), Color.Transparent),
+                center = Offset(size.width * 0.1f + (size.width * 0.05f * colorShift), size.height * 0.2f),
+                radius = 400.dp.toPx()
+            )
+        )
+        
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(NeonGold.copy(alpha = 0.03f), Color.Transparent),
+                center = Offset(size.width * 0.9f - (size.width * 0.05f * colorShift), size.height * 0.8f),
+                radius = 500.dp.toPx()
+            )
+        )
+    }
+}
+
+@Composable
 private fun MatrixHeaderRow() {
     Row(
         modifier = Modifier
-            .background(PanelSurface)
-            .border(0.5.dp, Color.White.copy(alpha = 0.2f))
+            .background(Color.White.copy(alpha = 0.03f))
     ) {
-        // Заголовок для назв вправ
         Box(
             modifier = Modifier
-                .width(160.dp)
-                .height(44.dp)
-                .border(0.5.dp, Color.White.copy(alpha = 0.2f))
-                .padding(start = 8.dp, end = 8.dp),
+                .width(180.dp)
+                .height(56.dp)
+                .padding(start = 24.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
                 text = "Вправа",
-                color = TextSecondary,
-                fontFamily = RajdhaniFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                style = MaterialTheme.typography.labelMedium.copy(color = Color.White.copy(alpha = 0.3f), fontWeight = FontWeight.Bold)
             )
         }
-        // Заголовки для місяців (M0 - M12)
         for (m in 0..12) {
             val rankInfo = getRankInfo(m)
             Box(
                 modifier = Modifier
-                    .width(70.dp)
-                    .height(44.dp)
-                    .border(0.5.dp, Color.White.copy(alpha = 0.2f)),
+                    .width(80.dp)
+                    .height(56.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "M$m (${rankInfo.first})",
-                    color = rankInfo.second,
-                    fontFamily = TekoFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "M$m",
+                        style = MaterialTheme.typography.labelSmall.copy(color = Color.White.copy(alpha = 0.3f))
+                    )
+                    Text(
+                        text = rankInfo.first,
+                        style = MaterialTheme.typography.labelMedium.copy(color = rankInfo.second, fontWeight = FontWeight.Black)
+                    )
+                }
             }
         }
     }
@@ -130,42 +197,52 @@ private fun MatrixHeaderRow() {
 @Composable
 private fun MatrixDataRow(row: MatrixRow) {
     Row(
-        modifier = Modifier.border(0.5.dp, Color.White.copy(alpha = 0.1f))
+        modifier = Modifier
+            .fillMaxWidth()
+            .drawBehind {
+                drawLine(
+                    color = Color.White.copy(alpha = 0.03f),
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 1.dp.toPx()
+                )
+            },
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Назва вправи
         Box(
             modifier = Modifier
-                .width(160.dp)
-                .height(40.dp)
-                .border(0.5.dp, Color.White.copy(alpha = 0.1f))
-                .padding(start = 8.dp, end = 8.dp),
+                .width(180.dp)
+                .height(52.dp)
+                .padding(start = 24.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
                 text = row.exercise.uppercase(),
-                color = TextPrimary,
-                fontFamily = RajdhaniFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 12.sp,
-                maxLines = 1,
-                textAlign = TextAlign.Start
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    letterSpacing = 0.5.sp
+                ),
+                maxLines = 1
             )
         }
-        // Значення для кожного місяця
         row.targets.forEachIndexed { index, target ->
             val rankInfo = getRankInfo(index)
             Box(
                 modifier = Modifier
-                    .width(70.dp)
-                    .height(40.dp)
-                    .border(0.5.dp, Color.White.copy(alpha = 0.1f)),
+                    .width(80.dp)
+                    .height(52.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = target,
-                    color = rankInfo.second.copy(alpha = 0.9f),
-                    fontFamily = TekoFamily,
-                    fontSize = 15.sp,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = rankInfo.second.copy(alpha = 0.8f),
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 13.sp
+                    ),
                     textAlign = TextAlign.Center
                 )
             }

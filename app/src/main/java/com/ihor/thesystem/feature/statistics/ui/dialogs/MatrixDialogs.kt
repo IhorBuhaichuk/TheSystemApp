@@ -1,16 +1,26 @@
 package com.ihor.thesystem.feature.statistics.ui.dialogs
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -19,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.ihor.thesystem.core.theme.*
-import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
 
@@ -35,49 +44,34 @@ fun SetupMatrixDialog(
     var target by remember { mutableStateOf(initialTarget) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .sciPanel(NeonGold.copy(0.5f), BackgroundDeep, 16.dp),
-            color = Color.Transparent
+        PremiumDialogContainer(
+            title = "НАЛАШТУВАННЯ МАТРИЦІ",
+            accentColor = NeonGold,
+            onDismiss = onDismiss
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(20.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "[ НАЛАШТУВАННЯ МАТРИЦІ ]",
-                    color = NeonGold,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-                Text(
                     text = exerciseName.uppercase(),
-                    color = TextPrimary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
                 )
                 
-                NeonInputField(label = "Стартова вага (кг)", value = start) { start = it }
-                NeonInputField(label = "Цільова вага (кг)", value = target) { target = it }
+                PremiumInputField(label = "Стартова вага (кг)", value = start, accentColor = NeonGold) { start = it }
+                PremiumInputField(label = "Цільова вага (кг)", value = target, accentColor = NeonGold) { target = it }
 
-                Button(
-                    onClick = { onConfirm(start, target) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonGold.copy(0.2f)),
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text(
-                        text = "[ ПІДТВЕРДИТИ ]",
-                        color = NeonGold,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                PremiumDialogButton(
+                    text = "ПІДТВЕРДИТИ",
+                    color = NeonGold,
+                    onClick = { onConfirm(start, target) }
+                )
             }
         }
     }
@@ -94,181 +88,243 @@ fun LogWorkoutSetsDialog(
     onDismiss: () -> Unit,
     existingLog: ExerciseSet? = null
 ) {
-    // Завдання 2: Правильна ініціалізація стану фітбеку
     var feedback by remember(existingLog) { mutableStateOf(existingLog?.userFeedback ?: "") }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .sciPanel(NeonCyan.copy(0.5f), BackgroundDeep, 16.dp),
-            color = Color.Transparent
+        PremiumDialogContainer(
+            title = "ЛОГУВАННЯ ПІДХОДІВ",
+            accentColor = NeonCyan,
+            onDismiss = onDismiss
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()) // КРИТИЧНО: Додаємо скрол для вмісту
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "[ ЛОГУВАННЯ ПІДХОДІВ ]",
-                    color = NeonCyan,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-                Text(
                     text = exerciseName.uppercase(),
-                    color = TextPrimary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
                 )
                 
                 // Введення підходів
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     sets.forEachIndexed { index, set ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
                                 text = "СЕТ ${index + 1}",
-                                color = TextSecondary,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 10.sp,
-                                modifier = Modifier.width(45.dp)
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = Color.White.copy(alpha = 0.4f),
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                modifier = Modifier.width(40.dp)
                             )
-                            SmallNeonInputField(
+                            
+                            SmallPremiumInputField(
                                 hint = "Вага",
                                 value = set.weight,
+                                accentColor = NeonCyan,
                                 modifier = Modifier.weight(1f)
                             ) { onUpdate(set.id, it, set.reps) }
                             
-                            SmallNeonInputField(
+                            SmallPremiumInputField(
                                 hint = "Повт",
                                 value = set.reps,
+                                accentColor = NeonCyan,
                                 modifier = Modifier.weight(1f)
                             ) { onUpdate(set.id, set.weight, it) }
                         }
                     }
                 }
 
-                // Керування підходами (+ / - СЕТ)
+                // Керування підходами
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    OutlinedButton(
+                    IconButton(
                         onClick = onRemove,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonRed),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, NeonRed.copy(0.3f))
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
                     ) {
-                        Text("- СЕТ", fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                        Icon(Icons.Default.Remove, contentDescription = null, tint = NeonRed)
                     }
-                    OutlinedButton(
+                    IconButton(
                         onClick = onAdd,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonGreen),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, NeonGreen.copy(0.3f))
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
                     ) {
-                        Text("+ СЕТ", fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                        Icon(Icons.Default.Add, contentDescription = null, tint = NeonGreen)
                     }
                 }
 
-                // ПОЛЕ ФІТБЕКУ (Завдання 2) - ПІД полями вводу ваги/повторень
                 OutlinedTextField(
                     value = feedback,
                     onValueChange = { feedback = it },
-                    label = { Text("Фітбек (відчуття, біль, легкість...)") },
-                    leadingIcon = { Icon(Icons.Default.Edit, contentDescription = "Feedback") },
-                    maxLines = 3,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                    placeholder = { Text("Фітбек (відчуття, памп...)", color = Color.White.copy(alpha = 0.2f)) },
+                    maxLines = 2,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = NeonCyan,
-                        unfocusedBorderColor = PanelBorder,
-                        focusedLabelColor = NeonCyan,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        cursorColor = NeonCyan
+                        focusedBorderColor = NeonCyan.copy(alpha = 0.5f),
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+                        cursorColor = NeonCyan,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
                     ),
-                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = RajdhaniFamily, fontSize = 14.sp)
+                    textStyle = MaterialTheme.typography.bodyMedium
                 )
 
-                // Кнопка збереження
-                Button(
-                    onClick = { onSave(feedback) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text(
-                        text = "[ ЗАЛОГУВАТИ ]",
-                        color = BackgroundDeep,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("СКАСУВАТИ", color = TextSecondary, fontFamily = FontFamily.Monospace)
-                }
+                PremiumDialogButton(
+                    text = "ЗАЛОГУВАТИ",
+                    color = NeonCyan,
+                    onClick = { onSave(feedback) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun NeonInputField(label: String, value: String, onValueChange: (String) -> Unit) {
-    TextField(
+fun PremiumDialogContainer(
+    title: String,
+    accentColor: Color,
+    onDismiss: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(32.dp))
+            .background(Color(0xFF020408))
+            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(32.dp))
+    ) {
+        // Decorative glow
+        Box(
+            modifier = Modifier
+                .size(150.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = 40.dp, y = (-40).dp)
+                .blur(40.dp)
+                .background(accentColor.copy(alpha = 0.1f), CircleShape)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = accentColor,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp
+                    )
+                )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Close, null, tint = Color.White.copy(alpha = 0.3f))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            content()
+        }
+    }
+}
+
+@Composable
+private fun PremiumInputField(
+    label: String,
+    value: String,
+    accentColor: Color,
+    onValueChange: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = label.uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(color = Color.White.copy(alpha = 0.3f))
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = accentColor,
+                unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+                cursorColor = accentColor,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
+            ),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+        )
+    }
+}
+
+@Composable
+private fun SmallPremiumInputField(
+    hint: String,
+    value: String,
+    accentColor: Color,
+    modifier: Modifier = Modifier,
+    onValueChange: (String) -> Unit
+) {
+    OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, color = TextSecondary, fontSize = 12.sp) },
+        placeholder = { Text(hint, fontSize = 12.sp, color = Color.White.copy(alpha = 0.2f)) },
+        modifier = modifier,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        modifier = Modifier.fillMaxWidth(),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = PanelSurface,
-            unfocusedContainerColor = PanelSurface,
-            focusedTextColor = NeonCyan,
-            unfocusedTextColor = TextPrimary,
-            cursorColor = NeonCyan,
-            focusedIndicatorColor = NeonCyan,
-            unfocusedIndicatorColor = TextSecondary.copy(0.3f)
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = accentColor,
+            unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+            cursorColor = accentColor,
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White
         ),
-        textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace)
+        textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center),
+        singleLine = true
     )
 }
 
 @Composable
-private fun SmallNeonInputField(hint: String, value: String, modifier: Modifier, onValueChange: (String) -> Unit) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(hint, color = TextSecondary.copy(0.5f), fontSize = 10.sp) },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        modifier = modifier,
-        textStyle = androidx.compose.ui.text.TextStyle(
-            fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
-            color = TextPrimary
-        ),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = PanelSurface,
-            unfocusedContainerColor = PanelSurface,
-            focusedIndicatorColor = NeonCyan,
-            unfocusedIndicatorColor = Color.Transparent,
-            cursorColor = NeonCyan
-        ),
-        maxLines = 1
-    )
+private fun PremiumDialogButton(
+    text: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = color,
+            contentColor = Color.Black
+        )
+    ) {
+        Text(text = text, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black, letterSpacing = 1.sp))
+    }
 }
+

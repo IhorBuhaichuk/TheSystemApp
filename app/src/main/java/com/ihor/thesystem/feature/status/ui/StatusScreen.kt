@@ -140,13 +140,24 @@ private fun HeaderSection(data: StatusUiData) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text(
-                    text = dateStr,
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        color = Color.White.copy(alpha = 0.5f),
-                        letterSpacing = 1.sp
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF00F0FF))
+                            .shadow(4.dp, CircleShape, spotColor = Color(0xFF00F0FF))
                     )
-                )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "SYSTEM ONLINE",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = Color(0xFF00F0FF),
+                            letterSpacing = 2.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                    )
+                }
                 Text(
                     text = "Вітаю, ${data.playerName}",
                     style = MaterialTheme.typography.headlineMedium.copy(
@@ -154,17 +165,39 @@ private fun HeaderSection(data: StatusUiData) {
                         fontWeight = FontWeight.Bold
                     )
                 )
+                Text(
+                    text = dateStr.uppercase(),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = Color.White.copy(alpha = 0.3f),
+                        letterSpacing = 1.sp
+                    )
+                )
             }
             
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.05f))
-                    .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Outlined.Notifications, contentDescription = null, tint = Color.White)
+            // Avatar with pulsing border
+            val infiniteTransition = rememberInfiniteTransition(label = "AvatarPulse")
+            val pulseScale by infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.1f,
+                animationSpec = infiniteRepeatable(tween(2000), RepeatMode.Reverse)
+            )
+
+            Box(contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .size(54.dp)
+                        .graphicsLayer(scaleX = pulseScale, scaleY = pulseScale)
+                        .border(1.dp, Color(0xFF00F0FF).copy(alpha = 0.2f), CircleShape)
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_background), // Замінити на реальне фото
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, Color.White.copy(alpha = 0.1f), CircleShape),
+                    contentScale = ContentScale.Crop
+                )
             }
         }
 
@@ -174,6 +207,7 @@ private fun HeaderSection(data: StatusUiData) {
         XpProgressBarPremium(data)
     }
 }
+
 
 @Composable
 private fun XpProgressBarPremium(data: StatusUiData) {

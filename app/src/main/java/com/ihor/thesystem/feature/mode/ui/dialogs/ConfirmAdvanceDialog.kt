@@ -1,5 +1,8 @@
 package com.ihor.thesystem.feature.mode.ui.dialogs
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -7,10 +10,12 @@ import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.components.sciPanel
 
 @Composable
 fun ConfirmAdvanceDialog(
@@ -23,60 +28,77 @@ fun ConfirmAdvanceDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor   = PanelSurface,
-        shape            = RoundedCornerShape(4.dp),
+        containerColor   = Color(0xFF020408),
+        shape            = RoundedCornerShape(16.dp),
+        modifier = Modifier.border(1.dp, NeonCyan.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
         icon = {
             Icon(Icons.Filled.SwapHoriz, contentDescription = null, tint = NeonCyan)
         },
         title = {
             Text(
-                text       = "[ ПЕРЕХІД ДО ДНЯ $nextDay ]",
+                text       = "ПЕРЕХІД ПРОТОКОЛУ",
                 color      = NeonCyan,
-                fontFamily = FontFamily.Monospace,
-                fontSize   = 14.sp
+                fontFamily = TekoFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize   = 22.sp,
+                letterSpacing = 2.sp
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
                     text       = "Завершити День $currentDay та розпочати День $nextDay?",
-                    color      = TextPrimary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize   = 12.sp
+                    color      = Color.White,
+                    fontFamily = RajdhaniFamily,
+                    fontSize   = 16.sp
                 )
-                Text(
-                    text       = "Невиконані завдання будуть позначені як ПРОВАЛЕНО.",
-                    color      = NeonRed.copy(alpha = 0.8f),
-                    fontFamily = FontFamily.Monospace,
-                    fontSize   = 11.sp
-                )
-                Divider(color = PanelBorder.copy(alpha = 0.3f))
-                Text(
-                    text       = "Або примусово завершити всі квести як ВИКОНАНО:",
-                    color      = TextSecondary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize   = 11.sp
-                )
-                TextButton(
-                    onClick = onForceComplete,
-                    modifier = Modifier.fillMaxWidth()
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .sciPanel(NeonRed.copy(0.3f), NeonRed.copy(0.05f), 8.dp)
+                        .padding(12.dp)
                 ) {
                     Text(
-                        text       = "✓ ЗАВЕРШИТИ ВСЕ ЯК ВИКОНАНО",
+                        text       = "УВАГА: Невиконані завдання будуть позначені як ПРОВАЛЕНО.",
+                        color      = NeonRed.copy(alpha = 0.9f),
+                        fontFamily = RajdhaniFamily,
+                        fontSize   = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+
+                Button(
+                    onClick = onForceComplete,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen.copy(alpha = 0.1f)),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, NeonGreen.copy(alpha = 0.3f))
+                ) {
+                    Text(
+                        text       = "✓ ЗАВЕРШИТИ ВСЕ УСПІШНО",
                         color      = NeonGreen,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize   = 11.sp
+                        fontFamily = RajdhaniFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize   = 13.sp
                     )
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = NeonCyan.copy(alpha = 0.2f)),
+                shape = RoundedCornerShape(8.dp)
+            ) {
                 Text(
-                    text       = "ПЕРЕЙТИ →",
+                    text       = "ПЕРЕЙТИ",
                     color      = NeonCyan,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize   = 12.sp
+                    fontFamily = RajdhaniFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize   = 14.sp
                 )
             }
         },
@@ -84,9 +106,9 @@ fun ConfirmAdvanceDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     text       = "СКАСУВАТИ",
-                    color      = TextSecondary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize   = 12.sp
+                    color      = Color.White.copy(alpha = 0.5f),
+                    fontFamily = RajdhaniFamily,
+                    fontSize   = 14.sp
                 )
             }
         }

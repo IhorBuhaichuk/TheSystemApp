@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -100,33 +101,44 @@ private fun CycleDayHex(
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val path = buildHexagonPath(size, rotationDegrees = 0f)
                 val bg   = when {
-                    day.isActive   -> accentColor.copy(alpha = 0.25f)
-                    day.isSelected -> accentColor.copy(alpha = 0.12f)
-                    else           -> PanelSurface
+                    day.isActive   -> accentColor.copy(alpha = 0.15f)
+                    day.isSelected -> accentColor.copy(alpha = 0.08f)
+                    else           -> Color.White.copy(alpha = 0.02f)
                 }
                 drawPath(path, bg)
+                
+                // Outer Glow for active day
+                if (day.isActive) {
+                    drawPath(
+                        path = path,
+                        color = accentColor.copy(alpha = 0.3f),
+                        style = Stroke(width = 4.dp.toPx())
+                    )
+                }
+
                 drawPath(
                     path  = path,
                     color = borderColor,
-                    style = Stroke(width = if (day.isActive) 3.dp.toPx() else if (day.isSelected) 2.dp.toPx() else 1.5.dp.toPx())
+                    style = Stroke(width = if (day.isActive) 2.dp.toPx() else 1.dp.toPx())
                 )
             }
             Text(
                 text = day.dayNumber.toString(),
-                color = if (day.isActive || day.isSelected) accentColor else TextSecondary,
+                color = if (day.isActive || day.isSelected) accentColor else Color.White.copy(alpha = 0.3f),
                 fontFamily = TekoFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
+                fontSize = 26.sp,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
 
         Text(
-            text       = label,
-            color      = if (day.isActive || day.isSelected) accentColor else TextSecondary.copy(alpha = 0.5f),
-            fontSize   = 10.sp,
+            text       = label.uppercase(),
+            color      = if (day.isActive || day.isSelected) accentColor else Color.White.copy(alpha = 0.4f),
+            fontSize   = 9.sp,
             fontFamily = RajdhaniFamily,
-            fontWeight = if (day.isActive || day.isSelected) FontWeight.Bold else FontWeight.Normal
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
         )
     }
 }
