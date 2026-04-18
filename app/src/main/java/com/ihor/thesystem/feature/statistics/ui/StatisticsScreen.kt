@@ -44,6 +44,9 @@ fun StatisticsScreen(
                         message = event.uiText.asString(context)
                     )
                 }
+                UiEvent.NavigateBack -> {
+                    navController.popBackStack()
+                }
             }
         }
     }

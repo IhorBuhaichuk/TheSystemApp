@@ -46,6 +46,9 @@ fun ArchitectScreen(
                 is UiEvent.ShowError -> {
                     Toast.makeText(context, event.uiText.asString(context), Toast.LENGTH_SHORT).show()
                 }
+                UiEvent.NavigateBack -> {
+                    onAcknowledge()
+                }
             }
         }
     }

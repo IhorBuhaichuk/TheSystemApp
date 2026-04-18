@@ -63,6 +63,9 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 StatusUiData(
                     playerName             = player.name,
                     playerClass            = player.playerClass,
+                    level                  = player.level,
+                    xpTotal                = player.xpTotal,
+                    xpMax                  = 1000,
                     currentMonth           = player.currentMonth,
                     totalMonths            = 12,
                     currentWeight          = weight ?: 80f,
@@ -80,7 +83,6 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     disAttribute           = player.disAttribute,
                     currentStreak          = player.currentStreak,
                     maxStreak              = player.maxStreak,
-                    xpTotal                = player.xpTotal,
                     xpThisWeek             = player.xpThisWeek
                 )
             }

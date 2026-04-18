@@ -27,6 +27,7 @@ sealed class StatusDialogState {
     object EditDebuffs                                                : StatusDialogState()
     object EditSystemConfig                                           : StatusDialogState()
     data class QuestChecklist(val questId: Int, val isDaily: Boolean) : StatusDialogState()
+    data class AddTask(val questId: Int)                             : StatusDialogState()
 }
 
 @HiltViewModel
@@ -155,8 +156,13 @@ class StatusViewModel @Inject constructor(
         useCases.toggleQuestTask(task.id, questId, task.isCompleted)
     }
 
-    fun onAddTask(questId: Int, taskName: String) = launchCatching {
+    fun onAddTaskTap(questId: Int) {
+        _dialogState.value = StatusDialogState.AddTask(questId)
+    }
+
+    fun onAddTaskConfirmed(questId: Int, taskName: String) = launchCatching {
         useCases.addTaskToQuest(questId, taskName)
+        onDismissDialog()
     }
 
     fun onRemoveTask(taskId: Int) = launchCatching {

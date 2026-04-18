@@ -59,6 +59,9 @@ fun ModeScreen(
                 is UiEvent.ShowError -> {
                     snackbarHostState.showSnackbar(event.uiText.asString(context))
                 }
+                UiEvent.NavigateBack -> {
+                    navController.popBackStack()
+                }
             }
         }
     }

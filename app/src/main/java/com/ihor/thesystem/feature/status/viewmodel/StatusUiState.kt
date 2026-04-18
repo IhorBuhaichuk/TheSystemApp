@@ -7,6 +7,9 @@ import kotlinx.collections.immutable.persistentListOf
 data class StatusUiData(
     val playerName: String            = "Ігор",
     val playerClass: String           = "Новачок",
+    val level: Int                    = 1,
+    val xpTotal: Int                  = 0,
+    val xpMax: Int                    = 1000,
     val currentMonth: Int             = 1,
     val totalMonths: Int              = 12,
     val currentWeight: Float          = 80f,
@@ -24,7 +27,6 @@ data class StatusUiData(
     val disAttribute: Int = 0,
     val currentStreak: Int = 0,
     val maxStreak: Int = 0,
-    val xpTotal: Int = 0,
     val xpThisWeek: Int = 0
 )
 

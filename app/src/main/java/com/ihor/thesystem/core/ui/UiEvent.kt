@@ -2,6 +2,7 @@ package com.ihor.thesystem.core.ui
 
 sealed class UiEvent {
     data class ShowError(val uiText: UiText) : UiEvent()
+    object NavigateBack : UiEvent()
 }
 
 /**
