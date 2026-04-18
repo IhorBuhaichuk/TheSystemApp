@@ -3,6 +3,7 @@ package com.ihor.thesystem.feature.mode.viewmodel
 import app.cash.turbine.test
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.util.AppLogger
+import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
@@ -30,6 +31,7 @@ class ModeViewModelTest {
     private val generateQuests: GenerateDailyQuestsUseCase = mockk()
     private val finalizeDayTransaction: FinalizeDayTransactionUseCase = mockk()
     private val logger: AppLogger = mockk(relaxed = true)
+    private val dispatchers: DispatcherProvider = mockk()
 
     private lateinit var viewModel: ModeViewModel
     private val testDispatcher = StandardTestDispatcher()
@@ -44,17 +46,23 @@ class ModeViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         
+        // Mock DispatcherProvider
+        every { dispatchers.main } returns testDispatcher
+        every { dispatchers.io } returns testDispatcher
+        every { dispatchers.default } returns testDispatcher
+        every { dispatchers.mainImmediate } returns testDispatcher
+        
         // Default mocks
         every { playerRepo.getPlayer() } returns flowOf(mockPlayer)
         every { scheduleRepo.getSchedulesForDays(any()) } returns flowOf(emptyList())
         every { questRepo.getActiveDailyQuest() } returns flowOf(null)
         every { questRepo.getActiveMainQuest() } returns flowOf(null)
         every { debuffRepo.getDebuffsForCycleDay(any()) } returns flowOf(emptyList())
-        coEvery { generateQuests() } returns Result.Success(Unit)
+        coEvery { generateQuests() } just Runs
 
         viewModel = ModeViewModel(
             playerRepo, questRepo, scheduleRepo, configRepo, debuffRepo,
-            generateQuests, finalizeDayTransaction, logger
+            generateQuests, finalizeDayTransaction, dispatchers, logger
         )
     }
 

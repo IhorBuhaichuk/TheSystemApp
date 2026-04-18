@@ -43,6 +43,7 @@ abstract class DatabaseModule {
                 "the_system_db"
             )
                 .addMigrations(*DatabaseMigrations.ALL_MIGRATIONS)
+                .fallbackToDestructiveMigration()
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
