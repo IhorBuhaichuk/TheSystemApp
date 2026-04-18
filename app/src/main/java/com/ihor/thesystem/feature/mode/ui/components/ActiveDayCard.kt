@@ -19,6 +19,8 @@ import com.ihor.thesystem.feature.statistics.ui.components.MatrixEntryCard
 @Composable
 fun ActiveDayCard(
     data: ActiveDayUiModel,
+    onOpenLogSets: (com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel) -> Unit,
+    onOpenSetup: (com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -49,8 +51,8 @@ fun ActiveDayCard(
             data.matrixEntries.forEach { entry ->
                 MatrixEntryCard(
                     entry = entry,
-                    onCardClick = { /* View details functionality could be added later */ },
-                    onSetupClick = { /* Setup goals functionality could be added later */ }
+                    onCardClick = { onOpenLogSets(entry) },
+                    onSetupClick = { onOpenSetup(entry) }
                 )
             }
         }

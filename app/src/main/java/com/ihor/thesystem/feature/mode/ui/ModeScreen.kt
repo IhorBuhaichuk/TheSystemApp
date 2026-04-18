@@ -34,6 +34,8 @@ import com.ihor.thesystem.feature.mode.ui.dialogs.SyncAnchorDialog
 import com.ihor.thesystem.feature.mode.viewmodel.ModeDialogState
 import com.ihor.thesystem.feature.mode.viewmodel.ModeEvent
 import com.ihor.thesystem.feature.mode.viewmodel.ModeViewModel
+import com.ihor.thesystem.feature.statistics.ui.dialogs.LogWorkoutSetsDialog
+import com.ihor.thesystem.feature.statistics.ui.dialogs.SetupMatrixDialog
 
 @Composable
 fun ModeScreen(
@@ -204,7 +206,11 @@ fun ModeScreen(
 
                             // ── Active Day Card ───────────────────────────
                             data.activeDayData?.let { dayData ->
-                                ActiveDayCard(data = dayData)
+                                ActiveDayCard(
+                                    data = dayData,
+                                    onOpenLogSets = { viewModel.onOpenLogSets(it) },
+                                    onOpenSetup = { viewModel.onOpenSetup(it) }
+                                )
                             }
                         }
                     }
@@ -237,6 +243,31 @@ fun ModeScreen(
                                 dayNumber = dialog.day,
                                 onConfirm = { viewModel.onConfirmSync(dialog.day) },
                                 onDismiss = { viewModel.onDismissDialog() }
+                            )
+                        }
+                        is ModeDialogState.SetupMatrix -> {
+                            SetupMatrixDialog(
+                                exerciseName = dialog.entry.exerciseName,
+                                initialStart = dialog.startWeight,
+                                initialTarget = dialog.targetWeight,
+                                onConfirm = { start, target ->
+                                    viewModel.onConfirmSetup(dialog.entry.exerciseId, start, target)
+                                },
+                                onDismiss = { viewModel.onDismissDialog() }
+                            )
+                        }
+                        is ModeDialogState.LogWorkoutSets -> {
+                            LogWorkoutSetsDialog(
+                                exerciseName = dialog.entry.exerciseName,
+                                sets = dialog.sets,
+                                onUpdate = { id, w, r -> viewModel.updateSetInput(id, w, r) },
+                                onAdd = { viewModel.addSet() },
+                                onRemove = { viewModel.removeSet() },
+                                onSave = { feedback ->
+                                    viewModel.onLogSetsConfirmed(dialog.entry.exerciseId, dialog.sets, feedback)
+                                },
+                                onDismiss = { viewModel.onDismissDialog() },
+                                existingLog = dialog.existingLog
                             )
                         }
                         else -> Unit

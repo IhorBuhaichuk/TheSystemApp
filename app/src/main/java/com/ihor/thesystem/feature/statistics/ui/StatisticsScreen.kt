@@ -4,7 +4,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,7 +28,6 @@ import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.feature.statistics.ui.components.*
-import com.ihor.thesystem.feature.statistics.ui.dialogs.*
 import com.ihor.thesystem.feature.statistics.viewmodel.*
 
 @Composable
@@ -127,85 +125,12 @@ fun StatisticsScreen(
                                     }
                                 }
                             }
-
-                            // ── Matrix section title ───────────────────────────
-                            item {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment     = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text          = "АКТИВНІ МАТРИЦІ",
-                                        style = MaterialTheme.typography.labelLarge.copy(
-                                            color = Color.White,
-                                            fontWeight = FontWeight.Bold,
-                                            letterSpacing = 2.sp
-                                        )
-                                    )
-                                    Surface(
-                                        color = NeonGreen.copy(alpha = 0.1f),
-                                        shape = CircleShape,
-                                        border = BorderStroke(1.dp, NeonGreen.copy(alpha = 0.2f))
-                                    ) {
-                                        Text(
-                                            text = "${data.matrixEntries.size} КАНАЛІВ",
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                            style = MaterialTheme.typography.labelSmall.copy(color = NeonGreen, fontSize = 9.sp)
-                                        )
-                                    }
-                                }
-                            }
-
-                            // ── Matrix entries ─────────────────────────────────
-                            if (data.matrixEntries.isEmpty()) {
-                                item {
-                                    EmptyMatrixState()
-                                }
-                            } else {
-                                items(
-                                    items = data.matrixEntries,
-                                    key   = { it.exerciseId }
-                                ) { entry ->
-                                    MatrixEntryCardPremium(
-                                        entry        = entry,
-                                        onCardClick  = { viewModel.onOpenLogSets(entry) },
-                                        onSetupClick = { viewModel.onOpenSetup(entry) }
-                                    )
-                                }
-                            }
                         }
 
-                        // ── Dialogs (Keep existing logic but they will use updated dialog UI if applicable) ───────────────────────────────────────────
-                        when (val dialog = dialogState) {
-                            is StatisticsDialogState.SetupMatrix -> {
-                                SetupMatrixDialog(
-                                    exerciseName = dialog.entry.exerciseName,
-                                    initialStart = dialog.startWeight,
-                                    initialTarget = dialog.targetWeight,
-                                    onConfirm = { start, target ->
-                                        viewModel.onConfirmSetup(dialog.entry.exerciseId, start, target)
-                                    },
-                                    onDismiss = { viewModel.onDismissDialog() }
-                                )
-                            }
-                            is StatisticsDialogState.LogWorkoutSets -> {
-                                LogWorkoutSetsDialog(
-                                    exerciseName = dialog.entry.exerciseName,
-                                    sets = dialog.sets,
-                                    onUpdate = { id, w, r -> viewModel.updateSetInput(id, w, r) },
-                                    onAdd = { viewModel.addSet() },
-                                    onRemove = { viewModel.removeSet() },
-                                    onSave = { feedback ->
-                                        viewModel.onLogSetsConfirmed(dialog.entry.exerciseId, dialog.sets, feedback)
-                                    },
-                                    onDismiss = { viewModel.onDismissDialog() },
-                                    existingLog = dialog.existingLog
-                                )
-                            }
+                        // ── Dialogs ───────────────────────────────────────────
+                        when (dialogState) {
                             StatisticsDialogState.None -> Unit
+                            else -> Unit // Matrix dialogs moved to ModeScreen
                         }
                     }
 
@@ -287,29 +212,13 @@ private fun PremiumActionButton(
 }
 
 @Composable
-private fun EmptyMatrixState() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(Icons.Default.DataArray, contentDescription = null, tint = Color.White.copy(alpha = 0.1f), modifier = Modifier.size(64.dp))
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "МАТРИЦЯ ПОРОЖНЯ",
-            style = MaterialTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.3f), fontWeight = FontWeight.Bold)
-        )
-    }
-}
-
-@Composable
 private fun AnimatedStatisticsBackground() {
-    val infiniteTransition = rememberInfiniteTransition()
+    val infiniteTransition = rememberInfiniteTransition(label = "stats_bg")
     val colorShift by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(12000, easing = LinearEasing), RepeatMode.Reverse)
+        animationSpec = infiniteRepeatable(tween(12000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "shift"
     )
 
     Canvas(modifier = Modifier.fillMaxSize()) {
@@ -334,4 +243,3 @@ private fun AnimatedStatisticsBackground() {
         )
     }
 }
-

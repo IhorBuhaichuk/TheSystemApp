@@ -9,6 +9,7 @@ import com.ihor.thesystem.core.util.*
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.*
+import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
@@ -26,6 +27,18 @@ sealed class ModeDialogState {
     object ConfirmAdvance                 : ModeDialogState()
     data class EditSchedule(val day: Int) : ModeDialogState()
     data class SyncAnchor(val day: Int)   : ModeDialogState()
+
+    data class SetupMatrix(
+        val entry: MatrixEntryUiModel,
+        val startWeight: String,
+        val targetWeight: String
+    ) : ModeDialogState()
+
+    data class LogWorkoutSets(
+        val entry: MatrixEntryUiModel,
+        val sets: List<WorkoutSetInput>,
+        val existingLog: com.ihor.thesystem.domain.model.ExerciseSet? = null
+    ) : ModeDialogState()
 }
 
 sealed class ModeEvent {
@@ -43,6 +56,7 @@ class ModeViewModel @Inject constructor(
     private val configRepo:      SystemConfigRepository,
     private val debuffRepo:      DebuffRepository,
     private val viewingDateRepo: ViewingDateRepository,
+    private val matrixRepo:      ProgressionMatrixRepository,
     private val getLogForDateUseCase: GetLogForDateUseCase,
     private val saveExerciseSetsUseCase: SaveExerciseSetsUseCase,
     private val generateQuests:  GenerateDailyQuestsUseCase,
@@ -266,6 +280,77 @@ class ModeViewModel @Inject constructor(
             }
         }
     }
+
+    private val _currentSetInputs = MutableStateFlow<List<WorkoutSetInput>>(emptyList())
+
+    fun onOpenLogSets(entry: MatrixEntryUiModel) {
+        val initialSets = listOf(WorkoutSetInput())
+        _currentSetInputs.value = initialSets
+        _dialogState.value = ModeDialogState.LogWorkoutSets(entry, initialSets)
+    }
+
+    fun onOpenSetup(entry: MatrixEntryUiModel) {
+        _dialogState.value = ModeDialogState.SetupMatrix(entry, entry.startWeight.toString(), entry.targetWeight.toString())
+    }
+
+    fun updateSetInput(id: Long, weight: String, reps: String) {
+        _currentSetInputs.update { list ->
+            list.map { if (it.id == id) it.copy(weight = weight, reps = reps) else it }
+        }
+        updateLogDialogState()
+    }
+
+    fun addSet() {
+        _currentSetInputs.update { it + WorkoutSetInput() }
+        updateLogDialogState()
+    }
+
+    fun removeSet() {
+        _currentSetInputs.update { if (it.size > 1) it.dropLast(1) else it }
+        updateLogDialogState()
+    }
+
+    private fun updateLogDialogState() {
+        val current = _dialogState.value
+        if (current is ModeDialogState.LogWorkoutSets) {
+            _dialogState.value = current.copy(sets = _currentSetInputs.value)
+        }
+    }
+
+    fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>, feedback: String) {
+        viewModelScope.launch {
+            try {
+                saveExerciseSetsUseCase(
+                    exerciseId = exerciseId,
+                    sets = sets,
+                    date = viewingDateRepo.selectedDate.value,
+                    userFeedback = feedback
+                )
+                onDismissDialog()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка збереження")))
+            }
+        }
+    }
+
+    fun onConfirmSetup(exerciseId: Int, start: String, target: String) {
+        viewModelScope.launch {
+            try {
+                matrixRepo.updateMatrixGoals(
+                    exerciseId = exerciseId,
+                    startWeight = start.toFloatOrNull() ?: 0f,
+                    targetWeight = target.toFloatOrNull() ?: 0f
+                )
+                onDismissDialog()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка")))
+            }
+        }
+    }
 }
 
 private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean, isSelected: Boolean) =
@@ -281,7 +366,7 @@ private fun ScheduleDay.toActiveDayUiModel(
     exercises: ImmutableList<ExerciseWorkoutUiModel>,
     dailyQuest: Quest?,
     debuffs: List<DebuffConfig>,
-    matrixEntries: ImmutableList<com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel>
+    matrixEntries: ImmutableList<MatrixEntryUiModel>
 ): ActiveDayUiModel {
     return ActiveDayUiModel(
         dayNumber   = cycleDay,
@@ -291,6 +376,6 @@ private fun ScheduleDay.toActiveDayUiModel(
         exercises   = exercises,
         matrixEntries = matrixEntries.filter { entry -> 
             exercises.any { it.name.equals(entry.exerciseName, ignoreCase = true) } 
-        }.toImmutableList()
+        }.map { it.copy(isActive = true) }.toImmutableList()
     )
 }
