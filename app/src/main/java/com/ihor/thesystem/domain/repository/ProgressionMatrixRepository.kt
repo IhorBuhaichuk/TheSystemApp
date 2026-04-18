@@ -3,7 +3,7 @@ package com.ihor.thesystem.domain.repository
 import com.ihor.thesystem.data.local.room.entity.ReferenceMatrixEntity
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.ExerciseCategory
-import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput
 import kotlinx.coroutines.flow.Flow
 
 interface ProgressionMatrixRepository {

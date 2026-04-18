@@ -1,6 +1,7 @@
 package com.ihor.thesystem.feature.mode.viewmodel
 
 import com.ihor.thesystem.domain.model.Quest
+import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -29,12 +30,21 @@ data class ActiveDayUiModel(
     val debuffName: String?,
     val dailyTasks: ImmutableList<Quest>,
     val workoutName: String?,
-    val exercises: ImmutableList<ExerciseWorkoutUiModel>
+    val exercises: ImmutableList<ExerciseWorkoutUiModel>,
+    val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf()
 )
 
 data class ExerciseWorkoutUiModel(
+    val exerciseId: Int,
     val name: String,
-    val recommendation: String? = null
+    val recommendation: String? = null,
+    val sets: ImmutableList<WorkoutSetInput> = persistentListOf()
+)
+
+data class WorkoutSetInput(
+    val id: Long = System.nanoTime(),
+    val weight: String = "",
+    val reps: String = ""
 )
 
 data class ActiveTaskUiModel(

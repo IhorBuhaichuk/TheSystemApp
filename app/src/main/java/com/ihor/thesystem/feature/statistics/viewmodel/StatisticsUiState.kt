@@ -50,11 +50,6 @@ data class MatrixEntryUiModel(
         get() = "${startWeight}кг"
 }
 
-data class WorkoutSetInput(
-    val id: Long = System.nanoTime(),
-    val weight: String = "",
-    val reps: String = ""
-)
 
 sealed class StatisticsDialogState {
     object None : StatisticsDialogState()
@@ -64,14 +59,10 @@ sealed class StatisticsDialogState {
         val startWeight: String,
         val targetWeight: String
     ) : StatisticsDialogState()
-    
+
     data class LogWorkoutSets(
         val entry: MatrixEntryUiModel,
-        val sets: ImmutableList<WorkoutSetInput> = persistentListOf(
-            WorkoutSetInput(),
-            WorkoutSetInput(),
-            WorkoutSetInput()
-        ),
+        val sets: List<com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput>,
         val existingLog: ExerciseSet? = null
     ) : StatisticsDialogState()
 }

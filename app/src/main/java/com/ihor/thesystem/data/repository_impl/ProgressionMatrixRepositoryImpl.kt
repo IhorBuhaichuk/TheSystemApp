@@ -6,7 +6,7 @@ import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
-import com.ihor.thesystem.feature.statistics.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

@@ -6,10 +6,8 @@ import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.repository.*
-import com.ihor.thesystem.domain.usecase.GetLogForDateUseCase
 import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
-import com.ihor.thesystem.domain.usecase.SaveExerciseSetsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
@@ -23,8 +21,6 @@ class StatisticsViewModel @Inject constructor(
     private val matrixRepo: ProgressionMatrixRepository,
     private val viewingDateRepo: ViewingDateRepository,
     private val getStatisticsDataUseCase: GetStatisticsDataUseCase,
-    private val getLogForDateUseCase: GetLogForDateUseCase,
-    private val saveExerciseSetsUseCase: SaveExerciseSetsUseCase,
     private val recalculateGlobalRankUseCase: RecalculateGlobalRankUseCase
 ) : ViewModel() {
 
@@ -41,11 +37,61 @@ class StatisticsViewModel @Inject constructor(
     private val _dialogState = MutableStateFlow<StatisticsDialogState>(StatisticsDialogState.None)
     val dialogState: StateFlow<StatisticsDialogState> = _dialogState.asStateFlow()
 
+    private val _currentSetInputs = MutableStateFlow<List<com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput>>(emptyList())
+
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
 
     fun onOpenSetup(entry: MatrixEntryUiModel) {
         _dialogState.value = StatisticsDialogState.SetupMatrix(entry, entry.startWeight.toString(), entry.targetWeight.toString())
+    }
+
+    fun onOpenLogSets(entry: MatrixEntryUiModel) {
+        val initialSets = listOf(com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput())
+        _currentSetInputs.value = initialSets
+        _dialogState.value = StatisticsDialogState.LogWorkoutSets(entry, initialSets)
+    }
+
+    fun updateSetInput(id: Long, weight: String, reps: String) {
+        _currentSetInputs.update { list ->
+            list.map { if (it.id == id) it.copy(weight = weight, reps = reps) else it }
+        }
+        updateLogDialogState()
+    }
+
+    fun addSet() {
+        _currentSetInputs.update { it + com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput() }
+        updateLogDialogState()
+    }
+
+    fun removeSet() {
+        _currentSetInputs.update { if (it.size > 1) it.dropLast(1) else it }
+        updateLogDialogState()
+    }
+
+    private fun updateLogDialogState() {
+        val current = _dialogState.value
+        if (current is StatisticsDialogState.LogWorkoutSets) {
+            _dialogState.value = current.copy(sets = _currentSetInputs.value)
+        }
+    }
+
+    fun onLogSetsConfirmed(exerciseId: Int, sets: List<com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput>, feedback: String) {
+        viewModelScope.launch {
+            try {
+                matrixRepo.saveExerciseSetsWithDate(
+                    exerciseId = exerciseId,
+                    sets = sets,
+                    timestamp = System.currentTimeMillis(),
+                    userFeedback = feedback
+                )
+                onDismissDialog()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка збереження")))
+            }
+        }
     }
 
     fun onConfirmSetup(exerciseId: Int, start: String, target: String) {
@@ -74,63 +120,6 @@ class StatisticsViewModel @Inject constructor(
         }
     }
 
-    fun onOpenLogSets(entry: MatrixEntryUiModel) {
-        if (!entry.isActive) return
-        viewModelScope.launch {
-            try {
-                val date = viewingDateRepo.selectedDate.value
-                val existingLog = getLogForDateUseCase(entry.exerciseId, date)
-                
-                _dialogState.value = StatisticsDialogState.LogWorkoutSets(
-                    entry = entry,
-                    existingLog = existingLog
-                )
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка завантаження логів")))
-            }
-        }
-    }
-
-    fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>, feedback: String) {
-        viewModelScope.launch {
-            try {
-                val date = viewingDateRepo.selectedDate.value
-                // UseCase handles timestamp calculation via AppClock internally
-                saveExerciseSetsUseCase(exerciseId, sets, date, feedback)
-                onDismissDialog()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка збереження результатів")))
-            }
-        }
-    }
-
-    fun addSet() {
-        val current = _dialogState.value
-        if (current is StatisticsDialogState.LogWorkoutSets) {
-            _dialogState.value = current.copy(sets = (current.sets + WorkoutSetInput()).toImmutableList())
-        }
-    }
-
-    fun removeSet() {
-        val current = _dialogState.value
-        if (current is StatisticsDialogState.LogWorkoutSets && current.sets.size > 1) {
-            _dialogState.value = current.copy(sets = current.sets.dropLast(1).toImmutableList())
-        }
-    }
-
-    fun updateSetInput(setId: Long, weight: String, reps: String) {
-        val current = _dialogState.value
-        if (current is StatisticsDialogState.LogWorkoutSets) {
-            val newList = current.sets.map { 
-                if (it.id == setId) it.copy(weight = weight, reps = reps) else it 
-            }.toImmutableList()
-            _dialogState.value = current.copy(sets = newList)
-        }
-    }
 
     fun onDismissDialog() { _dialogState.value = StatisticsDialogState.None }
 }

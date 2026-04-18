@@ -5,16 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
-import com.ihor.thesystem.core.util.AppLogger
-import com.ihor.thesystem.core.util.DispatcherProvider
-import com.ihor.thesystem.core.util.Result
-import com.ihor.thesystem.core.util.safeCall
+import com.ihor.thesystem.core.util.*
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.*
-import com.ihor.thesystem.feature.mode.ui.components.*
+import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,14 +42,20 @@ class ModeViewModel @Inject constructor(
     private val scheduleRepo:    ScheduleRepository,
     private val configRepo:      SystemConfigRepository,
     private val debuffRepo:      DebuffRepository,
+    private val viewingDateRepo: ViewingDateRepository,
+    private val getLogForDateUseCase: GetLogForDateUseCase,
+    private val saveExerciseSetsUseCase: SaveExerciseSetsUseCase,
     private val generateQuests:  GenerateDailyQuestsUseCase,
     private val finalizeDayTransaction: FinalizeDayTransactionUseCase,
+    private val getStatisticsDataUseCase: GetStatisticsDataUseCase,
     private val dispatchers:     DispatcherProvider,
     private val logger:          AppLogger
 ) : ViewModel() {
 
     private val _selectedDay = MutableStateFlow(1)
     val selectedDay: StateFlow<Int> = _selectedDay.asStateFlow()
+
+    private val _exerciseInputs = MutableStateFlow<Map<Int, ImmutableList<WorkoutSetInput>>>(emptyMap())
 
     private val _dialogState = MutableStateFlow<ModeDialogState>(ModeDialogState.None)
     val dialogState: StateFlow<ModeDialogState> = _dialogState.asStateFlow()
@@ -63,26 +67,57 @@ class ModeViewModel @Inject constructor(
     val uiEvents = _uiEvents.asSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<UiState<ModeUiData>> = _selectedDay.flatMapLatest { selDay ->
+    val uiState: StateFlow<UiState<ModeUiData>> = combine(_selectedDay, _exerciseInputs) { selDay, inputs -> 
+        selDay to inputs 
+    }.flatMapLatest { (selDay, inputs) ->
+        val playerFlow = playerRepo.getPlayer().filterNotNull()
+        val schedulesFlow = scheduleRepo.getSchedulesForDays(CycleConfig.MICROCYCLE_DAYS)
+        val dailyQuestFlow = questRepo.getActiveDailyQuest()
+        val mainQuestFlow = questRepo.getActiveMainQuest()
+        val debuffsFlow = debuffRepo.getDebuffsForCycleDay(selDay)
+        val statsFlow = getStatisticsDataUseCase()
+
         combine(
-            playerRepo.getPlayer().filterNotNull(),
-            scheduleRepo.getSchedulesForDays(CycleConfig.MICROCYCLE_DAYS),
-            questRepo.getActiveDailyQuest(),
-            questRepo.getActiveMainQuest(),
-            debuffRepo.getDebuffsForCycleDay(selDay)
-        ) { player, schedules, daily, main, debuffs ->
+            listOf(
+                playerFlow,
+                schedulesFlow,
+                dailyQuestFlow,
+                mainQuestFlow,
+                debuffsFlow,
+                statsFlow
+            )
+        ) { args ->
+            val player = args[0] as Player
+            val schedules = args[1] as List<ScheduleDay>
+            val daily = args[2] as Quest?
+            val main = args[3] as Quest?
+            val debuffs = args[4] as List<DebuffConfig>
+            val stats = args[5] as StatisticsUiData
             val allDays = CycleConfig.MICROCYCLE_DAYS.map { d -> schedules.find { it.cycleDay == d } }
             val currentSelectedSchedule = allDays.getOrNull(selDay - 1)
 
             val exercises = if (selDay == player.currentCycleDay) {
-                main?.tasks?.map { task ->
+                main?.tasks?.mapNotNull { task ->
+                    val exerciseId = task.exerciseId ?: return@mapNotNull null
                     val recStr = if (task.recommendedWeight != null) {
                         "${task.recommendedWeight}кг | ${task.recommendedSets}x${task.recommendedReps}"
                     } else null
-                    ExerciseWorkoutUiModel(name = task.name, recommendation = recStr)
+                    
+                    val currentInputs = inputs[exerciseId] ?: persistentListOf(
+                        WorkoutSetInput(), WorkoutSetInput(), WorkoutSetInput()
+                    )
+
+                    ExerciseWorkoutUiModel(
+                        exerciseId = exerciseId,
+                        name = task.name, 
+                        recommendation = recStr,
+                        sets = currentInputs
+                    )
                 } ?: emptyList()
             } else {
-                currentSelectedSchedule?.exercises?.map { ExerciseWorkoutUiModel(name = it.name) } ?: emptyList()
+                currentSelectedSchedule?.exercises?.map { 
+                    ExerciseWorkoutUiModel(exerciseId = it.id, name = it.name)
+                } ?: emptyList()
             }
 
             val data = ModeUiData(
@@ -97,9 +132,10 @@ class ModeViewModel @Inject constructor(
                     )
                 }.toImmutableList(),
                 activeDayData = currentSelectedSchedule?.toActiveDayUiModel(
-                    exercises.toImmutableList(), 
-                    if(selDay == player.currentCycleDay) daily else null,
-                    debuffs
+                    exercises = exercises.toImmutableList(), 
+                    dailyQuest = if(selDay == player.currentCycleDay) daily else null,
+                    debuffs = debuffs,
+                    matrixEntries = stats.matrixEntries
                 )
             )
             UiState.Content(data) as UiState<ModeUiData>
@@ -154,7 +190,28 @@ class ModeViewModel @Inject constructor(
         }
     }
 
+    fun onUpdateSetInput(exerciseId: Int, setId: Long, weight: String, reps: String) {
+        val currentInputs = _exerciseInputs.value[exerciseId] ?: persistentListOf(
+            WorkoutSetInput(), WorkoutSetInput(), WorkoutSetInput()
+        )
+        val newList = currentInputs.map {
+            if (it.id == setId) it.copy(weight = weight, reps = reps) else it
+        }.toImmutableList()
+        _exerciseInputs.value = _exerciseInputs.value + (exerciseId to newList)
+    }
+
     private suspend fun advanceAndFinalize(forceComplete: Boolean) {
+        val currentState = uiState.value
+        if (currentState is UiState.Content) {
+            val date = viewingDateRepo.selectedDate.value
+            currentState.data.activeDayData?.exercises?.forEach { ex ->
+                val sets = ex.sets
+                if (sets.any { it.weight.isNotEmpty() && it.reps.isNotEmpty() }) {
+                    saveExerciseSetsUseCase(ex.exerciseId, sets, date, null)
+                }
+            }
+        }
+
         val result = safeCall {
             finalizeDayTransaction(forceComplete = forceComplete)
         }
@@ -223,13 +280,17 @@ private fun ScheduleDay.toCycleDayUiModel(dayNum: Int, isActive: Boolean, isSele
 private fun ScheduleDay.toActiveDayUiModel(
     exercises: ImmutableList<ExerciseWorkoutUiModel>,
     dailyQuest: Quest?,
-    debuffs: List<DebuffConfig>
+    debuffs: List<DebuffConfig>,
+    matrixEntries: ImmutableList<com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel>
 ): ActiveDayUiModel {
     return ActiveDayUiModel(
         dayNumber   = cycleDay,
         debuffName  = debuffs.firstOrNull()?.condition,
         dailyTasks  = (if (dailyQuest != null) listOf(dailyQuest) else emptyList<Quest>()).toImmutableList(),
         workoutName = workoutTemplateName,
-        exercises   = exercises
+        exercises   = exercises,
+        matrixEntries = matrixEntries.filter { entry -> 
+            exercises.any { it.name.equals(entry.exerciseName, ignoreCase = true) } 
+        }.toImmutableList()
     )
 }
