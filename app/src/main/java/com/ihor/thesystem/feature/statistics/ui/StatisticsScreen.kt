@@ -1,9 +1,10 @@
 package com.ihor.thesystem.feature.statistics.ui
 
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,11 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.ihor.thesystem.core.navigation.Routes
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
-import com.ihor.thesystem.feature.statistics.ui.components.*
+import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogHeightDialog
+import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogWeightDialog
 import com.ihor.thesystem.feature.statistics.viewmodel.*
 
 @Composable
@@ -39,6 +40,8 @@ fun StatisticsScreen(
     val uiState     by viewModel.uiState.collectAsState()
     val dialogState by viewModel.dialogState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         viewModel.uiEvents.collect { event ->
@@ -55,8 +58,10 @@ fun StatisticsScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF020408))) {
-        // Shared dynamic background for consistency
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(BackgroundDeep)) {
+        
         AnimatedStatisticsBackground()
 
         Scaffold(
@@ -67,75 +72,85 @@ fun StatisticsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 32.dp, bottom = 120.dp)
             ) {
-                // ── Custom Premium Header ─────────────────────────────────────
                 StatisticsHeader(navController)
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                StatisticsTabSelector(
+                    selectedTabIndex = selectedTab,
+                    onTabSelected = { selectedTab = it }
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
 
                 when (val state = uiState) {
                     is UiState.Loading -> {
                         Box(
-                            modifier         = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxWidth().height(400.dp),
                             contentAlignment = Alignment.Center
-                        ) { CircularProgressIndicator(color = NeonGreen) }
+                        ) { CircularProgressIndicator(color = NeonCyan) }
                     }
 
                     is UiState.Content -> {
-                        val data = state.data
-
-                        LazyColumn(
-                            modifier            = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 20.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            contentPadding      = PaddingValues(bottom = 100.dp)
-                        ) {
-                            // ── Player Performance Card ─────────────────────────────
-                            item {
-                                PlayerStatsHeaderPremium(data = data)
-                            }
-
-                            // ── Matrix Controls ───────────────────────────
-                            item {
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    PremiumActionButton(
-                                        text = "МАТРИЦЯ РОКУ",
-                                        icon = Icons.Default.Grid4x4,
-                                        modifier = Modifier.weight(1f),
-                                        color = NeonGreen,
-                                        onClick = { navController.navigate(Routes.AnnualMatrix) }
-                                    )
-                                }
-                            }
-
-                            // ── Weight Chart section ───────────────────────────
-                            if (data.weightHistory.size >= 2) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(24.dp))
-                                            .background(Color.White.copy(alpha = 0.03f))
-                                            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))
-                                            .padding(16.dp)
+                        Crossfade(targetState = selectedTab, label = "TabTransition") { tab ->
+                            when (tab) {
+                                0 -> {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(24.dp)
                                     ) {
-                                        WeightProgressChart(
-                                            history = data.weightHistory,
-                                            modifier = Modifier.fillMaxWidth()
+                                        RadarChartMock()
+                                        
+                                        PlayerMetricsGrid(
+                                            weight = state.data.currentWeight.toString(),
+                                            height = state.data.currentHeight.toInt().toString(),
+                                            onWeightClick = { viewModel.onOpenLogWeight() },
+                                            onHeightClick = { viewModel.onOpenEditHeight() }
                                         )
+                                        
+                                        ProgressLineChartMock()
+                                    }
+                                }
+                                1 -> {
+                                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                                        Text(text = "МАТРИЦЯ: In Development", color = TextSecondary)
+                                    }
+                                }
+                                2 -> {
+                                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                                        Text(text = "АНАЛІТИКА: In Development", color = TextSecondary)
                                     }
                                 }
                             }
                         }
 
-                        // ── Dialogs ───────────────────────────────────────────
+                        // Existing business logic dialogs handling
                         when (dialogState) {
                             StatisticsDialogState.None -> Unit
-                            else -> Unit // Matrix dialogs moved to ModeScreen
+                            StatisticsDialogState.LogWeight -> {
+                                LogWeightDialog(
+                                    currentWeight = state.data.currentWeight,
+                                    onConfirm = { viewModel.onWeightConfirmed(it) },
+                                    onDismiss = { viewModel.onDismissDialog() }
+                                )
+                            }
+                            StatisticsDialogState.EditHeight -> {
+                                LogHeightDialog(
+                                    currentHeight = state.data.currentHeight,
+                                    onConfirm = { viewModel.onHeightConfirmed(it) },
+                                    onDismiss = { viewModel.onDismissDialog() }
+                                )
+                            }
+                            else -> Unit
                         }
                     }
 
                     is UiState.Error -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
                             Text(text = "[ ERROR: ${state.message} ]", color = NeonRed)
                         }
                     }
@@ -146,11 +161,294 @@ fun StatisticsScreen(
 }
 
 @Composable
+private fun StatisticsTabSelector(selectedTabIndex: Int, onTabSelected: (Int) -> Unit) {
+    val tabs = listOf("ПЕРСОНАЖ", "МАТРИЦЯ", "АНАЛІТИКА")
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PanelSurface, RoundedCornerShape(16.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+            .padding(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            tabs.forEachIndexed { index, title ->
+                val isSelected = selectedTabIndex == index
+                
+                val backgroundColor by animateColorAsState(
+                    targetValue = if (isSelected) NeonCyan else Color.Transparent,
+                    animationSpec = tween(durationMillis = 300),
+                    label = "TabBackground"
+                )
+                
+                val contentColor by animateColorAsState(
+                    targetValue = if (isSelected) BackgroundDeep else TextSecondary,
+                    animationSpec = tween(durationMillis = 300),
+                    label = "TabContent"
+                )
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(backgroundColor)
+                        .clickable { onTabSelected(index) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            color = contentColor,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 12.sp
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayerMetricsGrid(
+    weight: String,
+    height: String,
+    onWeightClick: () -> Unit,
+    onHeightClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        MetricCard(
+            label = "ВАГА",
+            value = weight,
+            unit = "кг",
+            modifier = Modifier
+                .weight(1f)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onWeightClick
+                )
+        )
+        MetricCard(
+            label = "ЗРІСТ",
+            value = height,
+            unit = "см",
+            modifier = Modifier
+                .weight(1f)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onHeightClick
+                )
+        )
+    }
+}
+
+@Composable
+private fun MetricCard(label: String, value: String, unit: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .background(PanelSurface, RoundedCornerShape(24.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = TextSecondary,
+                fontSize = 12.sp,
+                letterSpacing = 2.sp
+            )
+        )
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 32.sp
+                )
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = unit,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = TextSecondary,
+                    fontSize = 20.sp
+                ),
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RadarChartMock() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PanelSurface, RoundedCornerShape(24.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))
+            .padding(24.dp)
+    ) {
+        Text(
+            text = "ХАРАКТЕРИСТИКИ ПЕРСОНАЖА",
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = TextSecondary,
+                fontSize = 12.sp,
+                letterSpacing = 2.sp
+            )
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Canvas(modifier = Modifier
+            .fillMaxWidth()
+            .height(250.dp)
+        ) {
+            val center = Offset(size.width / 2, size.height / 2)
+            val radius = size.minDimension / 2 * 0.8f
+            val levels = 4
+            val sides = 6
+            val angleStep = (2 * Math.PI / sides).toFloat()
+
+            // Draw grid web
+            for (i in 1..levels) {
+                val currentRadius = radius * (i.toFloat() / levels)
+                val path = androidx.compose.ui.graphics.Path()
+                for (j in 0 until sides) {
+                    val angle = j * angleStep - Math.PI.toFloat() / 2
+                    val x = center.x + currentRadius * Math.cos(angle.toDouble()).toFloat()
+                    val y = center.y + currentRadius * Math.sin(angle.toDouble()).toFloat()
+                    if (j == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                }
+                path.close()
+                drawPath(path, Color.White.copy(alpha = 0.05f), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx()))
+            }
+
+            // Draw axes
+            for (j in 0 until sides) {
+                val angle = j * angleStep - Math.PI.toFloat() / 2
+                val x = center.x + radius * Math.cos(angle.toDouble()).toFloat()
+                val y = center.y + radius * Math.sin(angle.toDouble()).toFloat()
+                drawLine(Color.White.copy(alpha = 0.05f), center, Offset(x, y), strokeWidth = 1.dp.toPx())
+            }
+
+            // Draw stats polygon
+            val stats = listOf(0.8f, 0.6f, 0.9f, 0.5f, 0.7f, 0.4f)
+            val statsPath = androidx.compose.ui.graphics.Path()
+            for (j in 0 until sides) {
+                val angle = j * angleStep - Math.PI.toFloat() / 2
+                val currentRadius = radius * stats[j]
+                val x = center.x + currentRadius * Math.cos(angle.toDouble()).toFloat()
+                val y = center.y + currentRadius * Math.sin(angle.toDouble()).toFloat()
+                if (j == 0) statsPath.moveTo(x, y) else statsPath.lineTo(x, y)
+            }
+            statsPath.close()
+
+            drawPath(statsPath, NeonCyan.copy(alpha = 0.2f))
+            drawPath(statsPath, NeonCyan, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()))
+        }
+    }
+}
+
+@Composable
+private fun ProgressLineChartMock() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PanelSurface, RoundedCornerShape(24.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))
+            .padding(24.dp)
+    ) {
+        Text(
+            text = "ПРОГРЕС ЗА 30 ДНІВ",
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = TextSecondary,
+                fontSize = 12.sp,
+                letterSpacing = 2.sp
+            )
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Canvas(modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+        ) {
+            val width = size.width
+            val height = size.height
+
+            // Horizontal grid lines
+            val gridLines = 4
+            for (i in 0..gridLines) {
+                val y = height * (i.toFloat() / gridLines)
+                drawLine(
+                    color = Color.White.copy(alpha = 0.05f),
+                    start = Offset(0f, y),
+                    end = Offset(width, y),
+                    strokeWidth = 1.dp.toPx(),
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                )
+            }
+
+            // Bezier curve
+            val path = androidx.compose.ui.graphics.Path().apply {
+                moveTo(0f, height * 0.9f)
+                cubicTo(
+                    width * 0.3f, height * 0.8f,
+                    width * 0.6f, height * 0.3f,
+                    width, height * 0.1f
+                )
+            }
+
+            // Fill under the curve
+            val fillPath = androidx.compose.ui.graphics.Path().apply {
+                addPath(path)
+                lineTo(width, height)
+                lineTo(0f, height)
+                close()
+            }
+
+            drawPath(
+                fillPath,
+                brush = Brush.verticalGradient(
+                    colors = listOf(NeonGreen.copy(alpha = 0.2f), Color.Transparent),
+                    startY = 0f,
+                    endY = height
+                )
+            )
+
+            drawPath(
+                path,
+                color = NeonGreen,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                    width = 3.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
+            )
+        }
+    }
+}
+
+@Composable
 private fun StatisticsHeader(navController: NavHostController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 24.dp),
+            .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -178,40 +476,6 @@ private fun StatisticsHeader(navController: NavHostController) {
 }
 
 @Composable
-private fun PremiumActionButton(
-    text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.height(56.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = color.copy(alpha = 0.1f),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.3f))
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelLarge.copy(
-                    color = color,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-            )
-        }
-    }
-}
-
-@Composable
 private fun AnimatedStatisticsBackground() {
     val infiniteTransition = rememberInfiniteTransition(label = "stats_bg")
     val colorShift by infiniteTransition.animateFloat(
@@ -222,12 +486,12 @@ private fun AnimatedStatisticsBackground() {
     )
 
     Canvas(modifier = Modifier.fillMaxSize()) {
-        drawRect(Color(0xFF020408))
+        drawRect(BackgroundDeep)
         
         // Matrix Green Glow
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(Color(0xFF00FF94).copy(alpha = 0.05f), Color.Transparent),
+                colors = listOf(NeonGreen.copy(alpha = 0.05f), Color.Transparent),
                 center = Offset(size.width * 0.8f, size.height * 0.2f + (size.height * 0.1f * colorShift)),
                 radius = 500.dp.toPx()
             )
@@ -236,7 +500,7 @@ private fun AnimatedStatisticsBackground() {
         // Cyber Blue Glow
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(Color(0xFF00B2FF).copy(alpha = 0.05f), Color.Transparent),
+                colors = listOf(NeonCyan.copy(alpha = 0.05f), Color.Transparent),
                 center = Offset(size.width * 0.2f, size.height * 0.8f - (size.height * 0.1f * colorShift)),
                 radius = 600.dp.toPx()
             )

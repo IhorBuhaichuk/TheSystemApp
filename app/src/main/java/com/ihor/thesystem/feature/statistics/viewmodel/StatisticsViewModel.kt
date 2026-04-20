@@ -7,7 +7,9 @@ import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
+import com.ihor.thesystem.domain.usecase.LogWeightUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
+import com.ihor.thesystem.domain.usecase.UpdatePlayerHeightUseCase
 import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
@@ -22,7 +24,9 @@ class StatisticsViewModel @Inject constructor(
     private val matrixRepo: ProgressionMatrixRepository,
     private val viewingDateRepo: ViewingDateRepository,
     private val getStatisticsDataUseCase: GetStatisticsDataUseCase,
-    private val recalculateGlobalRankUseCase: RecalculateGlobalRankUseCase
+    private val recalculateGlobalRankUseCase: RecalculateGlobalRankUseCase,
+    private val logWeightUseCase: LogWeightUseCase,
+    private val updatePlayerHeightUseCase: UpdatePlayerHeightUseCase
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -121,6 +125,34 @@ class StatisticsViewModel @Inject constructor(
         }
     }
 
+
+    fun onOpenLogWeight() {
+        _dialogState.value = StatisticsDialogState.LogWeight
+    }
+
+    fun onOpenEditHeight() {
+        _dialogState.value = StatisticsDialogState.EditHeight
+    }
+
+    fun onWeightConfirmed(weight: Float) {
+        viewModelScope.launch {
+            logWeightUseCase(weight).onSuccess {
+                onDismissDialog()
+            }.onFailure {
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(it.message ?: "Помилка оновлення ваги")))
+            }
+        }
+    }
+
+    fun onHeightConfirmed(height: Float) {
+        viewModelScope.launch {
+            updatePlayerHeightUseCase(height).onSuccess {
+                onDismissDialog()
+            }.onFailure {
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(it.message ?: "Помилка оновлення зросту")))
+            }
+        }
+    }
 
     fun onDismissDialog() { _dialogState.value = StatisticsDialogState.None }
 }

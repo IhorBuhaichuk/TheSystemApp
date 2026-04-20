@@ -18,6 +18,8 @@ data class StatisticsUiData(
     val currentCycleDay: Int                    = 1,
     val isPenaltyActive: Boolean                = false,
     val globalRank: Rank                        = Rank.E,
+    val currentWeight: Float                    = 0f,
+    val currentHeight: Float                    = 0f,
     val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf(),
     val tonnageStats: ImmutableList<DailyTonnageStats>   = persistentListOf(),
     val weightHistory: ImmutableList<WeightLogEntity>    = persistentListOf()
@@ -66,4 +68,7 @@ sealed class StatisticsDialogState {
         val sets: List<WorkoutSetInput>,
         val existingLog: ExerciseSet? = null
     ) : StatisticsDialogState()
+
+    object LogWeight : StatisticsDialogState()
+    object EditHeight : StatisticsDialogState()
 }

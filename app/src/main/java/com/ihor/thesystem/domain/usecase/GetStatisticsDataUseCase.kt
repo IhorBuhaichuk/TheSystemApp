@@ -50,7 +50,7 @@ class GetStatisticsDataUseCase @Inject constructor(
                 anchorCycleDay = config.cycleAnchorDay
             )
 
-            val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
+            val schedule = scheduleRepo.getScheduleForDay(cycleDay).first()
             val activeExerciseIds = schedule?.exercises?.map { it.id } ?: emptyList()
 
             val historiesMap = allHistories.groupBy { it.exerciseId }
@@ -60,8 +60,8 @@ class GetStatisticsDataUseCase @Inject constructor(
                 val isExerciseActive = activeExerciseIds.contains(entry.exerciseId)
                 val orderIndex = if (isExerciseActive) activeExerciseIds.indexOf(entry.exerciseId) else 999
 
-                val m0 = ref?.milestones?.get("M0")?.toFloat() ?: entry.startWeight
-                val m12 = ref?.milestones?.get("M12")?.toFloat() ?: entry.targetWeight
+                val m0 = ref?.milestones?.get("M0")?.let { it.toFloat() } ?: entry.startWeight
+                val m12 = ref?.milestones?.get("M12")?.let { it.toFloat() } ?: entry.targetWeight
                 
                 val history = historiesMap[entry.exerciseId]?.map { 
                     WeightHistoryEntry(it.weight, it.timestamp) 
@@ -82,9 +82,14 @@ class GetStatisticsDataUseCase @Inject constructor(
                 currentCycleDay = cycleDay,
                 isPenaltyActive = player.isPenaltyActive,
                 globalRank      = player.globalRank,
+                currentWeight   = weightHistory.maxByOrNull { it.timestamp }?.weight ?: 0f,
+                currentHeight   = player.height,
                 matrixEntries   = updatedEntries.toImmutableList(),
                 weightHistory   = weightHistory.sortedBy { it.timestamp }.toImmutableList()
             )
+        }.catch { e ->
+            e.printStackTrace()
+            emit(StatisticsUiData())
         }.flowOn(Dispatchers.Default)
     }
 

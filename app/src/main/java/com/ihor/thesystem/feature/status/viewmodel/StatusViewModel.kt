@@ -79,15 +79,18 @@ class StatusViewModel @Inject constructor(
             ) { schedules, stats ->
                 val schedule = schedules.firstOrNull() ?: return@combine null
                 
-                val exercisesWithRecs = schedule.exercises.map { ex ->
+                val exercisesWithRecs = mutableListOf<ExerciseWorkoutUiModel>()
+                for (ex in schedule.exercises) {
                     val rec = calculateRecommendation(ex.id, ex.name)
-                    ExerciseWorkoutUiModel(
-                        exerciseId = ex.id,
-                        name = ex.name,
-                        recommendedWeight = rec.weight,
-                        recommendedReps = rec.reps,
-                        recommendedSets = rec.sets,
-                        recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg"
+                    exercisesWithRecs.add(
+                        ExerciseWorkoutUiModel(
+                            exerciseId = ex.id,
+                            name = ex.name,
+                            recommendedWeight = rec.weight,
+                            recommendedReps = rec.reps,
+                            recommendedSets = rec.sets,
+                            recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg"
+                        )
                     )
                 }
 
@@ -122,6 +125,8 @@ class StatusViewModel @Inject constructor(
     init {
         // БД гарантовано готова на момент старту екрану (контролюється навігацією)
         viewModelScope.launch {
+            // Очікуємо появу гравця в БД, щоб генерація квестів не пройшла вхолосту
+            playerRepo.getPlayer().filterNotNull().first()
             useCases.generateDailyQuests()
             useCases.calculateAttributes()
         }

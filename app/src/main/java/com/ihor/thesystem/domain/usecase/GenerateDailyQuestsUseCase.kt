@@ -54,14 +54,17 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             // ГЕНЕРУЄМО ОСНОВНЕ ТРЕНУВАННЯ, ЯКЩО ЙОГО НЕМАЄ ТА ВОНО ПЕРЕДБАЧЕНЕ (не день відпочинку)
             val workoutTemplateName = schedule.workoutTemplateName
             if (!hasMainWorkout && workoutTemplateName != null) {
-                val recommendedExercises = schedule.exercises.map { exercise ->
+                val recommendedExercises = mutableListOf<ExerciseRecommendation>()
+                for (exercise in schedule.exercises) {
                     val rec = calculateRecommendation(exercise.id, exercise.name)
-                    ExerciseRecommendation(
-                        exerciseId = exercise.id,
-                        exerciseName = exercise.name,
-                        weight = rec.weight,
-                        sets = rec.sets,
-                        reps = rec.reps
+                    recommendedExercises.add(
+                        ExerciseRecommendation(
+                            exerciseId = exercise.id,
+                            exerciseName = exercise.name,
+                            weight = rec.weight,
+                            sets = rec.sets,
+                            reps = rec.reps
+                        )
                     )
                 }
 
