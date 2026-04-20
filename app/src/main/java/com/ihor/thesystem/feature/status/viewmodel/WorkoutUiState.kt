@@ -1,0 +1,40 @@
+package com.ihor.thesystem.feature.status.viewmodel
+
+import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+
+data class ActiveDayUiModel(
+    val dayNumber: Int,
+    val debuffName: String?,
+    val dailyTasks: ImmutableList<com.ihor.thesystem.domain.model.Quest>,
+    val workoutName: String?,
+    val exercises: ImmutableList<ExerciseWorkoutUiModel>,
+    val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf()
+)
+
+data class ExerciseWorkoutUiModel(
+    val exerciseId: Int,
+    val name: String,
+    val recommendedWeight: Double? = null,
+    val recommendedReps: Int? = null,
+    val recommendedSets: Int? = null,
+    val recommendation: String? = null,
+    val sets: ImmutableList<WorkoutSetInput> = persistentListOf()
+)
+
+data class WorkoutSetInput(
+    val id: Long = System.nanoTime(),
+    val weight: String = "",
+    val reps: String = ""
+)
+
+data class CycleDayUiModel(
+    val dayNumber: Int,
+    val type: DayType,
+    val isActive: Boolean,
+    val isSelected: Boolean = false,
+    val workoutName: String? = null
+)
+
+enum class DayType { REST, WORKOUT }

@@ -65,17 +65,6 @@ fun SystemBottomNavBar(navController: NavHostController) {
                     }
                 )
                 NavIconButton(
-                    icon = Icons.Filled.FlashOn,
-                    isSelected = destination?.hasRoute<Routes.Mode>() == true,
-                    activeColor = NeonGold,
-                    onClick = {
-                        navController.navigate(Routes.Mode) {
-                            popUpTo<Routes.Status> { inclusive = false }
-                            launchSingleTop = true
-                        }
-                    }
-                )
-                NavIconButton(
                     icon = Icons.Filled.CalendarToday,
                     isSelected = destination?.hasRoute<Routes.Calendar>() == true,
                     activeColor = GlitchPink,

@@ -5,7 +5,7 @@ import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
-import com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
 import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject

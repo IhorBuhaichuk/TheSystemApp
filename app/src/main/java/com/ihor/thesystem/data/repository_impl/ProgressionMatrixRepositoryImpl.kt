@@ -6,7 +6,7 @@ import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
-import com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -53,9 +53,9 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         if (validSets.isEmpty()) return
 
         val zoneId = ZoneId.systemDefault()
-        val today = LocalDate.now(zoneId)
-        val startOfDay = today.atStartOfDay(zoneId).toInstant().toEpochMilli()
-        val endOfDay = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
+        val date = java.time.Instant.ofEpochMilli(timestamp).atZone(zoneId).toLocalDate()
+        val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
 
         val totalTonnage = validSets.sumOf { 
             (it.weight.toDoubleOrNull() ?: 0.0) * (it.reps.toIntOrNull() ?: 0)
@@ -70,7 +70,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
                 WorkoutSessionLogEntity(
                     sessionId = sessionId,
                     questId = 0,
-                    timestamp = System.currentTimeMillis(),
+                    timestamp = timestamp,
                     totalTonnage = totalTonnage,
                     cycleDay = 0,
                     durationMinutes = 0
@@ -92,7 +92,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         } else {
             val sessionLog = WorkoutSessionLogEntity(
                 questId = 0,
-                timestamp = System.currentTimeMillis(),
+                timestamp = timestamp,
                 totalTonnage = totalTonnage,
                 cycleDay = 0,
                 durationMinutes = 0

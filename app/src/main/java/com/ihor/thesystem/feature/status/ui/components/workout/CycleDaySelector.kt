@@ -1,7 +1,6 @@
-package com.ihor.thesystem.feature.mode.ui.components
+package com.ihor.thesystem.feature.status.ui.components.workout
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,16 +9,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
@@ -28,8 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
-import com.ihor.thesystem.feature.mode.viewmodel.CycleDayUiModel
-import com.ihor.thesystem.feature.mode.viewmodel.DayType
+import com.ihor.thesystem.feature.status.viewmodel.CycleDayUiModel
 
 @Composable
 fun CycleDaySelector(
@@ -62,10 +57,10 @@ private fun CycleDayButton(
     modifier: Modifier = Modifier
 ) {
     val (icon, iconColor, glowColor) = when (day.dayNumber) {
-        1 -> Triple(Icons.Filled.WbSunny, Color(0xFFFFD600), Color(0xFFFFD600)) // Сонце (День)
-        2 -> Triple(Icons.Filled.NightsStay, Color(0xFF81D4FA), Color(0xFF0288D1)) // Місяць (Ніч)
-        3 -> Triple(Icons.Filled.Bedtime, Color(0xFFA5D6A7), Color(0xFF4CAF50)) // Людина спить / Zzz (Відсипний)
-        4 -> Triple(Icons.Filled.Favorite, Color(0xFFF06292), Color(0xFFE91E63)) // Вихідний (Серце/Спорт/Релакс)
+        1 -> Triple(Icons.Filled.WbSunny, Color(0xFFFFD600), Color(0xFFFFD600))
+        2 -> Triple(Icons.Filled.NightsStay, Color(0xFF81D4FA), Color(0xFF0288D1))
+        3 -> Triple(Icons.Filled.Bedtime, Color(0xFFA5D6A7), Color(0xFF4CAF50))
+        4 -> Triple(Icons.Filled.Favorite, Color(0xFFF06292), Color(0xFFE91E63))
         else -> Triple(Icons.Filled.Circle, Color.White, Color.White)
     }
 
@@ -77,7 +72,6 @@ private fun CycleDayButton(
         else -> stringResource(R.string.cycle_day_default, day.dayNumber)
     }
 
-    // Анімація пульсації для активного дня
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by if (day.isActive) {
         infiniteTransition.animateFloat(
@@ -117,7 +111,6 @@ private fun CycleDayButton(
                 },
             contentAlignment = Alignment.Center
         ) {
-            // Glow effect
             if (day.isActive) {
                 Box(
                     modifier = Modifier
@@ -127,7 +120,6 @@ private fun CycleDayButton(
                 )
             }
 
-            // Selection indicator (bottom bar or ring)
             if (day.isSelected && !day.isActive) {
                 Box(
                     modifier = Modifier
@@ -156,4 +148,3 @@ private fun CycleDayButton(
         )
     }
 }
-

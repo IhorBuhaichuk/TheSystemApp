@@ -7,9 +7,6 @@ sealed interface Routes {
     data object Status : Routes
     
     @Serializable
-    data object Mode : Routes
-    
-    @Serializable
     data object Statistics : Routes
     
     @Serializable

@@ -13,6 +13,10 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.model.DataError
+import com.ihor.thesystem.feature.status.viewmodel.CycleDayUiModel
+import com.ihor.thesystem.feature.status.viewmodel.DayType
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -22,11 +26,13 @@ data class CalendarDayUiModel(
     val date: LocalDate,
     val cycleDay: Int,
     val label: String,
-    val isToday: Boolean
+    val isToday: Boolean,
+    val isActive: Boolean = false
 )
 
 data class CalendarUiState(
     val days: List<CalendarDayUiModel> = emptyList(),
+    val cycleDays: List<CycleDayUiModel> = emptyList(),
     val todayInfo: CalendarDayUiModel? = null,
     val selectedDate: LocalDate? = null,
     val workoutResults: List<WorkoutResultUiModel> = emptyList(),
@@ -55,7 +61,8 @@ class CalendarViewModel @Inject constructor(
     private val weightLogDao: WeightLogDao,
     private val workoutDao: WorkoutDao,
     private val calculateCycleDay: CalculateCycleDayForDateUseCase,
-    private val viewingDateRepo: ViewingDateRepository
+    private val viewingDateRepo: ViewingDateRepository,
+    private val playerRepo: PlayerRepository
 ) : ViewModel() {
 
     private val _currentMonth = MutableStateFlow(YearMonth.now())
@@ -71,7 +78,8 @@ class CalendarViewModel @Inject constructor(
         _selectedDate,
         _workoutResults,
         _recommendations,
-        _loggedWeight
+        _loggedWeight,
+        playerRepo.getPlayer().filterNotNull()
     ) { args: Array<Any?> ->
         val month = args[0] as YearMonth
         val config = args[1] as SystemConfig
@@ -79,6 +87,7 @@ class CalendarViewModel @Inject constructor(
         val results = args[3] as List<WorkoutResultUiModel>
         val recs = args[4] as List<ProgressionMatrixEntry>
         val weight = args[5] as Double?
+        val player = args[6] as com.ihor.thesystem.domain.model.Player
 
         val daysInMonth = month.lengthOfMonth()
         
@@ -93,7 +102,8 @@ class CalendarViewModel @Inject constructor(
                 date = date,
                 cycleDay = cycleDay,
                 label = getLabelForCycleDay(cycleDay),
-                isToday = date == LocalDate.now()
+                isToday = date == LocalDate.now(),
+                isActive = date == LocalDate.now()
             )
         }
 
@@ -103,9 +113,19 @@ class CalendarViewModel @Inject constructor(
             anchorEpochDay = config.cycleAnchorDateTimestamp,
             anchorCycleDay = config.cycleAnchorDay
         )
+
+        val cycleDays = (1..4).map { d ->
+            CycleDayUiModel(
+                dayNumber = d,
+                type = if (d <= 2) DayType.WORKOUT else DayType.REST,
+                isActive = d == player.currentCycleDay,
+                isSelected = false
+            )
+        }
         
         CalendarUiState(
             days = calendarDays,
+            cycleDays = cycleDays,
             todayInfo = CalendarDayUiModel(todayDate, todayCycleDay, getLabelForCycleDay(todayCycleDay), true),
             selectedDate = selectedDate,
             workoutResults = results,
@@ -187,6 +207,22 @@ class CalendarViewModel @Inject constructor(
         viewModelScope.launch {
             val weight = weightLogDao.getWeightByDate(millis)
             _loggedWeight.value = weight?.toDouble()
+        }
+    }
+
+    fun onConfirmSync(day: Int) {
+        viewModelScope.launch {
+            playerRepo.updateCurrentCycleDay(day)
+            
+            val currentConfig = configRepo.getConfigFlow().firstOrNull()
+            if (currentConfig != null) {
+                configRepo.updateConfig(
+                    currentConfig.copy(
+                        cycleAnchorDateTimestamp = LocalDate.now().toEpochDay(),
+                        cycleAnchorDay = day
+                    )
+                )
+            }
         }
     }
 

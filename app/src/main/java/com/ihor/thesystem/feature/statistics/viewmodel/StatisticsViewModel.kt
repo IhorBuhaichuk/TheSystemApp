@@ -8,6 +8,7 @@ import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
+import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
@@ -37,7 +38,7 @@ class StatisticsViewModel @Inject constructor(
     private val _dialogState = MutableStateFlow<StatisticsDialogState>(StatisticsDialogState.None)
     val dialogState: StateFlow<StatisticsDialogState> = _dialogState.asStateFlow()
 
-    private val _currentSetInputs = MutableStateFlow<List<com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput>>(emptyList())
+    private val _currentSetInputs = MutableStateFlow<List<WorkoutSetInput>>(emptyList())
 
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
@@ -47,7 +48,7 @@ class StatisticsViewModel @Inject constructor(
     }
 
     fun onOpenLogSets(entry: MatrixEntryUiModel) {
-        val initialSets = listOf(com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput())
+        val initialSets = listOf(WorkoutSetInput())
         _currentSetInputs.value = initialSets
         _dialogState.value = StatisticsDialogState.LogWorkoutSets(entry, initialSets)
     }
@@ -60,7 +61,7 @@ class StatisticsViewModel @Inject constructor(
     }
 
     fun addSet() {
-        _currentSetInputs.update { it + com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput() }
+        _currentSetInputs.update { it + WorkoutSetInput() }
         updateLogDialogState()
     }
 
@@ -76,7 +77,7 @@ class StatisticsViewModel @Inject constructor(
         }
     }
 
-    fun onLogSetsConfirmed(exerciseId: Int, sets: List<com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput>, feedback: String) {
+    fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>, feedback: String) {
         viewModelScope.launch {
             try {
                 matrixRepo.saveExerciseSetsWithDate(

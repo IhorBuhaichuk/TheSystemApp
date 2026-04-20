@@ -9,15 +9,24 @@ import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.DebuffConfig
 import com.ihor.thesystem.domain.model.Player
+import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.DatabaseReadinessRepository
 import com.ihor.thesystem.domain.repository.DatabaseStatus
+import com.ihor.thesystem.domain.repository.PlayerRepository
+import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.usecase.*
+import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
+import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 sealed class StatusDialogState {
     object None                                                       : StatusDialogState()
@@ -29,12 +38,21 @@ sealed class StatusDialogState {
     data class QuestChecklist(val questId: Int, val isDaily: Boolean) : StatusDialogState()
     data class AddTask(val questId: Int)                             : StatusDialogState()
     object MainQuestWorkout                                          : StatusDialogState()
+    data class SetupMatrix(val entry: MatrixEntryUiModel, val startWeight: String, val targetWeight: String, val showWorkoutAfter: Boolean = false) : StatusDialogState()
+    data class LogWorkoutSets(val entry: MatrixEntryUiModel, val sets: List<WorkoutSetInput>, val existingLog: com.ihor.thesystem.domain.model.ExerciseSet? = null, val showWorkoutAfter: Boolean = false) : StatusDialogState()
 }
 
 @HiltViewModel
 class StatusViewModel @Inject constructor(
     private val useCases:              StatusUseCases,
-    private val databaseReadinessRepo: DatabaseReadinessRepository
+    private val databaseReadinessRepo: DatabaseReadinessRepository,
+    private val playerRepo: PlayerRepository,
+    private val scheduleRepo: ScheduleRepository,
+    private val getStatsUseCase: GetStatisticsDataUseCase,
+    private val matrixRepo: com.ihor.thesystem.domain.repository.ProgressionMatrixRepository,
+    private val saveExerciseSetsUseCase: com.ihor.thesystem.domain.usecase.SaveExerciseSetsUseCase,
+    private val viewingDateRepo: com.ihor.thesystem.domain.repository.ViewingDateRepository,
+    private val calculateRecommendation: com.ihor.thesystem.domain.usecase.CalculateRecommendedSetUseCase
 ) : ViewModel() {
 
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
@@ -51,6 +69,39 @@ class StatusViewModel @Inject constructor(
             initialValue = UiState.Loading
         )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val activeDayWorkout: StateFlow<ActiveDayUiModel?> = playerRepo.getPlayer()
+        .filterNotNull()
+        .flatMapLatest { player ->
+            combine(
+                scheduleRepo.getSchedulesForDays(listOf(player.currentCycleDay)),
+                getStatsUseCase()
+            ) { schedules, stats ->
+                val schedule = schedules.firstOrNull() ?: return@combine null
+                
+                val exercisesWithRecs = schedule.exercises.map { ex ->
+                    val rec = calculateRecommendation(ex.id, ex.name)
+                    ExerciseWorkoutUiModel(
+                        exerciseId = ex.id,
+                        name = ex.name,
+                        recommendedWeight = rec.weight,
+                        recommendedReps = rec.reps,
+                        recommendedSets = rec.sets,
+                        recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg"
+                    )
+                }
+
+                ActiveDayUiModel(
+                    dayNumber = schedule.cycleDay,
+                    debuffName = null,
+                    dailyTasks = persistentListOf(),
+                    workoutName = schedule.workoutTemplateName,
+                    exercises = exercisesWithRecs.toImmutableList(),
+                    matrixEntries = stats.matrixEntries
+                )
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     private val _dialogState = MutableStateFlow<StatusDialogState>(StatusDialogState.None)
     val dialogState: StateFlow<StatusDialogState> = _dialogState.asStateFlow()
 
@@ -65,6 +116,8 @@ class StatusViewModel @Inject constructor(
 
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
+
+    private val _currentSetInputs = MutableStateFlow<List<WorkoutSetInput>>(emptyList())
 
     init {
         // БД гарантовано готова на момент старту екрану (контролюється навігацією)
@@ -110,17 +163,93 @@ class StatusViewModel @Inject constructor(
         }
     }
 
-    fun onNameTap()         { _dialogState.value = StatusDialogState.EditName }
-    fun onWeightTap()       { _dialogState.value = StatusDialogState.LogWeight }
-    fun onHeightTap()       { _dialogState.value = StatusDialogState.EditHeight }
-    fun onDebuffTap()       { _dialogState.value = StatusDialogState.EditDebuffs }
-    fun onSystemConfigTap() { _dialogState.value = StatusDialogState.EditSystemConfig }
-    fun onQuestTap(questId: Int, isDaily: Boolean) {
-        _dialogState.value = StatusDialogState.QuestChecklist(questId, isDaily)
-    }
     fun onMainQuestWorkoutTap() {
         _dialogState.value = StatusDialogState.MainQuestWorkout
     }
+
+    fun onOpenLogSets(entry: MatrixEntryUiModel, fromWorkout: Boolean = false) {
+        val initialSets = listOf(WorkoutSetInput())
+        _currentSetInputs.value = initialSets
+        _dialogState.value = StatusDialogState.LogWorkoutSets(entry, initialSets, showWorkoutAfter = fromWorkout)
+    }
+
+    fun onOpenSetup(entry: MatrixEntryUiModel, fromWorkout: Boolean = false) {
+        _dialogState.value = StatusDialogState.SetupMatrix(entry, entry.startWeight.toString(), entry.targetWeight.toString(), showWorkoutAfter = fromWorkout)
+    }
+
+    fun updateSetInput(id: Long, weight: String, reps: String) {
+        _currentSetInputs.update { list ->
+            list.map { if (it.id == id) it.copy(weight = weight, reps = reps) else it }
+        }
+        updateLogDialogState()
+    }
+
+    fun addSet() {
+        _currentSetInputs.update { it + WorkoutSetInput() }
+        updateLogDialogState()
+    }
+
+    fun removeSet() {
+        _currentSetInputs.update { if (it.size > 1) it.dropLast(1) else it }
+        updateLogDialogState()
+    }
+
+    private fun updateLogDialogState() {
+        val current = _dialogState.value
+        if (current is StatusDialogState.LogWorkoutSets) {
+            _dialogState.value = current.copy(sets = _currentSetInputs.value)
+        }
+    }
+
+    fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>, feedback: String) {
+        val currentDialog = _dialogState.value
+        viewModelScope.launch {
+            try {
+                saveExerciseSetsUseCase(
+                    exerciseId = exerciseId,
+                    sets = sets,
+                    date = viewingDateRepo.selectedDate.value,
+                    userFeedback = feedback
+                )
+                // Use the status screen data use case to trigger a refresh of attributes and rank if needed
+                useCases.calculateAttributes()
+                
+                if (currentDialog is StatusDialogState.LogWorkoutSets && currentDialog.showWorkoutAfter) {
+                    _dialogState.value = StatusDialogState.MainQuestWorkout
+                } else {
+                    onDismissDialog()
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка збереження")))
+            }
+        }
+    }
+
+    fun onConfirmSetup(exerciseId: Int, start: String, target: String) {
+        val currentDialog = _dialogState.value
+        viewModelScope.launch {
+            try {
+                matrixRepo.updateMatrixGoals(
+                    exerciseId = exerciseId,
+                    startWeight = start.toFloatOrNull() ?: 0f,
+                    targetWeight = target.toFloatOrNull() ?: 0f
+                )
+                
+                if (currentDialog is StatusDialogState.SetupMatrix && currentDialog.showWorkoutAfter) {
+                    _dialogState.value = StatusDialogState.MainQuestWorkout
+                } else {
+                    onDismissDialog()
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка")))
+            }
+        }
+    }
+
     fun onDismissDialog()   { _dialogState.value = StatusDialogState.None }
 
     fun onNameConfirmed(newName: String) = launchCatching {

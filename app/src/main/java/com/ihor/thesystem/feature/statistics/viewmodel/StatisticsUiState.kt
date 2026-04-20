@@ -5,6 +5,7 @@ import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.WeightHistoryEntry
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
+import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -62,7 +63,7 @@ sealed class StatisticsDialogState {
 
     data class LogWorkoutSets(
         val entry: MatrixEntryUiModel,
-        val sets: List<com.ihor.thesystem.feature.mode.viewmodel.WorkoutSetInput>,
+        val sets: List<WorkoutSetInput>,
         val existingLog: ExerciseSet? = null
     ) : StatisticsDialogState()
 }

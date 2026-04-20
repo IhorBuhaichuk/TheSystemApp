@@ -36,6 +36,7 @@ import com.ihor.thesystem.feature.calendar.viewmodel.CalendarDayUiModel
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarViewModel
 import com.ihor.thesystem.feature.calendar.viewmodel.WorkoutResultUiModel
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
+import com.ihor.thesystem.feature.status.ui.components.workout.CycleDaySelector
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -58,6 +59,14 @@ fun CalendarScreen(
                 .verticalScroll(scrollState)
                 .padding(horizontal = 24.dp)
         ) {
+            Spacer(Modifier.height(32.dp))
+
+            CycleDaySelector(
+                days = uiState.cycleDays,
+                onTap = { viewModel.onConfirmSync(it) },
+                onLongPress = { viewModel.onConfirmSync(it) }
+            )
+
             CalendarHeaderAndMonthSelector(
                 currentMonth = uiState.currentMonth,
                 onMonthChange = { viewModel.onMonthChange(it) }

@@ -3,7 +3,9 @@ package com.ihor.thesystem.feature.status.ui.components.dialogs
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,78 +19,87 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.ihor.thesystem.core.theme.RajdhaniFamily
+import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
+import com.ihor.thesystem.feature.status.ui.components.workout.ActiveDayCard
+import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun MainQuestWorkoutDialog(
+    data: ActiveDayUiModel?,
+    onOpenLogSets: (MatrixEntryUiModel) -> Unit,
+    onOpenSetup: (MatrixEntryUiModel) -> Unit,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        )
+    ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp)
-                .clip(RoundedCornerShape(32.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(Color(0xFF1A1A2E), Color(0xFF0F0F1A)),
-                        start = Offset(0f, 0f),
-                        end = Offset(1000f, 1000f)
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.sweepGradient(
-                        listOf(
-                            Color(0xFF00F0FF).copy(alpha = 0.4f),
-                            Color(0xFFB257FF).copy(alpha = 0.4f),
-                            Color(0xFF00F0FF).copy(alpha = 0.4f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(32.dp)
-                )
+                .fillMaxSize()
+                .background(Color(0xFF020408))
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .padding(top = 16.dp)
             ) {
-                Text(
-                    text = "ТРЕНУВАННЯ",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        color = Color.White,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontFamily = RajdhaniFamily,
-                        letterSpacing = 2.sp
-                    )
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = "Модуль тренування в розробці",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.White.copy(alpha = 0.6f),
-                        fontFamily = RajdhaniFamily
-                    )
-                )
-                
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                Button(
-                    onClick = onDismiss,
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF00F0FF),
-                        contentColor = Color.Black
-                    )
+                // Top Row: Title and Close button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "ЗАКРИТИ",
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = RajdhaniFamily
+                        text = "ТРЕНУВАННЯ",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            color = Color.White,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontFamily = RajdhaniFamily,
+                            letterSpacing = 2.sp
+                        )
                     )
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(modifier = Modifier.weight(1f)) {
+                    if (data != null) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            ActiveDayCard(
+                                data = data,
+                                onOpenLogSets = onOpenLogSets,
+                                onOpenSetup = onOpenSetup
+                            )
+                            
+                            Spacer(modifier = Modifier.height(32.dp))
+                        }
+                    } else {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = Color(0xFF00F0FF))
+                        }
+                    }
                 }
             }
         }

@@ -52,6 +52,7 @@ fun StatusScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val dialogState by viewModel.dialogState.collectAsState()
+    val activeDayWorkout by viewModel.activeDayWorkout.collectAsState()
 
     var levelUpEvent by remember { mutableStateOf<Any?>(null) }
     var showPenaltyOn by remember { mutableStateOf(false) }
@@ -122,8 +123,48 @@ fun StatusScreen(
                 onDismiss = { viewModel.onDismissDialog() }
             )
             is StatusDialogState.MainQuestWorkout -> MainQuestWorkoutDialog(
+                data = activeDayWorkout,
+                onOpenLogSets = { viewModel.onOpenLogSets(it, fromWorkout = true) },
+                onOpenSetup = { viewModel.onOpenSetup(it, fromWorkout = true) },
                 onDismiss = { viewModel.onDismissDialog() }
             )
+            is StatusDialogState.SetupMatrix -> {
+                com.ihor.thesystem.feature.statistics.ui.dialogs.SetupMatrixDialog(
+                    exerciseName = dState.entry.exerciseName,
+                    initialStart = dState.startWeight,
+                    initialTarget = dState.targetWeight,
+                    onConfirm = { start, target ->
+                        viewModel.onConfirmSetup(dState.entry.exerciseId, start, target)
+                    },
+                    onDismiss = { 
+                        if (dState.showWorkoutAfter) {
+                            viewModel.onMainQuestWorkoutTap()
+                        } else {
+                            viewModel.onDismissDialog()
+                        }
+                    }
+                )
+            }
+            is StatusDialogState.LogWorkoutSets -> {
+                com.ihor.thesystem.feature.statistics.ui.dialogs.LogWorkoutSetsDialog(
+                    exerciseName = dState.entry.exerciseName,
+                    sets = dState.sets,
+                    onUpdate = { id, w, r -> viewModel.updateSetInput(id, w, r) },
+                    onAdd = { viewModel.addSet() },
+                    onRemove = { viewModel.removeSet() },
+                    onSave = { feedback ->
+                        viewModel.onLogSetsConfirmed(dState.entry.exerciseId, dState.sets, feedback)
+                    },
+                    onDismiss = { 
+                        if (dState.showWorkoutAfter) {
+                            viewModel.onMainQuestWorkoutTap()
+                        } else {
+                            viewModel.onDismissDialog()
+                        }
+                    },
+                    existingLog = dState.existingLog
+                )
+            }
             else -> {}
         }
     }
