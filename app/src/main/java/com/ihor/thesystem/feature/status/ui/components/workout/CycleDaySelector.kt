@@ -2,8 +2,6 @@ package com.ihor.thesystem.feature.status.ui.components.workout
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -13,10 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -73,27 +71,13 @@ private fun CycleDayButton(
     }
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulseAlpha by if (day.isActive) {
-        infiniteTransition.animateFloat(
-            initialValue = 0.3f,
-            targetValue = 0.8f,
-            animationSpec = infiniteRepeatable(tween(1500), RepeatMode.Reverse),
-            label = "alpha"
-        )
-    } else {
-        remember { mutableFloatStateOf(0f) }
-    }
     
-    val pulseScale by if (day.isActive) {
-        infiniteTransition.animateFloat(
-            initialValue = 1f,
-            targetValue = 1.2f,
-            animationSpec = infiniteRepeatable(tween(1500), RepeatMode.Reverse),
-            label = "scale"
-        )
-    } else {
-        remember { mutableFloatStateOf(1f) }
-    }
+    val pulseValue by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
+        label = "pulse"
+    )
 
     Column(
         modifier              = modifier,
@@ -111,36 +95,48 @@ private fun CycleDayButton(
                 },
             contentAlignment = Alignment.Center
         ) {
-            if (day.isActive) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .blur(15.dp)
-                        .background(glowColor.copy(alpha = pulseAlpha), CircleShape)
-                )
-            }
-
-            if (day.isSelected && !day.isActive) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .border(1.5.dp, iconColor.copy(alpha = 0.3f), CircleShape)
-                )
-            }
-
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (day.isActive || day.isSelected) iconColor else iconColor.copy(alpha = 0.2f),
+                tint = if (day.isActive || day.isSelected) {
+                    val factor = pulseValue * 0.3f
+                    Color(
+                        red = iconColor.red + (1f - iconColor.red) * factor,
+                        green = iconColor.green + (1f - iconColor.green) * factor,
+                        blue = iconColor.blue + (1f - iconColor.blue) * factor,
+                        alpha = 1f
+                    )
+                } else iconColor.copy(alpha = 0.15f),
                 modifier = Modifier
-                    .size(if (day.isActive) 32.dp else 28.dp)
-                    .then(if (day.isActive) Modifier.size(32.dp * pulseScale) else Modifier)
+                    .size(30.dp)
+                    .graphicsLayer {
+                        if (day.isActive || day.isSelected) {
+                            val scale = 1f + (0.05f * pulseValue)
+                            scaleX = scale
+                            scaleY = scale
+                        }
+                    }
+                    .drawBehind {
+                        if (day.isActive || day.isSelected) {
+                            drawCircle(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        glowColor.copy(alpha = 0.6f * pulseValue),
+                                        Color.Transparent
+                                    ),
+                                    center = center,
+                                    radius = size.minDimension * 0.7f
+                                ),
+                                radius = size.minDimension * 0.7f
+                            )
+                        }
+                    }
             )
         }
 
         Text(
             text       = label.uppercase(),
-            color      = if (day.isActive) iconColor else if (day.isSelected) Color.White else Color.White.copy(alpha = 0.3f),
+            color      = if (day.isActive) iconColor else if (day.isSelected) Color.White else Color.White.copy(alpha = 0.2f),
             fontSize   = 10.sp,
             fontFamily = RajdhaniFamily,
             fontWeight = if (day.isActive || day.isSelected) FontWeight.Bold else FontWeight.Medium,
