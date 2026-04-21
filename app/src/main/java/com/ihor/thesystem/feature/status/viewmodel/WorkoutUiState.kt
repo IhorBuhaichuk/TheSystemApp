@@ -6,7 +6,6 @@ import kotlinx.collections.immutable.persistentListOf
 
 data class ActiveDayUiModel(
     val dayNumber: Int,
-    val debuffName: String?,
     val dailyTasks: ImmutableList<com.ihor.thesystem.domain.model.Quest>,
     val workoutName: String?,
     val exercises: ImmutableList<ExerciseWorkoutUiModel>,

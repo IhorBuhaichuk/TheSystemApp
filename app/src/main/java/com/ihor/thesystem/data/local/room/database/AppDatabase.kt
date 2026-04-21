@@ -21,7 +21,6 @@ import com.ihor.thesystem.data.local.room.entity.*
         QuestEntity::class,
         QuestTaskEntity::class,
         ProgressionMatrixEntity::class,
-        DebuffConfigEntity::class,
         QuestLogEntity::class,
         WorkoutSessionEntity::class,
         ExerciseSetEntity::class,
@@ -33,7 +32,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class
     ],
-    version = 25,
+    version = 26,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -46,7 +45,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun scheduleDao(): ScheduleDao
     abstract fun questDao(): QuestDao
     abstract fun progressionMatrixDao(): ProgressionMatrixDao
-    abstract fun debuffConfigDao(): DebuffConfigDao
     abstract fun questLogDao(): QuestLogDao
     abstract fun workoutAnalyticsDao(): WorkoutAnalyticsDao
     abstract fun protocolTemplateDao(): ProtocolTemplateDao

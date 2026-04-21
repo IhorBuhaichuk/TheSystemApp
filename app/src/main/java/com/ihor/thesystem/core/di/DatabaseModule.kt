@@ -74,7 +74,6 @@ abstract class DatabaseModule {
         @Provides fun provideScheduleDao(db: AppDatabase)          = db.scheduleDao()
         @Provides fun provideQuestDao(db: AppDatabase)             = db.questDao()
         @Provides fun provideProgressionMatrixDao(db: AppDatabase) = db.progressionMatrixDao()
-        @Provides fun provideDebuffConfigDao(db: AppDatabase)      = db.debuffConfigDao()
         @Provides fun provideQuestLogDao(db: AppDatabase)          = db.questLogDao()
         @Provides fun provideWorkoutAnalyticsDao(db: AppDatabase)  = db.workoutAnalyticsDao()
         @Provides fun provideProtocolTemplateDao(db: AppDatabase)  = db.protocolTemplateDao()

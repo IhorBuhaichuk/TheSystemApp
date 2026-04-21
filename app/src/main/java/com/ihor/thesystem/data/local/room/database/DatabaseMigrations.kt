@@ -201,7 +201,6 @@ object DatabaseMigrations {
     val MIGRATION_20_21 = object : Migration(20, 21) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE quest ADD COLUMN targetExerciseId INTEGER")
-            db.execSQL("ALTER TABLE debuff_config ADD COLUMN cycleDay INTEGER")
         }
     }
 
@@ -215,16 +214,6 @@ object DatabaseMigrations {
             questCursor.close()
             if (!questColumns.contains("targetExerciseId")) {
                 db.execSQL("ALTER TABLE quest ADD COLUMN targetExerciseId INTEGER")
-            }
-
-            val debuffCursor = db.query("PRAGMA table_info(debuff_config)")
-            val debuffColumns = mutableSetOf<String>()
-            while (debuffCursor.moveToNext()) {
-                debuffColumns.add(debuffCursor.getString(debuffCursor.getColumnIndexOrThrow("name")))
-            }
-            debuffCursor.close()
-            if (!debuffColumns.contains("cycleDay")) {
-                db.execSQL("ALTER TABLE debuff_config ADD COLUMN cycleDay INTEGER")
             }
         }
     }
@@ -248,9 +237,20 @@ object DatabaseMigrations {
 
     val MIGRATION_23_24 = object : Migration(23, 24) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            // Check if columns exist before adding them (though we are deleting them in 25, 
-            // someone might be on v23 and need to go to v24 first if they don't have certain columns)
-            // But usually v24 was already released. If it crashed on phone, maybe v24 wasn't handled.
+            // Safely add missing columns for version 24 if they don't exist
+            val cursor = db.query("PRAGMA table_info(player)")
+            val columns = mutableSetOf<String>()
+            while (cursor.moveToNext()) {
+                columns.add(cursor.getString(cursor.getColumnIndexOrThrow("name")))
+            }
+            cursor.close()
+
+            if (!columns.contains("chestAttr")) db.execSQL("ALTER TABLE player ADD COLUMN chestAttr INTEGER NOT NULL DEFAULT 0")
+            if (!columns.contains("backAttr")) db.execSQL("ALTER TABLE player ADD COLUMN backAttr INTEGER NOT NULL DEFAULT 0")
+            if (!columns.contains("shouldersAttr")) db.execSQL("ALTER TABLE player ADD COLUMN shouldersAttr INTEGER NOT NULL DEFAULT 0")
+            if (!columns.contains("quadsAttr")) db.execSQL("ALTER TABLE player ADD COLUMN quadsAttr INTEGER NOT NULL DEFAULT 0")
+            if (!columns.contains("legsAttr")) db.execSQL("ALTER TABLE player ADD COLUMN legsAttr INTEGER NOT NULL DEFAULT 0")
+            if (!columns.contains("armsAttr")) db.execSQL("ALTER TABLE player ADD COLUMN armsAttr INTEGER NOT NULL DEFAULT 0")
         }
     }
 
@@ -305,11 +305,17 @@ object DatabaseMigrations {
         }
     }
 
+    val MIGRATION_25_26 = object : Migration(25, 26) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS `debuff_config`")
+        }
+    }
+
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7,
         MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12,
         MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
         MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22,
-        MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25
+        MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26
     )
 }

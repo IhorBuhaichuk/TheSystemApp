@@ -9,22 +9,15 @@ interface SystemConfigRepository {
     suspend fun updateConfig(config: SystemConfig)
 }
 
-interface DebuffRepository {
-    fun getAllDebuffs(): Flow<List<DebuffConfig>>
-    fun getActiveDebuffs(): Flow<List<DebuffConfig>>
-    fun getDebuffsForCycleDay(day: Int): Flow<List<DebuffConfig>>
-    suspend fun updateDebuff(debuff: DebuffConfig)
-}
-
 interface ScheduleRepository {
     fun getScheduleForDay(day: Int): Flow<ScheduleDay?>
     fun getSchedulesForDays(days: List<Int>): Flow<List<ScheduleDay>>
 }
 
 sealed class DatabaseStatus {
-    object Idle : DatabaseStatus()
-    object Loading : DatabaseStatus()
-    object Ready : DatabaseStatus()
+    data object Idle : DatabaseStatus()
+    data object Loading : DatabaseStatus()
+    data object Ready : DatabaseStatus()
     data class Failed(val reason: String) : DatabaseStatus()
 }
 

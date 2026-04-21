@@ -17,7 +17,6 @@ data class StatusUiData(
     val cycleDay: Int                 = 1,
     val monthWorkoutsCompleted: Int   = 2,
     val monthWorkoutsTotal: Int       = 13,
-    val activeDebuffs: ImmutableList<DebuffUiModel> = persistentListOf(),
     val dailyQuest: QuestUiModel?     = null,
     val mainQuest: QuestUiModel?      = null,
     val promotionQuests: ImmutableList<QuestUiModel> = persistentListOf(),
@@ -26,14 +25,6 @@ data class StatusUiData(
     val currentStreak: Int = 0,
     val maxStreak: Int = 0,
     val xpThisWeek: Int = 0
-)
-
-data class DebuffUiModel(
-    val id: Int,
-    val condition: String,
-    val text: String,
-    val penaltyPercent: Int,
-    val isActive: Boolean = false
 )
 
 data class QuestUiModel(

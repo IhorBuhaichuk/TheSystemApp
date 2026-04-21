@@ -65,13 +65,10 @@ object DatabasePopulator {
         )
         matrixData.forEach { db.progressionMatrixDao().insert(it) }
 
-        // 5. Розклад та дебафи
-        db.debuffConfigDao().insert(DebuffConfigEntity(1, "СЛАБКІСТЬ", "Дебаф: зниження продуктивності", 0))
-        db.debuffConfigDao().insert(DebuffConfigEntity(2, "ЦНС", "Дебаф: перевтома системи", 0))
-        
-        db.scheduleDao().insertSchedule(ScheduleEntity(1, 1, 2)) // ДЕНЬ 1: ВИХІДНИЙ -> ТРЕНУВАННЯ А
-        db.scheduleDao().insertSchedule(ScheduleEntity(2, 2, 3)) // ДЕНЬ 2: НІЧ -> ТРЕНУВАННЯ Б
+        // 5. Розклад
+        db.scheduleDao().insertSchedule(ScheduleEntity(1, 1, null)) // ДЕНЬ 1: ДЕНЬ -> ВІДПОЧИНОК
+        db.scheduleDao().insertSchedule(ScheduleEntity(2, 2, 3))    // ДЕНЬ 2: НІЧ -> ТРЕНУВАННЯ Б
         db.scheduleDao().insertSchedule(ScheduleEntity(3, 3, null)) // ДЕНЬ 3: ПІСЛЯ НОЧІ -> ВІДПОЧИНОК
-        db.scheduleDao().insertSchedule(ScheduleEntity(4, 4, null)) // ДЕНЬ 4: ВИХІДНИЙ -> ВІДПОЧИНОК
+        db.scheduleDao().insertSchedule(ScheduleEntity(4, 4, 2))    // ДЕНЬ 4: ВИХІДНИЙ -> ТРЕНУВАННЯ А
     }
 }

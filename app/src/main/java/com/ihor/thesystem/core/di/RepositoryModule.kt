@@ -22,9 +22,6 @@ abstract class RepositoryModule {
     abstract fun bindSystemConfigRepository(impl: SystemConfigRepositoryImpl): SystemConfigRepository
 
     @Binds @Singleton
-    abstract fun bindDebuffRepository(impl: DebuffRepositoryImpl): DebuffRepository
-
-    @Binds @Singleton
     abstract fun bindScheduleRepository(impl: ScheduleRepositoryImpl): ScheduleRepository
 
     @Binds @Singleton

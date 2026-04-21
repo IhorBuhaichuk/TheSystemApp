@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,15 +32,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
-import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.ui.components.GlitchText
 import com.ihor.thesystem.feature.status.ui.components.dialogs.AddTaskDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.LevelUpDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.MainQuestWorkoutDialog
-import com.ihor.thesystem.feature.status.ui.components.dialogs.PenaltyActivatedDialog
-import com.ihor.thesystem.feature.status.ui.components.dialogs.PenaltyDeactivatedDialog
 import com.ihor.thesystem.feature.status.viewmodel.*
 import kotlin.system.exitProcess
 
@@ -55,15 +51,11 @@ fun StatusScreen(
     val activeDayWorkout by viewModel.activeDayWorkout.collectAsState()
 
     var levelUpEvent by remember { mutableStateOf<Any?>(null) }
-    var showPenaltyOn by remember { mutableStateOf(false) }
-    var showPenaltyOff by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is StatusOneOffEvent.ShowLevelUp -> levelUpEvent = event
-                is StatusOneOffEvent.ShowPenaltyActivated -> showPenaltyOn = true
-                is StatusOneOffEvent.ShowPenaltyDeactivated -> showPenaltyOff = true
             }
         }
     }
@@ -116,8 +108,6 @@ fun StatusScreen(
                 onDismiss = { levelUpEvent = null }
             )
         }
-        if (showPenaltyOn) PenaltyActivatedDialog { showPenaltyOn = false }
-        if (showPenaltyOff) PenaltyDeactivatedDialog { showPenaltyOff = false }
         
         when (val dState = dialogState) {
             is StatusDialogState.AddTask -> AddTaskDialog(
@@ -514,10 +504,7 @@ private fun DailyQuestsSectionPremium(
                     .clip(RoundedCornerShape(16.dp))
                     .clickable { onAddTask(quest.id) }
                     .drawBehind {
-                        val strokeWidth = 1.dp.toPx()
-                        val dashWidth = 10.dp.toPx()
-                        val gapWidth = 10.dp.toPx()
-                        // Manual dashed border drawing if needed, or just solid for now
+                        // Manual dashed border drawing if needed
                     }
                     .background(Color.White.copy(alpha = 0.02f))
                     .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp)),

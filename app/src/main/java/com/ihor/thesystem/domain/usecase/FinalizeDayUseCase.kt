@@ -31,16 +31,11 @@ class FinalizeDayUseCase @Inject constructor(
         val todayQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
         val mainQuests = todayQuests.filter { it.type == DomainQuestType.MAIN }
 
-        // Стан до трансформації для визначення подій (Events)
-        val wasPenaltyActive = player.isPenaltyActive
-
         // 1. Ланцюжок трансформацій доменної моделі (Immutable logic)
         val (updatedPlayer, levelUpTriggered) = player
             .evaluateQuests(mainQuests)
             .advanceTime(config)
             .checkLevelUp()
-
-        val penaltyActivated = !wasPenaltyActive && updatedPlayer.isPenaltyActive
 
         // 2. Збереження оновленого стану в репозиторій
         val updateResult = playerRepo.updatePlayer(updatedPlayer)
@@ -56,7 +51,6 @@ class FinalizeDayUseCase @Inject constructor(
         // 4. Визначення результату для UI
         val finalResult = when {
             levelUpTriggered -> DayFinalizationResult.LevelUp
-            penaltyActivated -> DayFinalizationResult.PenaltyZoneEntered
             else -> DayFinalizationResult.Success
         }
         

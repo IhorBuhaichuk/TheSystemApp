@@ -53,7 +53,7 @@ class ArchitectViewModel @Inject constructor(
                 val initialMessages = listOf(
                     ChatMessage(
                         role = ChatRole.SYSTEM,
-                        uiText = UiText.StringResource(R.string.architect_initial_message, context),
+                        uiText = UiText.StringResource(R.string.architect_initial_message, listOf(context)),
                         isActionable = true
                     )
                 )
@@ -157,7 +157,7 @@ class ArchitectViewModel @Inject constructor(
                     role = ChatRole.SYSTEM,
                     uiText = UiText.StringResource(
                         R.string.error_network_architect, 
-                        e.message ?: ""
+                        listOf(e.message ?: "")
                     ),
                     isActionable = false
                 )

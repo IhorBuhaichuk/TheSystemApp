@@ -54,7 +54,7 @@ data class MatrixEntryUiModel(
 
 
 sealed class StatisticsDialogState {
-    object None : StatisticsDialogState()
+    data object None : StatisticsDialogState()
     
     data class SetupMatrix(
         val entry: MatrixEntryUiModel,
@@ -68,6 +68,6 @@ sealed class StatisticsDialogState {
         val existingLog: ExerciseSet? = null
     ) : StatisticsDialogState()
 
-    object LogWeight : StatisticsDialogState()
-    object EditHeight : StatisticsDialogState()
+    data object LogWeight : StatisticsDialogState()
+    data object EditHeight : StatisticsDialogState()
 }

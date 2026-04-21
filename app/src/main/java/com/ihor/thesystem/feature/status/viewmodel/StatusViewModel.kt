@@ -7,7 +7,6 @@ import com.ihor.thesystem.core.ui.StringResourceException
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
-import com.ihor.thesystem.domain.model.DebuffConfig
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.model.SystemConfig
@@ -29,15 +28,14 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 sealed class StatusDialogState {
-    object None                                                       : StatusDialogState()
-    object EditName                                                   : StatusDialogState()
-    object LogWeight                                                  : StatusDialogState()
-    object EditHeight                                                 : StatusDialogState()
-    object EditDebuffs                                                : StatusDialogState()
-    object EditSystemConfig                                           : StatusDialogState()
+    data object None                                                       : StatusDialogState()
+    data object EditName                                                   : StatusDialogState()
+    data object LogWeight                                                  : StatusDialogState()
+    data object EditHeight                                                 : StatusDialogState()
+    data object EditSystemConfig                                           : StatusDialogState()
     data class QuestChecklist(val questId: Int, val isDaily: Boolean) : StatusDialogState()
     data class AddTask(val questId: Int)                             : StatusDialogState()
-    object MainQuestWorkout                                          : StatusDialogState()
+    data object MainQuestWorkout                                          : StatusDialogState()
     data class SetupMatrix(val entry: MatrixEntryUiModel, val startWeight: String, val targetWeight: String, val showWorkoutAfter: Boolean = false) : StatusDialogState()
     data class LogWorkoutSets(val entry: MatrixEntryUiModel, val sets: List<WorkoutSetInput>, val existingLog: com.ihor.thesystem.domain.model.ExerciseSet? = null, val showWorkoutAfter: Boolean = false) : StatusDialogState()
 }
@@ -57,6 +55,9 @@ class StatusViewModel @Inject constructor(
 
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
 
+    val systemConfig: StateFlow<SystemConfig?> = useCases.getSystemConfig()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     val uiState: StateFlow<UiState<StatusUiData>> = useCases.getStatusData()
         .map<StatusUiData, UiState<StatusUiData>> { UiState.Content(it) }
         .catch { 
@@ -70,49 +71,53 @@ class StatusViewModel @Inject constructor(
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val activeDayWorkout: StateFlow<ActiveDayUiModel?> = playerRepo.getPlayer()
-        .filterNotNull()
-        .flatMapLatest { player ->
-            combine(
-                scheduleRepo.getSchedulesForDays(listOf(player.currentCycleDay)),
-                getStatsUseCase()
-            ) { schedules, stats ->
-                val schedule = schedules.firstOrNull() ?: return@combine null
-                
-                val exercisesWithRecs = mutableListOf<ExerciseWorkoutUiModel>()
-                for (ex in schedule.exercises) {
-                    val rec = calculateRecommendation(ex.id, ex.name)
-                    exercisesWithRecs.add(
-                        ExerciseWorkoutUiModel(
-                            exerciseId = ex.id,
-                            name = ex.name,
-                            recommendedWeight = rec.weight,
-                            recommendedReps = rec.reps,
-                            recommendedSets = rec.sets,
-                            recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg"
-                        )
+    val activeDayWorkout: StateFlow<ActiveDayUiModel?> = combine(
+        playerRepo.getPlayer().filterNotNull(),
+        systemConfig.filterNotNull()
+    ) { player, config ->
+        if (config.cycleAnchorDateTimestamp > 0) {
+            val anchorDate = java.time.Instant.ofEpochMilli(config.cycleAnchorDateTimestamp)
+                .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+            val todayDate = java.time.LocalDate.now()
+            val daysPassed = java.time.temporal.ChronoUnit.DAYS.between(anchorDate, todayDate).toInt()
+            (config.cycleAnchorDay + daysPassed - 1) % config.cycleDaysPerMicrocycle + 1
+        } else {
+            player.currentCycleDay
+        }
+    }.flatMapLatest { currentDay ->
+        combine(
+            scheduleRepo.getSchedulesForDays(listOf(currentDay)),
+            getStatsUseCase()
+        ) { schedules, stats ->
+            val schedule = schedules.firstOrNull() ?: return@combine null
+            
+            val exercisesWithRecs = mutableListOf<ExerciseWorkoutUiModel>()
+            for (ex in schedule.exercises) {
+                val rec = calculateRecommendation(ex.id, ex.name)
+                exercisesWithRecs.add(
+                    ExerciseWorkoutUiModel(
+                        exerciseId = ex.id,
+                        name = ex.name,
+                        recommendedWeight = rec.weight,
+                        recommendedReps = rec.reps,
+                        recommendedSets = rec.sets,
+                        recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg"
                     )
-                }
-
-                ActiveDayUiModel(
-                    dayNumber = schedule.cycleDay,
-                    debuffName = null,
-                    dailyTasks = persistentListOf(),
-                    workoutName = schedule.workoutTemplateName,
-                    exercises = exercisesWithRecs.toImmutableList(),
-                    matrixEntries = stats.matrixEntries
                 )
             }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+            ActiveDayUiModel(
+                dayNumber = schedule.cycleDay,
+                dailyTasks = persistentListOf(),
+                workoutName = schedule.workoutTemplateName,
+                exercises = exercisesWithRecs.toImmutableList(),
+                matrixEntries = stats.matrixEntries
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _dialogState = MutableStateFlow<StatusDialogState>(StatusDialogState.None)
     val dialogState: StateFlow<StatusDialogState> = _dialogState.asStateFlow()
-
-    val allDebuffs: StateFlow<List<DebuffConfig>> = useCases.getAllDebuffs()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    val systemConfig: StateFlow<SystemConfig?> = useCases.getSystemConfig()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val _events = MutableSharedFlow<StatusOneOffEvent>()
     val events = _events.asSharedFlow()
@@ -124,13 +129,8 @@ class StatusViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            // 1. Чекаємо, поки DatabasePopulator завершить роботу
             databaseReadinessRepo.status.first { it is DatabaseStatus.Ready }
-            
-            // 2. Очікуємо появу гравця
             playerRepo.getPlayer().filterNotNull().first()
-            
-            // 3. Тепер розклад точно в базі, можна генерувати
             useCases.generateDailyQuests()
             useCases.calculateAttributes()
         }
@@ -149,12 +149,6 @@ class StatusViewModel @Inject constructor(
                         _events.emit(
                             StatusOneOffEvent.ShowLevelUp(current.playerClass, current.currentMonth)
                         )
-                    }
-                    if (!prev.isPenaltyActive && current.isPenaltyActive) {
-                        _events.emit(StatusOneOffEvent.ShowPenaltyActivated)
-                    }
-                    if (prev.isPenaltyActive && !current.isPenaltyActive) {
-                        _events.emit(StatusOneOffEvent.ShowPenaltyDeactivated)
                     }
                 }
         }
@@ -220,7 +214,6 @@ class StatusViewModel @Inject constructor(
                     date = viewingDateRepo.selectedDate.value,
                     userFeedback = feedback
                 )
-                // Use the status screen data use case to trigger a refresh of attributes and rank if needed
                 useCases.calculateAttributes()
                 
                 if (currentDialog is StatusDialogState.LogWorkoutSets && currentDialog.showWorkoutAfter) {
@@ -309,10 +302,6 @@ class StatusViewModel @Inject constructor(
 
     fun onRemoveTask(taskId: Int) = launchCatching {
         useCases.removeQuestTask(taskId)
-    }
-
-    fun onDebuffToggled(debuff: DebuffConfig) = launchCatching {
-        useCases.updateDebuff(debuff.copy(isActive = !debuff.isActive))
     }
 
     fun onSystemConfigConfirmed(config: SystemConfig) = launchCatching {

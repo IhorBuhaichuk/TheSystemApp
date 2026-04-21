@@ -16,7 +16,6 @@ class GetStatusScreenDataUseCase @Inject constructor(
     private val playerRepo: PlayerRepository,
     private val questRepo: QuestRepository,
     private val matrixRepo: ProgressionMatrixRepository,
-    private val debuffRepo: DebuffRepository,
     private val questLogDao: QuestLogDao,
     private val scheduleRepo: ScheduleRepository,
     private val configRepo: SystemConfigRepository,
@@ -64,17 +63,15 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 listOf(
                     activeQuestsFlow,
                     dailyQuestsForDateFlow,
-                    debuffRepo.getActiveDebuffs(),
                     playerRepo.getLatestWeight(),
                     questLogDao.getFullHistory()
                 ) + scheduleFlows
             ) { args ->
                 val activeQuests = args[0] as List<Quest>
                 val dailyQuestsForDate = args[1] as List<Quest>
-                val debuffs = args[2] as List<DebuffConfig>
-                val weight = args[3] as Float?
-                val questHistory = args[4] as List<QuestLogEntity>
-                val schedules = args.slice(5 until args.size).filterIsInstance<ScheduleDay>()
+                val weight = args[2] as Float?
+                val questHistory = args[3] as List<QuestLogEntity>
+                val schedules = args.slice(4 until args.size).filterIsInstance<ScheduleDay>()
 
                 // Основний квест та щоденні квести на сьогодні
                 val daily = dailyQuestsForDate.find { it.type == DomainQuestType.DAILY }
@@ -101,10 +98,9 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     totalMonths            = 12,
                     currentWeight          = weight ?: 80f,
                     height                 = player.height.takeIf { it > 0f } ?: 182f,
-                    cycleDay               = player.currentCycleDay,
+                    cycleDay               = currentCycleDay,
                     monthWorkoutsCompleted = completedMainThisMonth,
                     monthWorkoutsTotal     = monthWorkoutsTotal,
-                    activeDebuffs          = debuffs.map { it.toUiModel() }.toImmutableList(),
                     dailyQuest             = daily?.toUiModel(),
                     mainQuest              = main?.toUiModel(),
                     promotionQuests        = promotions.map { it.toUiModel() }.toImmutableList(),
@@ -119,9 +115,6 @@ class GetStatusScreenDataUseCase @Inject constructor(
 }
 
 // ── Mappers ───────────────────────────────────────────────────────────────────
-private fun DebuffConfig.toUiModel() =
-    DebuffUiModel(id, condition, text, penaltyPercent, isActive)
-
 private fun Quest.toUiModel() = QuestUiModel(
     id          = id,
     title       = title,
