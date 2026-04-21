@@ -25,6 +25,7 @@ sealed interface DataError : DomainError {
 
 sealed interface AppError : DomainError {
     object Unknown : AppError
+    object AiParsingError : AppError
     data class Message(val text: String) : AppError
 }
 
@@ -43,6 +44,7 @@ fun DomainError.asUiText(): UiText {
         DataError.Network.UNKNOWN -> UiText.StringResource(R.string.error_unknown)
         
         AppError.Unknown -> UiText.StringResource(R.string.error_unknown)
+        AppError.AiParsingError -> UiText.DynamicString("Помилка генерації AI, спробуйте ще раз")
         is AppError.Message -> UiText.DynamicString(this.text)
         
         else -> UiText.StringResource(R.string.error_unknown)

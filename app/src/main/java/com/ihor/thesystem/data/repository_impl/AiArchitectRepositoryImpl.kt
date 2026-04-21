@@ -3,7 +3,10 @@ package com.ihor.thesystem.data.repository_impl
 import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.ihor.thesystem.BuildConfig
+import com.ihor.thesystem.domain.model.AppError
+import com.ihor.thesystem.domain.model.asUiText
 import com.ihor.thesystem.data.remote.dto.GeminiWorkoutResponseDto
+import com.ihor.thesystem.data.remote.dto.WorkoutTargetDto
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
@@ -40,36 +43,60 @@ class AiArchitectRepositoryImpl @Inject constructor(
                 
                 val cleanJson = extractJson(responseText)
 
-                val dto = json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
-                val targets = dto.nextWorkoutTargets
+                val dto = try {
+                    json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
+                } catch (e: Exception) {
+                    Log.e("AiArchitect", "JSON Decoding failed: ${e.message}")
+                    return@withTimeout ChatMessage(
+                        role = ChatRole.AI,
+                        uiText = AppError.AiParsingError.asUiText(),
+                        text = "Помилка генерації AI, спробуйте ще раз",
+                        isActionable = false
+                    )
+                }
+
+                val targets = dto.nextWorkoutTargets.mapNotNull { it.toDomain() }
                 
                 ChatMessage(
                     role = ChatRole.AI,
                     text = dto.feedbackText.ifBlank { "Аналіз завершено." },
-                    recommendations = targets.map { 
-                        AiWorkoutRecommendation(
-                            exerciseId = it.exerciseId, 
-                            weight = it.weight,
-                            sets = it.recommendedSets,
-                            reps = it.recommendedReps,
-                            aiFeedback = it.aiFeedback
-                        )
-                    },
+                    recommendations = targets,
                     isActionable = targets.isNotEmpty(),
-                    aiFeedback = targets.firstOrNull()?.aiFeedback
+                    aiFeedback = dto.aiFeedback ?: targets.firstOrNull()?.aiFeedback
                 )
             }
         } catch (e: Exception) {
             Log.e("AiArchitect", "Помилка парсингу або запиту Gemini: ${e.message}")
-            if (responseText.isNotBlank()) {
-                Log.e("AiArchitect", "Оригінальна відповідь AI (Raw Response): $responseText")
-            }
-            val errorDetail = e.localizedMessage ?: e.message ?: "Unknown error"
             ChatMessage(
                 role = ChatRole.AI,
-                text = "Виникла помилка під час аналізу. Спробуйте пізніше. [Error: $errorDetail]",
+                uiText = AppError.AiParsingError.asUiText(),
+                text = "Помилка генерації AI, спробуйте ще раз",
                 isActionable = false
             )
+        }
+    }
+
+    private fun WorkoutTargetDto.toDomain(): AiWorkoutRecommendation? {
+        if (exerciseId <= 0) return null
+        
+        return AiWorkoutRecommendation(
+            exerciseId = exerciseId,
+            weight = weight.takeIf { it >= 0 } ?: 0f,
+            sets = recommendedSets.takeIf { it > 0 } ?: 1,
+            reps = sanitizeReps(recommendedReps),
+            aiFeedback = aiFeedback
+        )
+    }
+
+    private fun sanitizeReps(reps: String): String {
+        // Якщо AI повернув щось типу "8-10", залишаємо як є, 
+        // але якщо там сміття, намагаємось витягнути цифри або даємо дефолт "8"
+        if (reps.isBlank()) return "8"
+        val digitRegex = Regex("""\d+""")
+        return if (digitRegex.containsMatchIn(reps)) {
+            reps.trim()
+        } else {
+            "8"
         }
     }
 

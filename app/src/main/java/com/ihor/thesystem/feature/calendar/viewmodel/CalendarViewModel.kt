@@ -8,6 +8,9 @@ import com.ihor.thesystem.data.local.room.entity.ProgressionMatrixEntity
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
+import com.ihor.thesystem.domain.usecase.GetDailySummaryForDateUseCase
+import com.ihor.thesystem.domain.usecase.CalendarLogItem
+import com.ihor.thesystem.domain.usecase.LogType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,6 +39,7 @@ data class CalendarUiState(
     val todayInfo: CalendarDayUiModel? = null,
     val selectedDate: LocalDate? = null,
     val workoutResults: List<WorkoutResultUiModel> = emptyList(),
+    val dailyLogs: List<CalendarLogItem> = emptyList(),
     val nextWorkoutRecommendations: List<ProgressionMatrixEntry> = emptyList(),
     val loggedWeightForDate: Double? = null,
     val currentMonth: YearMonth = YearMonth.now(),
@@ -62,12 +66,14 @@ class CalendarViewModel @Inject constructor(
     private val workoutDao: WorkoutDao,
     private val calculateCycleDay: CalculateCycleDayForDateUseCase,
     private val viewingDateRepo: ViewingDateRepository,
-    private val playerRepo: PlayerRepository
+    private val playerRepo: PlayerRepository,
+    private val getDailySummary: GetDailySummaryForDateUseCase
 ) : ViewModel() {
 
     private val _currentMonth = MutableStateFlow(YearMonth.now())
     val _selectedDate = viewingDateRepo.selectedDate
     private val _workoutResults = MutableStateFlow<List<WorkoutResultUiModel>>(emptyList())
+    private val _dailyLogs = MutableStateFlow<List<CalendarLogItem>>(emptyList())
     private val _recommendations = MutableStateFlow<List<ProgressionMatrixEntry>>(emptyList())
     private val _loggedWeight = MutableStateFlow<Double?>(null)
 
@@ -77,6 +83,7 @@ class CalendarViewModel @Inject constructor(
         configRepo.getConfigFlow().filterNotNull(),
         _selectedDate,
         _workoutResults,
+        _dailyLogs,
         _recommendations,
         _loggedWeight,
         playerRepo.getPlayer().filterNotNull()
@@ -85,9 +92,10 @@ class CalendarViewModel @Inject constructor(
         val config = args[1] as SystemConfig
         val selectedDate = args[2] as LocalDate?
         val results = args[3] as List<WorkoutResultUiModel>
-        val recs = args[4] as List<ProgressionMatrixEntry>
-        val weight = args[5] as Double?
-        val player = args[6] as com.ihor.thesystem.domain.model.Player
+        val logs = args[4] as List<CalendarLogItem>
+        val recs = args[5] as List<ProgressionMatrixEntry>
+        val weight = args[6] as Double?
+        val player = args[7] as com.ihor.thesystem.domain.model.Player
 
         val daysInMonth = month.lengthOfMonth()
         
@@ -129,6 +137,7 @@ class CalendarViewModel @Inject constructor(
             todayInfo = CalendarDayUiModel(todayDate, todayCycleDay, getLabelForCycleDay(todayCycleDay), true),
             selectedDate = selectedDate,
             workoutResults = results,
+            dailyLogs = logs,
             nextWorkoutRecommendations = recs,
             loggedWeightForDate = weight,
             currentMonth = month,
@@ -153,12 +162,22 @@ class CalendarViewModel @Inject constructor(
         if (date != null) {
             viewingDateRepo.setDate(date)
             loadWorkoutResults(date)
+            loadDailyLogs(date)
             loadRecommendations(date)
             loadWeight(date)
         } else {
             _loggedWeight.value = null
             _workoutResults.value = emptyList()
+            _dailyLogs.value = emptyList()
             _recommendations.value = emptyList()
+        }
+    }
+
+    private fun loadDailyLogs(date: LocalDate) {
+        viewModelScope.launch {
+            getDailySummary(date).collect { logs ->
+                _dailyLogs.value = logs
+            }
         }
     }
 

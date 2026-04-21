@@ -30,6 +30,8 @@ import com.ihor.thesystem.feature.calendar.viewmodel.CalendarDayUiModel
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarViewModel
 import com.ihor.thesystem.feature.calendar.viewmodel.WorkoutResultUiModel
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
+import com.ihor.thesystem.domain.usecase.CalendarLogItem
+import com.ihor.thesystem.domain.usecase.LogType
 import com.ihor.thesystem.feature.status.ui.components.workout.CycleDaySelector
 import java.time.LocalDate
 import java.time.YearMonth
@@ -83,6 +85,7 @@ fun CalendarScreen(
                         date = date,
                         dayModel = selectedDayModel,
                         results = uiState.workoutResults,
+                        dailyLogs = uiState.dailyLogs,
                         recommendations = uiState.nextWorkoutRecommendations,
                         loggedWeight = uiState.loggedWeightForDate,
                         onDismiss = { viewModel.onDateSelected(null) },
@@ -318,6 +321,7 @@ fun DailyScheduleSection(
     date: LocalDate,
     dayModel: CalendarDayUiModel,
     results: List<WorkoutResultUiModel>,
+    dailyLogs: List<CalendarLogItem>,
     recommendations: List<ProgressionMatrixEntry>,
     loggedWeight: Double?,
     onDismiss: () -> Unit,
@@ -447,27 +451,58 @@ fun DailyScheduleSection(
                         modifier = Modifier.padding(vertical = 20.dp)
                     )
 
-                    if (results.isNotEmpty()) {
+                    if (results.isNotEmpty() || dailyLogs.isNotEmpty()) {
                         Text(
-                            text = "РЕЗУЛЬТАТИ ТРЕНУВАННЯ",
+                            text = "АКТИВНІСТЬ ДНЯ",
                             style = MaterialTheme.typography.labelSmall.copy(color = NeonCyan, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                         )
                         Spacer(Modifier.height(12.dp))
-                        results.forEach { result ->
+                        
+                        // Render Unified Logs (Quests + Completed Exercises)
+                        dailyLogs.forEach { log ->
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(result.exerciseName.uppercase(), color = NeonGold, style = MaterialTheme.typography.labelMedium, fontFamily = RajdhaniFamily)
-                                    val setsText = result.sets.joinToString(" | ") { "${it.weight}кг x ${it.reps}" }
-                                    Text(setsText, color = TextSecondary, fontSize = 11.sp, fontFamily = RajdhaniFamily)
+                                    Text(
+                                        text = log.title.uppercase(),
+                                        color = if (log.type == LogType.WORKOUT) NeonGold else NeonCyan,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = log.subtitle,
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontFamily = RajdhaniFamily
+                                    )
                                 }
-                                MaxOneRepMaxText(
-                                    sets = result.sets.map { it.weight to it.reps },
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
+                                if (log.isCompleted) {
+                                    Icon(Icons.Default.CheckCircle, "Completed", tint = NeonGreen, modifier = Modifier.size(18.dp))
+                                }
+                            }
+                        }
+
+                        if (results.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            results.forEach { result ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(result.exerciseName.uppercase(), color = NeonGold.copy(0.7f), style = MaterialTheme.typography.labelMedium, fontFamily = RajdhaniFamily)
+                                        val setsText = result.sets.joinToString(" | ") { "${it.weight}кг x ${it.reps}" }
+                                        Text(setsText, color = TextSecondary, fontSize = 11.sp, fontFamily = RajdhaniFamily)
+                                    }
+                                    MaxOneRepMaxText(
+                                        sets = result.sets.map { it.weight to it.reps },
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                }
                             }
                         }
                         HorizontalDivider(color = Color.White.copy(alpha = 0.05f), thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))

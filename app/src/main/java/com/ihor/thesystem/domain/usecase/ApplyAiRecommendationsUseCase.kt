@@ -2,6 +2,7 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
+import android.util.Log
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import java.util.Calendar
@@ -81,17 +82,28 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
         try {
             val response = aiRepository.getChatResponse(prompt)
             
+            // Якщо текст відповіді містить ключову фразу помилки парсингу
+            if (response.text == "Помилка генерації AI, спробуйте ще раз") {
+                Log.e("ApplyAiRecs", "AI returned parsing error. Aborting database update.")
+                return
+            }
+
             // 4. Розпарсинг та оновлення бази даних для кожної вправи
             response.recommendations.forEach { rec ->
-                matrixRepo.updateTarget(
-                    exerciseId = rec.exerciseId,
-                    weight = rec.weight.toDouble(),
-                    sets = rec.sets,
-                    reps = rec.reps,
-                    aiFeedback = rec.aiFeedback ?: response.aiFeedback
-                )
+                try {
+                    matrixRepo.updateTarget(
+                        exerciseId = rec.exerciseId,
+                        weight = rec.weight.toDouble(),
+                        sets = rec.sets,
+                        reps = rec.reps,
+                        aiFeedback = rec.aiFeedback ?: response.aiFeedback
+                    )
+                } catch (e: Exception) {
+                    Log.e("ApplyAiRecs", "Failed to update target for exercise ${rec.exerciseId}: ${e.message}")
+                }
             }
         } catch (e: Exception) {
+            Log.e("ApplyAiRecs", "Critical error in ApplyAiRecommendationsUseCase: ${e.message}")
             e.printStackTrace()
         }
     }
