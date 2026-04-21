@@ -23,13 +23,14 @@ class SendArchitectAnalysisUseCase @Inject constructor(
             2) Оцінити прогрес відносно довгострокового річного плану. 
             3) Надати мотиваційний блок у кіберпанк-стилі. 
             4) Запропонувати вагу та повторення на наступне тренування (збільш вагу на 2.5-5% при успіху). 
+            Використовуй реальний exercise_id з наданих даних <workout_data>.
             
             ВАЖЛИВО: Відповідь поверни СУВОРО у форматі JSON об'єкта наступної структури:
             {
               "feedback_text": "Твій текст з пунктами 1,2,3",
               "next_workout_targets": [
                 {
-                  "exercise_id": ID,
+                  "exercise_id": 999,
                   "nextWeight": 50.0,
                   "nextSets": 3,
                   "nextReps": "8-10",
@@ -37,7 +38,6 @@ class SendArchitectAnalysisUseCase @Inject constructor(
                 }
               ]
             }
-            КРИТИЧНО: У текстах feedback_text та aiFeedback КАТЕГОРИЧНО ЗАБОРОНЕНО використовувати будь-які лапки (ні подвійні, ні одинарні) та символи переносу рядка.
         """.trimIndent()
         
         return aiArchitectRepository.getChatResponse(prompt)

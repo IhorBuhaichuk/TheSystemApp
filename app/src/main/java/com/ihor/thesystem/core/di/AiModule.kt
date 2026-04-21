@@ -52,7 +52,7 @@ abstract class AiModule {
                     responseMimeType = "application/json"
                 },
                 systemInstruction = content {
-                    text("Ти елітний ШІ-Аналітик фітнес-системи. Відповідай ВИКЛЮЧНО валідним JSON об'єктом наступної структури:\n{\n  \"feedback_text\": \"текст аналізу до 3 речень\",\n  \"next_workout_targets\": [\n    {\n      \"exercise_id\": числовий_ID,\n      \"nextWeight\": число,\n      \"nextSets\": число,\n      \"nextReps\": \"діапазон наприклад 8-10\",\n      \"aiFeedback\": \"коментар до вправи\"\n    }\n  ]\n}\nЗАБОРОНЕНО: будь-які лапки та переноси рядків всередині текстових полів feedback_text та aiFeedback.")
+                    text("Ти елітний ШІ-Аналітик фітнес-системи. Відповідай ВИКЛЮЧНО валідним JSON об'єктом наступної структури:\n{\n  \"feedback_text\": \"текст аналізу до 3 речень\",\n  \"next_workout_targets\": [\n    {\n      \"exercise_id\": 999,\n      \"nextWeight\": 0.0,\n      \"nextSets\": 0,\n      \"nextReps\": \"діапазон наприклад 8-10\",\n      \"aiFeedback\": \"коментар до вправи\"\n    }\n  ]\n}\n")
                 }
             )
         }

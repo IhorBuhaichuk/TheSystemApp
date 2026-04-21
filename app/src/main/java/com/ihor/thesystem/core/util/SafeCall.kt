@@ -1,6 +1,6 @@
 package com.ihor.thesystem.core.util
 
-import com.ihor.thesystem.domain.model.AppError
+import com.ihor.thesystem.domain.model.AppErrorType
 import com.ihor.thesystem.domain.model.DomainError
 import kotlinx.coroutines.CancellationException
 
@@ -17,7 +17,7 @@ suspend fun <T> safeCall(
         if (it.javaClass.simpleName.contains("SQLiteException")) {
             com.ihor.thesystem.domain.model.DataError.Local.SQLITE_EXCEPTION
         } else {
-            AppError.Message(it.localizedMessage ?: "Unknown Error")
+            AppErrorType.Message(it.localizedMessage ?: "Unknown Error")
         }
     },
     action: suspend () -> Result<T, DomainError>

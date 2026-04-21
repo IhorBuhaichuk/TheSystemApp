@@ -2,7 +2,6 @@ package com.ihor.thesystem.data.repository_impl
 
 import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.TooManyRequestsException
 import com.ihor.thesystem.BuildConfig
 import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.AppErrorType 
@@ -70,8 +69,9 @@ class AiArchitectRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("AiArchitect", "Помилка парсингу або запиту Gemini: ${e.message}")
-            val error: DomainError = when (e) {
-                is TooManyRequestsException -> DataError.Network.TOO_MANY_REQUESTS
+            val error: DomainError = when {
+                e.message?.contains("429") == true -> DataError.Network.TOO_MANY_REQUESTS
+                e.message?.contains("Too Many Requests", ignoreCase = true) == true -> DataError.Network.TOO_MANY_REQUESTS
                 else -> AppErrorType.AiParsingError
             }
             ChatMessage(
