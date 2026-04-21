@@ -2,9 +2,12 @@ package com.ihor.thesystem.data.repository_impl
 
 import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.TooManyRequestsException
 import com.ihor.thesystem.BuildConfig
-import com.ihor.thesystem.domain.model.AppError
-import com.ihor.thesystem.domain.model.asUiText
+import com.ihor.thesystem.domain.model.DomainError
+import com.ihor.thesystem.domain.model.AppErrorType 
+import com.ihor.thesystem.domain.model.DataError 
+import com.ihor.thesystem.core.ui.asUiText
 import com.ihor.thesystem.data.remote.dto.GeminiWorkoutResponseDto
 import com.ihor.thesystem.data.remote.dto.WorkoutTargetDto
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
@@ -20,8 +23,8 @@ class AiArchitectRepositoryImpl @Inject constructor(
     @Named("ArchitectModel") private val generativeModel: GenerativeModel
 ) : AiArchitectRepository {
 
-    private val json = Json { 
-        ignoreUnknownKeys = true 
+    private val json = Json {
+        ignoreUnknownKeys = true
         coerceInputValues = true
     }
 
@@ -40,7 +43,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
             withTimeout(60_000L) {
                 val response = generativeModel.generateContent(prompt)
                 responseText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
-                
+
                 val cleanJson = extractJson(responseText)
 
                 val dto = try {
@@ -49,14 +52,14 @@ class AiArchitectRepositoryImpl @Inject constructor(
                     Log.e("AiArchitect", "JSON Decoding failed: ${e.message}")
                     return@withTimeout ChatMessage(
                         role = ChatRole.AI,
-                        uiText = AppError.AiParsingError.asUiText(),
+                        uiText = AppErrorType.AiParsingError.asUiText(),
                         text = "Помилка генерації AI, спробуйте ще раз",
                         isActionable = false
                     )
                 }
 
                 val targets = dto.nextWorkoutTargets.mapNotNull { it.toDomain() }
-                
+
                 ChatMessage(
                     role = ChatRole.AI,
                     text = dto.feedbackText.ifBlank { "Аналіз завершено." },
@@ -67,10 +70,14 @@ class AiArchitectRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("AiArchitect", "Помилка парсингу або запиту Gemini: ${e.message}")
+            val error: DomainError = when (e) {
+                is TooManyRequestsException -> DataError.Network.TOO_MANY_REQUESTS
+                else -> AppErrorType.AiParsingError
+            }
             ChatMessage(
                 role = ChatRole.AI,
-                uiText = AppError.AiParsingError.asUiText(),
-                text = "Помилка генерації AI, спробуйте ще раз",
+                uiText = error.asUiText(),
+                text = error.message ?: "Помилка генерації AI, спробуйте ще раз",
                 isActionable = false
             )
         }
@@ -78,7 +85,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
 
     private fun WorkoutTargetDto.toDomain(): AiWorkoutRecommendation? {
         if (exerciseId <= 0) return null
-        
+
         return AiWorkoutRecommendation(
             exerciseId = exerciseId,
             weight = weight.takeIf { it >= 0 } ?: 0f,
@@ -89,7 +96,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
     }
 
     private fun sanitizeReps(reps: String): String {
-        // Якщо AI повернув щось типу "8-10", залишаємо як є, 
+        // Якщо AI повернув щось типу "8-10", залишаємо як є,
         // але якщо там сміття, намагаємось витягнути цифри або даємо дефолт "8"
         if (reps.isBlank()) return "8"
         val digitRegex = Regex("""\d+""")
@@ -104,7 +111,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
         // Регулярний вираз для пошуку JSON блоку всередині Markdown
         val regex = Regex("""```json\s*([\s\S]*?)\s*```|```\s*([\s\S]*?)\s*```""")
         val matchResult = regex.find(input)
-        
+
         return if (matchResult != null) {
             // Беремо вміст першої або другої групи захоплення (залежно від того, яка спрацювала)
             matchResult.groups[1]?.value ?: matchResult.groups[2]?.value ?: input

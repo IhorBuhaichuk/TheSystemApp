@@ -167,13 +167,21 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         return matrixDao.getExerciseIdsByCategory(category)
     }
 
-    override suspend fun updateTarget(exerciseId: Int, weight: Double, sets: Int, reps: String, aiFeedback: String?) {
+    override suspend fun updateTarget(
+        exerciseId: Int,
+        weight: Double,
+        sets: Int,
+        reps: String,
+        aiFeedback: String?,
+        timestamp: Long
+    ) {
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
         matrixDao.update(existing.copy(
             nextRecommendedWeight = weight,
             nextRecommendedSets = sets,
             nextRecommendedReps = reps,
             lastAiFeedback = aiFeedback,
+            lastAnalyzedTimestamp = timestamp,
             targetWeightNote = "Рекомендація AI ($sets sets, $reps reps)"
         ))
     }
@@ -206,6 +214,7 @@ private fun ProgressionMatrixEntity.toDomain(
         nextRecommendedWeight = nextRecommendedWeight,
         nextRecommendedSets = nextRecommendedSets,
         nextRecommendedReps = nextRecommendedReps,
-        lastAiFeedback = lastAiFeedback
+        lastAiFeedback = lastAiFeedback,
+        lastAnalyzedTimestamp = lastAnalyzedTimestamp
     )
 }

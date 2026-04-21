@@ -311,11 +311,39 @@ object DatabaseMigrations {
         }
     }
 
+    val MIGRATION_26_27 = object : Migration(26, 27) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Check if column exists first to avoid crash if it was partially added in a failed v26 attempt
+            val cursor = db.query("PRAGMA table_info(progression_matrix)")
+            var columnExists = false
+            while (cursor.moveToNext()) {
+                if (cursor.getString(cursor.getColumnIndexOrThrow("name")) == "lastAnalyzedTimestamp") {
+                    columnExists = true
+                    break
+                }
+            }
+            cursor.close()
+
+            if (!columnExists) {
+                db.execSQL("ALTER TABLE progression_matrix ADD COLUMN lastAnalyzedTimestamp INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+    }
+
+
+    val MIGRATION_27_28 = object : Migration(27, 28) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No schema changes for this version, just a version bump to force recreation for problematic devices
+            // Or add any new schema changes here if needed for version 28
+        }
+    }
+
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7,
         MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12,
         MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
         MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22,
-        MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26
+        MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27,
+        MIGRATION_27_28
     )
 }

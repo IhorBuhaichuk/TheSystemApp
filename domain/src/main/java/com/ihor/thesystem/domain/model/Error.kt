@@ -1,22 +1,55 @@
 package com.ihor.thesystem.domain.model
 
-interface AppError {
+sealed interface DomainError {
     val message: String?
 }
 
-sealed interface DomainError : AppError {
-    override val message: String?
-        get() = when (this) {
-            is UnknownError -> "An unknown error occurred."
-            is DatabaseError -> throwable?.localizedMessage ?: "A database error occurred."
-            is NetworkError -> message ?: "A network error occurred."
-            is Message -> message
-        }
+sealed interface DataError : DomainError {
+    enum class Local : DataError {
+        DISK_FULL,
+        SQLITE_EXCEPTION,
+        NOT_FOUND,
+        UNKNOWN;
 
-    object UnknownError : DomainError
-    data class DatabaseError(val throwable: Throwable? = null) : DomainError
-    data class NetworkError(val code: Int? = null, override val message: String? = null) : DomainError
-    data class Message(override val message: String) : DomainError
+        override val message: String?
+            get() = when (this) {
+                DISK_FULL -> "Disk full error"
+                SQLITE_EXCEPTION -> "Database error"
+                NOT_FOUND -> "Not found"
+                UNKNOWN -> "Unknown local error"
+            }
+    }
+
+    enum class Network : DataError {
+        REQUEST_TIMEOUT,
+        TOO_MANY_REQUESTS,
+        NO_INTERNET,
+        SERVER_ERROR,
+        SERIALIZATION,
+        UNKNOWN;
+
+        override val message: String?
+            get() = when (this) {
+                REQUEST_TIMEOUT -> "Request timeout"
+                TOO_MANY_REQUESTS -> "Too many requests"
+                NO_INTERNET -> "No internet connection"
+                SERVER_ERROR -> "Server error"
+                SERIALIZATION -> "Serialization error"
+                UNKNOWN -> "Unknown network error"
+            }
+    }
+}
+
+sealed interface AppErrorType : DomainError {
+    object Unknown : AppErrorType {
+        override val message: String? = "An unknown app error occurred."
+    }
+    object AiParsingError : AppErrorType {
+        override val message: String? = "AI parsing error"
+    }
+    data class Message(val text: String) : AppErrorType {
+        override val message: String? = text
+    }
 }
 
 interface ExceptionMapper {

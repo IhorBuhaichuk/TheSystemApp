@@ -15,6 +15,7 @@ import com.ihor.thesystem.domain.usecase.SendArchitectAnalysisUseCase
 import com.ihor.thesystem.domain.usecase.SendLiveCoachMessageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -83,11 +84,14 @@ class ArchitectViewModel @Inject constructor(
         }
     }
 
+    private var chatHistoryJob: Job? = null
+
     /**
      * Завантажує історію чату для конкретної сесії.
      */
     fun loadChatHistory(sessionId: Long) {
-        viewModelScope.launch {
+        chatHistoryJob?.cancel()
+        chatHistoryJob = viewModelScope.launch {
             chatRepository.getChatHistory(sessionId).collect { history ->
                 _chatHistory.value = history
             }

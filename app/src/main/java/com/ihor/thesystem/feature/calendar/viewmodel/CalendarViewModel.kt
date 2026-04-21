@@ -14,6 +14,7 @@ import com.ihor.thesystem.domain.usecase.LogType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import com.ihor.thesystem.core.util.Result
@@ -198,8 +199,11 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
+    private var recommendationsJob: Job? = null
+
     private fun loadRecommendations(date: LocalDate) {
-        viewModelScope.launch {
+        recommendationsJob?.cancel()
+        recommendationsJob = viewModelScope.launch {
             val config = configRepo.getConfigFlow().firstOrNull() ?: return@launch
             val cycleDay = calculateCycleDay(
                 targetDate = date,
@@ -210,7 +214,7 @@ class CalendarViewModel @Inject constructor(
             val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
             if (schedule?.workoutTemplateId != null) {
                 val exerciseIds = schedule.exercises.map { it.id }
-                matrixRepo.getAllEntries().collect { allEntries ->
+                matrixRepo.getAllEntries().first().let { allEntries ->
                     _recommendations.value = allEntries.filter { 
                         exerciseIds.contains(it.exerciseId) && it.nextRecommendedWeight != null 
                     }

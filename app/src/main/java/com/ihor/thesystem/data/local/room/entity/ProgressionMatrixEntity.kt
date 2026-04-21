@@ -18,5 +18,6 @@ data class ProgressionMatrixEntity(
     val nextRecommendedWeight: Double? = null,
     val nextRecommendedSets: Int? = null,
     val nextRecommendedReps: String? = null,
-    val lastAiFeedback: String? = null
+    val lastAiFeedback: String? = null,
+    val lastAnalyzedTimestamp: Long = 0L
 )

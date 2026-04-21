@@ -28,7 +28,14 @@ interface ProgressionMatrixRepository {
     /**
      * Оновлює цільові показники вправи на основі рекомендацій ШІ.
      */
-    suspend fun updateTarget(exerciseId: Int, weight: Double, sets: Int, reps: String, aiFeedback: String? = null)
+    suspend fun updateTarget(
+        exerciseId: Int,
+        weight: Double,
+        sets: Int,
+        reps: String,
+        aiFeedback: String? = null,
+        timestamp: Long = System.currentTimeMillis()
+    )
 }
 
 data class ProgressionMatrixEntry(
@@ -47,5 +54,6 @@ data class ProgressionMatrixEntry(
     val nextRecommendedWeight: Double? = null,
     val nextRecommendedSets: Int? = null,
     val nextRecommendedReps: String? = null,
-    val lastAiFeedback: String? = null
+    val lastAiFeedback: String? = null,
+    val lastAnalyzedTimestamp: Long = 0L
 )

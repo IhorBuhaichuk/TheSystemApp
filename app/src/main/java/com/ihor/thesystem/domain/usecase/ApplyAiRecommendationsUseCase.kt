@@ -29,10 +29,19 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
         val weight6MonthsAgo = playerRepo.getWeightAtOrBefore(calendar.timeInMillis) ?: playerWeight.toFloat()
         
         val matrix = matrixRepo.getAllEntries().first()
+        val now = System.currentTimeMillis()
+        val twelveHoursMillis = 12 * 60 * 60 * 1000L
 
         // 2. Збір детального контексту для кожної вправи (Batch Context)
         val exercisesContext = exerciseIds.mapNotNull { id ->
             val entry = matrix.find { it.exerciseId == id } ?: return@mapNotNull null
+            
+            // Захист від занадто частих запитів (не частіше ніж раз на 12 годин для однієї вправи)
+            if (now - entry.lastAnalyzedTimestamp < twelveHoursMillis) {
+                Log.d("ApplyAiRecs", "Skip AI analysis for exercise $id: analyzed recently")
+                return@mapNotNull null
+            }
+
             val recentLogs = analyticsRepo.getRecentLogsForExercise(id)
             val annualGoals = AnnualMatrixProvider.getMatrix()
                 .find { it.exercise.equals(entry.exerciseName, true) }?.targets?.joinToString(", ") ?: "немає"
