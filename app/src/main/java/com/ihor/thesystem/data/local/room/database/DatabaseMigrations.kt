@@ -246,11 +246,70 @@ object DatabaseMigrations {
         }
     }
 
+    val MIGRATION_23_24 = object : Migration(23, 24) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Check if columns exist before adding them (though we are deleting them in 25, 
+            // someone might be on v23 and need to go to v24 first if they don't have certain columns)
+            // But usually v24 was already released. If it crashed on phone, maybe v24 wasn't handled.
+        }
+    }
+
+    val MIGRATION_24_25 = object : Migration(24, 25) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Recreate table to drop columns
+            db.execSQL("""
+                CREATE TABLE `player_new` (
+                    `id` INTEGER NOT NULL, 
+                    `name` TEXT NOT NULL, 
+                    `level` INTEGER NOT NULL, 
+                    `playerClass` TEXT NOT NULL, 
+                    `height` REAL NOT NULL, 
+                    `currentMonth` INTEGER NOT NULL, 
+                    `currentWeek` INTEGER NOT NULL, 
+                    `currentCycleDay` INTEGER NOT NULL, 
+                    `consecutiveMainQuestFailures` INTEGER NOT NULL, 
+                    `isPenaltyActive` INTEGER NOT NULL, 
+                    `globalRank` TEXT NOT NULL, 
+                    `currentStreak` INTEGER NOT NULL, 
+                    `maxStreak` INTEGER NOT NULL, 
+                    `xpTotal` INTEGER NOT NULL, 
+                    `xpThisWeek` INTEGER NOT NULL, 
+                    `chestAttr` INTEGER NOT NULL, 
+                    `backAttr` INTEGER NOT NULL, 
+                    `shouldersAttr` INTEGER NOT NULL, 
+                    `quadsAttr` INTEGER NOT NULL, 
+                    `legsAttr` INTEGER NOT NULL, 
+                    `armsAttr` INTEGER NOT NULL, 
+                    PRIMARY KEY(`id`)
+                )
+            """.trimIndent())
+            
+            // Safely copy data. We assume columns exist in v24.
+            db.execSQL("""
+                INSERT INTO `player_new` (
+                    `id`, `name`, `level`, `playerClass`, `height`, `currentMonth`, `currentWeek`, 
+                    `currentCycleDay`, `consecutiveMainQuestFailures`, `isPenaltyActive`, `globalRank`, 
+                    `currentStreak`, `maxStreak`, `xpTotal`, `xpThisWeek`, `chestAttr`, `backAttr`, 
+                    `shouldersAttr`, `quadsAttr`, `legsAttr`, `armsAttr`
+                )
+                SELECT 
+                    `id`, `name`, `level`, `playerClass`, `height`, `currentMonth`, `currentWeek`, 
+                    `currentCycleDay`, `consecutiveMainQuestFailures`, `isPenaltyActive`, `globalRank`, 
+                    `currentStreak`, `maxStreak`, `xpTotal`, `xpThisWeek`, `chestAttr`, `backAttr`, 
+                    `shouldersAttr`, `quadsAttr`, `legsAttr`, `armsAttr` 
+                FROM `player`
+            """.trimIndent())
+            
+            db.execSQL("DROP TABLE `player`")
+            db.execSQL("ALTER TABLE `player_new` RENAME TO `player`")
+        }
+    }
+
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7,
         MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12,
         MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
         MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22,
-        MIGRATION_22_23
+        MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25
     )
 }

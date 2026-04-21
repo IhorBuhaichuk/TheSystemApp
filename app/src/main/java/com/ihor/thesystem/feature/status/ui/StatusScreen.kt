@@ -86,6 +86,8 @@ fun StatusScreen(
                     val data = state.data as StatusUiData
                     
                     HeaderSection(data)
+
+                    Spacer(modifier = Modifier.height(16.dp))
                     
                     MainWorkoutCardPremium(
                         data = data,
@@ -326,7 +328,7 @@ private fun MainWorkoutCardPremium(
         modifier = Modifier
             .fillMaxWidth()
             .padding(24.dp)
-            .height(220.dp)
+            .wrapContentHeight()
             .clip(RoundedCornerShape(32.dp))
             .background(
                 Brush.linearGradient(
@@ -347,16 +349,17 @@ private fun MainWorkoutCardPremium(
         Box(
             modifier = Modifier
                 .size(150.dp)
-                .offset(x = 180.dp, y = (-50).dp)
+                .align(Alignment.TopEnd)
+                .offset(x = 60.dp, y = (-50).dp)
                 .blur(60.dp)
                 .background(Color(0xFFB257FF).copy(alpha = 0.15f), CircleShape)
         )
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(24.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Column {
@@ -388,6 +391,41 @@ private fun MainWorkoutCardPremium(
                         modifier = Modifier.padding(12.dp),
                         fontSize = 20.sp
                     )
+                }
+            }
+
+            // Exercise List
+            if (mainQuest.tasks.isNotEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    mainQuest.tasks.take(5).forEach { task ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF00F0FF).copy(alpha = 0.6f))
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = task.name,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = Color.White.copy(alpha = 0.7f),
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                maxLines = 1
+                            )
+                        }
+                    }
+                    if (mainQuest.tasks.size > 5) {
+                        Text(
+                            text = "+ ще ${mainQuest.tasks.size - 5} вправ",
+                            style = MaterialTheme.typography.labelSmall.copy(color = Color.White.copy(alpha = 0.3f)),
+                            modifier = Modifier.padding(start = 18.dp)
+                        )
+                    }
                 }
             }
 

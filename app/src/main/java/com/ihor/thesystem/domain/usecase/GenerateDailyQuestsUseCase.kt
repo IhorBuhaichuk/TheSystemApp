@@ -21,7 +21,11 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         val cycleDay = player.currentCycleDay
         
         // 1. Отримуємо всі квести на сьогодні
-        val todayQuests = questRepo.getDailyQuestsForDate(clock.now()).first()
+        val now = clock.now()
+        val todayQuests = questRepo.getDailyQuestsForDate(now).first()
+        
+        // Додаємо логування для діагностики на телефоні
+        timber.log.Timber.d("GenerateDailyQuests: cycleDay=$cycleDay, todayQuestsCount=${todayQuests.size}")
         
         // 2. ФІКС: Розблоковуємо застряглі квести, але не перериваємо виконання
         todayQuests.filter { it.status == DomainQuestStatus.LOCKED }.forEach { lockedQuest ->

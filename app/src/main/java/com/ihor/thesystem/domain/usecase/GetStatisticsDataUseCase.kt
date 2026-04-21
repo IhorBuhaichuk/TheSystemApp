@@ -7,8 +7,10 @@ import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
+import com.ihor.thesystem.domain.util.MuscleGroupMapper
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.time.LocalDate
 import javax.inject.Inject
@@ -23,70 +25,86 @@ class GetStatisticsDataUseCase @Inject constructor(
     private val weightLogDao: WeightLogDao,
     private val calculateCycleDay: CalculateCycleDayForDateUseCase
 ) {
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Suppress("UNCHECKED_CAST")
     operator fun invoke(): Flow<StatisticsUiData> {
-        return combine(
-            listOf(
+        val configFlow = configRepo.getConfigFlow().filterNotNull()
+        val selectedDateFlow = viewingDateRepo.selectedDate
+
+        // Спочатку розраховуємо день циклу, щоб знати, який розклад тягнути
+        val cycleDayFlow = combine(configFlow, selectedDateFlow) { config, date ->
+            calculateCycleDay(
+                targetDate = date,
+                anchorEpochDay = config.cycleAnchorDateTimestamp,
+                anchorCycleDay = config.cycleAnchorDay
+            )
+        }.distinctUntilChanged()
+
+        return cycleDayFlow.flatMapLatest { cycleDay ->
+            combine(
                 playerRepo.getPlayer().filterNotNull(),
                 matrixRepo.getAllEntries(),
                 matrixRepo.getAllReferences(),
                 analyticsRepo.getAllWeightHistories(),
-                viewingDateRepo.selectedDate,
-                configRepo.getConfigFlow().filterNotNull(),
+                scheduleRepo.getScheduleForDay(cycleDay),
                 weightLogDao.getAllLogs()
-            )
-        ) { args: Array<Any?> ->
-            val player = args[0] as Player
-            val matrix = args[1] as List<ProgressionMatrixEntry>
-            val references = args[2] as List<ReferenceMatrixEntity>
-            val allHistories = args[3] as List<WeightHistoryWithId>
-            val selectedDate = args[4] as LocalDate
-            val config = args[5] as SystemConfig
-            val weightHistory = args[6] as List<WeightLogEntity>
+            ) { args ->
+                val player = args[0] as Player
+                val matrix = args[1] as List<ProgressionMatrixEntry>
+                val references = args[2] as List<ReferenceMatrixEntity>
+                val allHistories = args[3] as List<WeightHistoryWithId>
+                val schedule = args[4] as ScheduleDay?
+                val weightHistory = args[5] as List<WeightLogEntity>
 
-            val cycleDay = calculateCycleDay(
-                targetDate = selectedDate,
-                anchorEpochDay = config.cycleAnchorDateTimestamp,
-                anchorCycleDay = config.cycleAnchorDay
-            )
+                val activeExerciseIds = schedule?.exercises?.map { it.id } ?: emptyList()
+                val historiesMap = allHistories.groupBy { it.exerciseId }
 
-            val schedule = scheduleRepo.getScheduleForDay(cycleDay).first()
-            val activeExerciseIds = schedule?.exercises?.map { it.id } ?: emptyList()
+                val updatedEntries = matrix.map { entry ->
+                    val ref = references.find { it.exerciseName.equals(entry.exerciseName, ignoreCase = true) }
+                    val isExerciseActive = activeExerciseIds.contains(entry.exerciseId)
+                    val orderIndex = if (isExerciseActive) activeExerciseIds.indexOf(entry.exerciseId) else 999
 
-            val historiesMap = allHistories.groupBy { it.exerciseId }
+                    val m0 = ref?.milestones?.get("M0")?.let { it.toFloat() } ?: entry.startWeight
+                    val m12 = ref?.milestones?.get("M12")?.let { it.toFloat() } ?: entry.targetWeight
+                    
+                    val history = historiesMap[entry.exerciseId]?.map { 
+                        WeightHistoryEntry(it.weight, it.timestamp) 
+                    } ?: emptyList()
 
-            val updatedEntries = matrix.map { entry ->
-                val ref = references.find { it.exerciseName.equals(entry.exerciseName, ignoreCase = true) }
-                val isExerciseActive = activeExerciseIds.contains(entry.exerciseId)
-                val orderIndex = if (isExerciseActive) activeExerciseIds.indexOf(entry.exerciseId) else 999
+                    entry.toUiModel(isExerciseActive, orderIndex, history).copy(
+                        startWeight = m0,
+                        targetWeight = m12
+                    )
+                }.sortedWith(compareBy({ !it.isActive }, { it.orderIndex }, { it.exerciseName }))
 
-                val m0 = ref?.milestones?.get("M0")?.let { it.toFloat() } ?: entry.startWeight
-                val m12 = ref?.milestones?.get("M12")?.let { it.toFloat() } ?: entry.targetWeight
-                
-                val history = historiesMap[entry.exerciseId]?.map { 
-                    WeightHistoryEntry(it.weight, it.timestamp) 
-                } ?: emptyList()
+                // Live calculation of RPG muscle attributes
+                val characterAttributes = MuscleGroup.entries.associateWith { group ->
+                    val groupExercises = matrix.filter { 
+                        MuscleGroupMapper.getMuscleGroupsForExercise(it.exerciseName).contains(group)
+                    }
+                    if (groupExercises.isEmpty()) 0f else {
+                        val totalRank = groupExercises.sumOf { it.currentRank.weight }
+                        val maxPossible = groupExercises.size * 6.0
+                        (totalRank / maxPossible * 100).toFloat().coerceIn(0f, 100f)
+                    }
+                }
 
-                entry.toUiModel(isExerciseActive, orderIndex, history).copy(
-                    startWeight = m0,
-                    targetWeight = m12
+                StatisticsUiData(
+                    playerName      = player.name,
+                    playerClass     = player.playerClass,
+                    currentMonth    = player.currentMonth,
+                    totalMonths     = 12,
+                    currentWeek     = player.currentWeek,
+                    currentCycleDay = cycleDay,
+                    isPenaltyActive = player.isPenaltyActive,
+                    globalRank      = player.globalRank,
+                    currentWeight   = weightHistory.maxByOrNull { it.timestamp }?.weight ?: 0f,
+                    currentHeight   = player.height,
+                    matrixEntries   = updatedEntries.toImmutableList(),
+                    weightHistory   = weightHistory.sortedBy { it.timestamp }.toImmutableList(),
+                    characterAttributes = characterAttributes
                 )
-            }.sortedWith(compareBy({ !it.isActive }, { it.orderIndex }, { it.exerciseName }))
-
-            StatisticsUiData(
-                playerName      = player.name,
-                playerClass     = player.playerClass,
-                currentMonth    = player.currentMonth,
-                totalMonths     = 12,
-                currentWeek     = player.currentWeek,
-                currentCycleDay = cycleDay,
-                isPenaltyActive = player.isPenaltyActive,
-                globalRank      = player.globalRank,
-                currentWeight   = weightHistory.maxByOrNull { it.timestamp }?.weight ?: 0f,
-                currentHeight   = player.height,
-                matrixEntries   = updatedEntries.toImmutableList(),
-                weightHistory   = weightHistory.sortedBy { it.timestamp }.toImmutableList()
-            )
+            }
         }.catch { e ->
             e.printStackTrace()
             emit(StatisticsUiData())

@@ -27,6 +27,8 @@ import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.ui.components.RankBadge
+import com.ihor.thesystem.feature.statistics.ui.components.*
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogHeightDialog
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogWeightDialog
 import com.ihor.thesystem.feature.statistics.viewmodel.*
@@ -103,16 +105,12 @@ fun StatisticsScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalArrangement = Arrangement.spacedBy(24.dp)
                                     ) {
-                                        RadarChartMock()
-                                        
                                         PlayerMetricsGrid(
                                             weight = state.data.currentWeight.toString(),
                                             height = state.data.currentHeight.toInt().toString(),
                                             onWeightClick = { viewModel.onOpenLogWeight() },
                                             onHeightClick = { viewModel.onOpenEditHeight() }
                                         )
-                                        
-                                        ProgressLineChartMock()
                                     }
                                 }
                                 1 -> {
@@ -121,8 +119,12 @@ fun StatisticsScreen(
                                     }
                                 }
                                 2 -> {
-                                    Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                                        Text(text = "АНАЛІТИКА: In Development", color = TextSecondary)
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                                    ) {
+                                        PlayerCharacterPanel(state.data)
+                                        ProgressLineChartMock()
                                     }
                                 }
                             }
@@ -295,7 +297,7 @@ private fun MetricCard(label: String, value: String, unit: String, modifier: Mod
 }
 
 @Composable
-private fun RadarChartMock() {
+private fun PlayerCharacterPanel(data: StatisticsUiData) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -303,64 +305,27 @@ private fun RadarChartMock() {
             .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))
             .padding(24.dp)
     ) {
-        Text(
-            text = "ХАРАКТЕРИСТИКИ ПЕРСОНАЖА",
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = TextSecondary,
-                fontSize = 12.sp,
-                letterSpacing = 2.sp
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "ХАРАКТЕРИСТИКИ ПЕРСОНАЖА",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                    letterSpacing = 2.sp
+                )
             )
-        )
+            RankBadge(rank = data.globalRank, size = 32.dp)
+        }
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        Canvas(modifier = Modifier
-            .fillMaxWidth()
-            .height(250.dp)
-        ) {
-            val center = Offset(size.width / 2, size.height / 2)
-            val radius = size.minDimension / 2 * 0.8f
-            val levels = 4
-            val sides = 6
-            val angleStep = (2 * Math.PI / sides).toFloat()
-
-            // Draw grid web
-            for (i in 1..levels) {
-                val currentRadius = radius * (i.toFloat() / levels)
-                val path = androidx.compose.ui.graphics.Path()
-                for (j in 0 until sides) {
-                    val angle = j * angleStep - Math.PI.toFloat() / 2
-                    val x = center.x + currentRadius * Math.cos(angle.toDouble()).toFloat()
-                    val y = center.y + currentRadius * Math.sin(angle.toDouble()).toFloat()
-                    if (j == 0) path.moveTo(x, y) else path.lineTo(x, y)
-                }
-                path.close()
-                drawPath(path, Color.White.copy(alpha = 0.05f), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx()))
-            }
-
-            // Draw axes
-            for (j in 0 until sides) {
-                val angle = j * angleStep - Math.PI.toFloat() / 2
-                val x = center.x + radius * Math.cos(angle.toDouble()).toFloat()
-                val y = center.y + radius * Math.sin(angle.toDouble()).toFloat()
-                drawLine(Color.White.copy(alpha = 0.05f), center, Offset(x, y), strokeWidth = 1.dp.toPx())
-            }
-
-            // Draw stats polygon
-            val stats = listOf(0.8f, 0.6f, 0.9f, 0.5f, 0.7f, 0.4f)
-            val statsPath = androidx.compose.ui.graphics.Path()
-            for (j in 0 until sides) {
-                val angle = j * angleStep - Math.PI.toFloat() / 2
-                val currentRadius = radius * stats[j]
-                val x = center.x + currentRadius * Math.cos(angle.toDouble()).toFloat()
-                val y = center.y + currentRadius * Math.sin(angle.toDouble()).toFloat()
-                if (j == 0) statsPath.moveTo(x, y) else statsPath.lineTo(x, y)
-            }
-            statsPath.close()
-
-            drawPath(statsPath, NeonCyan.copy(alpha = 0.2f))
-            drawPath(statsPath, NeonCyan, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()))
-        }
+        AttributePanel(
+            characterAttributes = data.characterAttributes
+        )
     }
 }
 

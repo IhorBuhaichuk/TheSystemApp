@@ -7,6 +7,7 @@ import com.ihor.thesystem.data.local.room.entity.QuestType
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.feature.status.viewmodel.*
+import com.ihor.thesystem.domain.util.MuscleGroupMapper
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -14,58 +15,79 @@ import javax.inject.Inject
 class GetStatusScreenDataUseCase @Inject constructor(
     private val playerRepo: PlayerRepository,
     private val questRepo: QuestRepository,
+    private val matrixRepo: ProgressionMatrixRepository,
     private val debuffRepo: DebuffRepository,
     private val questLogDao: QuestLogDao,
     private val scheduleRepo: ScheduleRepository,
+    private val configRepo: SystemConfigRepository,
     private val clock: AppClock
 ) {
     @Suppress("UNCHECKED_CAST")
     operator fun invoke(): Flow<StatusUiData> =
-        playerRepo.getPlayer().flatMapLatest { player ->
+        combine(
+            playerRepo.getPlayer(),
+            configRepo.getConfigFlow(),
+            matrixRepo.getAllEntries()
+        ) { player: Player?, config: SystemConfig?, matrix: List<ProgressionMatrixEntry> ->
+            Triple(player, config ?: SystemConfig(), matrix)
+        }.flatMapLatest { (player, config, matrix) ->
             if (player == null) return@flatMapLatest flowOf(StatusUiData())
             
-            val dailyQuestsFlow = questRepo.getDailyQuestsForDate(clock.now())
-            val promotionQuestsFlow = questRepo.getActivePromotionQuests()
+            val activeQuestsFlow = questRepo.getActiveQuests()
+            val dailyQuestsForDateFlow = questRepo.getDailyQuestsForDate(clock.now())
+            
+            // RPG Muscle Attributes Calculation
+            val muscleMap = MuscleGroup.entries.associateWith { group ->
+                val groupExercises = matrix.filter { 
+                    MuscleGroupMapper.getMuscleGroupsForExercise(it.exerciseName).contains(group)
+                }
+                if (groupExercises.isEmpty()) 0f else {
+                    val totalRank = groupExercises.sumOf { it.currentRank.weight }
+                    val maxPossible = groupExercises.size * 6.0
+                    (totalRank / maxPossible * 100).toFloat().coerceIn(0f, 100f)
+                }
+            }
             
             // Отримуємо розклад для всіх 4 днів циклу
-            val scheduleFlows = (1..4).map { scheduleRepo.getScheduleForDay(it) }
+            val scheduleFlows = (1..config.cycleDaysPerMicrocycle).map { scheduleRepo.getScheduleForDay(it) }
             
             combine(
                 listOf(
-                    dailyQuestsFlow,
-                    promotionQuestsFlow,
+                    activeQuestsFlow,
+                    dailyQuestsForDateFlow,
                     debuffRepo.getActiveDebuffs(),
                     playerRepo.getLatestWeight(),
                     questLogDao.getFullHistory()
                 ) + scheduleFlows
             ) { args ->
-                val dailyQuests = args[0] as List<Quest>
-                val promotionQuests = args[1] as List<Quest>
+                val activeQuests = args[0] as List<Quest>
+                val dailyQuestsForDate = args[1] as List<Quest>
                 val debuffs = args[2] as List<DebuffConfig>
                 val weight = args[3] as Float?
                 val questHistory = args[4] as List<QuestLogEntity>
-                val schedules = args.slice(5..8) as List<ScheduleDay?>
+                val schedules = args.slice(5 until args.size).filterIsInstance<ScheduleDay>()
 
-                val allQuests = dailyQuests + promotionQuests
+                // Основний квест та щоденні квести на сьогодні
+                val daily = dailyQuestsForDate.find { it.type == DomainQuestType.DAILY }
+                val main = dailyQuestsForDate.find { it.type == DomainQuestType.MAIN }
                 
-                val daily = allQuests.find { it.type == DomainQuestType.DAILY }
-                val main = allQuests.find { it.type == DomainQuestType.MAIN }
-                val promotions = allQuests.filter { it.type == DomainQuestType.PROMOTION }
+                // Промоушн квести шукаємо серед усіх активних
+                val promotions = activeQuests.filter { it.type == DomainQuestType.PROMOTION }
 
                 val completedMainThisMonth = questHistory.count {
                     it.questType == QuestType.MAIN && it.wasSuccessful
                 }
 
                 // Розрахунок загальної кількості тренувань у місяці (4 тижні)
-                val trainingDaysPerCycle = schedules.count { it?.workoutTemplateName != null }
-                val monthWorkoutsTotal = trainingDaysPerCycle * 4
+                val trainingDaysPerCycle = schedules.count { it.workoutTemplateName != null }
+                val monthWorkoutsTotal = trainingDaysPerCycle * config.microCyclesPerMonth
 
                 StatusUiData(
                     playerName             = player.name,
                     playerClass            = player.playerClass,
                     level                  = player.level,
                     xpTotal                = player.xpTotal,
-                    xpMax                  = 1000,
+                    xpMax                  = player.level * 1000,
                     currentMonth           = player.currentMonth,
                     totalMonths            = 12,
                     currentWeight          = weight ?: 80f,
@@ -78,9 +100,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     mainQuest              = main?.toUiModel(),
                     promotionQuests        = promotions.map { it.toUiModel() }.toImmutableList(),
                     globalRank             = player.globalRank,
-                    strAttribute           = player.strAttribute,
-                    endAttribute           = player.endAttribute,
-                    disAttribute           = player.disAttribute,
+                    characterAttributes    = muscleMap,
                     currentStreak          = player.currentStreak,
                     maxStreak              = player.maxStreak,
                     xpThisWeek             = player.xpThisWeek

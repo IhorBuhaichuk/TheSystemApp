@@ -17,11 +17,14 @@ data class PlayerEntity(
     val consecutiveMainQuestFailures: Int = 0,
     val isPenaltyActive: Boolean = false,
     val globalRank: Rank = Rank.E,
-    val strAttribute: Int = 0,
-    val endAttribute: Int = 0,
-    val disAttribute: Int = 0,
     val currentStreak: Int = 0,
     val maxStreak: Int = 0,
     val xpTotal: Int = 0,
-    val xpThisWeek: Int = 0
+    val xpThisWeek: Int = 0,
+    val chestAttr: Int = 0,
+    val backAttr: Int = 0,
+    val shouldersAttr: Int = 0,
+    val quadsAttr: Int = 0,
+    val legsAttr: Int = 0,
+    val armsAttr: Int = 0
 )

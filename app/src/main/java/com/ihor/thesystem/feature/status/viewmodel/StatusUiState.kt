@@ -22,9 +22,7 @@ data class StatusUiData(
     val mainQuest: QuestUiModel?      = null,
     val promotionQuests: ImmutableList<QuestUiModel> = persistentListOf(),
     val globalRank: Rank              = Rank.E,
-    val strAttribute: Int = 0,
-    val endAttribute: Int = 0,
-    val disAttribute: Int = 0,
+    val characterAttributes: Map<com.ihor.thesystem.domain.model.MuscleGroup, Float> = emptyMap(),
     val currentStreak: Int = 0,
     val maxStreak: Int = 0,
     val xpThisWeek: Int = 0
