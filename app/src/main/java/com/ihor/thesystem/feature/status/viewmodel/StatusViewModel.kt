@@ -16,7 +16,8 @@ import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.usecase.*
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
-import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
+import com.ihor.thesystem.feature.status.viewmodel.TaskUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -37,7 +38,7 @@ sealed class StatusDialogState {
     data class AddTask(val questId: Int)                             : StatusDialogState()
     data object MainQuestWorkout                                          : StatusDialogState()
     data class SetupMatrix(val entry: MatrixEntryUiModel, val startWeight: String, val targetWeight: String, val showWorkoutAfter: Boolean = false) : StatusDialogState()
-    data class LogWorkoutSets(val entry: MatrixEntryUiModel, val sets: List<WorkoutSetInput>, val existingLog: com.ihor.thesystem.domain.model.ExerciseSet? = null, val showWorkoutAfter: Boolean = false) : StatusDialogState()
+    data class LogWorkoutSets(val entry: MatrixEntryUiModel, val sets: List<ActiveSetInput>, val existingLog: com.ihor.thesystem.domain.model.ExerciseSet? = null, val showWorkoutAfter: Boolean = false) : StatusDialogState()
 }
 
 @HiltViewModel
@@ -70,6 +71,19 @@ class StatusViewModel @Inject constructor(
             initialValue = UiState.Loading
         )
 
+    private val _dialogState = MutableStateFlow<StatusDialogState>(StatusDialogState.None)
+    val dialogState: StateFlow<StatusDialogState> = _dialogState.asStateFlow()
+
+    private val _events = MutableSharedFlow<StatusOneOffEvent>()
+    val events = _events.asSharedFlow()
+
+    private val _uiEvents = MutableSharedFlow<UiEvent>()
+    val uiEvents = _uiEvents.asSharedFlow()
+
+    private val _currentSetInputs = MutableStateFlow<List<ActiveSetInput>>(emptyList())
+
+    private val _activeWorkoutState = MutableStateFlow<ActiveDayUiModel?>(null)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val activeDayWorkout: StateFlow<ActiveDayUiModel?> = combine(
         playerRepo.getPlayer().filterNotNull(),
@@ -101,7 +115,8 @@ class StatusViewModel @Inject constructor(
                         recommendedWeight = rec.weight,
                         recommendedReps = rec.reps,
                         recommendedSets = rec.sets,
-                        recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg"
+                        recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg",
+                        sets = (1..(rec.sets ?: 1)).map { ActiveSetInput() }.toImmutableList()
                     )
                 )
             }
@@ -114,18 +129,8 @@ class StatusViewModel @Inject constructor(
                 matrixEntries = stats.matrixEntries
             )
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    private val _dialogState = MutableStateFlow<StatusDialogState>(StatusDialogState.None)
-    val dialogState: StateFlow<StatusDialogState> = _dialogState.asStateFlow()
-
-    private val _events = MutableSharedFlow<StatusOneOffEvent>()
-    val events = _events.asSharedFlow()
-
-    private val _uiEvents = MutableSharedFlow<UiEvent>()
-    val uiEvents = _uiEvents.asSharedFlow()
-
-    private val _currentSetInputs = MutableStateFlow<List<WorkoutSetInput>>(emptyList())
+    }.onEach { _activeWorkoutState.value = it }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
         viewModelScope.launch {
@@ -166,12 +171,70 @@ class StatusViewModel @Inject constructor(
         }
     }
 
-    fun onMainQuestWorkoutTap() {
+    fun onSetWeightChanged(exerciseId: Int, setId: Long, weight: String) {
+        _activeWorkoutState.update { state ->
+            state?.copy(
+                exercises = state.exercises.map { ex ->
+                    if (ex.exerciseId == exerciseId) {
+                        ex.copy(sets = ex.sets.map { if (it.id == setId) it.copy(weight = weight) else it }.toImmutableList())
+                    } else ex
+                }.toImmutableList()
+            )
+        }
+        autoSaveSet(exerciseId, setId)
+    }
+
+    fun onSetRepsChanged(exerciseId: Int, setId: Long, reps: String) {
+        _activeWorkoutState.update { state ->
+            state?.copy(
+                exercises = state.exercises.map { ex ->
+                    if (ex.exerciseId == exerciseId) {
+                        ex.copy(sets = ex.sets.map { if (it.id == setId) it.copy(reps = reps) else it }.toImmutableList())
+                    } else ex
+                }.toImmutableList()
+            )
+        }
+        autoSaveSet(exerciseId, setId)
+    }
+
+    fun onSetCompleted(exerciseId: Int, setId: Long) {
+        _activeWorkoutState.update { state ->
+            state?.copy(
+                exercises = state.exercises.map { ex ->
+                    if (ex.exerciseId == exerciseId) {
+                        ex.copy(sets = ex.sets.map { if (it.id == setId) it.copy(isCompleted = !it.isCompleted) else it }.toImmutableList())
+                    } else ex
+                }.toImmutableList()
+            )
+        }
+        autoSaveSet(exerciseId, setId)
+    }
+
+    private var autoSaveJob: kotlinx.coroutines.Job? = null
+    private fun autoSaveSet(exerciseId: Int, setId: Long) {
+        autoSaveJob?.cancel()
+        autoSaveJob = viewModelScope.launch {
+            kotlinx.coroutines.delay(1000)
+            val exercise = _activeWorkoutState.value?.exercises?.find { it.exerciseId == exerciseId } ?: return@launch
+            val set = exercise.sets.find { it.id == setId } ?: return@launch
+            
+            if (set.weight.isNotEmpty() && set.reps.isNotEmpty()) {
+                saveExerciseSetsUseCase(
+                    exerciseId = exerciseId,
+                    sets = exercise.sets.filter { it.isCompleted || it.id == setId }.map { ActiveSetInput(it.id, it.weight, it.reps) },
+                    date = viewingDateRepo.selectedDate.value,
+                    userFeedback = ""
+                )
+            }
+        }
+    }
+
+    fun onOpenMainWorkout() {
         _dialogState.value = StatusDialogState.MainQuestWorkout
     }
 
     fun onOpenLogSets(entry: MatrixEntryUiModel, fromWorkout: Boolean = false) {
-        val initialSets = listOf(WorkoutSetInput())
+        val initialSets = listOf(ActiveSetInput())
         _currentSetInputs.value = initialSets
         _dialogState.value = StatusDialogState.LogWorkoutSets(entry, initialSets, showWorkoutAfter = fromWorkout)
     }
@@ -188,7 +251,7 @@ class StatusViewModel @Inject constructor(
     }
 
     fun addSet() {
-        _currentSetInputs.update { it + WorkoutSetInput() }
+        _currentSetInputs.update { it + ActiveSetInput() }
         updateLogDialogState()
     }
 
@@ -204,7 +267,7 @@ class StatusViewModel @Inject constructor(
         }
     }
 
-    fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>, feedback: String) {
+    fun onLogSetsConfirmed(exerciseId: Int, sets: List<ActiveSetInput>, feedback: String) {
         val currentDialog = _dialogState.value
         viewModelScope.launch {
             try {

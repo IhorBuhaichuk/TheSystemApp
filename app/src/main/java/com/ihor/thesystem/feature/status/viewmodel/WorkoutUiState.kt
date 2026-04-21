@@ -19,13 +19,14 @@ data class ExerciseWorkoutUiModel(
     val recommendedReps: Int? = null,
     val recommendedSets: Int? = null,
     val recommendation: String? = null,
-    val sets: ImmutableList<WorkoutSetInput> = persistentListOf()
+    val sets: ImmutableList<ActiveSetInput> = persistentListOf()
 )
 
-data class WorkoutSetInput(
+data class ActiveSetInput(
     val id: Long = System.nanoTime(),
     val weight: String = "",
-    val reps: String = ""
+    val reps: String = "",
+    val isCompleted: Boolean = false
 )
 
 data class CycleDayUiModel(

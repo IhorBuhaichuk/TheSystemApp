@@ -19,16 +19,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
+
 @Composable
 fun ActiveDayCard(
     data: ActiveDayUiModel,
-    onOpenLogSets: (MatrixEntryUiModel) -> Unit,
+    onSetWeightChanged: (Int, Long, String) -> Unit,
+    onSetRepsChanged: (Int, Long, String) -> Unit,
+    onSetCompleted: (Int, Long) -> Unit,
     onOpenSetup: (MatrixEntryUiModel) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -41,10 +48,11 @@ fun ActiveDayCard(
                 val matrixEntry = data.matrixEntries.find { it.exerciseId == exercise.exerciseId }
                 
                 ExerciseItem(
-                    name = exercise.name,
-                    recommendation = exercise.recommendation,
+                    exercise = exercise,
                     matrixEntry = matrixEntry,
-                    onLogSets = { matrixEntry?.let(onOpenLogSets) },
+                    onSetWeightChanged = { setId, w -> onSetWeightChanged(exercise.exerciseId, setId, w) },
+                    onSetRepsChanged = { setId, r -> onSetRepsChanged(exercise.exerciseId, setId, r) },
+                    onSetCompleted = { setId -> onSetCompleted(exercise.exerciseId, setId) },
                     onSetup = { matrixEntry?.let(onOpenSetup) }
                 )
             }
@@ -54,10 +62,11 @@ fun ActiveDayCard(
 
 @Composable
 private fun ExerciseItem(
-    name: String,
-    recommendation: String?,
+    exercise: com.ihor.thesystem.feature.status.viewmodel.ExerciseWorkoutUiModel,
     matrixEntry: MatrixEntryUiModel?,
-    onLogSets: () -> Unit,
+    onSetWeightChanged: (Long, String) -> Unit,
+    onSetRepsChanged: (Long, String) -> Unit,
+    onSetCompleted: (Long) -> Unit,
     onSetup: () -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -93,16 +102,16 @@ private fun ExerciseItem(
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = name.uppercase(),
+                    text = exercise.name.uppercase(),
                     color = Color.White,
                     fontSize = 18.sp,
                     fontFamily = RajdhaniFamily,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
-                if (recommendation != null) {
+                if (exercise.recommendation != null) {
                     Text(
-                        text = recommendation,
+                        text = exercise.recommendation,
                         color = NeonCyan,
                         fontSize = 13.sp,
                         fontFamily = RajdhaniFamily,
@@ -128,6 +137,20 @@ private fun ExerciseItem(
                     .padding(top = 16.dp)
                     .fillMaxWidth()
             ) {
+                // Sets Input Area
+                exercise.sets.forEachIndexed { index, set ->
+                    SetInputRow(
+                        index = index + 1,
+                        set = set,
+                        onWeightChange = { onSetWeightChanged(set.id, it) },
+                        onRepsChange = { onSetRepsChanged(set.id, it) },
+                        onComplete = { onSetCompleted(set.id) }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 if (matrixEntry != null) {
                     // Progress Bar
                     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
@@ -181,34 +204,98 @@ private fun ExerciseItem(
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Button(
-                            onClick = onLogSets,
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("РОЗПОЧАТИ СЕТ", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
-                        }
                         IconButton(
                             onClick = onSetup,
                             modifier = Modifier
                                 .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
-                                .size(48.dp)
+                                .size(40.dp)
                         ) {
-                            Icon(Icons.Default.Settings, null, tint = Color.White.copy(alpha = 0.5f))
+                            Icon(Icons.Default.Settings, null, tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
                         }
                     }
-                } else {
-                    Text(
-                        "Дані матриці прогресії не знайдені",
-                        color = Color.White.copy(alpha = 0.3f),
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SetInputRow(
+    index: Int,
+    set: ActiveSetInput,
+    onWeightChange: (String) -> Unit,
+    onRepsChange: (String) -> Unit,
+    onComplete: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (set.isCompleted) NeonCyan.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.03f))
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "$index",
+            color = if (set.isCompleted) NeonCyan else Color.White.copy(alpha = 0.3f),
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.width(24.dp),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        OutlinedTextField(
+            value = set.weight,
+            onValueChange = onWeightChange,
+            modifier = Modifier.weight(1f).height(48.dp),
+            placeholder = { Text("кг", fontSize = 12.sp) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+                focusedBorderColor = NeonCyan,
+                unfocusedTextColor = Color.White,
+                focusedTextColor = Color.White
+            ),
+            shape = RoundedCornerShape(8.dp),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        OutlinedTextField(
+            value = set.reps,
+            onValueChange = onRepsChange,
+            modifier = Modifier.weight(1f).height(48.dp),
+            placeholder = { Text("reps", fontSize = 12.sp) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+                focusedBorderColor = NeonCyan,
+                unfocusedTextColor = Color.White,
+                focusedTextColor = Color.White
+            ),
+            shape = RoundedCornerShape(8.dp),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        IconButton(
+            onClick = onComplete,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(if (set.isCompleted) NeonCyan else Color.White.copy(alpha = 0.1f))
+        ) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = if (set.isCompleted) Color.Black else Color.White.copy(alpha = 0.3f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

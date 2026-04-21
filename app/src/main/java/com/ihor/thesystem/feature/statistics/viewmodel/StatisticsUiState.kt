@@ -3,7 +3,7 @@ package com.ihor.thesystem.feature.statistics.viewmodel
 import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
-import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -64,7 +64,7 @@ sealed class StatisticsDialogState {
 
     data class LogWorkoutSets(
         val entry: MatrixEntryUiModel,
-        val sets: List<WorkoutSetInput>,
+        val sets: List<ActiveSetInput>,
         val existingLog: ExerciseSet? = null
     ) : StatisticsDialogState()
 

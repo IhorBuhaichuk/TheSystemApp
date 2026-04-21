@@ -30,7 +30,9 @@ import androidx.compose.ui.window.DialogProperties
 @Composable
 fun MainQuestWorkoutDialog(
     data: ActiveDayUiModel?,
-    onOpenLogSets: (MatrixEntryUiModel) -> Unit,
+    onSetWeightChanged: (Int, Long, String) -> Unit,
+    onSetRepsChanged: (Int, Long, String) -> Unit,
+    onSetCompleted: (Int, Long) -> Unit,
     onOpenSetup: (MatrixEntryUiModel) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -89,7 +91,9 @@ fun MainQuestWorkoutDialog(
                         ) {
                             ActiveDayCard(
                                 data = data,
-                                onOpenLogSets = onOpenLogSets,
+                                onSetWeightChanged = onSetWeightChanged,
+                                onSetRepsChanged = onSetRepsChanged,
+                                onSetCompleted = onSetCompleted,
                                 onOpenSetup = onOpenSetup
                             )
                             

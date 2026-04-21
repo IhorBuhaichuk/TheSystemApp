@@ -3,7 +3,7 @@ package com.ihor.thesystem.domain.repository
 import com.ihor.thesystem.data.local.room.entity.ReferenceMatrixEntity
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.ExerciseCategory
-import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
 import kotlinx.coroutines.flow.Flow
 
 interface ProgressionMatrixRepository {
@@ -12,8 +12,8 @@ interface ProgressionMatrixRepository {
     suspend fun updateCurrentWeight(exerciseId: Int, newWeight: Float)
     suspend fun updateMatrixGoals(exerciseId: Int, startWeight: Float, targetWeight: Float)
     
-    suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>)
-    suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<WorkoutSetInput>, timestamp: Long, userFeedback: String? = null)
+    suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>)
+    suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<ActiveSetInput>, timestamp: Long, userFeedback: String? = null)
 
     suspend fun getReferenceForExercise(name: String): ReferenceMatrixEntity?
     fun getAllReferences(): Flow<List<ReferenceMatrixEntity>>

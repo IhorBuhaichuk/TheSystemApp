@@ -10,7 +10,7 @@ import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
 import com.ihor.thesystem.domain.usecase.LogWeightUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
 import com.ihor.thesystem.domain.usecase.UpdatePlayerHeightUseCase
-import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
@@ -42,7 +42,7 @@ class StatisticsViewModel @Inject constructor(
     private val _dialogState = MutableStateFlow<StatisticsDialogState>(StatisticsDialogState.None)
     val dialogState: StateFlow<StatisticsDialogState> = _dialogState.asStateFlow()
 
-    private val _currentSetInputs = MutableStateFlow<List<WorkoutSetInput>>(emptyList())
+    private val _currentSetInputs = MutableStateFlow<List<ActiveSetInput>>(emptyList())
 
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
@@ -52,7 +52,7 @@ class StatisticsViewModel @Inject constructor(
     }
 
     fun onOpenLogSets(entry: MatrixEntryUiModel) {
-        val initialSets = listOf(WorkoutSetInput())
+        val initialSets = listOf(ActiveSetInput())
         _currentSetInputs.value = initialSets
         _dialogState.value = StatisticsDialogState.LogWorkoutSets(entry, initialSets)
     }
@@ -65,7 +65,7 @@ class StatisticsViewModel @Inject constructor(
     }
 
     fun addSet() {
-        _currentSetInputs.update { it + WorkoutSetInput() }
+        _currentSetInputs.update { it + ActiveSetInput() }
         updateLogDialogState()
     }
 
@@ -81,7 +81,7 @@ class StatisticsViewModel @Inject constructor(
         }
     }
 
-    fun onLogSetsConfirmed(exerciseId: Int, sets: List<WorkoutSetInput>, feedback: String) {
+    fun onLogSetsConfirmed(exerciseId: Int, sets: List<ActiveSetInput>, feedback: String) {
         viewModelScope.launch {
             try {
                 matrixRepo.saveExerciseSetsWithDate(

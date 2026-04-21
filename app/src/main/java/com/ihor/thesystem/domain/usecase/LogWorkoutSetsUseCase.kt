@@ -5,7 +5,7 @@ import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
-import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
 import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
@@ -17,7 +17,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         exerciseId: Int,
-        sets: List<WorkoutSetInput>,
+        sets: List<ActiveSetInput>,
         timestamp: Long,
         userFeedback: String? = null
     ) {

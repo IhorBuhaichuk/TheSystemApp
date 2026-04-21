@@ -6,7 +6,7 @@ import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
-import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -44,11 +44,11 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         ))
     }
 
-    override suspend fun saveExerciseSets(exerciseId: Int, sets: List<WorkoutSetInput>) {
+    override suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>) {
         saveExerciseSetsWithDate(exerciseId, sets, System.currentTimeMillis())
     }
 
-    override suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<WorkoutSetInput>, timestamp: Long, userFeedback: String?) {
+    override suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<ActiveSetInput>, timestamp: Long, userFeedback: String?) {
         val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
         if (validSets.isEmpty()) return
 

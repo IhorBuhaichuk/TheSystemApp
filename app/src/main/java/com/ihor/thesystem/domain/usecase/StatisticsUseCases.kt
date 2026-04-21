@@ -8,7 +8,7 @@ import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
-import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import java.time.LocalDate
@@ -46,7 +46,7 @@ class SaveExerciseSetsUseCase @Inject constructor(
     private val recalculateGlobalRank: RecalculateGlobalRankUseCase,
     private val clock: AppClock
 ) {
-    suspend operator fun invoke(exerciseId: Int, sets: List<WorkoutSetInput>, date: LocalDate, userFeedback: String?) {
+    suspend operator fun invoke(exerciseId: Int, sets: List<ActiveSetInput>, date: LocalDate, userFeedback: String?) {
         val timestamp = date.atStartOfDay(clock.zoneId()).toInstant().toEpochMilli()
 
         // 1. Збереження логу підходів

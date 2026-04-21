@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.domain.model.ExerciseSet
-import com.ihor.thesystem.feature.status.viewmodel.WorkoutSetInput
+import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
 
 @Composable
 fun SetupMatrixDialog(
@@ -80,7 +80,7 @@ fun SetupMatrixDialog(
 @Composable
 fun LogWorkoutSetsDialog(
     exerciseName: String,
-    sets: List<WorkoutSetInput>,
+    sets: List<ActiveSetInput>,
     onUpdate: (Long, String, String) -> Unit,
     onAdd: () -> Unit,
     onRemove: () -> Unit,

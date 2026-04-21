@@ -83,7 +83,7 @@ fun StatusScreen(
                     
                     MainWorkoutCardPremium(
                         data = data,
-                        onStartWorkout = { viewModel.onMainQuestWorkoutTap() }
+                        onStartWorkout = { viewModel.onOpenMainWorkout() }
                     )
 
                     DailyQuestsSectionPremium(
@@ -116,7 +116,9 @@ fun StatusScreen(
             )
             is StatusDialogState.MainQuestWorkout -> MainQuestWorkoutDialog(
                 data = activeDayWorkout,
-                onOpenLogSets = { viewModel.onOpenLogSets(it, fromWorkout = true) },
+                onSetWeightChanged = { exId, setId, w -> viewModel.onSetWeightChanged(exId, setId, w) },
+                onSetRepsChanged = { exId, setId, r -> viewModel.onSetRepsChanged(exId, setId, r) },
+                onSetCompleted = { exId, setId -> viewModel.onSetCompleted(exId, setId) },
                 onOpenSetup = { viewModel.onOpenSetup(it, fromWorkout = true) },
                 onDismiss = { viewModel.onDismissDialog() }
             )
@@ -130,7 +132,7 @@ fun StatusScreen(
                     },
                     onDismiss = { 
                         if (dState.showWorkoutAfter) {
-                            viewModel.onMainQuestWorkoutTap()
+                            viewModel.onOpenMainWorkout()
                         } else {
                             viewModel.onDismissDialog()
                         }
@@ -149,7 +151,7 @@ fun StatusScreen(
                     },
                     onDismiss = { 
                         if (dState.showWorkoutAfter) {
-                            viewModel.onMainQuestWorkoutTap()
+                            viewModel.onOpenMainWorkout()
                         } else {
                             viewModel.onDismissDialog()
                         }
