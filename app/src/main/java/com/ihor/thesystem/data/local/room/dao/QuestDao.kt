@@ -57,20 +57,21 @@ interface QuestDao {
     @Transaction
     @Query("""
         SELECT * FROM quest 
-        WHERE strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') = strftime('%Y-%m-%d', :dateMillis / 1000, 'unixepoch', 'localtime')
+        WHERE date >= :startOfDay AND date <= :endOfDay
         ORDER BY date DESC
     """)
-    fun getQuestsByDate(dateMillis: Long): Flow<List<QuestWithTasks>>
+    fun getQuestsByDateRange(startOfDay: Long, endOfDay: Long): Flow<List<QuestWithTasks>>
 
     @Transaction
     @Query("""
         SELECT * FROM quest 
-        WHERE strftime('%Y-%m-%d', date / 1000, 'unixepoch', 'localtime') = strftime('%Y-%m-%d', :dateMillis / 1000, 'unixepoch', 'localtime')
+        WHERE date >= :startOfDay AND date <= :endOfDay
         AND (type = :typeDaily OR type = :typeMain)
         ORDER BY date DESC
     """)
-    fun getDailyQuestsForDate(
-        dateMillis: Long,
+    fun getDailyQuestsForDateRange(
+        startOfDay: Long,
+        endOfDay: Long,
         typeDaily: QuestType,
         typeMain: QuestType
     ): Flow<List<QuestWithTasks>>

@@ -69,9 +69,9 @@ object DatabasePopulator {
         db.debuffConfigDao().insert(DebuffConfigEntity(1, "СЛАБКІСТЬ", "Дебаф: зниження продуктивності", 0))
         db.debuffConfigDao().insert(DebuffConfigEntity(2, "ЦНС", "Дебаф: перевтома системи", 0))
         
-        db.scheduleDao().insertSchedule(ScheduleEntity(1, 1, null))
-        db.scheduleDao().insertSchedule(ScheduleEntity(2, 2, 2))
-        db.scheduleDao().insertSchedule(ScheduleEntity(3, 3, null))
-        db.scheduleDao().insertSchedule(ScheduleEntity(4, 4, 3))
+        db.scheduleDao().insertSchedule(ScheduleEntity(1, 1, 2)) // ДЕНЬ 1: ВИХІДНИЙ -> ТРЕНУВАННЯ А
+        db.scheduleDao().insertSchedule(ScheduleEntity(2, 2, 3)) // ДЕНЬ 2: НІЧ -> ТРЕНУВАННЯ Б
+        db.scheduleDao().insertSchedule(ScheduleEntity(3, 3, null)) // ДЕНЬ 3: ПІСЛЯ НОЧІ -> ВІДПОЧИНОК
+        db.scheduleDao().insertSchedule(ScheduleEntity(4, 4, null)) // ДЕНЬ 4: ВИХІДНИЙ -> ВІДПОЧИНОК
     }
 }

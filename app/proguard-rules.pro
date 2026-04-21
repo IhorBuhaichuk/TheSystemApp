@@ -1,3 +1,7 @@
+# Keep all domain models and enums to prevent R8 from breaking Room TypeConverters and Serialization
+-keep class com.ihor.thesystem.domain.model.** { *; }
+-keepclassmembers enum com.ihor.thesystem.domain.model.** { *; }
+
 # Kotlin Serialization
 -keepattributes *Annotation*, EnclosingMethod, InnerClasses, Signature
 -keep,allowobfuscation,allowshrinking class kotlinx.serialization.json.** { *; }
@@ -9,15 +13,13 @@
     *** $serializer;
 }
 
-# Keep DTOs and Room Entities
--keep class com.ihor.thesystem.data.remote.dto.** { *; }
--keep class com.ihor.thesystem.data.local.room.entity.** { *; }
--keep class com.ihor.thesystem.domain.model.** { *; }
+# Room specific rules
+-keep class androidx.room.BoundDb { *; }
+-keep class * extends androidx.room.RoomDatabase
+-keep class * extends androidx.room.TypeConverter
 
-# Hilt/Dagger
+# Hilt
 -keep class dagger.hilt.android.internal.** { *; }
--keep class * extends androidx.lifecycle.ViewModel { *; }
 
-# Gemini AI (Google Generative AI)
+# Gemini AI
 -keep class com.google.ai.client.generativeai.** { *; }
--keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations

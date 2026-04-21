@@ -20,6 +20,7 @@ data class ScheduleWithDetails(
     val workoutTemplate: WorkoutTemplateEntity?,
 
     @Relation(
+        entity = ExerciseEntity::class,
         parentColumn = "workoutTemplateId",
         entityColumn = "id",
         associateBy = Junction(

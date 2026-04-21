@@ -123,10 +123,14 @@ class StatusViewModel @Inject constructor(
     private val _currentSetInputs = MutableStateFlow<List<WorkoutSetInput>>(emptyList())
 
     init {
-        // БД гарантовано готова на момент старту екрану (контролюється навігацією)
         viewModelScope.launch {
-            // Очікуємо появу гравця в БД, щоб генерація квестів не пройшла вхолосту
+            // 1. Чекаємо, поки DatabasePopulator завершить роботу
+            databaseReadinessRepo.status.first { it is DatabaseStatus.Ready }
+            
+            // 2. Очікуємо появу гравця
             playerRepo.getPlayer().filterNotNull().first()
+            
+            // 3. Тепер розклад точно в базі, можна генерувати
             useCases.generateDailyQuests()
             useCases.calculateAttributes()
         }

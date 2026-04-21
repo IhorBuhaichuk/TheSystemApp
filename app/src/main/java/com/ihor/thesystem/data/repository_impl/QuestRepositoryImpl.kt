@@ -136,14 +136,29 @@ class QuestRepositoryImpl @Inject constructor(
     override suspend fun getLastTwoMainQuestsStatus(): List<DomainQuestStatus> =
         questDao.getLastQuestsByType(type = EntityQuestType.MAIN, limit = 2).map { it.status.toDomain() }
 
-    override fun getQuestsByDate(dateMillis: Long): Flow<List<Quest>> =
-        questDao.getQuestsByDate(dateMillis).map { list -> list.map { it.toDomain() } }
+    override fun getQuestsByDate(dateMillis: Long): Flow<List<Quest>> {
+        val (start, end) = getDayRange(dateMillis)
+        return questDao.getQuestsByDateRange(start, end).map { list -> list.map { it.toDomain() } }
+    }
 
     override suspend fun getQuestById(questId: Int): Quest? =
         questDao.getQuestWithTasksById(questId)?.toDomain()
 
-    override fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>> =
-        questDao.getDailyQuestsForDate(dateMillis, EntityQuestType.DAILY, EntityQuestType.MAIN).map { list -> list.map { it.toDomain() } }
+    override fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>> {
+        val (start, end) = getDayRange(dateMillis)
+        return questDao.getDailyQuestsForDateRange(start, end, EntityQuestType.DAILY, EntityQuestType.MAIN)
+            .map { list -> list.map { it.toDomain() } }
+    }
+
+    private fun getDayRange(millis: Long): Pair<Long, Long> {
+        val localDate = java.time.Instant.ofEpochMilli(millis)
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+        val start = localDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val end = localDate.atTime(java.time.LocalTime.MAX)
+            .atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        return start to end
+    }
 
     override fun getPendingPromotionQuests(): Flow<List<Quest>> =
         questDao.getPendingPromotionQuests(EntityQuestType.PROMOTION, EntityQuestStatus.COMPLETED).map { list -> list.map { it.toDomain() } }

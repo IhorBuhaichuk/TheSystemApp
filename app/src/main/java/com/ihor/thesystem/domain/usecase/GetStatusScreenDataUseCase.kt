@@ -32,6 +32,15 @@ class GetStatusScreenDataUseCase @Inject constructor(
             Triple(player, config ?: SystemConfig(), matrix)
         }.flatMapLatest { (player, config, matrix) ->
             if (player == null) return@flatMapLatest flowOf(StatusUiData())
+
+            // АВТОМАТИЧНИЙ РОЗРАХУНОК ПОТОЧНОГО ДНЯ ЦИКЛУ
+            val currentCycleDay = if (config.cycleAnchorDateTimestamp > 0) {
+                val daysPassed = ((clock.now() - config.cycleAnchorDateTimestamp) / (24 * 60 * 60 * 1000)).toInt()
+                val calculatedDay = (config.cycleAnchorDay + daysPassed - 1) % config.cycleDaysPerMicrocycle + 1
+                calculatedDay
+            } else {
+                player.currentCycleDay
+            }
             
             val activeQuestsFlow = questRepo.getActiveQuests()
             val dailyQuestsForDateFlow = questRepo.getDailyQuestsForDate(clock.now())
