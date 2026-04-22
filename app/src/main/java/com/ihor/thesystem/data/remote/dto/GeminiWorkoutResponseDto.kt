@@ -5,6 +5,7 @@ import kotlinx.serialization.SerialName
 
 @Serializable
 data class GeminiWorkoutResponseDto(
+    @SerialName("status") val status: String = "success",
     @SerialName("feedback_text") val feedbackText: String = "",
     @SerialName("next_workout_targets") val nextWorkoutTargets: List<WorkoutTargetDto> = emptyList(),
     @SerialName("aiFeedback") val aiFeedback: String? = null
@@ -14,7 +15,7 @@ data class GeminiWorkoutResponseDto(
 data class WorkoutTargetDto(
     @SerialName("exercise_id") val exerciseId: Int = 0,
     @SerialName("nextWeight") val weight: Float = 0f,
-    @SerialName("nextSets") val recommendedSets: Int = 0,
+    @SerialName("nextSets") val recommendedSets: String = "0", // String or Float to be safe with AI output
     @SerialName("nextReps") val recommendedReps: String = "",
     @SerialName("aiFeedback") val aiFeedback: String? = null
 )

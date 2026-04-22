@@ -51,7 +51,8 @@ class StatusViewModel @Inject constructor(
     private val matrixRepo: com.ihor.thesystem.domain.repository.ProgressionMatrixRepository,
     private val saveExerciseSetsUseCase: com.ihor.thesystem.domain.usecase.SaveExerciseSetsUseCase,
     private val viewingDateRepo: com.ihor.thesystem.domain.repository.ViewingDateRepository,
-    private val calculateRecommendation: com.ihor.thesystem.domain.usecase.CalculateRecommendedSetUseCase
+    private val calculateRecommendation: com.ihor.thesystem.domain.usecase.CalculateRecommendedSetUseCase,
+    private val calculateCycleDay: com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 ) : ViewModel() {
 
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
@@ -83,61 +84,53 @@ class StatusViewModel @Inject constructor(
     private val _currentSetInputs = MutableStateFlow<List<ActiveSetInput>>(emptyList())
 
     private val _activeWorkoutState = MutableStateFlow<ActiveDayUiModel?>(null)
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val activeDayWorkout: StateFlow<ActiveDayUiModel?> = combine(
-        playerRepo.getPlayer().filterNotNull(),
-        systemConfig.filterNotNull()
-    ) { player, config ->
-        if (config.cycleAnchorDateTimestamp > 0) {
-            val anchorDate = java.time.Instant.ofEpochMilli(config.cycleAnchorDateTimestamp)
-                .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-            val todayDate = java.time.LocalDate.now()
-            val daysPassed = java.time.temporal.ChronoUnit.DAYS.between(anchorDate, todayDate).toInt()
-            (config.cycleAnchorDay + daysPassed - 1) % config.cycleDaysPerMicrocycle + 1
-        } else {
-            player.currentCycleDay
-        }
-    }.flatMapLatest { currentDay ->
-        combine(
-            scheduleRepo.getSchedulesForDays(listOf(currentDay)),
-            getStatsUseCase()
-        ) { schedules, stats ->
-            val schedule = schedules.firstOrNull() ?: return@combine null
-            
-            val exercisesWithRecs = mutableListOf<ExerciseWorkoutUiModel>()
-            for (ex in schedule.exercises) {
-                val rec = calculateRecommendation(ex.id, ex.name)
-                exercisesWithRecs.add(
-                    ExerciseWorkoutUiModel(
-                        exerciseId = ex.id,
-                        name = ex.name,
-                        recommendedWeight = rec.weight,
-                        recommendedReps = rec.reps,
-                        recommendedSets = rec.sets,
-                        recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg",
-                        sets = (1..(rec.sets ?: 1)).map { ActiveSetInput() }.toImmutableList()
-                    )
-                )
-            }
-
-            ActiveDayUiModel(
-                dayNumber = schedule.cycleDay,
-                dailyTasks = persistentListOf(),
-                workoutName = schedule.workoutTemplateName,
-                exercises = exercisesWithRecs.toImmutableList(),
-                matrixEntries = stats.matrixEntries
-            )
-        }
-    }.onEach { _activeWorkoutState.value = it }
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val activeWorkoutState: StateFlow<ActiveDayUiModel?> = _activeWorkoutState.asStateFlow()
 
     init {
         viewModelScope.launch {
-            databaseReadinessRepo.status.first { it is DatabaseStatus.Ready }
-            playerRepo.getPlayer().filterNotNull().first()
-            useCases.generateDailyQuests()
-            useCases.calculateAttributes()
+            try {
+                kotlinx.coroutines.withTimeout(10_000) {
+                    databaseReadinessRepo.status.first { it is DatabaseStatus.Ready }
+                    playerRepo.getPlayer().filterNotNull().first()
+                }
+                useCases.generateDailyQuests()
+                useCases.calculateAttributes()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_unknown)))
+            }
+        }
+
+        // Single source of truth for workout data, loaded once per day change
+        viewModelScope.launch {
+            combine(
+                playerRepo.getPlayer().filterNotNull(),
+                systemConfig.filterNotNull(),
+                viewingDateRepo.selectedDate
+            ) { player, config, date ->
+                if (config.cycleAnchorDateTimestamp > 0) {
+                    calculateCycleDay(
+                        targetDate = date,
+                        anchorEpochDay = java.time.Instant.ofEpochMilli(config.cycleAnchorDateTimestamp)
+                            .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay(),
+                        anchorCycleDay = config.cycleAnchorDay,
+                        cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
+                    )
+                } else {
+                    player.currentCycleDay
+                }
+            }.distinctUntilChanged().collect { day ->
+                loadDailyWorkout(day)
+            }
+        }
+
+        // Update only matrix entries to avoid overwriting user input in exercises
+        viewModelScope.launch {
+            getStatsUseCase().collect { stats ->
+                _activeWorkoutState.update { current ->
+                    current?.copy(matrixEntries = stats.matrixEntries)
+                }
+            }
         }
 
         viewModelScope.launch {
@@ -373,4 +366,32 @@ class StatusViewModel @Inject constructor(
     }
 
     suspend fun getCurrentPlayer(): Player? = useCases.getPlayerFlow().firstOrNull()
+
+    private fun loadDailyWorkout(day: Int) {
+        viewModelScope.launch {
+            val schedules = scheduleRepo.getSchedulesForDays(listOf(day)).first()
+            val schedule = schedules.firstOrNull() ?: return@launch
+            
+            val exercisesWithRecs = schedule.exercises.map { ex ->
+                val rec = calculateRecommendation(ex.id, ex.name)
+                ExerciseWorkoutUiModel(
+                    exerciseId = ex.id,
+                    name = ex.name,
+                    recommendedWeight = rec.weight,
+                    recommendedReps = rec.reps,
+                    recommendedSets = rec.sets,
+                    recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg",
+                    sets = (1..(rec.sets ?: 1)).map { ActiveSetInput() }.toImmutableList()
+                )
+            }.toImmutableList()
+
+            _activeWorkoutState.value = ActiveDayUiModel(
+                dayNumber = schedule.cycleDay,
+                dailyTasks = persistentListOf(),
+                workoutName = schedule.workoutTemplateName,
+                exercises = exercisesWithRecs,
+                matrixEntries = _activeWorkoutState.value?.matrixEntries ?: persistentListOf()
+            )
+        }
+    }
 }

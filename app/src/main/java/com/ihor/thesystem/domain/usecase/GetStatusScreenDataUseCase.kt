@@ -19,9 +19,9 @@ class GetStatusScreenDataUseCase @Inject constructor(
     private val questLogDao: QuestLogDao,
     private val scheduleRepo: ScheduleRepository,
     private val configRepo: SystemConfigRepository,
+    private val calculateCycleDay: CalculateCycleDayForDateUseCase,
     private val clock: AppClock
 ) {
-    @Suppress("UNCHECKED_CAST")
     operator fun invoke(): Flow<StatusUiData> =
         combine(
             playerRepo.getPlayer(),
@@ -32,19 +32,22 @@ class GetStatusScreenDataUseCase @Inject constructor(
         }.flatMapLatest { (player, config, matrix) ->
             if (player == null) return@flatMapLatest flowOf(StatusUiData())
 
-            // АВТОМАТИЧНИЙ РОЗРАХУНОК ПОТОЧНОГО ДНЯ ЦИКЛУ
+            val cycleDays = config.cycleDaysPerMicrocycle.coerceAtLeast(1)
             val currentCycleDay = if (config.cycleAnchorDateTimestamp > 0) {
-                val daysPassed = ((clock.now() - config.cycleAnchorDateTimestamp) / (24 * 60 * 60 * 1000)).toInt()
-                val calculatedDay = (config.cycleAnchorDay + daysPassed - 1) % config.cycleDaysPerMicrocycle + 1
-                calculatedDay
+                val todayDate = java.time.Instant.ofEpochMilli(clock.now())
+                    .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                
+                calculateCycleDay(
+                    targetDate = todayDate,
+                    anchorEpochDay = java.time.Instant.ofEpochMilli(config.cycleAnchorDateTimestamp)
+                        .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay(),
+                    anchorCycleDay = config.cycleAnchorDay,
+                    cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
+                )
             } else {
                 player.currentCycleDay
             }
             
-            val activeQuestsFlow = questRepo.getActiveQuests()
-            val dailyQuestsForDateFlow = questRepo.getDailyQuestsForDate(clock.now())
-            
-            // RPG Muscle Attributes Calculation
             val muscleMap = MuscleGroup.entries.associateWith { group ->
                 val groupExercises = matrix.filter { 
                     MuscleGroupMapper.getMuscleGroupsForExercise(it.exerciseName).contains(group)
@@ -56,35 +59,25 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 }
             }
             
-            // Отримуємо розклад для всіх 4 днів циклу
-            val scheduleFlows = (1..config.cycleDaysPerMicrocycle).map { scheduleRepo.getScheduleForDay(it) }
+            val scheduleFlows = (1..cycleDays).map { scheduleRepo.getScheduleForDay(it) }
+            val schedulesFlow = if (scheduleFlows.isEmpty()) flowOf(emptyList<ScheduleDay>()) 
+                               else combine(scheduleFlows) { it.filterIsInstance<ScheduleDay>() }
             
             combine(
-                listOf(
-                    activeQuestsFlow,
-                    dailyQuestsForDateFlow,
-                    playerRepo.getLatestWeight(),
-                    questLogDao.getFullHistory()
-                ) + scheduleFlows
-            ) { args ->
-                val activeQuests = args[0] as List<Quest>
-                val dailyQuestsForDate = args[1] as List<Quest>
-                val weight = args[2] as Float?
-                val questHistory = args[3] as List<QuestLogEntity>
-                val schedules = args.slice(4 until args.size).filterIsInstance<ScheduleDay>()
-
-                // Основний квест та щоденні квести на сьогодні
+                questRepo.getActiveQuests(),
+                questRepo.getDailyQuestsForDate(clock.now()),
+                playerRepo.getLatestWeight(),
+                questLogDao.getFullHistory(),
+                schedulesFlow
+            ) { activeQuests, dailyQuestsForDate, weight, questHistory, schedules ->
                 val daily = dailyQuestsForDate.find { it.type == DomainQuestType.DAILY }
                 val main = dailyQuestsForDate.find { it.type == DomainQuestType.MAIN }
-                
-                // Промоушн квести шукаємо серед усіх активних
                 val promotions = activeQuests.filter { it.type == DomainQuestType.PROMOTION }
 
                 val completedMainThisMonth = questHistory.count {
                     it.questType == QuestType.MAIN && it.wasSuccessful
                 }
 
-                // Розрахунок загальної кількості тренувань у місяці (4 тижні)
                 val trainingDaysPerCycle = schedules.count { it.workoutTemplateName != null }
                 val monthWorkoutsTotal = trainingDaysPerCycle * config.microCyclesPerMonth
 
@@ -114,7 +107,6 @@ class GetStatusScreenDataUseCase @Inject constructor(
         }
 }
 
-// ── Mappers ───────────────────────────────────────────────────────────────────
 private fun Quest.toUiModel() = QuestUiModel(
     id          = id,
     title       = title,

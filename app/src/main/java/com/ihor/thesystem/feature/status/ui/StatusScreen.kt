@@ -48,7 +48,7 @@ fun StatusScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val dialogState by viewModel.dialogState.collectAsState()
-    val activeDayWorkout by viewModel.activeDayWorkout.collectAsState()
+    val activeDayWorkout by viewModel.activeWorkoutState.collectAsState()
 
     var levelUpEvent by remember { mutableStateOf<Any?>(null) }
 
@@ -81,10 +81,14 @@ fun StatusScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    MainWorkoutCardPremium(
-                        data = data,
-                        onStartWorkout = { viewModel.onOpenMainWorkout() }
-                    )
+                    if (data.mainQuest != null) {
+                        MainWorkoutCardPremium(
+                            data = data,
+                            onStartWorkout = { viewModel.onOpenMainWorkout() }
+                        )
+                    } else {
+                        RestDayCard()
+                    }
 
                     DailyQuestsSectionPremium(
                         data = data,
@@ -304,6 +308,45 @@ private fun XpProgressBarPremium(data: StatusUiData) {
                             colors = listOf(Color(0xFF00F0FF), Color(0xFFB257FF))
                         )
                     )
+            )
+        }
+    }
+}
+
+@Composable
+private fun RestDayCard() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
+            .clip(RoundedCornerShape(32.dp))
+            .background(Color.White.copy(alpha = 0.03f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(32.dp))
+            .padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Surface(
+                shape = CircleShape,
+                color = Color.White.copy(alpha = 0.05f),
+                modifier = Modifier.size(64.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text("💤", fontSize = 28.sp)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "СЬОГОДНІ ВІДПОЧИНОК",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp
+                )
+            )
+            Text(
+                text = "Час для відновлення сил",
+                style = MaterialTheme.typography.bodySmall.copy(color = Color.White.copy(alpha = 0.4f))
             )
         }
     }

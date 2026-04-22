@@ -18,6 +18,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
     private val configRepo: SystemConfigRepository,
     private val matrixRepo: ProgressionMatrixRepository,
     private val calculateRecommendation: CalculateRecommendedSetUseCase,
+    private val calculateCycleDay: CalculateCycleDayForDateUseCase,
     private val clock: AppClock
 ) {
     suspend operator fun invoke() {
@@ -26,13 +27,16 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         // 1. РОЗРАХУНОК ПОТОЧНОГО ДНЯ ЦИКЛУ (КАЛЕНДАРНИЙ)
         val now = clock.now()
         val currentDay = if (config.cycleAnchorDateTimestamp > 0) {
-            val anchorDate = Instant.ofEpochMilli(config.cycleAnchorDateTimestamp)
-                .atZone(ZoneId.systemDefault()).toLocalDate()
             val todayDate = Instant.ofEpochMilli(now)
                 .atZone(ZoneId.systemDefault()).toLocalDate()
             
-            val daysPassed = ChronoUnit.DAYS.between(anchorDate, todayDate).toInt()
-            (config.cycleAnchorDay + daysPassed - 1) % config.cycleDaysPerMicrocycle + 1
+            calculateCycleDay(
+                targetDate = todayDate,
+                anchorEpochDay = Instant.ofEpochMilli(config.cycleAnchorDateTimestamp)
+                    .atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay(),
+                anchorCycleDay = config.cycleAnchorDay,
+                cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
+            )
         } else {
             1
         }

@@ -28,8 +28,14 @@ interface WorkoutDao {
     suspend fun insertCrossRef(crossRef: WorkoutExerciseCrossRef)
 
     @Transaction
-    @Query("SELECT * FROM workout_templates WHERE id = :templateId")
-    fun getTemplateWithExercises(templateId: Int): Flow<TemplateWithExercises?>
+    @Query("""
+        SELECT e.* FROM exercises e
+        INNER JOIN workout_exercise_cross_ref xr ON e.id = xr.exerciseId
+        INNER JOIN workout_templates wt ON xr.workoutTemplateId = wt.id
+        WHERE wt.id = :templateId
+        ORDER BY xr.orderIndex ASC
+    """)
+    fun getOrderedExercisesForTemplate(templateId: Int): Flow<List<ExerciseEntity>>
 
     @Query("SELECT name FROM workout_templates WHERE id = :templateId")
     suspend fun getTemplateNameSync(templateId: Int): String?
@@ -47,16 +53,4 @@ interface WorkoutDao {
     suspend fun deleteAllTemplates()
 }
 
-data class TemplateWithExercises(
-    @Embedded val template: WorkoutTemplateEntity,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "id",
-        associateBy = Junction(
-            WorkoutExerciseCrossRef::class,
-            parentColumn = "workoutTemplateId",
-            entityColumn = "exerciseId"
-        )
-    )
-    val exercises: List<ExerciseEntity>
-)
+

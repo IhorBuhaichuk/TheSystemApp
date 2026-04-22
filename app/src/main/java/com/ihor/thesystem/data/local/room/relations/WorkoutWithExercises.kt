@@ -8,15 +8,6 @@ import com.ihor.thesystem.data.local.room.entity.WorkoutExerciseCrossRef
 import com.ihor.thesystem.data.local.room.entity.WorkoutTemplateEntity
 
 data class WorkoutWithExercises(
-    @Embedded val workout: WorkoutTemplateEntity,
-    @Relation(
-        parentColumn    = "id",
-        entityColumn    = "id",
-        associateBy     = Junction(
-            value           = WorkoutExerciseCrossRef::class,
-            parentColumn    = "workoutTemplateId",
-            entityColumn    = "exerciseId"
-        )
-    )
+    val workout: WorkoutTemplateEntity,
     val exercises: List<ExerciseEntity>
 )

@@ -13,13 +13,15 @@ import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
+import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Named
 
 class AiArchitectRepositoryImpl @Inject constructor(
-    @Named("ArchitectModel") private val generativeModel: GenerativeModel
+    @Named("ArchitectModel") private val generativeModel: GenerativeModel,
+    private val matrixRepo: ProgressionMatrixRepository
 ) : AiArchitectRepository {
 
     private val json = Json {
@@ -57,7 +59,24 @@ class AiArchitectRepositoryImpl @Inject constructor(
                     )
                 }
 
-                val targets = dto.nextWorkoutTargets.mapNotNull { it.toDomain() }
+                val targets = dto.nextWorkoutTargets.map { it.toDomain() }
+
+                // Save recommendations to database
+                val now = System.currentTimeMillis()
+                targets.forEach { rec ->
+                    if (rec.exerciseId > 0) {
+                        matrixRepo.updateTarget(
+                            exerciseId = rec.exerciseId,
+                            weight = rec.weight.toDouble(),
+                            sets = rec.sets,
+                            reps = rec.reps,
+                            aiFeedback = rec.aiFeedback,
+                            timestamp = now
+                        )
+                    } else {
+                        Log.e("AiArchitect", "Invalid exerciseId received from AI: ${rec.exerciseId}")
+                    }
+                }
 
                 ChatMessage(
                     role = ChatRole.AI,
@@ -83,15 +102,20 @@ class AiArchitectRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun WorkoutTargetDto.toDomain(): AiWorkoutRecommendation? {
-        if (exerciseId <= 0) return null
+    private fun WorkoutTargetDto.toDomain(): AiWorkoutRecommendation {
+        Log.d("AiArchitect", "Mapping exercise ${this.exerciseId}: $this")
+        val setsInt = try {
+            recommendedSets.toFloat().toInt()
+        } catch (e: Exception) {
+            0
+        }
 
         return AiWorkoutRecommendation(
             exerciseId = exerciseId,
             weight = weight.takeIf { it >= 0 } ?: 0f,
-            sets = recommendedSets.takeIf { it > 0 } ?: 1,
+            sets = setsInt.takeIf { it > 0 } ?: 1,
             reps = sanitizeReps(recommendedReps),
-            aiFeedback = aiFeedback
+            aiFeedback = if (exerciseId <= 0) "ПОМИЛКА: Невірний ID вправи ($exerciseId). ${aiFeedback ?: ""}" else aiFeedback
         )
     }
 
@@ -108,15 +132,32 @@ class AiArchitectRepositoryImpl @Inject constructor(
     }
 
     private fun extractJson(input: String): String {
-        // Регулярний вираз для пошуку JSON блоку всередині Markdown
-        val regex = Regex("""```json\s*([\s\S]*?)\s*```|```\s*([\s\S]*?)\s*```""")
-        val matchResult = regex.find(input)
+        var trimmed = input.trim()
+        
+        // Якщо це вже чистий JSON
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            return trimmed
+        }
 
-        return if (matchResult != null) {
-            // Беремо вміст першої або другої групи захоплення (залежно від того, яка спрацювала)
-            matchResult.groups[1]?.value ?: matchResult.groups[2]?.value ?: input
+        // Регулярний вираз для пошуку JSON блоку всередині Markdown як fallback
+        val regex = Regex("""```json\s*([\s\S]*?)\s*```|```\s*([\s\S]*?)\s*```""")
+        val matchResult = regex.find(trimmed)
+
+        trimmed = if (matchResult != null) {
+            matchResult.groups[1]?.value ?: matchResult.groups[2]?.value ?: trimmed
         } else {
-            input
+            trimmed
         }.trim()
+
+        // Спроба знайти JSON за дужками, якщо AI додав зайвий текст
+        if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
+            val start = trimmed.indexOf('{')
+            val end = trimmed.lastIndexOf('}')
+            if (start != -1 && end != -1 && end > start) {
+                trimmed = trimmed.substring(start, end + 1)
+            }
+        }
+
+        return trimmed
     }
 }

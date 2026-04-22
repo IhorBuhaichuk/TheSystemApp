@@ -20,18 +20,6 @@ data class ScheduleWithDetails(
     val workoutTemplate: WorkoutTemplateEntity?,
 
     @Relation(
-        entity = ExerciseEntity::class,
-        parentColumn = "workoutTemplateId",
-        entityColumn = "id",
-        associateBy = Junction(
-            value = WorkoutExerciseCrossRef::class,
-            parentColumn = "workoutTemplateId",
-            entityColumn = "exerciseId"
-        )
-    )
-    val exercises: List<ExerciseEntity>,
-
-    @Relation(
         parentColumn = "id",
         entityColumn = "id",
         associateBy  = Junction(
