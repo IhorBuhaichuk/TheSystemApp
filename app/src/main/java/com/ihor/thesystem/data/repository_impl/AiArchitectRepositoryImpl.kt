@@ -64,16 +64,15 @@ class AiArchitectRepositoryImpl @Inject constructor(
                 // Save recommendations to database
                 val now = System.currentTimeMillis()
                 targets.forEach { rec ->
-                    if (rec.exerciseId > 0) {
-                        matrixRepo.updateTarget(
-                            exerciseId = rec.exerciseId,
-                            weight = rec.weight.toDouble(),
-                            sets = rec.sets,
-                            reps = rec.reps,
-                            aiFeedback = rec.aiFeedback,
-                            timestamp = now
-                        )
-                    } else {
+                    matrixRepo.updateTarget(
+                        exerciseId = rec.exerciseId,
+                        weight = rec.weight.toDouble(),
+                        sets = rec.sets,
+                        reps = rec.reps,
+                        aiFeedback = rec.aiFeedback,
+                        timestamp = now
+                    )
+                    if (rec.exerciseId <= 0) {
                         Log.e("AiArchitect", "Invalid exerciseId received from AI: ${rec.exerciseId}")
                     }
                 }
@@ -104,18 +103,13 @@ class AiArchitectRepositoryImpl @Inject constructor(
 
     private fun WorkoutTargetDto.toDomain(): AiWorkoutRecommendation {
         Log.d("AiArchitect", "Mapping exercise ${this.exerciseId}: $this")
-        val setsInt = try {
-            recommendedSets.toFloat().toInt()
-        } catch (e: Exception) {
-            0
-        }
-
+        
         return AiWorkoutRecommendation(
             exerciseId = exerciseId,
             weight = weight.takeIf { it >= 0 } ?: 0f,
-            sets = setsInt.takeIf { it > 0 } ?: 1,
-            reps = sanitizeReps(recommendedReps),
-            aiFeedback = if (exerciseId <= 0) "ПОМИЛКА: Невірний ID вправи ($exerciseId). ${aiFeedback ?: ""}" else aiFeedback
+            sets = recommendedSets.toInt().takeIf { it > 0 } ?: 1,
+            reps = recommendedReps.toInt().toString().takeIf { it != "0" } ?: "8",
+            aiFeedback = aiFeedback
         )
     }
 

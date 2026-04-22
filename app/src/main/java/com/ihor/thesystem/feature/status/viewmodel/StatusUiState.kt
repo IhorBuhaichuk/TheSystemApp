@@ -24,7 +24,8 @@ data class StatusUiData(
     val characterAttributes: Map<com.ihor.thesystem.domain.model.MuscleGroup, Float> = emptyMap(),
     val currentStreak: Int = 0,
     val maxStreak: Int = 0,
-    val xpThisWeek: Int = 0
+    val xpThisWeek: Int = 0,
+    val avatarUri: String? = null
 )
 
 data class QuestUiModel(

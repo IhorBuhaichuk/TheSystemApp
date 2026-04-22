@@ -1,5 +1,8 @@
 package com.ihor.thesystem.feature.status.viewmodel
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.R
@@ -20,6 +23,7 @@ import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
 import com.ihor.thesystem.feature.status.viewmodel.TaskUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -43,6 +47,7 @@ sealed class StatusDialogState {
 
 @HiltViewModel
 class StatusViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val useCases:              StatusUseCases,
     private val databaseReadinessRepo: DatabaseReadinessRepository,
     private val playerRepo: PlayerRepository,
@@ -128,7 +133,7 @@ class StatusViewModel @Inject constructor(
         viewModelScope.launch {
             getStatsUseCase().collect { stats ->
                 _activeWorkoutState.update { current ->
-                    current?.copy(matrixEntries = stats.matrixEntries)
+                    current?.copy(matrixEntries = stats.matrixEntries.toImmutableList())
                 }
             }
         }
@@ -208,16 +213,22 @@ class StatusViewModel @Inject constructor(
         autoSaveJob?.cancel()
         autoSaveJob = viewModelScope.launch {
             kotlinx.coroutines.delay(1000)
-            val exercise = _activeWorkoutState.value?.exercises?.find { it.exerciseId == exerciseId } ?: return@launch
+            val currentState = _activeWorkoutState.value ?: return@launch
+            val exercise = currentState.exercises.find { it.exerciseId == exerciseId } ?: return@launch
             val set = exercise.sets.find { it.id == setId } ?: return@launch
             
             if (set.weight.isNotEmpty() && set.reps.isNotEmpty()) {
-                saveExerciseSetsUseCase(
-                    exerciseId = exerciseId,
-                    sets = exercise.sets.filter { it.isCompleted || it.id == setId }.map { ActiveSetInput(it.id, it.weight, it.reps) },
-                    date = viewingDateRepo.selectedDate.value,
-                    userFeedback = ""
-                )
+                try {
+                    saveExerciseSetsUseCase(
+                        exerciseId = exerciseId,
+                        sets = exercise.sets.filter { it.isCompleted || it.id == setId }.map { ActiveSetInput(it.id, it.weight, it.reps) },
+                        date = viewingDateRepo.selectedDate.value,
+                        userFeedback = ""
+                    )
+                    // We don't call calculateAttributes() here to avoid triggering full UI refresh
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }
@@ -310,6 +321,10 @@ class StatusViewModel @Inject constructor(
 
     fun onDismissDialog()   { _dialogState.value = StatusDialogState.None }
 
+    fun onEditNameTap() {
+        _dialogState.value = StatusDialogState.EditName
+    }
+
     fun onNameConfirmed(newName: String) = launchCatching {
         val player = useCases.getPlayerFlow().firstOrNull() ?: return@launchCatching
         useCases.updatePlayerName(player, newName).onSuccess {
@@ -331,6 +346,23 @@ class StatusViewModel @Inject constructor(
         useCases.updateHeight(height).onSuccess {
             onDismissDialog()
         }.onFailure { e ->
+            handleError(e)
+        }
+    }
+
+    fun updateAvatarUri(uri: Uri) = launchCatching {
+        val player = useCases.getPlayerFlow().firstOrNull() ?: return@launchCatching
+        
+        try {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        }
+
+        useCases.updatePlayerAvatar(player, uri.toString()).onFailure { e ->
             handleError(e)
         }
     }

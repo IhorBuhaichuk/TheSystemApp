@@ -17,6 +17,7 @@ data class PlayerEntity(
     val consecutiveMainQuestFailures: Int = 0,
     val isPenaltyActive: Boolean = false,
     val globalRank: Rank = Rank.E,
+    val avatarUri: String? = null,
     val currentStreak: Int = 0,
     val maxStreak: Int = 0,
     val xpTotal: Int = 0,

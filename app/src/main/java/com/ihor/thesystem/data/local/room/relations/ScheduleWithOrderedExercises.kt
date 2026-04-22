@@ -9,5 +9,5 @@ data class ScheduleWithOrderedExercises(
     val schedule: ScheduleEntity,
     val workoutTemplate: WorkoutTemplateEntity?,
     val dailyTasks: List<DailyTaskTemplateEntity>,
-    val exercises: List<ExerciseEntity>
+    val exercises: List<OrderedExerciseRecord>
 )

@@ -105,6 +105,8 @@ fun StatisticsScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalArrangement = Arrangement.spacedBy(24.dp)
                                     ) {
+                                        PlayerStatsHeaderPremium(data = state.data)
+
                                         PlayerMetricsGrid(
                                             weight = state.data.currentWeight.toString(),
                                             height = state.data.currentHeight.toInt().toString(),

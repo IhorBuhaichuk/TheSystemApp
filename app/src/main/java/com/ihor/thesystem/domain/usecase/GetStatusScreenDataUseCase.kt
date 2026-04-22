@@ -101,7 +101,8 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     characterAttributes    = muscleMap,
                     currentStreak          = player.currentStreak,
                     maxStreak              = player.maxStreak,
-                    xpThisWeek             = player.xpThisWeek
+                    xpThisWeek             = player.xpThisWeek,
+                    avatarUri              = player.avatarUri
                 )
             }
         }

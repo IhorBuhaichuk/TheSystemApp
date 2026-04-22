@@ -1,5 +1,8 @@
 package com.ihor.thesystem.feature.status.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -30,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.UiState
@@ -77,7 +82,11 @@ fun StatusScreen(
                 is UiState.Content<*> -> {
                     val data = state.data as StatusUiData
                     
-                    HeaderSection(data)
+                    HeaderSection(
+                        data = data,
+                        onAvatarSelected = { viewModel.updateAvatarUri(it) },
+                        onEditNameTap = { viewModel.onEditNameTap() }
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
                     
@@ -114,6 +123,16 @@ fun StatusScreen(
         }
         
         when (val dState = dialogState) {
+            is StatusDialogState.EditName -> {
+                val currentData = (uiState as? UiState.Content)?.data
+                if (currentData != null) {
+                    com.ihor.thesystem.feature.statistics.ui.components.dialogs.EditNameDialog(
+                        currentName = currentData.playerName,
+                        onConfirm = { viewModel.onNameConfirmed(it) },
+                        onDismiss = { viewModel.onDismissDialog() }
+                    )
+                }
+            }
             is StatusDialogState.AddTask -> AddTaskDialog(
                 onConfirm = { viewModel.onAddTaskConfirmed(dState.questId, it) },
                 onDismiss = { viewModel.onDismissDialog() }
@@ -169,7 +188,16 @@ fun StatusScreen(
 }
 
 @Composable
-private fun HeaderSection(data: StatusUiData) {
+private fun HeaderSection(
+    data: StatusUiData,
+    onAvatarSelected: (android.net.Uri) -> Unit,
+    onEditNameTap: () -> Unit
+) {
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> uri?.let { onAvatarSelected(it) } }
+    )
+
     val locale = java.util.Locale("uk")
     val today = java.time.LocalDate.now()
     val dateStr = today.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, locale)
@@ -178,28 +206,31 @@ private fun HeaderSection(data: StatusUiData) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 40.dp, start = 24.dp, end = 24.dp, bottom = 20.dp)
+            .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
+                            .size(6.dp)
                             .clip(CircleShape)
                             .background(Color(0xFF00F0FF))
-                            .shadow(4.dp, CircleShape, spotColor = Color(0xFF00F0FF))
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "SYSTEM ONLINE",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color(0xFF00F0FF),
-                            letterSpacing = 2.sp,
+                            letterSpacing = 1.5.sp,
                             fontWeight = FontWeight.Black
                         )
                     )
@@ -208,42 +239,89 @@ private fun HeaderSection(data: StatusUiData) {
                     text = "Вітаю, ${data.playerName}",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp,
+                        lineHeight = 32.sp
+                    ),
+                    modifier = Modifier.clickable { onEditNameTap() }
                 )
                 Text(
                     text = dateStr.uppercase(),
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = Color.White.copy(alpha = 0.3f),
-                        letterSpacing = 1.sp
+                        color = Color.White.copy(alpha = 0.4f),
+                        letterSpacing = 1.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 )
             }
             
-            // Avatar with pulsing border
+            // Avatar with pulsing shadow
             val infiniteTransition = rememberInfiniteTransition(label = "AvatarPulse")
-            val pulseScale by infiniteTransition.animateFloat(
-                initialValue = 1f,
-                targetValue = 1.1f,
+            val pulseAlpha by infiniteTransition.animateFloat(
+                initialValue = 0.1f,
+                targetValue = 0.4f,
                 animationSpec = infiniteRepeatable(tween(2000), RepeatMode.Reverse)
             )
 
             Box(contentAlignment = Alignment.Center) {
+                // Pulsing Gradient Background
                 Box(
                     modifier = Modifier
-                        .size(54.dp)
-                        .graphicsLayer(scaleX = pulseScale, scaleY = pulseScale)
-                        .border(1.dp, Color(0xFF00F0FF).copy(alpha = 0.2f), CircleShape)
+                        .size(110.dp)
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    Color.Black,
+                                    Color(0xFF00F0FF).copy(alpha = pulseAlpha),
+                                    Color.Transparent
+                                )
+                            ),
+                            CircleShape
+                        )
                 )
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_background), // Замінити на реальне фото
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.White.copy(alpha = 0.1f), CircleShape),
-                    contentScale = ContentScale.Crop
-                )
+                
+                val avatarSize = 77.dp // 110 * 0.7
+
+                if (data.avatarUri != null) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(data.avatarUri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .size(avatarSize)
+                            .clip(CircleShape)
+                            .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                            .clickable {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(avatarSize)
+                            .clip(CircleShape)
+                            .background(Color.Black)
+                            .border(1.dp, Color(0xFF00F0FF).copy(alpha = 0.2f), CircleShape)
+                            .clickable {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(avatarSize * 0.6f),
+                            tint = Color(0xFF00F0FF).copy(alpha = 0.5f)
+                        )
+                    }
+                }
             }
         }
 

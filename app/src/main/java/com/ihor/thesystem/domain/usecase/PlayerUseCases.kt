@@ -24,6 +24,19 @@ class UpdatePlayerNameUseCase @Inject constructor(
     }
 }
 
+class UpdatePlayerAvatarUseCase @Inject constructor(
+    private val repo: PlayerRepository
+) {
+    suspend operator fun invoke(player: Player, avatarUri: String?): Result<Unit> {
+        return try {
+            repo.updatePlayer(player.copy(avatarUri = avatarUri))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+
 class GetPlayerFlowUseCase @Inject constructor(
     private val repo: PlayerRepository
 ) {

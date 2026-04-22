@@ -102,7 +102,8 @@ class GetStatisticsDataUseCase @Inject constructor(
                     currentHeight   = player.height,
                     matrixEntries   = updatedEntries.toImmutableList(),
                     weightHistory   = weightHistory.sortedBy { it.timestamp }.toImmutableList(),
-                    characterAttributes = characterAttributes
+                    characterAttributes = characterAttributes,
+                    avatarUri = player.avatarUri
                 )
             }
         }.catch { e ->

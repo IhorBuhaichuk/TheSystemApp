@@ -4,6 +4,7 @@ import androidx.room.*
 import com.ihor.thesystem.data.local.room.entity.ExerciseEntity
 import com.ihor.thesystem.data.local.room.entity.WorkoutExerciseCrossRef
 import com.ihor.thesystem.data.local.room.entity.WorkoutTemplateEntity
+import com.ihor.thesystem.data.local.room.relations.OrderedExerciseRecord
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -29,25 +30,24 @@ interface WorkoutDao {
 
     @Transaction
     @Query("""
-        SELECT e.* FROM exercises e
+        SELECT e.*, xr.orderIndex FROM exercises e
         INNER JOIN workout_exercise_cross_ref xr ON e.id = xr.exerciseId
-        INNER JOIN workout_templates wt ON xr.workoutTemplateId = wt.id
-        WHERE wt.id = :templateId
+        WHERE xr.workoutTemplateId = :templateId
         ORDER BY xr.orderIndex ASC
     """)
-    fun getOrderedExercisesForTemplate(templateId: Int): Flow<List<ExerciseEntity>>
+    fun getOrderedExercisesForTemplate(templateId: Int): Flow<List<OrderedExerciseRecord>>
 
     @Query("SELECT name FROM workout_templates WHERE id = :templateId")
     suspend fun getTemplateNameSync(templateId: Int): String?
 
     @Transaction
     @Query("""
-        SELECT e.* FROM exercises e
+        SELECT e.*, xr.orderIndex FROM exercises e
         INNER JOIN workout_exercise_cross_ref xr ON e.id = xr.exerciseId
         WHERE xr.workoutTemplateId = :templateId
         ORDER BY xr.orderIndex ASC
     """)
-    suspend fun getExercisesForTemplateSync(templateId: Int): List<ExerciseEntity>
+    suspend fun getExercisesForTemplateSync(templateId: Int): List<OrderedExerciseRecord>
 
     @Query("DELETE FROM workout_templates")
     suspend fun deleteAllTemplates()

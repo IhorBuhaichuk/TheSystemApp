@@ -21,7 +21,8 @@ data class StatisticsUiData(
     val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf(),
     val tonnageStats: ImmutableList<DailyTonnageStats>   = persistentListOf(),
     val weightHistory: ImmutableList<WeightLogEntity>    = persistentListOf(),
-    val characterAttributes: Map<MuscleGroup, Float>    = emptyMap()
+    val characterAttributes: Map<MuscleGroup, Float>    = emptyMap(),
+    val avatarUri: String? = null
 )
 
 data class MatrixEntryUiModel(

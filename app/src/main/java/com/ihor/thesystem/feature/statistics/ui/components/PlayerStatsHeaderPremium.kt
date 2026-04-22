@@ -15,9 +15,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.RankBadge
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
@@ -43,8 +47,37 @@ fun PlayerStatsHeaderPremium(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    RankBadge(rank = data.globalRank, size = 60.dp)
-                    Spacer(Modifier.width(16.dp))
+                    if (data.avatarUri != null) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(data.avatarUri)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Avatar",
+                            modifier = Modifier
+                                .size(150.dp)
+                                .clip(CircleShape)
+                                .border(2.dp, Color.White.copy(alpha = 0.1f), CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(150.dp)
+                                .clip(CircleShape)
+                                .background(Color.Black.copy(alpha = 0.4f))
+                                .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                modifier = Modifier.size(90.dp),
+                                tint = Color.White.copy(alpha = 0.4f)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.width(20.dp))
                     Column {
                         Text(
                             text = data.playerName,

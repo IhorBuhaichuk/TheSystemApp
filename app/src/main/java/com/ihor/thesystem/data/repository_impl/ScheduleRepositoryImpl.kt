@@ -6,6 +6,7 @@ import com.ihor.thesystem.data.local.room.entity.DailyTaskTemplateEntity
 import com.ihor.thesystem.data.local.room.entity.ExerciseEntity
 import com.ihor.thesystem.data.local.room.entity.ScheduleEntity
 import com.ihor.thesystem.data.local.room.entity.WorkoutTemplateEntity
+import com.ihor.thesystem.data.local.room.relations.OrderedExerciseRecord
 import com.ihor.thesystem.data.local.room.relations.ScheduleWithDetails
 import com.ihor.thesystem.data.local.room.relations.ScheduleWithOrderedExercises
 import com.ihor.thesystem.domain.model.ExerciseDetails
@@ -55,7 +56,7 @@ class ScheduleRepositoryImpl @Inject constructor(
 
     private fun assembleAndMap(
         details: ScheduleWithDetails,
-        orderedExercises: List<ExerciseEntity>
+        orderedExercises: List<OrderedExerciseRecord>
     ): ScheduleDay {
         val scheduleWithOrdered = ScheduleWithOrderedExercises(
             schedule = details.schedule,
@@ -73,7 +74,7 @@ class ScheduleRepositoryImpl @Inject constructor(
             workoutTemplateId   = ordered.schedule.workoutTemplateId,
             workoutTemplateName = ordered.workoutTemplate?.name,
             dailyTaskNames      = ordered.dailyTasks.map { it.name },
-            exercises           = ordered.exercises.map { ExerciseDetails(it.id, it.name) }
+            exercises           = ordered.exercises.map { ExerciseDetails(it.exercise.id, it.exercise.name) }
         )
     }
 }

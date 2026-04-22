@@ -28,6 +28,7 @@ import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.focus.onFocusChanged
 import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
 
 @Composable
@@ -229,6 +230,9 @@ private fun SetInputRow(
     onRepsChange: (String) -> Unit,
     onComplete: () -> Unit
 ) {
+    var weightText by remember(set.id) { mutableStateOf(set.weight) }
+    var repsText by remember(set.id) { mutableStateOf(set.reps) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -248,9 +252,16 @@ private fun SetInputRow(
         Spacer(modifier = Modifier.width(8.dp))
 
         OutlinedTextField(
-            value = set.weight,
-            onValueChange = onWeightChange,
-            modifier = Modifier.weight(1f).height(48.dp),
+            value = weightText,
+            onValueChange = { weightText = it },
+            modifier = Modifier
+                .weight(1f)
+                .height(48.dp)
+                .onFocusChanged { focusState ->
+                    if (!focusState.isFocused && weightText != set.weight) {
+                        onWeightChange(weightText)
+                    }
+                },
             placeholder = { Text("кг", fontSize = 12.sp) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             colors = OutlinedTextFieldDefaults.colors(
@@ -266,9 +277,16 @@ private fun SetInputRow(
         Spacer(modifier = Modifier.width(8.dp))
 
         OutlinedTextField(
-            value = set.reps,
-            onValueChange = onRepsChange,
-            modifier = Modifier.weight(1f).height(48.dp),
+            value = repsText,
+            onValueChange = { repsText = it },
+            modifier = Modifier
+                .weight(1f)
+                .height(48.dp)
+                .onFocusChanged { focusState ->
+                    if (!focusState.isFocused && repsText != set.reps) {
+                        onRepsChange(repsText)
+                    }
+                },
             placeholder = { Text("reps", fontSize = 12.sp) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = OutlinedTextFieldDefaults.colors(
