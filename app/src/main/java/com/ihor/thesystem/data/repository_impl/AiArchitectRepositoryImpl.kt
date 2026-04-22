@@ -52,7 +52,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
                     return@withTimeout ChatMessage(
                         role = ChatRole.AI,
                         uiText = AppErrorType.AiParsingError.asUiText(),
-                        text = "Помилка генерації AI, спробуйте ще раз",
+                        text = "ДЕБАГ: ${e.localizedMessage}",
                         isActionable = false
                     )
                 }
@@ -77,7 +77,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
             ChatMessage(
                 role = ChatRole.AI,
                 uiText = error.asUiText(),
-                text = error.message ?: "Помилка генерації AI, спробуйте ще раз",
+                text = "ДЕБАГ: ${e.localizedMessage}",
                 isActionable = false
             )
         }
