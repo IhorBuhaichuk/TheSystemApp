@@ -1,10 +1,5 @@
 package com.ihor.thesystem.domain.model
 
-object CycleConfig {
-    val MICROCYCLE_DAYS = listOf(1, 2, 3, 4)
-    val MICROCYCLE_DAY_RANGE = 1..4
-}
-
 data class Player(
     val id: Int,
     val name: String,
@@ -99,64 +94,3 @@ data class Player(
         return updatedPlayer to levelUpTriggered
     }
 }
-
-data class Quest(
-    val id: Int,
-    val title: String,
-    val type: DomainQuestType,
-    val date: Long,
-    val status: DomainQuestStatus,
-    val tasks: List<QuestTask>,
-    val scheduleId: Int? = null,
-    val targetExerciseId: Int? = null
-) {
-    val isCompleted: Boolean get() = status == DomainQuestStatus.COMPLETED
-}
-
-data class QuestTask(
-    val id: Int,
-    val questId: Int,
-    val name: String,
-    val isCompleted: Boolean,
-    val exerciseId: Int? = null,
-    val recommendedWeight: Double? = null,
-    val recommendedSets: Int? = null,
-    val recommendedReps: Int? = null
-)
-
-data class SystemConfig(
-    val id: Int = 1,
-    val defaultPenalty: Int = 20,
-    val targetSets: Int = 3,
-    val targetReps: Int = 12,
-    val matrixWeeks: Int = 48,
-    val cycleAnchorDateTimestamp: Long = 0L, // Epoch Day
-    val cycleAnchorDay: Int = 1,              // Який це був день циклу (1..4)
-    val cycleDaysPerMicrocycle: Int = 4,
-    val microCyclesPerMonth: Int = 4,
-    val dayStartOffsetHours: Int = 4
-)
-
-data class ScheduleDay(
-    val id: Int,
-    val cycleDay: Int,
-    val workoutTemplateId: Int?,
-    val workoutTemplateName: String?,
-    val dailyTaskNames: List<String>,
-    val exercises: List<ExerciseDetails>
-) {
-    val isWorkoutDay: Boolean get() = workoutTemplateId != null
-}
-
-data class ExerciseDetails(
-    val id: Int,
-    val name: String
-)
-
-data class ExerciseRecommendation(
-    val exerciseId: Int,
-    val exerciseName: String,
-    val weight: Double,
-    val sets: Int,
-    val reps: Int
-)
