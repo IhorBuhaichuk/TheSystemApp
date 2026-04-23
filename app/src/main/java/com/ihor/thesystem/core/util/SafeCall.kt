@@ -7,14 +7,15 @@ import kotlinx.coroutines.CancellationException
 /**
  * Універсальна обгортка для безпечного виконання корутин з деталізацією помилок.
  */
-suspend /**
- * Аналог runCatching для корутин, який не поглинає CancellationException.
- * Використовує стандартний kotlin.Result.
+/**
+ * Спеціалізована функція для перехоплення помилок у саспенд-корутинах.
+ * Важливо: вона явно прокидає CancellationException, щоб не порушувати 
+ * механізм скасування корутин в Android (наприклад, при ViewModel.onCleared).
  */
-inline fun <R> runSuspendCatching(block: () -> R): kotlin.Result<R> {
+inline fun <T> runSuspendCatching(block: () -> T): kotlin.Result<T> {
     return try {
         kotlin.Result.success(block())
-    } catch (c: kotlinx.coroutines.CancellationException) {
+    } catch (c: CancellationException) {
         throw c
     } catch (e: Throwable) {
         kotlin.Result.failure(e)

@@ -4,7 +4,7 @@ import com.ihor.thesystem.core.util.runSuspendCatching
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.util.sanitizeForPrompt
-import com.ihor.thesystem.core.util.getOrNull
+import com.ihor.thesystem.core.util.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
@@ -24,78 +24,76 @@ class FinalizeSessionUseCase @Inject constructor(
         session: WorkoutSession,
         sets: List<ExerciseSet>,
         isNightShift: Boolean
-    ): kotlin.Result<AiArchitectReport> {
-        return runSuspendCatching {
-            // 1. Зберегти сесію та сети
-            val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
+    ): kotlin.Result<AiArchitectReport> = runSuspendCatching {
+        // 1. Зберегти сесію та сети
+        val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
             
-            // 2. Отримати актуальну вагу гравця та вагу 6 місяців тому
-            val playerWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
+        // 2. Отримати актуальну вагу гравця та вагу 6 місяців тому
+        val playerWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
             
-            val calendar = Calendar.getInstance()
-            calendar.add(Calendar.MONTH, -6)
-            val timestampSixMonthsAgo = calendar.timeInMillis
-            val weight6MonthsAgo = playerRepository.getWeightAtOrBefore(timestampSixMonthsAgo).getOrNull() ?: playerWeight.toFloat()
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.MONTH, -6)
+        val timestampSixMonthsAgo = calendar.timeInMillis
+        val weight6MonthsAgo = playerRepository.getWeightAtOrBefore(timestampSixMonthsAgo).getOrNull() ?: playerWeight.toFloat()
 
-            // 3. Отримати матрицю прогресії
-            val matrix = progressionMatrixRepository.getAllEntries().first()
+        // 3. Отримати матрицю прогресії
+        val matrix = progressionMatrixRepository.getAllEntries().first()
 
-            // 4. Оновити ранги вправ
-            updateExerciseRanks(sets, matrix, playerWeight)
+        // 4. Оновити ранги вправ
+        updateExerciseRanks(sets, matrix, playerWeight)
 
-            val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
-            val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
+        val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
+        val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
 
-            // 5. Розрахунок відновлення
-            val recoveryDuration = calculateRecovery(finalTonnage, isNightShift).getOrDefault(24.hours)
-            val recoveryHours = recoveryDuration.inWholeHours.toDouble()
+        // 5. Розрахунок відновлення
+        val recoveryDuration = calculateRecovery(finalTonnage, isNightShift).getOrDefault(24.hours)
+        val recoveryHours = recoveryDuration.inWholeHours.toDouble()
 
-            // 6. Формування контексту для AI
-            val exerciseContexts = generateAiPrompt(sets, matrix, playerWeight, weight6MonthsAgo)
+        // 6. Формування контексту для AI
+        val exerciseContexts = generateAiPrompt(sets, matrix, playerWeight, weight6MonthsAgo)
 
-            // 7. Виконання запиту через SendArchitectAnalysisUseCase
-            val report = try {
-                val chatMsg = sendArchitectAnalysis(exerciseContexts)
+        // 7. Виконання запиту через SendArchitectAnalysisUseCase
+        val report = try {
+            val chatMsg = sendArchitectAnalysis(exerciseContexts)
                 
-                chatMsg.recommendations.forEach { rec ->
-                    progressionMatrixRepository.updateTarget(
-                        exerciseId = rec.exerciseId,
-                        weight = rec.weight.toDouble(),
-                        sets = rec.sets,
-                        reps = rec.reps
-                    )
-                }
-
-                AiArchitectReport(
-                    architectFeedback = chatMsg.text,
-                    currentStageStatus = "[ LOGGED ]",
-                    completedExercises = sets.map { it.exerciseId }.distinct(),
-                    pendingExercises = emptyList(),
-                    nextWorkoutDirectives = chatMsg.recommendations.map { 
-                        WorkoutDirective(it.exerciseId, it.weight.toDouble(), it.sets, it.reps)
-                    },
-                    recoveryWindowHours = recoveryHours,
-                    isFallback = false
+            chatMsg.recommendations.forEach { rec ->
+                progressionMatrixRepository.updateTarget(
+                    exerciseId = rec.exerciseId,
+                    weight = rec.weight.toDouble(),
+                    sets = rec.sets,
+                    reps = rec.reps
                 )
-            } catch (e: Exception) {
-                generateFallbackReport(sets, matrix, recoveryHours)
             }
 
-            // 8. Валідація директив
-            val validatedDirectives = validateDirectives(report.nextWorkoutDirectives, matrix)
-                .getOrDefault(report.nextWorkoutDirectives)
-
-            // 9. Зберегти директиви
-            analyticsRepository.saveDirectives(validatedDirectives)
-
-            // 10. Оновити Глобальний Ранг
-            recalculateGlobalRank()
-
-            report.copy(
-                nextWorkoutDirectives = validatedDirectives,
-                recoveryWindowHours = recoveryHours
+            AiArchitectReport(
+                architectFeedback = chatMsg.text,
+                currentStageStatus = "[ LOGGED ]",
+                completedExercises = sets.map { it.exerciseId }.distinct(),
+                pendingExercises = emptyList(),
+                nextWorkoutDirectives = chatMsg.recommendations.map { 
+                    WorkoutDirective(it.exerciseId, it.weight.toDouble(), it.sets, it.reps)
+                },
+                recoveryWindowHours = recoveryHours,
+                isFallback = false
             )
+        } catch (e: Exception) {
+            generateFallbackReport(sets, matrix, recoveryHours)
         }
+
+        // 8. Валідація директив
+        val validatedDirectives = validateDirectives(report.nextWorkoutDirectives, matrix)
+            .getOrDefault(report.nextWorkoutDirectives)
+
+        // 9. Зберегти директиви
+        analyticsRepository.saveDirectives(validatedDirectives)
+
+        // 10. Оновити Глобальний Ранг
+        recalculateGlobalRank()
+
+        report.copy(
+            nextWorkoutDirectives = validatedDirectives,
+            recoveryWindowHours = recoveryHours
+        )
     }
 
     private suspend fun generateAiPrompt(
@@ -151,15 +149,21 @@ class FinalizeSessionUseCase @Inject constructor(
         matrix: List<ProgressionMatrixEntry>,
         recoveryHours: Double
     ): AiArchitectReport {
-        val fallbackDirectives = sets.map { set ->
-            val entry = matrix.find { it.exerciseId == set.exerciseId }
+        val fallbackDirectives = sets.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
+            val entry = matrix.find { it.exerciseId == exId }
+            val lastSet = exerciseSets.lastOrNull { it.isCompleted } ?: exerciseSets.last()
+            
+            // Використовуємо вагу останнього успішного підходу або стандартне зниження на 5% від цілі
+            val fallbackWeight = lastSet.weight.takeIf { it > 0 } 
+                ?: ((entry?.targetWeight?.toDouble() ?: lastSet.weight) * 0.95)
+
             WorkoutDirective(
-                exerciseId = set.exerciseId,
-                targetWeight = entry?.targetWeight?.toDouble() ?: set.weight,
+                exerciseId = exId,
+                targetWeight = fallbackWeight,
                 targetSets = entry?.nextRecommendedSets ?: 3,
                 targetReps = entry?.nextRecommendedReps ?: "10"
             )
-        }.distinctBy { it.exerciseId }
+        }
 
         return AiArchitectReport(
             architectFeedback = "ЗВ'ЯЗОК З AI ВТРАЧЕНО. Активовано резервний протокол.",

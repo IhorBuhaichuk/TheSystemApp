@@ -38,10 +38,10 @@ class FinalizeDayUseCase @Inject constructor(
 
                 // 3. Розрахунок XP та стріків на основі результатів квестів
                 val mainQuests = activeQuests.filter { it.type == DomainQuestType.MAIN }
+                val wasPenaltyActive = player.isPenaltyActive
                 val (playerAfterXP, levelUpTriggered) = player.evaluateQuests(mainQuests).checkLevelUp()
 
                 // 4. Просування часу (Cycle Day / Week / Month) - ВИКЛИКАЄТЬСЯ ОДИН РАЗ
-                val wasPenaltyActive = player.isPenaltyActive
                 val finalPlayer = playerAfterXP.advanceTime(config)
 
                 // 5. Збереження оновленого стану гравця

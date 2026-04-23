@@ -24,3 +24,10 @@ fun <D, E : DomainError> Result<D, E>.getOrNull(): D? {
         is Result.Error -> null
     }
 }
+
+fun <D, E : DomainError> Result<D, E>.getOrDefault(defaultValue: D): D {
+    return when (this) {
+        is Result.Success -> data
+        is Result.Error -> defaultValue
+    }
+}

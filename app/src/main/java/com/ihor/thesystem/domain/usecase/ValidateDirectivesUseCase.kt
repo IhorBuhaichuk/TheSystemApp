@@ -1,5 +1,8 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.model.DataError
+import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.model.WorkoutDirective
 import javax.inject.Inject
@@ -12,9 +15,9 @@ class ValidateDirectivesUseCase @Inject constructor() {
     operator fun invoke(
         directives: List<WorkoutDirective>,
         matrix: List<ProgressionMatrixEntry>
-    ): Result<List<WorkoutDirective>> {
-        return runCatching {
-            directives.map { directive ->
+    ): Result<List<WorkoutDirective>, DomainError> {
+        return try {
+            val validated = directives.map { directive ->
                 // Шукаємо ліміти для конкретної вправи у матриці прогресії
                 val matrixEntry = matrix.find { it.exerciseId == directive.exerciseId }
 
@@ -37,6 +40,9 @@ class ValidateDirectivesUseCase @Inject constructor() {
                     )
                 }
             }
+            Result.Success(validated)
+        } catch (e: Exception) {
+            Result.Error(DataError.Local.SQLITE_EXCEPTION)
         }
     }
 }

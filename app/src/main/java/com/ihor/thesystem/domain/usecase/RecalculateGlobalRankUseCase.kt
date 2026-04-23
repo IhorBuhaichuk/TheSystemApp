@@ -16,17 +16,22 @@ class RecalculateGlobalRankUseCase @Inject constructor(
         val entries = matrixRepo.getAllEntries().first()
         if (entries.isEmpty()) return
 
-        // Розрахунок на основі топ-5 найкращих вправ користувача (щоб нові вправи не тягнули ранг вниз)
-        val topScores = entries
+        // Розрахунок на основі медіани топ-5 найкращих вправ
+        val scores = entries
             .map { it.currentRank.weight }
             .sortedByDescending { it }
             .take(5)
         
-        val averageScore = topScores.average()
-        
-        // 3. Конвертуємо результат назад у Rank (округлюємо до найближчого цілого)
-        val globalRankValue = averageScore.roundToInt().coerceIn(1, 6)
-        val newGlobalRank = Rank.fromValue(globalRankValue)
+        val globalRankValue = if (scores.isNotEmpty()) {
+            val mid = scores.size / 2
+            if (scores.size % 2 == 0) {
+                ((scores[mid - 1] + scores[mid]) / 2.0).roundToInt()
+            } else {
+                scores[mid]
+            }
+        } else 1
+
+        val newGlobalRank = Rank.fromValue(globalRankValue.coerceIn(1, 6))
 
         // 4. Зберігаємо новий ранг у гравця
         val player = playerRepo.getPlayer().firstOrNull() ?: return

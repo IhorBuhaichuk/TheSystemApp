@@ -108,13 +108,17 @@ class StatusViewModel @Inject constructor(
     private suspend fun performAutoSave(exerciseId: Int, setId: Long) {
         val currentState = _activeWorkoutState.value ?: return
         val exercise = currentState.exercises.find { it.exerciseId == exerciseId } ?: return
-        val set = exercise.sets.find { it.id == setId } ?: return
         
-        if (set.weight.isNotEmpty() && set.reps.isNotEmpty()) {
+        // Зберігаємо всі заповнені сети вправи
+        val setsToSave = exercise.sets
+            .filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
+            .map { ActiveSetInput(it.id, it.weight, it.reps) }
+
+        if (setsToSave.isNotEmpty()) {
             try {
                 saveExerciseSetsUseCase(
                     exerciseId = exerciseId,
-                    sets = exercise.sets.filter { it.isCompleted || it.id == setId }.map { ActiveSetInput(it.id, it.weight, it.reps) },
+                    sets = setsToSave,
                     date = viewingDateRepo.selectedDate.value,
                     userFeedback = ""
                 )

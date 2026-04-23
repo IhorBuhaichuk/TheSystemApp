@@ -27,7 +27,7 @@ class CalculateEffectiveWeightUseCase @Inject constructor(
             totalPenaltyPercent += config.defaultPenalty
         }
         
-        // Локальні дебафи (наприклад, втома)
+        // Локальні дебафи (наприклад, втома ЦНС)
         totalPenaltyPercent += activeDebuffs.sumOf { it.penaltyPercent }
 
         // Max penalty is 50% (Floor)
