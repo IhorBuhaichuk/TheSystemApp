@@ -26,10 +26,16 @@ class GetStatusScreenDataUseCase @Inject constructor(
         combine(
             playerRepo.getPlayer(),
             configRepo.getConfigFlow(),
-            matrixRepo.getAllEntries()
-        ) { player: Player?, config: SystemConfig?, matrix: List<ProgressionMatrixEntry> ->
-            Triple(player, config ?: SystemConfig(), matrix)
-        }.flatMapLatest { (player, config, matrix) ->
+            matrixRepo.getAllEntries(),
+            questRepo.getActiveQuests()
+        ) { player, config, matrix, activeQuests ->
+            DataContainer(player, config ?: SystemConfig(), matrix, activeQuests)
+        }.flatMapLatest { container ->
+            val player = container.player
+            val config = container.config
+            val matrix = container.matrix
+            val activeQuests = container.activeQuests
+
             if (player == null) return@flatMapLatest flowOf(StatusUiData())
 
             val cycleDays = config.cycleDaysPerMicrocycle.coerceAtLeast(1)
@@ -66,7 +72,6 @@ class GetStatusScreenDataUseCase @Inject constructor(
                                else combine(scheduleFlows) { it.filterIsInstance<ScheduleDay>() }
             
             combine(
-                questRepo.getActiveQuests(),
                 questRepo.getDailyQuestsForDate(
                     java.time.Instant.ofEpochMilli(clock.now())
                         .atZone(java.time.ZoneId.systemDefault())
@@ -77,7 +82,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 playerRepo.getLatestWeight(),
                 questLogDao.getFullHistory(),
                 schedulesFlow
-            ) { activeQuests, dailyQuestsForDate, weight, questHistory, schedules ->
+            ) { dailyQuestsForDate, weight, questHistory, schedules ->
                 val daily = dailyQuestsForDate.find { it.type == DomainQuestType.DAILY }
                 val main = dailyQuestsForDate.find { it.type == DomainQuestType.MAIN }
                 val promotions = activeQuests.filter { it.type == DomainQuestType.PROMOTION }
@@ -119,6 +124,13 @@ class GetStatusScreenDataUseCase @Inject constructor(
             }
         }
 }
+
+private data class DataContainer(
+    val player: Player?,
+    val config: SystemConfig,
+    val matrix: List<ProgressionMatrixEntry>,
+    val activeQuests: List<Quest>
+)
 
 private fun Quest.toUiModel() = QuestUiModel(
     id          = id,

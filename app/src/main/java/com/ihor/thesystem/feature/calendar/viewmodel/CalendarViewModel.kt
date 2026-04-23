@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.domain.model.DataError
+import com.ihor.thesystem.domain.usecase.SyncCycleAnchorUseCase
 import com.ihor.thesystem.feature.status.viewmodel.CycleDayUiModel
 import com.ihor.thesystem.feature.status.viewmodel.DayType
 import java.time.LocalDate
@@ -68,7 +69,8 @@ class CalendarViewModel @Inject constructor(
     private val calculateCycleDay: CalculateCycleDayForDateUseCase,
     private val viewingDateRepo: ViewingDateRepository,
     private val playerRepo: PlayerRepository,
-    private val getDailySummary: GetDailySummaryForDateUseCase
+    private val getDailySummary: GetDailySummaryForDateUseCase,
+    private val syncCycleAnchor: SyncCycleAnchorUseCase
 ) : ViewModel() {
 
     private val _currentMonth = MutableStateFlow(YearMonth.now())
@@ -235,17 +237,7 @@ class CalendarViewModel @Inject constructor(
 
     fun onConfirmSync(day: Int) {
         viewModelScope.launch {
-            playerRepo.updateCurrentCycleDay(day)
-            
-            val currentConfig = configRepo.getConfigFlow().firstOrNull()
-            if (currentConfig != null) {
-                configRepo.updateConfig(
-                    currentConfig.copy(
-                        cycleAnchorDateTimestamp = LocalDate.now().toEpochDay(),
-                        cycleAnchorDay = day
-                    )
-                )
-            }
+            syncCycleAnchor(day)
         }
     }
 
