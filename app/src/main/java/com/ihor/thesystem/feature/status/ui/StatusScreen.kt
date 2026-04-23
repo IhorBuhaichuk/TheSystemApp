@@ -182,7 +182,7 @@ fun StatusScreen(
                             viewModel.onDismissDialog()
                         }
                     },
-                    existingLog = dState.existingLog
+                    existingLogs = dState.existingLogs
                 )
             }
             else -> {}

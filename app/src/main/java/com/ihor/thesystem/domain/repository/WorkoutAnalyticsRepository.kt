@@ -30,7 +30,7 @@ interface WorkoutAnalyticsRepository {
     fun getAllWeightHistories(): Flow<List<WeightHistoryWithId>>
 
     // Нові методи для фіксу дублікатів та контексту
-    suspend fun getLogForExerciseOnDate(exerciseId: Int, startOfDay: Long, endOfDay: Long): ExerciseSet?
+    suspend fun getLogsForExerciseOnDate(exerciseId: Int, startOfDay: Long, endOfDay: Long): List<ExerciseSet>
     suspend fun updateSetLog(log: ExerciseSet)
     suspend fun insertSetLog(log: ExerciseSet): Long
     suspend fun saveSetLogs(logs: List<ExerciseSet>)

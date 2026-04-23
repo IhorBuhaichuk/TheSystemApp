@@ -61,10 +61,10 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
             (it.weight.toDoubleOrNull() ?: 0.0) * (it.reps.toIntOrNull() ?: 0)
         }
 
-        val existingSetLog = analyticsDao.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)
+        val existingLogs = analyticsDao.getLogsForExerciseOnDate(exerciseId, startOfDay, endOfDay)
 
-        if (existingSetLog != null) {
-            val sessionId = existingSetLog.sessionId
+        if (existingLogs.isNotEmpty()) {
+            val sessionId = existingLogs.first().sessionId
             
             analyticsDao.insertSessionLog(
                 WorkoutSessionLogEntity(

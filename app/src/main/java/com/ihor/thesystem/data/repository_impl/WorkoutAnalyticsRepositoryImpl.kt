@@ -63,12 +63,12 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLogForExerciseOnDate(
+    override suspend fun getLogsForExerciseOnDate(
         exerciseId: Int,
         startOfDay: Long,
         endOfDay: Long
-    ): ExerciseSet? {
-        return dao.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)?.toDomain()
+    ): List<ExerciseSet> {
+        return dao.getLogsForExerciseOnDate(exerciseId, startOfDay, endOfDay).map { it.toDomain() }
     }
 
     override suspend fun updateSetLog(log: ExerciseSet) {

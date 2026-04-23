@@ -29,11 +29,13 @@ class GetDailySummaryForDateUseCase @Inject constructor(
         val workoutsFlow = analyticsRepo.getSessionsByDate(startOfDay).map { sessions ->
             val exerciseNames = analyticsRepo.getAllExercisesMap()
             sessions.flatMap { session ->
-                session.sets.groupBy { it.exerciseId }.map { (id, _) ->
+                session.sets.groupBy { it.exerciseId }.map { (id, sets) ->
+                    val totalSets = sets.size
+                    val maxWeight = sets.maxOfOrNull { it.weight } ?: 0.0
                     CalendarLogItem(
                         type = LogType.WORKOUT,
-                        title = "Main Quest",
-                        subtitle = exerciseNames[id] ?: "Вправа",
+                        title = "Workout Session",
+                        subtitle = "${exerciseNames[id] ?: "Вправа"}: $totalSets підх. @ ${maxWeight}кг",
                         isCompleted = true
                     )
                 }

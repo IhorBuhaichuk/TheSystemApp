@@ -32,11 +32,11 @@ class GetLogForDateUseCase @Inject constructor(
     private val analyticsRepo: WorkoutAnalyticsRepository,
     private val clock: AppClock
 ) {
-    suspend operator fun invoke(exerciseId: Int, date: LocalDate): ExerciseSet? {
+    suspend operator fun invoke(exerciseId: Int, date: LocalDate): List<ExerciseSet> {
         val zoneId = clock.zoneId()
         val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
         val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
-        return analyticsRepo.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)
+        return analyticsRepo.getLogsForExerciseOnDate(exerciseId, startOfDay, endOfDay)
     }
 }
 

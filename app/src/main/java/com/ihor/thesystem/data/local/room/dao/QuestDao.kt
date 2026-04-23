@@ -45,6 +45,18 @@ interface QuestDao {
         limit: Int
     ): List<QuestEntity>
 
+    @Query("DELETE FROM quest WHERE id = :questId")
+    suspend fun deleteQuestById(questId: Int)
+
+    @Query("DELETE FROM quest_task WHERE questId = :questId")
+    suspend fun deleteTasksByQuestId(questId: Int)
+
+    @Transaction
+    suspend fun deleteQuestWithTasks(questId: Int) {
+        deleteTasksByQuestId(questId)
+        deleteQuestById(questId)
+    }
+
     @Query("DELETE FROM quest_task WHERE id = :taskId")
     suspend fun deleteTask(taskId: Int)
 

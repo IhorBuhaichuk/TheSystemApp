@@ -122,8 +122,8 @@ class AiArchitectRepositoryImpl @Inject constructor(
         return AiWorkoutRecommendation(
             exerciseId = exerciseId,
             weight = weight,
-            sets = recommendedSets.toInt(),
-            reps = recommendedReps.toInt().toString(),
+            sets = recommendedSets,
+            reps = recommendedReps,
             aiFeedback = aiFeedback
         )
     }
@@ -142,6 +142,10 @@ class AiArchitectRepositoryImpl @Inject constructor(
 
     private fun extractJson(input: String): String {
         var trimmed = input.trim()
+
+        // Обов'язкове очищення від Markdown тегів перед парсингом
+        trimmed = trimmed.replace(Regex("""^```json\s*|```$""", RegexOption.MULTILINE), "")
+        trimmed = trimmed.trim()
         
         // Якщо це вже чистий JSON
         if (trimmed.startsWith("{") && trimmed.endsWith("}")) {

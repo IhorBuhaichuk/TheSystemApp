@@ -34,11 +34,11 @@ class LogWorkoutSetsUseCase @Inject constructor(
             (it.weight.toDoubleOrNull() ?: 0.0) * (it.reps.toIntOrNull() ?: 0)
         }
 
-        // Перевіряємо, чи вже був запис цієї вправи в цей день
-        val existingSetLog = analyticsRepo.getLogForExerciseOnDate(exerciseId, startOfDay, endOfDay)
+        // Перевіряємо, чи вже були записи цієї вправи в цей день
+        val existingLogs = analyticsRepo.getLogsForExerciseOnDate(exerciseId, startOfDay, endOfDay)
 
-        if (existingSetLog != null) {
-            val sessionId = existingSetLog.sessionId
+        if (existingLogs.isNotEmpty()) {
+            val sessionId = existingLogs.first().sessionId
             
             val sessionUpdate = WorkoutSession(
                 sessionId = sessionId,

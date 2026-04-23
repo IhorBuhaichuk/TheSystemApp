@@ -86,9 +86,9 @@ fun LogWorkoutSetsDialog(
     onRemove: () -> Unit,
     onSave: (String) -> Unit,
     onDismiss: () -> Unit,
-    existingLog: ExerciseSet? = null
+    existingLogs: List<ExerciseSet> = emptyList()
 ) {
-    var feedback by remember(existingLog) { mutableStateOf(existingLog?.userFeedback ?: "") }
+    var feedback by remember(existingLogs) { mutableStateOf(existingLogs.firstOrNull()?.userFeedback ?: "") }
 
     Dialog(onDismissRequest = onDismiss) {
         PremiumDialogContainer(

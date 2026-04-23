@@ -28,6 +28,7 @@ interface QuestRepository {
     suspend fun getLastTwoMainQuestsStatus(): List<DomainQuestStatus>
     fun getQuestsByDate(dateMillis: Long): Flow<List<Quest>>
     suspend fun getQuestById(questId: Int): Quest?
+    suspend fun deleteQuestWithTasks(questId: Int)
 
     // Fixed methods
     fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>>

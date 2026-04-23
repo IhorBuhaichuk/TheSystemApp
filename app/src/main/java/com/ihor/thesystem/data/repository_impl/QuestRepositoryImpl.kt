@@ -144,6 +144,10 @@ class QuestRepositoryImpl @Inject constructor(
     override suspend fun getQuestById(questId: Int): Quest? =
         questDao.getQuestWithTasksById(questId)?.toDomain()
 
+    override suspend fun deleteQuestWithTasks(questId: Int) {
+        questDao.deleteQuestWithTasks(questId)
+    }
+
     override fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>> {
         val (start, end) = getDayRange(dateMillis)
         return questDao.getDailyQuestsForDateRange(start, end, EntityQuestType.DAILY, EntityQuestType.MAIN)

@@ -29,7 +29,8 @@ private fun SystemConfigEntity.toDomain() =
         cycleAnchorDateTimestamp = cycleAnchorDateTimestamp,
         cycleAnchorDay = cycleAnchorDay,
         cycleDaysPerMicrocycle = cycleDaysPerMicrocycle,
-        microCyclesPerMonth = microCyclesPerMonth
+        microCyclesPerMonth = microCyclesPerMonth,
+        dayStartOffsetHours = dayStartOffsetHours
     )
 
 private fun SystemConfig.toEntity() =
@@ -42,5 +43,6 @@ private fun SystemConfig.toEntity() =
         cycleAnchorDateTimestamp = cycleAnchorDateTimestamp,
         cycleAnchorDay = cycleAnchorDay,
         cycleDaysPerMicrocycle = cycleDaysPerMicrocycle,
-        microCyclesPerMonth = microCyclesPerMonth
+        microCyclesPerMonth = microCyclesPerMonth,
+        dayStartOffsetHours = dayStartOffsetHours
     )

@@ -42,7 +42,7 @@ sealed class StatusDialogState {
     data class AddTask(val questId: Int)                             : StatusDialogState()
     data object MainQuestWorkout                                          : StatusDialogState()
     data class SetupMatrix(val entry: MatrixEntryUiModel, val startWeight: String, val targetWeight: String, val showWorkoutAfter: Boolean = false) : StatusDialogState()
-    data class LogWorkoutSets(val entry: MatrixEntryUiModel, val sets: List<ActiveSetInput>, val existingLog: com.ihor.thesystem.domain.model.ExerciseSet? = null, val showWorkoutAfter: Boolean = false) : StatusDialogState()
+    data class LogWorkoutSets(val entry: MatrixEntryUiModel, val sets: List<ActiveSetInput>, val existingLogs: List<com.ihor.thesystem.domain.model.ExerciseSet> = emptyList(), val showWorkoutAfter: Boolean = false) : StatusDialogState()
 }
 
 @HiltViewModel
