@@ -46,16 +46,18 @@ fun ActiveDayCard(
     ) {
         if (data.exercises.isNotEmpty()) {
             data.exercises.forEach { exercise ->
-                val matrixEntry = data.matrixEntries.find { it.exerciseId == exercise.exerciseId }
-                
-                ExerciseItem(
-                    exercise = exercise,
-                    matrixEntry = matrixEntry,
-                    onSetWeightChanged = { setId, w -> onSetWeightChanged(exercise.exerciseId, setId, w) },
-                    onSetRepsChanged = { setId, r -> onSetRepsChanged(exercise.exerciseId, setId, r) },
-                    onSetCompleted = { setId -> onSetCompleted(exercise.exerciseId, setId) },
-                    onSetup = { matrixEntry?.let(onOpenSetup) }
-                )
+                key(exercise.exerciseId) {
+                    val matrixEntry = data.matrixEntries.find { it.exerciseId == exercise.exerciseId }
+                    
+                    ExerciseItem(
+                        exercise = exercise,
+                        matrixEntry = matrixEntry,
+                        onSetWeightChanged = { setId, w -> onSetWeightChanged(exercise.exerciseId, setId, w) },
+                        onSetRepsChanged = { setId, r -> onSetRepsChanged(exercise.exerciseId, setId, r) },
+                        onSetCompleted = { setId -> onSetCompleted(exercise.exerciseId, setId) },
+                        onSetup = { matrixEntry?.let(onOpenSetup) }
+                    )
+                }
             }
         }
     }

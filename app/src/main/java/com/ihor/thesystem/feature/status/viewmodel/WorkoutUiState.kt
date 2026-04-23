@@ -1,9 +1,11 @@
 package com.ihor.thesystem.feature.status.viewmodel
 
+import androidx.compose.runtime.Immutable
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+@Immutable
 data class ActiveDayUiModel(
     val dayNumber: Int,
     val dailyTasks: ImmutableList<com.ihor.thesystem.domain.model.Quest>,
@@ -12,6 +14,7 @@ data class ActiveDayUiModel(
     val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf()
 )
 
+@Immutable
 data class ExerciseWorkoutUiModel(
     val exerciseId: Int,
     val name: String,
@@ -22,6 +25,7 @@ data class ExerciseWorkoutUiModel(
     val sets: ImmutableList<ActiveSetInput> = persistentListOf()
 )
 
+@Immutable
 data class ActiveSetInput(
     val id: Long = System.nanoTime(),
     val weight: String = "",
@@ -29,6 +33,7 @@ data class ActiveSetInput(
     val isCompleted: Boolean = false
 )
 
+@Immutable
 data class CycleDayUiModel(
     val dayNumber: Int,
     val type: DayType,

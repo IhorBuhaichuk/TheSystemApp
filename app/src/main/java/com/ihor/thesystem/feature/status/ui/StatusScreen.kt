@@ -46,14 +46,16 @@ import com.ihor.thesystem.feature.status.ui.components.dialogs.MainQuestWorkoutD
 import com.ihor.thesystem.feature.status.viewmodel.*
 import kotlin.system.exitProcess
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 @Composable
 fun StatusScreen(
     navController: NavHostController,
     viewModel: StatusViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val dialogState by viewModel.dialogState.collectAsState()
-    val activeDayWorkout by viewModel.activeWorkoutState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
+    val activeDayWorkout by viewModel.activeWorkoutState.collectAsStateWithLifecycle()
 
     var levelUpEvent by remember { mutableStateOf<Any?>(null) }
 

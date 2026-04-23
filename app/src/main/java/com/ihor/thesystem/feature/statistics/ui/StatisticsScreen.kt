@@ -33,14 +33,16 @@ import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogHeightDial
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogWeightDialog
 import com.ihor.thesystem.feature.statistics.viewmodel.*
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 @Composable
 fun StatisticsScreen(
     navController: NavHostController,
     viewModel: StatisticsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val uiState     by viewModel.uiState.collectAsState()
-    val dialogState by viewModel.dialogState.collectAsState()
+    val uiState     by viewModel.uiState.collectAsStateWithLifecycle()
+    val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var selectedTab by remember { mutableIntStateOf(0) }

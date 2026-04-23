@@ -63,7 +63,7 @@ class StatusViewModel @Inject constructor(
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
 
     val systemConfig: StateFlow<SystemConfig?> = useCases.getSystemConfig()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), null)
 
     val uiState: StateFlow<UiState<StatusUiData>> = useCases.getStatusData()
         .map<StatusUiData, UiState<StatusUiData>> { UiState.Content(it) }
@@ -73,7 +73,7 @@ class StatusViewModel @Inject constructor(
         }
         .stateIn(
             scope        = viewModelScope,
-            started      = SharingStarted.WhileSubscribed(5_000),
+            started      = SharingStarted.WhileSubscribed(5_000L),
             initialValue = UiState.Loading
         )
 

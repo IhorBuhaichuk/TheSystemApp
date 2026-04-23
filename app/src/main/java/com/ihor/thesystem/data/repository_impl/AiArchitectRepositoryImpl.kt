@@ -39,63 +39,83 @@ class AiArchitectRepositoryImpl @Inject constructor(
             )
         }
 
-        var responseText = ""
-        return try {
-            withTimeout(60_000L) {
-                val response = generativeModel.generateContent(prompt)
-                responseText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
+        var lastException: Exception? = null
+        var currentDelay = 1000L
 
-                val cleanJson = extractJson(responseText)
+        repeat(3) { attempt ->
+            try {
+                return withTimeout(60_000L) {
+                    val response = generativeModel.generateContent(prompt)
+                    val responseText = response.text ?: throw IllegalStateException("Порожня відповідь від AI")
 
-                val dto = try {
-                    json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
-                } catch (e: Exception) {
-                    Log.e("AiArchitect", "JSON Decoding failed: ${e.message}")
-                    return@withTimeout ChatMessage(
+                    val cleanJson = extractJson(responseText)
+
+                    val dto = try {
+                        json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
+                    } catch (e: Exception) {
+                        Log.e("AiArchitect", "JSON Decoding failed on attempt ${attempt + 1}: ${e.message}")
+                        // Якщо це помилка парсингу, повторні спроби навряд чи допоможуть, 
+                        // але ми все одно спробуємо, раптом наступна відповідь буде кращою
+                        throw e
+                    }
+
+                    val targets = dto.nextWorkoutTargets.map { it.toDomain() }
+
+                    // Save recommendations to database
+                    val now = System.currentTimeMillis()
+                    targets.forEach { rec ->
+                        matrixRepo.updateTarget(
+                            exerciseId = rec.exerciseId,
+                            weight = rec.weight.toDouble(),
+                            sets = rec.sets,
+                            reps = rec.reps,
+                            aiFeedback = rec.aiFeedback,
+                            timestamp = now
+                        )
+                    }
+
+                    ChatMessage(
                         role = ChatRole.AI,
-                        uiText = AppErrorType.AiParsingError.asUiText(),
-                        text = "ДЕБАГ: ${e.localizedMessage}",
-                        isActionable = false
+                        text = dto.feedbackText.ifBlank { "Аналіз завершено." },
+                        recommendations = targets,
+                        isActionable = targets.isNotEmpty(),
+                        aiFeedback = dto.aiFeedback ?: targets.firstOrNull()?.aiFeedback
                     )
                 }
+            } catch (e: Exception) {
+                lastException = e
+                Log.w("AiArchitect", "Attempt ${attempt + 1} failed: ${e.message}")
+                
+                // Перевіряємо чи варто робити повтор (Retry)
+                val isRetryable = e is kotlinx.coroutines.TimeoutCancellationException ||
+                        e.message?.contains("429") == true ||
+                        e.message?.contains("Too Many Requests", ignoreCase = true) == true ||
+                        e.message?.contains("SocketTimeout", ignoreCase = true) == true
 
-                val targets = dto.nextWorkoutTargets.map { it.toDomain() }
-
-                // Save recommendations to database
-                val now = System.currentTimeMillis()
-                targets.forEach { rec ->
-                    matrixRepo.updateTarget(
-                        exerciseId = rec.exerciseId,
-                        weight = rec.weight.toDouble(),
-                        sets = rec.sets,
-                        reps = rec.reps,
-                        aiFeedback = rec.aiFeedback,
-                        timestamp = now
-                    )
+                if (isRetryable && attempt < 2) {
+                    kotlinx.coroutines.delay(currentDelay)
+                    currentDelay *= 2
+                } else {
+                    // Якщо не підлягає повтору або це остання спроба - виходимо з try/catch
+                    // і дозволяємо циклу repeat завершитись або викидаємо помилку обробки
                 }
-
-                ChatMessage(
-                    role = ChatRole.AI,
-                    text = dto.feedbackText.ifBlank { "Аналіз завершено." },
-                    recommendations = targets,
-                    isActionable = targets.isNotEmpty(),
-                    aiFeedback = dto.aiFeedback ?: targets.firstOrNull()?.aiFeedback
-                )
             }
-        } catch (e: Exception) {
-            Log.e("AiArchitect", "Помилка парсингу або запиту Gemini: ${e.message}")
-            val error: DomainError = when {
-                e.message?.contains("429") == true -> DataError.Network.TOO_MANY_REQUESTS
-                e.message?.contains("Too Many Requests", ignoreCase = true) == true -> DataError.Network.TOO_MANY_REQUESTS
-                else -> AppErrorType.AiParsingError
-            }
-            ChatMessage(
-                role = ChatRole.AI,
-                uiText = error.asUiText(),
-                text = "ДЕБАГ: ${e.localizedMessage}",
-                isActionable = false
-            )
         }
+
+        // Обробка помилки після всіх спроб
+        val error: DomainError = when {
+            lastException?.message?.contains("429") == true -> DataError.Network.TOO_MANY_REQUESTS
+            lastException?.message?.contains("Too Many Requests", ignoreCase = true) == true -> DataError.Network.TOO_MANY_REQUESTS
+            lastException is kotlinx.coroutines.TimeoutCancellationException -> DataError.Network.REQUEST_TIMEOUT
+            else -> AppErrorType.AiParsingError
+        }
+
+        return ChatMessage(
+            role = ChatRole.AI,
+            uiText = error.asUiText(),
+            text = "ДЕБАГ (після 3 спроб): ${lastException?.localizedMessage}",
+            isActionable = false
+        )
     }
 
     private fun WorkoutTargetDto.toDomain(): AiWorkoutRecommendation {
