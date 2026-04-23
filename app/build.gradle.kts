@@ -86,6 +86,9 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+    
     implementation(libs.navigation.compose)
     
     implementation(libs.kotlinx.coroutines.android)
@@ -95,6 +98,7 @@ dependencies {
 
     implementation(libs.timber)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

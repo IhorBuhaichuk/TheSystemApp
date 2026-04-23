@@ -72,9 +72,6 @@ class AiArchitectRepositoryImpl @Inject constructor(
                         aiFeedback = rec.aiFeedback,
                         timestamp = now
                     )
-                    if (rec.exerciseId <= 0) {
-                        Log.e("AiArchitect", "Invalid exerciseId received from AI: ${rec.exerciseId}")
-                    }
                 }
 
                 ChatMessage(
@@ -102,13 +99,11 @@ class AiArchitectRepositoryImpl @Inject constructor(
     }
 
     private fun WorkoutTargetDto.toDomain(): AiWorkoutRecommendation {
-        Log.d("AiArchitect", "Mapping exercise ${this.exerciseId}: $this")
-        
         return AiWorkoutRecommendation(
             exerciseId = exerciseId,
-            weight = weight.takeIf { it >= 0 } ?: 0f,
-            sets = recommendedSets.toInt().takeIf { it > 0 } ?: 1,
-            reps = recommendedReps.toInt().toString().takeIf { it != "0" } ?: "8",
+            weight = weight,
+            sets = recommendedSets.toInt(),
+            reps = recommendedReps.toInt().toString(),
             aiFeedback = aiFeedback
         )
     }
