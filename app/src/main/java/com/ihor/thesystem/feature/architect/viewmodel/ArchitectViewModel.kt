@@ -100,12 +100,17 @@ class ArchitectViewModel @Inject constructor(
 
     /**
      * Відправляє повідомлення живому тренеру.
+     * Викликається ВИКЛЮЧНО через подію від користувача (наприклад, натискання кнопки).
      */
     fun sendMessage(sessionId: Long, text: String) {
-        if (text.isBlank()) return
+        if (text.isBlank() || _uiState.value.isLoading) return
+        
         viewModelScope.launch {
+            // Встановлюємо стан завантаження, щоб заблокувати повторні натискання кнопки
             _uiState.update { it.copy(isLoading = true) }
             try {
+                // Прямий виклик UseCase. Він сам збереже повідомлення в БД.
+                // Збір даних (collect) у loadChatHistory автоматично оновить UI при зміні БД.
                 sendLiveCoachMessage(sessionId, text)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -123,6 +128,8 @@ class ArchitectViewModel @Inject constructor(
      * Відправляє контекст останнього тренування на аналіз до ШІ.
      */
     fun sendForAnalysis() {
+        if (_uiState.value.isLoading) return
+        
         viewModelScope.launch {
             // 1. Отримуємо актуальний контекст
             val context = getLastWorkoutContext() ?: return@launch
@@ -133,7 +140,7 @@ class ArchitectViewModel @Inject constructor(
                 uiText = UiText.StringResource(R.string.architect_btn_send_analysis)
             )
             
-            // 3. Вмикаємо завантаження та вимикаємо кнопку в попередньому системному повідомленні
+            // 3. Вмикаємо завантаження
             _uiState.update { state ->
                 val updatedMessages = state.messages.map { it.copy(isActionable = false) }
                 state.copy(

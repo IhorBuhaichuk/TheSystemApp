@@ -130,7 +130,7 @@ class StatusViewModel @Inject constructor(
     }
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 kotlinx.coroutines.withTimeout(10_000) {
                     databaseReadinessRepo.status.first { it is DatabaseStatus.Ready }
@@ -139,13 +139,14 @@ class StatusViewModel @Inject constructor(
                 useCases.generateDailyQuests()
                 useCases.calculateAttributes()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_unknown)))
             }
         }
 
         // Single source of truth for workout data, loaded once per day change
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             combine(
                 playerRepo.getPlayer().filterNotNull(),
                 systemConfig.filterNotNull(),

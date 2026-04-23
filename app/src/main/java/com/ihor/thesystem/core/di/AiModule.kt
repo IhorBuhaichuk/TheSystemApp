@@ -1,7 +1,10 @@
 package com.ihor.thesystem.core.di
 
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.BlockThreshold
+import com.google.ai.client.generativeai.type.HarmCategory
 import com.google.ai.client.generativeai.type.RequestOptions
+import com.google.ai.client.generativeai.type.SafetySetting
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
 import com.ihor.thesystem.BuildConfig
@@ -44,10 +47,18 @@ abstract class AiModule {
         @Singleton
         @Named("ArchitectModel")
         fun provideArchitectGenerativeModel(): GenerativeModel {
+            val safetySettings = listOf(
+                SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
+                SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
+                SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.NONE),
+                SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE)
+            )
+
             return GenerativeModel(
-                modelName = "gemini-2.0-flash",
+                modelName = "gemini-2.5-flash",
                 apiKey = BuildConfig.GEMINI_API_KEY,
                 requestOptions = RequestOptions(timeout = 60.seconds),
+                safetySettings = safetySettings,
                 generationConfig = generationConfig {
                     responseMimeType = "application/json"
                 },
@@ -61,12 +72,20 @@ abstract class AiModule {
         @Singleton
         @Named("LiveCoachModel")
         fun provideLiveCoachGenerativeModel(): GenerativeModel {
+            val safetySettings = listOf(
+                SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
+                SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
+                SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.NONE),
+                SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE)
+            )
+
             return GenerativeModel(
-                modelName = "gemini-2.0-flash",
+                modelName = "gemini-2.5-flash",
                 apiKey = BuildConfig.GEMINI_API_KEY,
                 requestOptions = RequestOptions(timeout = 60.seconds),
+                safetySettings = safetySettings,
                 systemInstruction = content {
-                    text("Ти 'ТРЕНЕР' - елітний живий ШІ-наставник. Спілкуйся природно, як людина. Відповідай коротко і по суті на питання гравця щодо поточного тренування, техніки чи болю. НЕ використовуй JSON та маркдаун.")
+                    text("Ти 'ТРЕНЕР' - елітний живий ШІ-наставник. Спілкуйся природно, як людина. Відповідай коротко і по суті на питання гравця щодо поточного тренування, техніки чи болю. НЕ використовуй JSON та маркдаун. ЗАВЖДИ відповідай УКРАЇНСЬКОЮ мовою.")
                 }
             )
         }

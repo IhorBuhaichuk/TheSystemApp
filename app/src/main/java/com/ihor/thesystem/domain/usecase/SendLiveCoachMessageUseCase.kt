@@ -15,28 +15,62 @@ class SendLiveCoachMessageUseCase @Inject constructor(
         // 1. Зберігаємо повідомлення гравця через репозиторій
         chatRepository.saveChatMessage(sessionId, ChatRole.USER, userMessage)
 
-        // 2. Беремо історію через репозиторій (останні 6 повідомлень)
-        val historyMessages = chatRepository.getRecentHistory(sessionId, 6)
+        // 2. Беремо історію (з запасом для фільтрації)
+        val rawHistory = chatRepository.getRecentHistory(sessionId, 20)
+        
+        // 3. Фільтруємо та форматуємо історію для Gemini
+        // Видаляємо повідомлення з помилками та системні, щоб не плутати ШІ
+        val filteredHistory = rawHistory
+            .dropLast(1) // Останнє - це щойно додане userMessage, воно йде окремим параметром
+            .filter { it.role == ChatRole.USER || it.role == ChatRole.AI }
+            .filter { !it.text.startsWith("Помилка зв'язку") }
+            .takeLast(10) // Обмежуємо вікно пам'яті для економії токенів/квоти
 
-        // 3. Конвертуємо об'єкти у формат Content для Gemini
-        // Виключаємо останнє додане повідомлення з історії, бо воно передається окремо як userMessage
-        // Або включаємо всі повідомлення крім останнього в history
-        val history = historyMessages.map { msg ->
-            content(role = if (msg.role == ChatRole.USER) "user" else "model") {
-                text(msg.text)
+        // Конвертуємо у формат Content та забезпечуємо чергування ролей (user/model)
+        val validHistory = mutableListOf<com.google.ai.client.generativeai.type.Content>()
+        var lastRole: String? = null
+
+        for (msg in filteredHistory) {
+            val role = if (msg.role == ChatRole.USER) "user" else "model"
+            if (role != lastRole) {
+                validHistory.add(content(role = role) { text(msg.text) })
+                lastRole = role
             }
         }
 
-        // 4. Відправляємо в репозиторій ШІ
-        val coachResponse = try {
-            liveCoachRepository.sendMessage(history.dropLast(1), userMessage)
-        } catch (e: Exception) {
-            "Помилка зв'язку з тренером: ${e.message}"
+        // КРИТИЧНО: Якщо історія закінчується на "user", Gemini не прийме наступний "userMessage".
+        // Тому ми повинні видалити останній елемент історії, якщо це "user", щоб забезпечити чергування.
+        if (lastRole == "user") {
+            validHistory.removeAt(validHistory.size - 1)
         }
 
-        // 5. Зберігаємо відповідь через репозиторій
-        chatRepository.saveChatMessage(sessionId, ChatRole.AI, coachResponse)
-        
-        return ChatMessage(role = ChatRole.AI, text = coachResponse)
+        // 4. Відправляємо запит до AI
+        return try {
+            val coachResponse = liveCoachRepository.sendMessage(validHistory, userMessage)
+            
+            // 5. Зберігаємо ТІЛЬКИ успішну відповідь
+            chatRepository.saveChatMessage(sessionId, ChatRole.AI, coachResponse)
+            
+            ChatMessage(role = ChatRole.AI, text = coachResponse)
+        } catch (e: Exception) {
+            // КРИТИЧНО: Якщо корутину скасовано (наприклад, користувач вийшов з екрана),
+            // ми ПОВИННІ прокинути CancellationException далі, щоб корутина зупинилася.
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            
+            // У разі інших помилок (наприклад, 429 або помилок серіалізації GrpcError)
+            // повертаємо повідомлення, але НЕ зберігаємо його в БД.
+            val errorText = when {
+                e is kotlinx.serialization.SerializationException || 
+                e.message?.contains("GrpcError") == true ||
+                e.message?.contains("503") == true -> 
+                    "Сервери AI тимчасово перевантажені. Спробуйте пізніше."
+                
+                e.message?.contains("429") == true -> 
+                    "Помилка зв'язку з тренером: Перевищено ліміт запитів (Quota Exceeded). Спробуйте пізніше."
+
+                else -> "Помилка зв'язку з тренером: ${e.localizedMessage ?: "невідома помилка"}"
+            }
+            ChatMessage(role = ChatRole.AI, text = errorText)
+        }
     }
 }
