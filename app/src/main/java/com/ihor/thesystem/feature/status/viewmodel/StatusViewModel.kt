@@ -91,6 +91,40 @@ class StatusViewModel @Inject constructor(
     private val _activeWorkoutState = MutableStateFlow<ActiveDayUiModel?>(null)
     val activeWorkoutState: StateFlow<ActiveDayUiModel?> = _activeWorkoutState.asStateFlow()
 
+    @OptIn(kotlinx.coroutines.FlowPreview::class)
+    private val _saveEvents = MutableSharedFlow<Pair<Int, Long>>(replay = 0)
+
+    init {
+        // Debounced auto-save logic to prevent Race Conditions
+        viewModelScope.launch {
+            _saveEvents
+                .debounce(1500L)
+                .collectLatest { (exerciseId, setId) ->
+                    performAutoSave(exerciseId, setId)
+                }
+        }
+    }
+
+    private suspend fun performAutoSave(exerciseId: Int, setId: Long) {
+        val currentState = _activeWorkoutState.value ?: return
+        val exercise = currentState.exercises.find { it.exerciseId == exerciseId } ?: return
+        val set = exercise.sets.find { it.id == setId } ?: return
+        
+        if (set.weight.isNotEmpty() && set.reps.isNotEmpty()) {
+            try {
+                saveExerciseSetsUseCase(
+                    exerciseId = exerciseId,
+                    sets = exercise.sets.filter { it.isCompleted || it.id == setId }.map { ActiveSetInput(it.id, it.weight, it.reps) },
+                    date = viewingDateRepo.selectedDate.value,
+                    userFeedback = ""
+                )
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                e.printStackTrace()
+            }
+        }
+    }
+
     init {
         viewModelScope.launch {
             try {
@@ -132,6 +166,8 @@ class StatusViewModel @Inject constructor(
         // Update only matrix entries to avoid overwriting user input in exercises
         viewModelScope.launch {
             getStatsUseCase().collect { stats ->
+                // IMPORTANT: We only update if the dialog is not currently editing specific sets
+                // or if we are just updating the progress bars (matrixEntries)
                 _activeWorkoutState.update { current ->
                     current?.copy(matrixEntries = stats.matrixEntries.toImmutableList())
                 }
@@ -179,7 +215,6 @@ class StatusViewModel @Inject constructor(
                 }.toImmutableList()
             )
         }
-        autoSaveSet(exerciseId, setId)
     }
 
     fun onSetRepsChanged(exerciseId: Int, setId: Long, reps: String) {
@@ -192,6 +227,9 @@ class StatusViewModel @Inject constructor(
                 }.toImmutableList()
             )
         }
+    }
+
+    fun onSetFocusLost(exerciseId: Int, setId: Long) {
         autoSaveSet(exerciseId, setId)
     }
 

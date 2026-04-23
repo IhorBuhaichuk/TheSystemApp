@@ -143,6 +143,7 @@ fun StatusScreen(
                 data = activeDayWorkout,
                 onSetWeightChanged = { exId, setId, w -> viewModel.onSetWeightChanged(exId, setId, w) },
                 onSetRepsChanged = { exId, setId, r -> viewModel.onSetRepsChanged(exId, setId, r) },
+                onSetFocusLost = { exId, setId -> viewModel.onSetFocusLost(exId, setId) },
                 onSetCompleted = { exId, setId -> viewModel.onSetCompleted(exId, setId) },
                 onOpenSetup = { viewModel.onOpenSetup(it, fromWorkout = true) },
                 onDismiss = { viewModel.onDismissDialog() }

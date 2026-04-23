@@ -36,6 +36,7 @@ fun ActiveDayCard(
     data: ActiveDayUiModel,
     onSetWeightChanged: (Int, Long, String) -> Unit,
     onSetRepsChanged: (Int, Long, String) -> Unit,
+    onSetFocusLost: (Int, Long) -> Unit,
     onSetCompleted: (Int, Long) -> Unit,
     onOpenSetup: (MatrixEntryUiModel) -> Unit,
     modifier: Modifier = Modifier
@@ -54,6 +55,7 @@ fun ActiveDayCard(
                         matrixEntry = matrixEntry,
                         onSetWeightChanged = { setId, w -> onSetWeightChanged(exercise.exerciseId, setId, w) },
                         onSetRepsChanged = { setId, r -> onSetRepsChanged(exercise.exerciseId, setId, r) },
+                        onSetFocusLost = { setId -> onSetFocusLost(exercise.exerciseId, setId) },
                         onSetCompleted = { setId -> onSetCompleted(exercise.exerciseId, setId) },
                         onSetup = { matrixEntry?.let(onOpenSetup) }
                     )
@@ -69,6 +71,7 @@ private fun ExerciseItem(
     matrixEntry: MatrixEntryUiModel?,
     onSetWeightChanged: (Long, String) -> Unit,
     onSetRepsChanged: (Long, String) -> Unit,
+    onSetFocusLost: (Long) -> Unit,
     onSetCompleted: (Long) -> Unit,
     onSetup: () -> Unit
 ) {
@@ -147,6 +150,7 @@ private fun ExerciseItem(
                         set = set,
                         onWeightChange = { onSetWeightChanged(set.id, it) },
                         onRepsChange = { onSetRepsChanged(set.id, it) },
+                        onFocusLost = { onSetFocusLost(set.id) },
                         onComplete = { onSetCompleted(set.id) }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -230,6 +234,7 @@ private fun SetInputRow(
     set: ActiveSetInput,
     onWeightChange: (String) -> Unit,
     onRepsChange: (String) -> Unit,
+    onFocusLost: () -> Unit,
     onComplete: () -> Unit
 ) {
     var weightText by remember(set.id) { mutableStateOf(set.weight) }
@@ -255,13 +260,16 @@ private fun SetInputRow(
 
         OutlinedTextField(
             value = weightText,
-            onValueChange = { weightText = it },
+            onValueChange = { 
+                weightText = it
+                onWeightChange(it) 
+            },
             modifier = Modifier
                 .weight(1f)
                 .height(48.dp)
                 .onFocusChanged { focusState ->
-                    if (!focusState.isFocused && weightText != set.weight) {
-                        onWeightChange(weightText)
+                    if (!focusState.isFocused) {
+                        onFocusLost()
                     }
                 },
             placeholder = { Text("кг", fontSize = 12.sp) },
@@ -280,13 +288,16 @@ private fun SetInputRow(
 
         OutlinedTextField(
             value = repsText,
-            onValueChange = { repsText = it },
+            onValueChange = { 
+                repsText = it
+                onRepsChange(it)
+            },
             modifier = Modifier
                 .weight(1f)
                 .height(48.dp)
                 .onFocusChanged { focusState ->
-                    if (!focusState.isFocused && repsText != set.reps) {
-                        onRepsChange(repsText)
+                    if (!focusState.isFocused) {
+                        onFocusLost()
                     }
                 },
             placeholder = { Text("reps", fontSize = 12.sp) },

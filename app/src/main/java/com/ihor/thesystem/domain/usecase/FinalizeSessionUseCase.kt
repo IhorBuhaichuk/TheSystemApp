@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.runSuspendCatching
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.util.sanitizeForPrompt
@@ -23,8 +24,8 @@ class FinalizeSessionUseCase @Inject constructor(
         session: WorkoutSession,
         sets: List<ExerciseSet>,
         isNightShift: Boolean
-    ): Result<AiArchitectReport> {
-        return runCatching {
+    ): kotlin.Result<AiArchitectReport> {
+        return runSuspendCatching {
             // 1. Зберегти сесію та сети
             val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
             

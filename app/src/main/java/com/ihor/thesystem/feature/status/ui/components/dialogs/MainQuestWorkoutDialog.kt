@@ -32,6 +32,7 @@ fun MainQuestWorkoutDialog(
     data: ActiveDayUiModel?,
     onSetWeightChanged: (Int, Long, String) -> Unit,
     onSetRepsChanged: (Int, Long, String) -> Unit,
+    onSetFocusLost: (Int, Long) -> Unit,
     onSetCompleted: (Int, Long) -> Unit,
     onOpenSetup: (MatrixEntryUiModel) -> Unit,
     onDismiss: () -> Unit
@@ -93,6 +94,7 @@ fun MainQuestWorkoutDialog(
                                 data = data,
                                 onSetWeightChanged = onSetWeightChanged,
                                 onSetRepsChanged = onSetRepsChanged,
+                                onSetFocusLost = onSetFocusLost,
                                 onSetCompleted = onSetCompleted,
                                 onOpenSetup = onOpenSetup
                             )
