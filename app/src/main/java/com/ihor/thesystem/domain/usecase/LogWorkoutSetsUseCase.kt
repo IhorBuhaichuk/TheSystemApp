@@ -3,14 +3,17 @@ package com.ihor.thesystem.domain.usecase
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutSession
+import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
+import kotlinx.coroutines.flow.firstOrNull
 import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
 
 class LogWorkoutSetsUseCase @Inject constructor(
+    private val playerRepo: PlayerRepository,
     private val matrixRepo: ProgressionMatrixRepository,
     private val analyticsRepo: WorkoutAnalyticsRepository,
     private val clock: AppClock
@@ -21,8 +24,15 @@ class LogWorkoutSetsUseCase @Inject constructor(
         timestamp: Long,
         userFeedback: String? = null
     ) {
-        val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
+        val validSets = sets.filter { 
+            it.weight.toDoubleOrNull()?.let { w -> w > 0 } == true && 
+            it.reps.toIntOrNull()?.let { r -> r > 0 } == true 
+        }
         if (validSets.isEmpty()) return
+
+        // 1. Отримуємо актуальний стан гравця для отримання реального cycleDay
+        val player = playerRepo.getPlayer().firstOrNull()
+        val currentCycleDay = player?.currentCycleDay ?: 0
 
         // Визначаємо межі дня на основі наданого timestamp та системного ZoneId
         val zoneId = ZoneId.systemDefault()
@@ -45,7 +55,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
                 questId = 0,
                 timestamp = clock.now(),
                 totalTonnage = totalTonnage,
-                cycleDay = 0,
+                cycleDay = currentCycleDay,
                 durationMinutes = 0
             )
             analyticsRepo.updateSessionLog(sessionUpdate)
@@ -67,7 +77,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
                 questId = 0,
                 timestamp = clock.now(),
                 totalTonnage = totalTonnage,
-                cycleDay = 0,
+                cycleDay = currentCycleDay,
                 durationMinutes = 0
             )
 

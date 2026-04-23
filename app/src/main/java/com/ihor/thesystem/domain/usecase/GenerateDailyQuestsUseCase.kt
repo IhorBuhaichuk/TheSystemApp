@@ -62,7 +62,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             }
         }
 
-        val hasRoutine = todayQuests.any { it.title.contains("РУТИНА", ignoreCase = true) }
+        val hasRoutine = todayQuests.any { it.type == DomainQuestType.DAILY }
 
         // 5. ГЕНЕРАЦІЯ
         if (!hasRoutine) {

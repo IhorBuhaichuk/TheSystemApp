@@ -22,7 +22,7 @@ class ValidateDirectivesUseCase @Inject constructor() {
                     // Якщо вправа є в матриці, затискаємо вагу в її межах
                     directive.copy(
                         targetWeight = directive.targetWeight.coerceIn(
-                            minimumValue = matrixEntry.startWeight.toDouble(),
+                            minimumValue = matrixEntry.currentWeight.toDouble(),
                             maximumValue = matrixEntry.targetWeight.toDouble()
                         ),
                         // Оскільки targetReps тепер String (діапазони), ми не можемо напряму використати coerceIn.

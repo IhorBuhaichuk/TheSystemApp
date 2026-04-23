@@ -36,7 +36,7 @@ object AnnualMatrixProvider {
         val row = getMatrix().find { it.exerciseId == exerciseId } ?: return Rank.E
         val targets = row.targets
         return when {
-            targets.size >= 11 && current1RM >= parseTarget(targets[10], playerWeight) -> Rank.S
+            targets.size >= 13 && current1RM >= parseTarget(targets[12], playerWeight) -> Rank.S
             targets.size >= 9  && current1RM >= parseTarget(targets[8],  playerWeight) -> Rank.A
             targets.size >= 7  && current1RM >= parseTarget(targets[6],  playerWeight) -> Rank.B
             targets.size >= 5  && current1RM >= parseTarget(targets[4],  playerWeight) -> Rank.C
@@ -54,7 +54,7 @@ object AnnualMatrixProvider {
         val targets = row.targets
 
         return when {
-            targets.size >= 11 && current1RM >= parseTarget(targets[10], playerWeight) -> Rank.S
+            targets.size >= 13 && current1RM >= parseTarget(targets[12], playerWeight) -> Rank.S
             targets.size >= 9 && current1RM >= parseTarget(targets[8], playerWeight) -> Rank.A
             targets.size >= 7 && current1RM >= parseTarget(targets[6], playerWeight) -> Rank.B
             targets.size >= 5 && current1RM >= parseTarget(targets[4], playerWeight) -> Rank.C

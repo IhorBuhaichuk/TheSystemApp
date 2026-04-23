@@ -91,6 +91,10 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         return dao.getRecentLogsForExercise(exerciseId).map { it.toDomain() }
     }
 
+    override suspend fun getLastSetsForExercise(exerciseId: Int): List<ExerciseSet> {
+        return dao.getLastSetsForExercise(exerciseId).map { it.toDomain() }
+    }
+
     override suspend fun updateSessionLog(session: WorkoutSession) {
         dao.insertSessionLog(session.toEntity())
     }

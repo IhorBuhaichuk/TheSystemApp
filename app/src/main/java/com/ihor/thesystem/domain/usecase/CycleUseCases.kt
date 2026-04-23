@@ -24,8 +24,12 @@ class AdvanceCycleDayUseCase @Inject constructor(
 
         // ── Завершуємо денний квест ───────────────────────────────────
         daily?.let {
-            val allDone = it.tasks.isNotEmpty() && it.tasks.all { t -> t.isCompleted }
-            val isSuccess = allDone || forceComplete
+            val hasTasks = it.tasks.isNotEmpty()
+            val allDone = hasTasks && it.tasks.all { t -> t.isCompleted }
+            
+            // Якщо задач немає (помилка ініціалізації), квест не вважається проваленим
+            val isSuccess = if (!hasTasks) true else (allDone || forceComplete)
+            
             questRepo.updateQuestStatus(
                 it.id,
                 if (isSuccess) DomainQuestStatus.COMPLETED
@@ -40,8 +44,12 @@ class AdvanceCycleDayUseCase @Inject constructor(
 
         // ── Завершуємо основний квест ─────────────────────────────────
         main?.let {
-            val allDone = it.tasks.isNotEmpty() && it.tasks.all { t -> t.isCompleted }
-            val isSuccess = allDone || forceComplete
+            val hasTasks = it.tasks.isNotEmpty()
+            val allDone = hasTasks && it.tasks.all { t -> t.isCompleted }
+            
+            // Якщо задач немає (наприклад, день відпочинку або помилка), квест не провалюється
+            val isSuccess = if (!hasTasks) true else (allDone || forceComplete)
+
             val status  = if (isSuccess) DomainQuestStatus.COMPLETED
             else DomainQuestStatus.FAILED
             questRepo.updateQuestStatus(it.id, status)

@@ -38,9 +38,10 @@ class FinalizeDayUseCase @Inject constructor(
 
                 // 3. Розрахунок XP та стріків на основі результатів квестів
                 val mainQuests = activeQuests.filter { it.type == DomainQuestType.MAIN }
-                val (playerAfterXP, _) = player.evaluateQuests(mainQuests).checkLevelUp()
+                val (playerAfterXP, levelUpTriggered) = player.evaluateQuests(mainQuests).checkLevelUp()
 
                 // 4. Просування часу (Cycle Day / Week / Month) - ВИКЛИКАЄТЬСЯ ОДИН РАЗ
+                val wasPenaltyActive = player.isPenaltyActive
                 val finalPlayer = playerAfterXP.advanceTime(config)
 
                 // 5. Збереження оновленого стану гравця
@@ -54,7 +55,13 @@ class FinalizeDayUseCase @Inject constructor(
                 calculateAttributes.invoke()
 
                 Timber.d("Day Finalization transaction completed successfully")
-                Result.Success(DayFinalizationResult.Success)
+                
+                val result = when {
+                    levelUpTriggered -> DayFinalizationResult.LevelUp
+                    !wasPenaltyActive && finalPlayer.isPenaltyActive -> DayFinalizationResult.PenaltyZoneEntered
+                    else -> DayFinalizationResult.Success
+                }
+                Result.Success(result)
             }
         } catch (e: TransactionRollbackException) {
             Timber.e(e, "Transaction rolled back during day finalization")

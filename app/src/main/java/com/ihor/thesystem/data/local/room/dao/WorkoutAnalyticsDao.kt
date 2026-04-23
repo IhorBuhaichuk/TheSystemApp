@@ -104,6 +104,9 @@ abstract class WorkoutAnalyticsDao {
     @Query("DELETE FROM exercise_set_logs WHERE sessionId = :sessionId")
     abstract suspend fun deleteSetsBySession(sessionId: Long)
 
+    @Query("SELECT * FROM exercise_set_logs WHERE exerciseId = :id ORDER BY setId DESC LIMIT 3")
+    abstract suspend fun getLastSetsForExercise(id: Int): List<ExerciseSetLogEntity>
+
     @Query("""
         SELECT e.* FROM exercise_set_logs e
         JOIN workout_session_logs s ON e.sessionId = s.sessionId

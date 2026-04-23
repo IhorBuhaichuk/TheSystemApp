@@ -9,6 +9,15 @@ interface SystemConfigRepository {
     suspend fun updateConfig(config: SystemConfig)
 }
 
+data class ActiveDebuff(
+    val name: String,
+    val penaltyPercent: Int
+)
+
+interface DebuffRepository {
+    fun getActiveDebuffs(): Flow<List<ActiveDebuff>>
+}
+
 interface ScheduleRepository {
     fun getScheduleForDay(day: Int): Flow<ScheduleDay?>
     fun getSchedulesForDays(days: List<Int>): Flow<List<ScheduleDay>>

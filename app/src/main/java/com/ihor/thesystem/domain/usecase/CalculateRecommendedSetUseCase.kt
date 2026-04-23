@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutLog
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
@@ -18,17 +19,10 @@ class CalculateRecommendedSetUseCase @Inject constructor(
     private val matrixRepo: ProgressionMatrixRepository
 ) {
     suspend operator fun invoke(exerciseId: Int, exerciseName: String): SetRecommendation {
-        // 1. Отримуємо всі логі (getAllLogs повертає Flow<List<WorkoutLog>>)
-        val allSessions: List<WorkoutLog> = analyticsRepo.getAllLogs().first()
-        
-        // 2. Фільтруємо підходи для конкретної вправи
-        // Логі повернуті в порядку DESC (останні спочатку), тому беремо останні підходи цієї вправи
-        val lastSets = allSessions
-            .flatMap { it.sets }
-            .filter { it.exerciseId == exerciseId }
-            .take(3) 
+        // 1. Отримуємо останні 3 сети з БД (Оптимізовано)
+        val lastSets: List<ExerciseSet> = analyticsRepo.getLastSetsForExercise(exerciseId)
 
-        // 3. Отримуємо дані з еталонної матриці для вправи
+        // 2. Отримуємо дані з еталонної матриці для вправи
         val reference = matrixRepo.getReferenceForExercise(exerciseName)
         val startWeight = reference?.milestones?.get("M0") ?: 0.0
         val progressionStep = reference?.progressionStep ?: 2.5

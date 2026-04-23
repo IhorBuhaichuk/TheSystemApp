@@ -88,13 +88,17 @@ class GetStatusScreenDataUseCase @Inject constructor(
 
                 val trainingDaysPerCycle = schedules.count { it.workoutTemplateName != null }
                 val monthWorkoutsTotal = trainingDaysPerCycle * config.microCyclesPerMonth
+                
+                val currentLevelXp = player.level * 1000 // Спрощена база для рівня
+                val xpMax = 1000 // XP для поточного рівня
+                val xpProgress = (player.xpTotal - currentLevelXp).coerceIn(0, xpMax)
 
                 StatusUiData(
                     playerName             = player.name,
                     playerClass            = player.playerClass,
                     level                  = player.level,
-                    xpTotal                = player.xpTotal,
-                    xpMax                  = player.level * 1000,
+                    xpTotal                = xpProgress,
+                    xpMax                  = xpMax,
                     currentMonth           = player.currentMonth,
                     totalMonths            = 12,
                     currentWeight          = weight ?: 80f,
