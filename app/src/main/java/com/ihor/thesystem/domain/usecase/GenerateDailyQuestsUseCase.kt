@@ -42,10 +42,9 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             1
         }
 
-        // 2. Отримуємо розклад реактивно
+        // 2. Отримуємо розклад
         val schedule = scheduleRepo.getScheduleForDay(currentDay)
-            .filterNotNull()
-            .first()
+            .firstOrNull() ?: return
 
         // 3. Отримуємо існуючі квести
         val todayQuests = questRepo.getDailyQuestsForDate(now).first()

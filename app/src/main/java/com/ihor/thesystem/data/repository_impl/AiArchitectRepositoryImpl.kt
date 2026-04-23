@@ -143,32 +143,27 @@ class AiArchitectRepositoryImpl @Inject constructor(
     private fun extractJson(input: String): String {
         var trimmed = input.trim()
 
-        // Обов'язкове очищення від Markdown тегів перед парсингом
-        trimmed = trimmed.replace(Regex("""^```json\s*|```$""", RegexOption.MULTILINE), "")
-        trimmed = trimmed.trim()
+        // Видаляємо markdown-теги ```json ... ``` або ``` ... ```
+        val markdownRegex = Regex("""^```(?:json)?\s*([\s\S]*?)\s*```$""", RegexOption.MULTILINE)
+        val matchResult = markdownRegex.find(trimmed)
+        
+        if (matchResult != null) {
+            trimmed = matchResult.groups[1]?.value?.trim() ?: trimmed
+        }
+
+        // Додаткове очищення від залишків тегів на початку/в кінці, якщо regex не спрацював ідеально
+        trimmed = trimmed.removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
         
         // Якщо це вже чистий JSON
         if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
             return trimmed
         }
 
-        // Регулярний вираз для пошуку JSON блоку всередині Markdown як fallback
-        val regex = Regex("""```json\s*([\s\S]*?)\s*```|```\s*([\s\S]*?)\s*```""")
-        val matchResult = regex.find(trimmed)
-
-        trimmed = if (matchResult != null) {
-            matchResult.groups[1]?.value ?: matchResult.groups[2]?.value ?: trimmed
-        } else {
-            trimmed
-        }.trim()
-
-        // Спроба знайти JSON за дужками, якщо AI додав зайвий текст
-        if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
-            val start = trimmed.indexOf('{')
-            val end = trimmed.lastIndexOf('}')
-            if (start != -1 && end != -1 && end > start) {
-                trimmed = trimmed.substring(start, end + 1)
-            }
+        // Спроба знайти JSON за дужками, якщо AI додав зайвий текст навколо
+        val start = trimmed.indexOf('{')
+        val end = trimmed.lastIndexOf('}')
+        if (start != -1 && end != -1 && end > start) {
+            trimmed = trimmed.substring(start, end + 1)
         }
 
         return trimmed

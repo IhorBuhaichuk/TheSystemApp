@@ -230,7 +230,7 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onSetFocusLost(exerciseId: Int, setId: Long) {
-        autoSaveSet(exerciseId, setId)
+        viewModelScope.launch { _saveEvents.emit(Pair(exerciseId, setId)) }
     }
 
     fun onSetCompleted(exerciseId: Int, setId: Long) {
@@ -243,32 +243,7 @@ class StatusViewModel @Inject constructor(
                 }.toImmutableList()
             )
         }
-        autoSaveSet(exerciseId, setId)
-    }
-
-    private var autoSaveJob: kotlinx.coroutines.Job? = null
-    private fun autoSaveSet(exerciseId: Int, setId: Long) {
-        autoSaveJob?.cancel()
-        autoSaveJob = viewModelScope.launch {
-            kotlinx.coroutines.delay(1000)
-            val currentState = _activeWorkoutState.value ?: return@launch
-            val exercise = currentState.exercises.find { it.exerciseId == exerciseId } ?: return@launch
-            val set = exercise.sets.find { it.id == setId } ?: return@launch
-            
-            if (set.weight.isNotEmpty() && set.reps.isNotEmpty()) {
-                try {
-                    saveExerciseSetsUseCase(
-                        exerciseId = exerciseId,
-                        sets = exercise.sets.filter { it.isCompleted || it.id == setId }.map { ActiveSetInput(it.id, it.weight, it.reps) },
-                        date = viewingDateRepo.selectedDate.value,
-                        userFeedback = ""
-                    )
-                    // We don't call calculateAttributes() here to avoid triggering full UI refresh
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
+        viewModelScope.launch { _saveEvents.emit(Pair(exerciseId, setId)) }
     }
 
     fun onOpenMainWorkout() {

@@ -155,9 +155,9 @@ class FinalizeSessionUseCase @Inject constructor(
             val entry = matrix.find { it.exerciseId == set.exerciseId }
             WorkoutDirective(
                 exerciseId = set.exerciseId,
-                targetWeight = entry?.startWeight?.toDouble() ?: set.weight,
-                targetSets = 3,
-                targetReps = "10"
+                targetWeight = entry?.targetWeight?.toDouble() ?: set.weight,
+                targetSets = entry?.nextRecommendedSets ?: 3,
+                targetReps = entry?.nextRecommendedReps ?: "10"
             )
         }.distinctBy { it.exerciseId }
 
