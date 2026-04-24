@@ -15,14 +15,9 @@ class CalculateRecoveryWindowUseCase @Inject constructor() {
      * @param isNightShift Чи була попередня зміна нічною.
      * @return Result з об'єктом Duration, що містить час відновлення.
      */
-    operator fun invoke(tonnage: Double, isNightShift: Boolean): Result<Duration, DomainError> {
+    operator fun invoke(tonnage: Double): Result<Duration, DomainError> {
         return try {
             var baseRecovery = 24.hours
-
-            // Штраф за нічну зміну (виснаження ЦНС)
-            if (isNightShift) {
-                baseRecovery += 12.hours
-            }
 
             // Додатковий час за об'єм роботи: 2 години за кожну 1000 кг (1 тонну)
             val tonnagePenaltyHours = ((tonnage / 1000.0) * 2).hours

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.sciPanel
+import com.ihor.thesystem.core.ui.components.neonGlow
 import com.ihor.thesystem.feature.status.viewmodel.QuestUiModel
 import com.ihor.thesystem.domain.model.DomainQuestType
 
@@ -44,6 +45,10 @@ fun QuestCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .then(
+                if (!quest.isCompleted) Modifier.neonGlow(accentColor, radius = if (isPromotion) 12.dp else 8.dp)
+                else Modifier
+            )
             .sciPanel(
                 borderColor = if (isPromotion) accentColor else accentColor.copy(alpha = 0.8f),
                 backgroundColor = PanelSurface,
@@ -102,7 +107,12 @@ fun QuestCard(
                 imageVector = if (isPromotion) Icons.Filled.Star else Icons.Filled.Assignment,
                 contentDescription = null,
                 tint = if (quest.isCompleted) Color.Gray.copy(alpha = 0.5f) else accentColor.copy(alpha = 0.8f),
-                modifier = Modifier.size(if (isPromotion) 32.dp else 24.dp)
+                modifier = Modifier
+                    .size(if (isPromotion) 32.dp else 24.dp)
+                    .then(
+                        if (!quest.isCompleted && isPromotion) Modifier.neonGlow(accentColor, 12.dp)
+                        else Modifier
+                    )
             )
         }
 

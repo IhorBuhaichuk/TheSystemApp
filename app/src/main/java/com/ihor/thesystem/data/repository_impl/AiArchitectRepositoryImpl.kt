@@ -1,6 +1,5 @@
 package com.ihor.thesystem.data.repository_impl
 
-import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.ihor.thesystem.BuildConfig
 import com.ihor.thesystem.R
@@ -39,46 +38,64 @@ class AiArchitectRepositoryImpl @Inject constructor(
         }
 
         try {
-            withTimeout(30_000L) {
-                val response = generativeModel.generateContent(prompt)
-                val responseText = response.text ?: throw IllegalStateException("Empty AI response")
+            repeat(3) { attempt ->
+                try {
+                    return@withContext withTimeout(30_000L) {
+                        val response = generativeModel.generateContent(prompt)
+                        val responseText = response.text ?: throw IllegalStateException("Empty AI response")
 
-                val cleanJson = extractJson(responseText)
-                val dto = try {
-                    json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
+                        val cleanJson = extractJson(responseText)
+                        val dto = try {
+                            json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
+                        } catch (e: Exception) {
+                            Timber.e("JSON parsing error: %s", e.message)
+                            return@withTimeout ChatMessage(
+                                role = ChatRole.AI,
+                                text = UiText.DynamicString(responseText),
+                                isActionable = false
+                            )
+                        }
+
+                        val targets = dto.nextWorkoutTargets.map { target ->
+                            AiWorkoutRecommendation(
+                                exerciseId = target.exerciseId,
+                                weight = target.weight,
+                                sets = target.recommendedSets,
+                                reps = target.recommendedReps,
+                                aiFeedback = target.aiFeedback
+                            )
+                        }
+
+                        ChatMessage(
+                            role = ChatRole.AI,
+                            text = if (dto.feedbackText.isBlank()) {
+                                UiText.StringResource(R.string.ai_analysis_complete)
+                            } else {
+                                UiText.DynamicString(dto.feedbackText)
+                            },
+                            recommendations = targets,
+                            isActionable = targets.isNotEmpty(),
+                            aiFeedback = dto.aiFeedback ?: targets.firstOrNull()?.aiFeedback
+                        )
+                    }
                 } catch (e: Exception) {
-                    Log.e("AiArchitect", "JSON Error: ${e.message}")
-                    return@withTimeout ChatMessage(
-                        role = ChatRole.AI,
-                        text = UiText.DynamicString(responseText),
-                        isActionable = false
-                    )
-                }
-
-                val targets = dto.nextWorkoutTargets.map { target ->
-                    AiWorkoutRecommendation(
-                        exerciseId = target.exerciseId,
-                        weight = target.weight,
-                        sets = target.recommendedSets,
-                        reps = target.recommendedReps,
-                        aiFeedback = target.aiFeedback
-                    )
-                }
-
-                ChatMessage(
-                    role = ChatRole.AI,
-                    text = if (dto.feedbackText.isBlank()) {
-                        UiText.StringResource(R.string.ai_analysis_complete)
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    
+                    val isRetryable = e is kotlinx.coroutines.TimeoutCancellationException || 
+                                     e.message?.contains("429") == true
+                    
+                    if (attempt < 2 && isRetryable) {
+                        val delayMs = if (attempt == 0) 1000L else 2000L
+                        kotlinx.coroutines.delay(delayMs)
                     } else {
-                        UiText.DynamicString(dto.feedbackText)
-                    },
-                    recommendations = targets,
-                    isActionable = targets.isNotEmpty(),
-                    aiFeedback = dto.aiFeedback ?: targets.firstOrNull()?.aiFeedback
-                )
+                        throw e
+                    }
+                }
             }
+            // Should not be reached due to throw e in the last attempt
+            throw IllegalStateException("Unexpected end of retry loop")
         } catch (e: Exception) {
-            Timber.e(e, "Request failed")
+            Timber.e(e, "Request failed after retries")
             if (e is kotlinx.coroutines.CancellationException) throw e
             
             val errorText = when {

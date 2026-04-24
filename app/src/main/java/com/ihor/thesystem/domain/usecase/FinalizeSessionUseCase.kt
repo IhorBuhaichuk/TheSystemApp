@@ -25,8 +25,7 @@ class FinalizeSessionUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         session: WorkoutSession,
-        sets: List<ExerciseSet>,
-        isNightShift: Boolean
+        sets: List<ExerciseSet>
     ): kotlin.Result<AiArchitectReport> = runSuspendCatching {
         // 1. Зберегти сесію та сети
         val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
@@ -49,7 +48,7 @@ class FinalizeSessionUseCase @Inject constructor(
         val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
 
         // 5. Розрахунок відновлення
-        val recoveryDuration = calculateRecovery(finalTonnage, isNightShift).getOrDefault(24.hours)
+        val recoveryDuration = calculateRecovery(finalTonnage).getOrDefault(24.hours)
         val recoveryHours = recoveryDuration.inWholeHours.toDouble()
 
         // 6. Формування контексту для AI

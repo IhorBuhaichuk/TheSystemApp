@@ -57,6 +57,9 @@ class StatusViewModel @Inject constructor(
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
 
+    val currentPlayer: StateFlow<Player?> = useCases.getPlayerFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     init {
         // Initialization Group 1: Database Readiness and Initial Calculations
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
@@ -113,7 +116,7 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onNameConfirmed(newName: String) = launchCatching {
-        val player = useCases.getPlayerFlow().firstOrNull() ?: return@launchCatching
+        val player = currentPlayer.value ?: return@launchCatching
         useCases.updatePlayerName(player, newName).onSuccess {
             onDismissDialog()
         }.onFailure { e ->
@@ -138,7 +141,7 @@ class StatusViewModel @Inject constructor(
     }
 
     fun updateAvatarUri(uri: Uri) = launchCatching {
-        val player = useCases.getPlayerFlow().firstOrNull() ?: return@launchCatching
+        val player = currentPlayer.value ?: return@launchCatching
         
         try {
             context.contentResolver.takePersistableUriPermission(
@@ -184,6 +187,4 @@ class StatusViewModel @Inject constructor(
         useCases.generateDailyQuests()
         onDismissDialog()
     }
-
-    suspend fun getCurrentPlayer(): Player? = useCases.getPlayerFlow().firstOrNull()
 }

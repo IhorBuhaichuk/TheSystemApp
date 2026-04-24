@@ -47,7 +47,7 @@ class WorkoutViewModel @Inject constructor(
     private val _saveEvents = MutableSharedFlow<SetSavePayload>(replay = 0)
 
     private val cycleDay: Flow<Int> = combine(
-        useCases.viewingDateRepo.selectedDate,
+        useCases.selectedDate,
         getSystemConfig().filterNotNull(),
         useCases.getPlayerFlow()
     ) { date, config, _ ->
@@ -67,7 +67,7 @@ class WorkoutViewModel @Inject constructor(
 
     private val activeWorkoutFlow: Flow<ActiveDayUiModel?> = cycleDay
         .flatMapLatest { day ->
-            useCases.scheduleRepo.getSchedulesForDays(listOf(day))
+            useCases.getSchedulesForDays(listOf(day))
         }
         .map { schedules ->
             val schedule = schedules.firstOrNull() ?: return@map null
@@ -132,7 +132,7 @@ class WorkoutViewModel @Inject constructor(
                         reps = payload.reps
                     )
                 ),
-                date = useCases.viewingDateRepo.selectedDate.value,
+                date = useCases.selectedDate.value,
                 userFeedback = ""
             )
         } catch (e: Exception) {
@@ -185,7 +185,7 @@ class WorkoutViewModel @Inject constructor(
                 useCases.saveExerciseSets(
                     exerciseId = exerciseId,
                     sets = sets,
-                    date = useCases.viewingDateRepo.selectedDate.value,
+                    date = useCases.selectedDate.value,
                     userFeedback = feedback
                 )
                 onDismissDialog()
@@ -227,7 +227,7 @@ class WorkoutViewModel @Inject constructor(
 
     fun onOpenLogSets(entry: MatrixEntryUiModel, fromWorkout: Boolean = false) {
         viewModelScope.launch {
-            val lastSets = useCases.analyticsRepo.getLastSetsForExercise(entry.exerciseId)
+            val lastSets = useCases.getLastSetsForExercise(entry.exerciseId)
             val initialSets = if (lastSets.isNotEmpty()) {
                 lastSets.map { ActiveSetInput(weight = it.weight.toString(), reps = it.reps.toString()) }
             } else {
