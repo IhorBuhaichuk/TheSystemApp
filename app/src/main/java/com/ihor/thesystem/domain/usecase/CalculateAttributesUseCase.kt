@@ -50,7 +50,6 @@ class CalculateAttributesUseCase @Inject constructor(
                 MuscleGroup.QUADS -> player.quadsAttr.toFloat()
                 MuscleGroup.HAMSTRINGS_GLUTES -> player.legsAttr.toFloat()
                 MuscleGroup.ARMS -> player.armsAttr.toFloat()
-                else -> 0f
             }
         }
 

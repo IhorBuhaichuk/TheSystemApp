@@ -58,6 +58,7 @@ class StatusViewModel @Inject constructor(
     val uiEvents = _uiEvents.asSharedFlow()
 
     init {
+        // Initialization Group 1: Database Readiness and Initial Calculations
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 kotlinx.coroutines.withTimeout(10_000) {
@@ -73,6 +74,7 @@ class StatusViewModel @Inject constructor(
             }
         }
 
+        // Initialization Group 2: Level-up Event Monitoring
         viewModelScope.launch {
             useCases.getPlayerFlow()
                 .filterNotNull()

@@ -3,6 +3,7 @@ package com.ihor.thesystem.data.local.room.database
 import androidx.room.withTransaction
 import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
+import timber.log.Timber
 
 object DatabasePopulator {
 
@@ -10,13 +11,13 @@ object DatabasePopulator {
         val workoutDao = db.workoutDao()
         if (workoutDao.getAllExercisesSync().isNotEmpty()) return
 
-        android.util.Log.d("DatabasePopulator", "Starting database population...")
+        Timber.d("Starting database population...")
 
         db.withTransaction {
             // 1. Гравець та конфігурація
             db.playerDao().insertOrUpdate(PlayerEntity())
             db.systemConfigDao().insertOrUpdate(SystemConfigEntity())
-            android.util.Log.d("DatabasePopulator", "Player and Config inserted")
+            Timber.d("Player and Config inserted")
 
             // 2. Вправи
             val exercises = listOf(
@@ -77,6 +78,6 @@ object DatabasePopulator {
             db.scheduleDao().insertSchedule(ScheduleEntity(4, 4, 2))    // ДЕНЬ 4: ВИХІДНИЙ -> ТРЕНУВАННЯ А
         }
 
-        android.util.Log.d("DatabasePopulator", "Database population completed successfully.")
+        Timber.d("Database population completed successfully.")
     }
 }
