@@ -62,7 +62,7 @@ class StatusViewModel @Inject constructor(
 
     init {
         // Initialization Group 1: Database Readiness and Initial Calculations
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        viewModelScope.launch {
             try {
                 kotlinx.coroutines.withTimeout(10_000) {
                     databaseReadinessRepo.status.first { it is DatabaseStatus.Ready }

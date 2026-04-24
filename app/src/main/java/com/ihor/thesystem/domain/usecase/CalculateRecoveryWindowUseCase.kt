@@ -11,8 +11,7 @@ class CalculateRecoveryWindowUseCase @Inject constructor() {
 
     /**
      * Розраховує час відновлення на основі тоннажу та робочого графіка.
-     * * @param tonnage Загальний піднятий тоннаж за тренування (в кілограмах).
-     * @param isNightShift Чи була попередня зміна нічною.
+     * @param tonnage Загальний піднятий тоннаж за тренування (в кілограмах).
      * @return Result з об'єктом Duration, що містить час відновлення.
      */
     operator fun invoke(tonnage: Double): Result<Duration, DomainError> {

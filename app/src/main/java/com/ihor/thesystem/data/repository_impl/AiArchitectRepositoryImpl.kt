@@ -93,7 +93,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
                 }
             }
             // Should not be reached due to throw e in the last attempt
-            throw IllegalStateException("Unexpected end of retry loop")
+            error("Unexpected end of retry loop: this line should never execute")
         } catch (e: Exception) {
             Timber.e(e, "Request failed after retries")
             if (e is kotlinx.coroutines.CancellationException) throw e

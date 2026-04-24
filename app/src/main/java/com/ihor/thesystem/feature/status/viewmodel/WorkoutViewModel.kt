@@ -23,9 +23,8 @@ import javax.inject.Inject
 
 data class SetSavePayload(
     val exerciseId: Int,
-    val setId: Long,
-    val weight: String,
-    val reps: String
+    val triggerSetId: Long,
+    val allSets: List<ActiveSetInput>
 )
 
 @HiltViewModel
@@ -123,15 +122,14 @@ class WorkoutViewModel @Inject constructor(
 
     private suspend fun performAutoSave(payload: SetSavePayload) {
         try {
+            val setsToSave = payload.allSets
+                .filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
+            
+            if (setsToSave.isEmpty()) return
+
             useCases.saveExerciseSets(
                 exerciseId = payload.exerciseId,
-                sets = listOf(
-                    ActiveSetInput(
-                        id = payload.setId,
-                        weight = payload.weight,
-                        reps = payload.reps
-                    )
-                ),
+                sets = setsToSave,
                 date = useCases.selectedDate.value,
                 userFeedback = ""
             )
@@ -162,20 +160,20 @@ class WorkoutViewModel @Inject constructor(
 
     fun onSetFocusLost(exerciseId: Int, setId: Long) {
         viewModelScope.launch {
-            val state = activeWorkoutState.value ?: return@launch
-            val exercise = state.exercises.find { it.exerciseId == exerciseId } ?: return@launch
-            val set = exercise.sets.find { it.id == setId } ?: return@launch
-            _saveEvents.emit(SetSavePayload(exerciseId, setId, set.weight, set.reps))
+            val currentSets = _userEdits.value[exerciseId]
+                ?: activeWorkoutState.value?.exercises?.find { it.exerciseId == exerciseId }?.sets
+                ?: return@launch
+            _saveEvents.emit(SetSavePayload(exerciseId, setId, currentSets.toList()))
         }
     }
 
     fun onSetCompleted(exerciseId: Int, setId: Long) {
         updateSetEdit(exerciseId, setId) { it.copy(isCompleted = !it.isCompleted) }
         viewModelScope.launch {
-            val state = activeWorkoutState.value ?: return@launch
-            val exercise = state.exercises.find { it.exerciseId == exerciseId } ?: return@launch
-            val set = exercise.sets.find { it.id == setId } ?: return@launch
-            _saveEvents.emit(SetSavePayload(exerciseId, setId, set.weight, set.reps))
+            val currentSets = _userEdits.value[exerciseId]
+                ?: activeWorkoutState.value?.exercises?.find { it.exerciseId == exerciseId }?.sets
+                ?: return@launch
+            _saveEvents.emit(SetSavePayload(exerciseId, setId, currentSets.toList()))
         }
     }
 
