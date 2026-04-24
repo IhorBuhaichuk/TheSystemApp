@@ -1,5 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.ChatDao
 import com.ihor.thesystem.data.local.room.entity.ChatMessageEntity
@@ -57,7 +58,7 @@ class ChatRepositoryImpl @Inject constructor(
                 "system" -> ChatRole.SYSTEM
                 else -> ChatRole.SYSTEM
             },
-            text = message
+            text = UiText.DynamicString(message)
         )
     }
 }

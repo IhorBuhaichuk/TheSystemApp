@@ -33,7 +33,10 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         val currentDay = if (config.cycleAnchorDateTimestamp > 0) {
             calculateCycleDay(
                 targetDate = todayDate,
-                anchorEpochDay = config.cycleAnchorDateTimestamp,
+                anchorEpochDay = java.time.Instant.ofEpochMilli(config.cycleAnchorDateTimestamp)
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate()
+                    .toEpochDay(),
                 anchorCycleDay = config.cycleAnchorDay,
                 cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
             )

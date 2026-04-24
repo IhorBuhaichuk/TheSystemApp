@@ -10,7 +10,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import com.ihor.thesystem.core.theme.RajdhaniFamily
+import com.ihor.thesystem.core.ui.asUiText
 import com.ihor.thesystem.domain.model.MuscleGroup
 import kotlin.math.cos
 import kotlin.math.sin
@@ -24,6 +27,10 @@ fun RadarChartCanvas(
     val textMeasurer = rememberTextMeasurer()
     val labels = MuscleGroup.entries
     val numPoints = labels.size
+    val context = LocalContext.current
+
+    // Pre-resolve names to use in drawing
+    val labelNames = labels.map { it.asUiText().asString(context).uppercase() }
 
     Canvas(modifier = modifier) {
         val center = Offset(size.width / 2f, size.height / 2f)
@@ -112,7 +119,7 @@ fun RadarChartCanvas(
         for (i in 0 until numPoints) {
             val labelRadius = radius + 25.dp.toPx()
             val pos = getCoordinates(i, labelRadius)
-            val labelText = labels[i].label.uppercase()
+            val labelText = labelNames[i]
             
             val textLayoutResult = textMeasurer.measure(
                 text = AnnotatedString(labelText),

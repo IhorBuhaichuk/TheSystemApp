@@ -4,7 +4,7 @@ data class Player(
     val id: Int,
     val name: String,
     val level: Int,
-    val playerClass: String,
+    val playerClass: PlayerRank,
     val height: Float,
     val currentMonth: Int,
     val currentWeek: Int,
@@ -74,13 +74,13 @@ data class Player(
      */
     fun checkLevelUp(): Pair<Player, Boolean> {
         val newRank = PlayerRank.resolveByMonth(currentMonth)
-        val levelUpTriggered = playerClass != newRank.title
+        val levelUpTriggered = playerClass != newRank
         val isNewMonthStart = currentCycleDay == 1 && currentWeek == 1
 
         var updatedPlayer = this
         if (levelUpTriggered) {
             updatedPlayer = updatedPlayer.copy(
-                playerClass = newRank.title,
+                playerClass = newRank,
                 xpTotal = xpTotal + 200,
                 xpThisWeek = xpThisWeek + 200
             )

@@ -1,9 +1,8 @@
 package com.ihor.thesystem.domain.repository
 
-import com.ihor.thesystem.data.local.room.entity.ReferenceMatrixEntity
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.ExerciseCategory
-import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
+import com.ihor.thesystem.domain.model.ActiveSetInput
 import kotlinx.coroutines.flow.Flow
 
 interface ProgressionMatrixRepository {
@@ -15,8 +14,8 @@ interface ProgressionMatrixRepository {
     suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>)
     suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<ActiveSetInput>, timestamp: Long, userFeedback: String? = null)
 
-    suspend fun getReferenceForExercise(name: String): ReferenceMatrixEntity?
-    fun getAllReferences(): Flow<List<ReferenceMatrixEntity>>
+    suspend fun getReferenceForExercise(name: String): Any?
+    fun getAllReferences(): Flow<List<Any>>
     
     suspend fun completeCycle(exerciseId: Int)
     suspend fun setPromotionPending(exerciseId: Int, pending: Boolean)

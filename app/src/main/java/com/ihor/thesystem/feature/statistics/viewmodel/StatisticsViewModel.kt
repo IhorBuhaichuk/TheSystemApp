@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.statistics.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
@@ -10,7 +11,7 @@ import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
 import com.ihor.thesystem.domain.usecase.LogWeightUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
 import com.ihor.thesystem.domain.usecase.UpdatePlayerHeightUseCase
-import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
+import com.ihor.thesystem.domain.model.ActiveSetInput
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
@@ -32,7 +33,7 @@ class StatisticsViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<UiState<StatisticsUiData>> = getStatisticsDataUseCase()
         .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
-        .catch { emit(UiState.Error(UiText.DynamicString(it.message ?: "Помилка"))) }
+        .catch { emit(UiState.Error(UiText.StringResource(R.string.error_generic))) }
         .stateIn(
             scope        = viewModelScope,
             started      = SharingStarted.WhileSubscribed(5_000L),
@@ -94,7 +95,7 @@ class StatisticsViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка збереження")))
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_saving)))
             }
         }
     }
@@ -108,7 +109,7 @@ class StatisticsViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка операції")))
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
             }
         }
     }
@@ -120,7 +121,7 @@ class StatisticsViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(e.localizedMessage ?: "Помилка оновлення рангу")))
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_rank_update)))
             }
         }
     }
@@ -139,7 +140,7 @@ class StatisticsViewModel @Inject constructor(
             logWeightUseCase(weight).onSuccess {
                 onDismissDialog()
             }.onFailure {
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(it.message ?: "Помилка оновлення ваги")))
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_weight_update)))
             }
         }
     }
@@ -149,7 +150,7 @@ class StatisticsViewModel @Inject constructor(
             updatePlayerHeightUseCase(height).onSuccess {
                 onDismissDialog()
             }.onFailure {
-                _uiEvents.emit(UiEvent.ShowError(UiText.DynamicString(it.message ?: "Помилка оновлення зросту")))
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_height_update)))
             }
         }
     }

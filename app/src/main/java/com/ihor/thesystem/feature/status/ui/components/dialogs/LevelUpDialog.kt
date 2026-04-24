@@ -19,17 +19,22 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.asUiText
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
+import com.ihor.thesystem.domain.model.PlayerRank
 
 @Composable
 fun LevelUpDialog(
-    newClass: String,
+    newClass: PlayerRank,
     newMonth: Int,
     onDismiss: () -> Unit
 ) {
@@ -41,30 +46,29 @@ fun LevelUpDialog(
                 tween(800, easing = EaseInOutSine),
                 RepeatMode.Reverse
             ),
-            label = "scale"
+            label = "pulse"
         )
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .wrapContentHeight()
                 .clip(RoundedCornerShape(32.dp))
-                .background(Color(0xFF020408))
-                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(32.dp))
+                .background(Color(0xFF020408).copy(alpha = 0.95f))
+                .border(2.dp, Brush.linearGradient(listOf(NeonGold, Color.Transparent)), RoundedCornerShape(32.dp))
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
         ) {
-            // Decorative background glow
+            // Glow effect
             Box(
                 modifier = Modifier
                     .size(200.dp)
-                    .align(Alignment.Center)
                     .blur(60.dp)
-                    .background(NeonGold.copy(alpha = 0.1f), CircleShape)
+                    .background(NeonGold.copy(alpha = 0.15f), CircleShape)
             )
 
             Column(
-                modifier = Modifier
-                    .padding(32.dp)
-                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
@@ -93,7 +97,7 @@ fun LevelUpDialog(
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "LEVEL UP",
+                        text = stringResource(R.string.text_level_up),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = NeonGold,
                             fontWeight = FontWeight.Black,
@@ -101,7 +105,7 @@ fun LevelUpDialog(
                         )
                     )
                     Text(
-                        text = "СИСТЕМА ОНОВЛЕНА",
+                        text = stringResource(R.string.text_system_updated),
                         style = MaterialTheme.typography.headlineSmall.copy(
                             color = Color.White,
                             fontWeight = FontWeight.ExtraBold
@@ -109,15 +113,9 @@ fun LevelUpDialog(
                     )
                 }
 
-                HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "ВАШ НОВИЙ КЛАС",
-                        style = MaterialTheme.typography.labelSmall.copy(color = Color.White.copy(alpha = 0.3f), letterSpacing = 1.sp)
-                    )
-                    Text(
-                        text = newClass.uppercase(),
+                        text = newClass.asUiText().asString(LocalContext.current).uppercase(),
                         style = MaterialTheme.typography.titleLarge.copy(
                             color = NeonCyan,
                             fontWeight = FontWeight.Black,
@@ -125,7 +123,7 @@ fun LevelUpDialog(
                         )
                     )
                     Text(
-                        text = "МІСЯЦЬ $newMonth",
+                        text = stringResource(R.string.text_month_n, newMonth),
                         style = MaterialTheme.typography.labelMedium.copy(color = NeonGold, fontWeight = FontWeight.Bold)
                     )
                 }
@@ -142,7 +140,7 @@ fun LevelUpDialog(
                     )
                 ) {
                     Text(
-                        text = "ПРИЙНЯТИ СИЛУ",
+                        text = stringResource(R.string.text_accept_power),
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black, letterSpacing = 1.sp)
                     )
                 }

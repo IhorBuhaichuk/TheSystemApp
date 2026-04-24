@@ -152,12 +152,14 @@ class CalendarViewModel @Inject constructor(
         initialValue = CalendarUiState(isLoading = true)
     )
 
-    private fun getLabelForCycleDay(day: Int) = when(day) {
-        1 -> "Денна зміна"
-        2 -> "Нічна зміна"
-        3 -> "Відсипний"
-        4 -> "Вихідний"
-        else -> ""
+    private fun getLabelForCycleDay(day: Int): String {
+        return when(day) {
+            1 -> "ДЕННА ЗМІНА"
+            2 -> "НІЧНА ЗМІНА"
+            3 -> "ВІДСИПНИЙ"
+            4 -> "ВИХІДНИЙ"
+            else -> ""
+        }
     }
 
     fun onMonthChange(month: YearMonth) { _currentMonth.value = month }

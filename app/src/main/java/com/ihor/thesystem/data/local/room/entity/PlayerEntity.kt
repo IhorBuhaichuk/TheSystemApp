@@ -2,6 +2,7 @@ package com.ihor.thesystem.data.local.room.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.model.Rank
 
 @Entity(tableName = "player")
@@ -9,7 +10,7 @@ data class PlayerEntity(
     @PrimaryKey val id: Int = 1,
     val name: String        = "Ігор",
     val level: Int          = 1,
-    val playerClass: String = "Новачок",
+    val playerClass: PlayerRank = PlayerRank.NOVICE,
     val height: Float       = 0f,
     val currentMonth: Int   = 1,
     val currentWeek: Int    = 1,

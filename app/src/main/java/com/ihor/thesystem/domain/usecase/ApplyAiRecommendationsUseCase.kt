@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import android.util.Log
@@ -92,8 +93,13 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             val response = aiRepository.getChatResponse(prompt)
             
             // Якщо текст відповіді містить ключову фразу помилки парсингу
-            if (response.text == "Помилка генерації AI, спробуйте ще раз") {
-                Log.e("ApplyAiRecs", "AI returned parsing error. Aborting database update.")
+            val responseText = when(val t = response.text) {
+                is UiText.DynamicString -> t.value
+                is UiText.StringResource -> ""
+            }
+            if (responseText == "Помилка генерації AI, спробуйте ще раз" || 
+                response.text is UiText.StringResource) {
+                Log.e("ApplyAiRecs", "AI returned error or parsing failed. Aborting database update.")
                 return
             }
 

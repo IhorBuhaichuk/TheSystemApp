@@ -3,13 +3,14 @@ package com.ihor.thesystem.feature.statistics.viewmodel
 import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
-import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+import com.ihor.thesystem.domain.model.PlayerRank
+
 data class StatisticsUiData(
     val playerName: String                      = "",
-    val playerClass: String                     = "",
+    val playerClass: PlayerRank                  = PlayerRank.NOVICE,
     val currentMonth: Int                       = 1,
     val totalMonths: Int                        = 12,
     val currentWeek: Int                        = 1,

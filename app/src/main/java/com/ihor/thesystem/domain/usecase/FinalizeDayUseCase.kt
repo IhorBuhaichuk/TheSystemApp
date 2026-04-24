@@ -18,11 +18,11 @@ class FinalizeDayUseCase @Inject constructor(
     private val advanceCycleDayStatus: AdvanceCycleDayUseCase
 ) {
     /**
-     * Повна синхронна фіналізація дня в межах однієї транзакції.
+     * Фіналізація дня з оптимізованим обсягом транзакції для запобігання ANR.
      */
     suspend operator fun invoke(forceComplete: Boolean = false): Result<DayFinalizationResult, DomainError> {
         return try {
-            transactionProvider.runInTransaction {
+            val transactionResult = transactionProvider.runInTransaction {
                 // 1. Оновлюємо статуси активних квестів (успіх/провал)
                 val statusResult = advanceCycleDayStatus(forceComplete)
                 if (statusResult is Result.Error) {
@@ -41,28 +41,30 @@ class FinalizeDayUseCase @Inject constructor(
                 val wasPenaltyActive = player.isPenaltyActive
                 val (playerAfterXP, levelUpTriggered) = player.evaluateQuests(mainQuests).checkLevelUp()
 
-                // 4. Просування часу (Cycle Day / Week / Month) - ВИКЛИКАЄТЬСЯ ОДИН РАЗ
+                // 4. Просування часу (Cycle Day / Week / Month)
                 val finalPlayer = playerAfterXP.advanceTime(config)
 
                 // 5. Збереження оновленого стану гравця
                 playerRepo.updatePlayer(finalPlayer)
 
-                // 6. Архівація та генерація нового дня
+                // 6. Архівація квестів
                 questRepo.archiveActiveQuests()
-                generateDailyQuests.invoke()
-                
-                // 7. Оновлення атрибутів RPG на основі Matrix
-                calculateAttributes.invoke()
 
-                Timber.d("Day Finalization transaction completed successfully")
-                
                 val result = when {
                     levelUpTriggered -> DayFinalizationResult.LevelUp
                     !wasPenaltyActive && finalPlayer.isPenaltyActive -> DayFinalizationResult.PenaltyZoneEntered
                     else -> DayFinalizationResult.Success
                 }
-                Result.Success(result)
+                result
             }
+
+            // 7. Поза транзакцією: Генерація нового дня та оновлення атрибутів
+            generateDailyQuests.invoke()
+            calculateAttributes.invoke()
+
+            Timber.d("Day Finalization completed successfully")
+            Result.Success(transactionResult)
+
         } catch (e: TransactionRollbackException) {
             Timber.e(e, "Transaction rolled back during day finalization")
             Result.Error(e.error)

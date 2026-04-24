@@ -13,6 +13,31 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object UseCaseModule {
+    @Provides
+    fun provideWorkoutUseCases(
+        saveExerciseSets: SaveExerciseSetsUseCase,
+        calculateRecommendation: CalculateRecommendedSetUseCase,
+        calculateCycleDay: CalculateCycleDayForDateUseCase,
+        getWorkoutDetails: GetWorkoutDetailsUseCase,
+        updateMatrixGoals: UpdateMatrixGoalsUseCase,
+        getPlayerFlow: GetPlayerFlowUseCase,
+        getStatisticsData: GetStatisticsDataUseCase,
+        scheduleRepo: ScheduleRepository,
+        viewingDateRepo: ViewingDateRepository,
+        analyticsRepo: WorkoutAnalyticsRepository
+    ): WorkoutUseCases = WorkoutUseCases(
+        saveExerciseSets,
+        calculateRecommendation,
+        calculateCycleDay,
+        getWorkoutDetails,
+        updateMatrixGoals,
+        getPlayerFlow,
+        getStatisticsData,
+        scheduleRepo,
+        viewingDateRepo,
+        analyticsRepo
+    )
+
     // Всі UseCase тепер використовують @Inject constructor() у доменному шарі.
     // Hilt автоматично знайде їх, якщо вони доступні в модулі :app через залежність implementation(project(":domain")).
     // Це дозволяє видалити явні @Provides методи для UseCase, які не мають складної ініціалізації.

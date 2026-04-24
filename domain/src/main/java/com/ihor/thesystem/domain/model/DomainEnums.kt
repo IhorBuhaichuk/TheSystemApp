@@ -16,13 +16,13 @@ enum class Rank(val weight: Int) {
     }
 }
 
-enum class PlayerRank(val title: String, val requiredMonths: Int) {
-    NOVICE("Новачок", 1),
-    APPRENTICE("Учень", 2),
-    ADEPT("Адепт", 3),
-    EXPERT("Експерт", 6),
-    MASTER("Майстер", 9),
-    THE_SYSTEM("Система", 12);
+enum class PlayerRank(val requiredMonths: Int) {
+    NOVICE(1),
+    APPRENTICE(2),
+    ADEPT(3),
+    EXPERT(6),
+    MASTER(9),
+    THE_SYSTEM(12);
 
     companion object {
         fun resolveByMonth(month: Int): PlayerRank {
@@ -32,11 +32,11 @@ enum class PlayerRank(val title: String, val requiredMonths: Int) {
     }
 }
 
-enum class MuscleGroup(val label: String) {
-    CHEST("Груди"),
-    BACK("Спина"),
-    SHOULDERS("Дельти"),
-    QUADS("Квадрицепси"),
-    HAMSTRINGS_GLUTES("Стегна та Сідниці"),
-    ARMS("Руки")
+enum class MuscleGroup {
+    CHEST,
+    BACK,
+    SHOULDERS,
+    QUADS,
+    HAMSTRINGS_GLUTES,
+    ARMS
 }

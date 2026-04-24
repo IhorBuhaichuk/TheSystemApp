@@ -4,6 +4,7 @@ import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutLog
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
+import com.ihor.thesystem.data.local.room.entity.ReferenceMatrixEntity
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
@@ -23,7 +24,7 @@ class CalculateRecommendedSetUseCase @Inject constructor(
         val lastSets: List<ExerciseSet> = analyticsRepo.getLastSetsForExercise(exerciseId)
 
         // 2. Отримуємо дані з еталонної матриці для вправи
-        val reference = matrixRepo.getReferenceForExercise(exerciseName)
+        val reference = matrixRepo.getReferenceForExercise(exerciseName) as? ReferenceMatrixEntity
         val startWeight = reference?.milestones?.get("M0") ?: 0.0
         val progressionStep = reference?.progressionStep ?: 2.5
 

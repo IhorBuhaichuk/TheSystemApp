@@ -4,9 +4,13 @@ import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.ExerciseCategory
+import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
-import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
+import com.ihor.thesystem.core.ui.UiText
+import com.ihor.thesystem.R
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -15,7 +19,8 @@ import java.time.ZoneId
 
 class ProgressionMatrixRepositoryImpl @Inject constructor(
     private val matrixDao:    ProgressionMatrixDao,
-    private val analyticsDao: WorkoutAnalyticsDao
+    private val analyticsDao: WorkoutAnalyticsDao,
+    @ApplicationContext private val context: Context
 ) : ProgressionMatrixRepository {
 
     override fun getAllEntries(): Flow<List<ProgressionMatrixEntry>> =
@@ -176,13 +181,14 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         timestamp: Long
     ) {
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
+        val note = UiText.StringResource(R.string.text_ai_recommendation_note, listOf(sets, reps)).asString(context)
         matrixDao.update(existing.copy(
             nextRecommendedWeight = weight,
             nextRecommendedSets = sets,
             nextRecommendedReps = reps,
             lastAiFeedback = aiFeedback,
             lastAnalyzedTimestamp = timestamp,
-            targetWeightNote = "Рекомендація AI ($sets sets, $reps reps)"
+            targetWeightNote = note
         ))
     }
 }

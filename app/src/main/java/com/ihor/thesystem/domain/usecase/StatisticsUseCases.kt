@@ -8,7 +8,7 @@ import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
-import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
+import com.ihor.thesystem.domain.model.ActiveSetInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import java.time.LocalDate

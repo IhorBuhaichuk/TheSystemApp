@@ -1,12 +1,15 @@
 package com.ihor.thesystem.feature.status.viewmodel
 
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.Rank
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+import com.ihor.thesystem.domain.model.PlayerRank
+
 data class StatusUiData(
     val playerName: String            = "Ігор",
-    val playerClass: String           = "Новачок",
+    val playerClass: PlayerRank        = PlayerRank.NOVICE,
     val level: Int                    = 1,
     val xpTotal: Int                  = 0,
     val xpMax: Int                    = 1000,
@@ -31,7 +34,7 @@ data class StatusUiData(
 data class QuestUiModel(
     val id: Int,
     val title: String,
-    val subtitle: String,
+    val subtitle: UiText,
     val tasks: ImmutableList<TaskUiModel> = persistentListOf(),
     val isCompleted: Boolean = false
 )

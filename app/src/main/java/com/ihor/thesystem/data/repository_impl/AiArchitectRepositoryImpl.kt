@@ -3,12 +3,14 @@ package com.ihor.thesystem.data.repository_impl
 import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.ihor.thesystem.BuildConfig
+import com.ihor.thesystem.R
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.data.remote.dto.GeminiWorkoutResponseDto
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
-import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
+import timber.log.Timber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -17,8 +19,7 @@ import javax.inject.Inject
 import javax.inject.Named
 
 class AiArchitectRepositoryImpl @Inject constructor(
-    @Named("ArchitectModel") private val generativeModel: GenerativeModel,
-    private val matrixRepo: ProgressionMatrixRepository
+    @Named("ArchitectModel") private val generativeModel: GenerativeModel
 ) : AiArchitectRepository {
 
     private val json = Json {
@@ -29,9 +30,10 @@ class AiArchitectRepositoryImpl @Inject constructor(
     override suspend fun getChatResponse(prompt: String): ChatMessage = withContext(Dispatchers.IO) {
         val apiKey = BuildConfig.GEMINI_API_KEY
         if (apiKey.isNullOrBlank() || apiKey == "null") {
+            Timber.e("Critical Error: Gemini API Key not found. Check local.properties.")
             return@withContext ChatMessage(
                 role = ChatRole.AI,
-                text = "КРИТИЧНА ПОМИЛКА: API ключ не знайдено в BuildConfig. Зробіть Clean/Rebuild.",
+                text = UiText.StringResource(R.string.error_ai_generic),
                 isActionable = false
             )
         }
@@ -48,7 +50,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
                     Log.e("AiArchitect", "JSON Error: ${e.message}")
                     return@withTimeout ChatMessage(
                         role = ChatRole.AI,
-                        text = responseText,
+                        text = UiText.DynamicString(responseText),
                         isActionable = false
                     )
                 }
@@ -63,44 +65,36 @@ class AiArchitectRepositoryImpl @Inject constructor(
                     )
                 }
 
-                // Збереження в БД через matrixRepo
-                targets.forEach { rec ->
-                    matrixRepo.updateTarget(
-                        exerciseId = rec.exerciseId,
-                        weight = rec.weight.toDouble(),
-                        sets = rec.sets,
-                        reps = rec.reps,
-                        aiFeedback = rec.aiFeedback,
-                        timestamp = System.currentTimeMillis()
-                    )
-                }
-
                 ChatMessage(
                     role = ChatRole.AI,
-                    text = dto.feedbackText.ifBlank { "Аналіз виконано." },
+                    text = if (dto.feedbackText.isBlank()) {
+                        UiText.StringResource(R.string.ai_analysis_complete)
+                    } else {
+                        UiText.DynamicString(dto.feedbackText)
+                    },
                     recommendations = targets,
                     isActionable = targets.isNotEmpty(),
                     aiFeedback = dto.aiFeedback ?: targets.firstOrNull()?.aiFeedback
                 )
             }
         } catch (e: Exception) {
-            Log.e("AiArchitect", "Request failed: ${e.message}")
+            Timber.e(e, "Request failed")
             if (e is kotlinx.coroutines.CancellationException) throw e
             
-            val errorMsg = when {
+            val errorText = when {
                 e is kotlinx.serialization.SerializationException || 
                 e.message?.contains("GrpcError") == true ||
                 e.message?.contains("503") == true -> 
-                    "Сервери AI тимчасово перевантажені. Спробуйте пізніше."
+                    UiText.StringResource(R.string.error_ai_overloaded)
                     
                 e.message?.contains("429") == true -> 
-                    "Перевищено ліміт запитів (429). Спробуйте через хвилину."
+                    UiText.StringResource(R.string.error_ai_rate_limit)
 
-                else -> "Помилка: ${e.localizedMessage}"
+                else -> UiText.StringResource(R.string.error_ai_generic)
             }
             ChatMessage(
                 role = ChatRole.AI,
-                text = errorMsg,
+                text = errorText,
                 isActionable = false
             )
         }

@@ -22,12 +22,17 @@ class ValidateDirectivesUseCase @Inject constructor() {
                 val matrixEntry = matrix.find { it.exerciseId == directive.exerciseId }
 
                 if (matrixEntry != null) {
+                    val safeMin = minOf(
+                        matrixEntry.currentWeight.toDouble(),
+                        matrixEntry.targetWeight.toDouble()
+                    )
+                    val safeMax = maxOf(
+                        matrixEntry.currentWeight.toDouble(),
+                        matrixEntry.targetWeight.toDouble()
+                    )
                     // Якщо вправа є в матриці, затискаємо вагу в її межах
                     directive.copy(
-                        targetWeight = directive.targetWeight.coerceIn(
-                            minimumValue = matrixEntry.currentWeight.toDouble(),
-                            maximumValue = matrixEntry.targetWeight.toDouble()
-                        ),
+                        targetWeight = directive.targetWeight.coerceIn(safeMin, safeMax),
                         // Оскільки targetReps тепер String (діапазони), ми не можемо напряму використати coerceIn.
                         // Для базової валідації намагаємося розпарсити або залишаємо як є.
                         targetReps = directive.targetReps,

@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -51,16 +52,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun StatusScreen(
     navController: NavHostController,
-    viewModel: StatusViewModel = hiltViewModel()
+    statusViewModel: StatusViewModel = hiltViewModel(),
+    workoutViewModel: WorkoutViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val dialogState by viewModel.dialogState.collectAsStateWithLifecycle()
-    val activeDayWorkout by viewModel.activeWorkoutState.collectAsStateWithLifecycle()
+    val uiState by statusViewModel.uiState.collectAsStateWithLifecycle()
+    val statusDialogState by statusViewModel.dialogState.collectAsStateWithLifecycle()
+    val workoutDialogState by workoutViewModel.dialogState.collectAsStateWithLifecycle()
+    val activeDayWorkout by workoutViewModel.activeWorkoutState.collectAsStateWithLifecycle()
 
     var levelUpEvent by remember { mutableStateOf<Any?>(null) }
 
     LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
+        statusViewModel.events.collect { event ->
             when (event) {
                 is StatusOneOffEvent.ShowLevelUp -> levelUpEvent = event
             }
@@ -86,8 +89,8 @@ fun StatusScreen(
                     
                     HeaderSection(
                         data = data,
-                        onAvatarSelected = { viewModel.updateAvatarUri(it) },
-                        onEditNameTap = { viewModel.onEditNameTap() }
+                        onAvatarSelected = { statusViewModel.updateAvatarUri(it) },
+                        onEditNameTap = { statusViewModel.onEditNameTap() }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -95,7 +98,7 @@ fun StatusScreen(
                     if (data.mainQuest != null) {
                         MainWorkoutCardPremium(
                             data = data,
-                            onStartWorkout = { viewModel.onOpenMainWorkout() }
+                            onStartWorkout = { workoutViewModel.onOpenMainWorkout() }
                         )
                     } else {
                         RestDayCard()
@@ -103,9 +106,9 @@ fun StatusScreen(
 
                     DailyQuestsSectionPremium(
                         data = data,
-                        onTaskToggled = { task, qId -> viewModel.onTaskToggled(task, qId) },
-                        onAddTask = { qId -> viewModel.onAddTaskTap(qId) },
-                        onRemoveTask = { id -> viewModel.onRemoveTask(id) }
+                        onTaskToggled = { task, qId -> statusViewModel.onTaskToggled(task, qId) },
+                        onAddTask = { qId -> statusViewModel.onAddTaskTap(qId) },
+                        onRemoveTask = { id -> statusViewModel.onRemoveTask(id) }
                     )
 
                     Spacer(modifier = Modifier.height(110.dp))
@@ -124,29 +127,35 @@ fun StatusScreen(
             )
         }
         
-        when (val dState = dialogState) {
+        // Status Dialogs
+        when (val dState = statusDialogState) {
             is StatusDialogState.EditName -> {
                 val currentData = (uiState as? UiState.Content)?.data
                 if (currentData != null) {
                     com.ihor.thesystem.feature.statistics.ui.components.dialogs.EditNameDialog(
                         currentName = currentData.playerName,
-                        onConfirm = { viewModel.onNameConfirmed(it) },
-                        onDismiss = { viewModel.onDismissDialog() }
+                        onConfirm = { statusViewModel.onNameConfirmed(it) },
+                        onDismiss = { statusViewModel.onDismissDialog() }
                     )
                 }
             }
             is StatusDialogState.AddTask -> AddTaskDialog(
-                onConfirm = { viewModel.onAddTaskConfirmed(dState.questId, it) },
-                onDismiss = { viewModel.onDismissDialog() }
+                onConfirm = { statusViewModel.onAddTaskConfirmed(dState.questId, it) },
+                onDismiss = { statusViewModel.onDismissDialog() }
             )
+            else -> {}
+        }
+
+        // Workout Dialogs
+        when (val dState = workoutDialogState) {
             is StatusDialogState.MainQuestWorkout -> MainQuestWorkoutDialog(
                 data = activeDayWorkout,
-                onSetWeightChanged = { exId, setId, w -> viewModel.onSetWeightChanged(exId, setId, w) },
-                onSetRepsChanged = { exId, setId, r -> viewModel.onSetRepsChanged(exId, setId, r) },
-                onSetFocusLost = { exId, setId -> viewModel.onSetFocusLost(exId, setId) },
-                onSetCompleted = { exId, setId -> viewModel.onSetCompleted(exId, setId) },
-                onOpenSetup = { viewModel.onOpenSetup(it, fromWorkout = true) },
-                onDismiss = { viewModel.onDismissDialog() }
+                onSetWeightChanged = { exId, setId, w -> workoutViewModel.onSetWeightChanged(exId, setId, w) },
+                onSetRepsChanged = { exId, setId, r -> workoutViewModel.onSetRepsChanged(exId, setId, r) },
+                onSetFocusLost = { exId, setId -> workoutViewModel.onSetFocusLost(exId, setId) },
+                onSetCompleted = { exId, setId -> workoutViewModel.onSetCompleted(exId, setId) },
+                onOpenSetup = { workoutViewModel.onOpenSetup(it, fromWorkout = true) },
+                onDismiss = { workoutViewModel.onDismissDialog() }
             )
             is StatusDialogState.SetupMatrix -> {
                 com.ihor.thesystem.feature.statistics.ui.dialogs.SetupMatrixDialog(
@@ -154,13 +163,13 @@ fun StatusScreen(
                     initialStart = dState.startWeight,
                     initialTarget = dState.targetWeight,
                     onConfirm = { start, target ->
-                        viewModel.onConfirmSetup(dState.entry.exerciseId, start, target)
+                        workoutViewModel.onConfirmSetup(dState.entry.exerciseId, start, target)
                     },
                     onDismiss = { 
                         if (dState.showWorkoutAfter) {
-                            viewModel.onOpenMainWorkout()
+                            workoutViewModel.onOpenMainWorkout()
                         } else {
-                            viewModel.onDismissDialog()
+                            workoutViewModel.onDismissDialog()
                         }
                     }
                 )
@@ -169,17 +178,19 @@ fun StatusScreen(
                 com.ihor.thesystem.feature.statistics.ui.dialogs.LogWorkoutSetsDialog(
                     exerciseName = dState.entry.exerciseName,
                     sets = dState.sets,
-                    onUpdate = { id, w, r -> viewModel.updateSetInput(id, w, r) },
-                    onAdd = { viewModel.addSet() },
-                    onRemove = { viewModel.removeSet() },
+                    onUpdate = { id, w, r -> 
+                        workoutViewModel.updateLogSetInput(id, w, r)
+                    },
+                    onAdd = { workoutViewModel.addLogSet() },
+                    onRemove = { workoutViewModel.removeLogSet() },
                     onSave = { feedback ->
-                        viewModel.onLogSetsConfirmed(dState.entry.exerciseId, dState.sets, feedback)
+                        workoutViewModel.onLogSetsConfirmed(dState.entry.exerciseId, dState.sets, feedback)
                     },
                     onDismiss = { 
                         if (dState.showWorkoutAfter) {
-                            viewModel.onOpenMainWorkout()
+                            workoutViewModel.onOpenMainWorkout()
                         } else {
-                            viewModel.onDismissDialog()
+                            workoutViewModel.onDismissDialog()
                         }
                     },
                     existingLogs = dState.existingLogs
@@ -230,7 +241,7 @@ private fun HeaderSection(
                             .background(Color(0xFF00F0FF))
                     )
                     Text(
-                        text = "SYSTEM ONLINE",
+                        text = stringResource(R.string.text_system_online),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color(0xFF00F0FF),
                             letterSpacing = 1.5.sp,
@@ -239,7 +250,7 @@ private fun HeaderSection(
                     )
                 }
                 Text(
-                    text = "Вітаю, ${data.playerName}",
+                    text = stringResource(R.string.text_greeting, data.playerName),
                     style = MaterialTheme.typography.headlineMedium.copy(
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
@@ -349,18 +360,18 @@ private fun XpProgressBarPremium(data: StatusUiData) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "LEVEL ${data.level}",
+                    text = stringResource(R.string.text_level_label, data.level),
                     style = MaterialTheme.typography.labelLarge.copy(
                         color = Color(0xFF00F0FF),
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
+                        letterSpacing = 1.5.sp
                     )
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Box(modifier = Modifier.size(4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.3f)))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "NEXT: ${data.xpMax - data.xpTotal} XP",
+                    text = stringResource(R.string.text_next_xp, data.xpMax - data.xpTotal),
                     style = MaterialTheme.typography.labelMedium.copy(color = Color.White.copy(alpha = 0.4f))
                 )
             }
@@ -418,7 +429,7 @@ private fun RestDayCard() {
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "СЬОГОДНІ ВІДПОЧИНОК",
+                text = stringResource(R.string.text_rest_day_title),
                 style = MaterialTheme.typography.labelLarge.copy(
                     color = Color.White.copy(alpha = 0.7f),
                     fontWeight = FontWeight.Bold,
@@ -426,7 +437,7 @@ private fun RestDayCard() {
                 )
             )
             Text(
-                text = "Час для відновлення сил",
+                text = stringResource(R.string.text_rest_day_subtitle),
                 style = MaterialTheme.typography.bodySmall.copy(color = Color.White.copy(alpha = 0.4f))
             )
         }
@@ -480,7 +491,7 @@ private fun MainWorkoutCardPremium(
             Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Column {
                     Text(
-                        text = "ОСНОВНИЙ КВЕСТ",
+                        text = stringResource(R.string.text_main_quest),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color(0xFF00F0FF),
                             fontWeight = FontWeight.Bold,
@@ -537,7 +548,7 @@ private fun MainWorkoutCardPremium(
                     }
                     if (mainQuest.tasks.size > 5) {
                         Text(
-                            text = "+ ще ${mainQuest.tasks.size - 5} вправ",
+                            text = stringResource(R.string.text_more_exercises, mainQuest.tasks.size - 5),
                             style = MaterialTheme.typography.labelSmall.copy(color = Color.White.copy(alpha = 0.3f)),
                             modifier = Modifier.padding(start = 18.dp)
                         )
@@ -551,7 +562,7 @@ private fun MainWorkoutCardPremium(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = mainQuest.subtitle,
+                    text = mainQuest.subtitle.asString(),
                     style = MaterialTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.5f))
                 )
                 
@@ -565,7 +576,7 @@ private fun MainWorkoutCardPremium(
                     modifier = Modifier.height(48.dp)
                 ) {
                     Text(
-                        text = if (mainQuest.isCompleted) "ЗАВЕРШЕНО ✓" else "РОЗПОЧАТИ",
+                        text = if (mainQuest.isCompleted) stringResource(R.string.text_completed_check) else stringResource(R.string.text_start),
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.5.sp
                     )
@@ -597,7 +608,7 @@ private fun DailyQuestsSectionPremium(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "ЩОДЕННІ ЦІЛІ",
+                text = stringResource(R.string.text_daily_goals),
                 style = MaterialTheme.typography.labelLarge.copy(
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
@@ -639,7 +650,7 @@ private fun DailyQuestsSectionPremium(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Add, contentDescription = null, tint = Color.White.copy(alpha = 0.3f), modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("ДОДАТИ НОВУ ЦІЛЬ", color = Color.White.copy(alpha = 0.3f), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text(stringResource(R.string.text_add_new_goal), color = Color.White.copy(alpha = 0.3f), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 }
             }
         }
@@ -741,7 +752,7 @@ private fun DatabaseErrorScreen(message: UiText) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         GlitchText(
-            text = "CRITICAL ERROR",
+            text = stringResource(R.string.text_critical_error_capital),
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 16.dp),
             primaryColor = Color.Red
@@ -756,7 +767,7 @@ private fun DatabaseErrorScreen(message: UiText) {
             onClick = { exitProcess(0) },
             colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.2f))
         ) {
-            Text("TERMINATE SYSTEM", color = Color.Red)
+            Text(stringResource(R.string.text_terminate_system), color = Color.Red)
         }
     }
 }

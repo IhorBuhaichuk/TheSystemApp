@@ -16,8 +16,7 @@ data class AiWorkoutRecommendation(
 data class ChatMessage(
     val id: String = UUID.randomUUID().toString(),
     val role: ChatRole,
-    val text: String = "",
-    val uiText: UiText? = null,
+    val text: UiText = UiText.DynamicString(""),
     val recommendations: List<AiWorkoutRecommendation> = emptyList(),
     val isActionable: Boolean = false,
     val aiFeedback: String? = null
@@ -73,7 +72,7 @@ data class WorkoutDirective(
  * (Зберігаємо для сумісності під час рефакторингу)
  */
 data class AiArchitectReport(
-    val architectFeedback: String,
+    val architectFeedback: UiText,
     val currentStageStatus: String,
     val completedExercises: List<Int>,
     val pendingExercises: List<Int>,

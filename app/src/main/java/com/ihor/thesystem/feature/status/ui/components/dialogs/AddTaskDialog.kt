@@ -22,6 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.stringResource
+import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
 
 @Composable
@@ -66,7 +68,7 @@ fun AddTaskDialog(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "НОВА ЦІЛЬ",
+                        text = stringResource(R.string.text_add_task_title),
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = Color.White,
                             fontWeight = FontWeight.ExtraBold,
@@ -82,7 +84,7 @@ fun AddTaskDialog(
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = {
                         Text(
-                            "Що потрібно зробити?",
+                            stringResource(R.string.text_add_task_placeholder),
                             color = Color.White.copy(alpha = 0.3f),
                             fontSize = 14.sp
                         )
@@ -115,7 +117,7 @@ fun AddTaskDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "СКАСУВАТИ",
+                            text = stringResource(R.string.text_add_task_cancel),
                             style = MaterialTheme.typography.labelLarge.copy(
                                 color = Color.White.copy(alpha = 0.6f),
                                 fontWeight = FontWeight.SemiBold
@@ -146,7 +148,7 @@ fun AddTaskDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "ДОДАТИ",
+                            text = stringResource(R.string.text_add_task_confirm),
                             style = MaterialTheme.typography.labelLarge.copy(
                                 color = if (taskName.isNotBlank()) Color.Black else Color.White.copy(alpha = 0.3f),
                                 fontWeight = FontWeight.Bold

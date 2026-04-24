@@ -12,6 +12,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 
+import androidx.compose.ui.res.stringResource
+import com.ihor.thesystem.R
+
 @Composable
 fun EditNameDialog(
     currentName: String,
@@ -29,7 +32,7 @@ fun EditNameDialog(
         },
         title = {
             Text(
-                text       = "[ РЕДАГУВАТИ ІМ'Я ]",
+                text       = stringResource(R.string.text_edit_name_title),
                 color      = NeonCyan,
                 fontFamily = FontFamily.Monospace,
                 fontSize   = 14.sp
@@ -41,7 +44,7 @@ fun EditNameDialog(
                 onValueChange  = { inputName = it.uppercase() },
                 singleLine     = true,
                 label          = {
-                    Text("Нове ім'я", fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                    Text(stringResource(R.string.text_new_name), fontFamily = FontFamily.Monospace, fontSize = 11.sp)
                 },
                 colors         = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor   = NeonCyan,
@@ -56,12 +59,12 @@ fun EditNameDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(inputName) }) {
-                Text("ПІДТВЕРДИТИ", color = NeonCyan, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                Text(stringResource(R.string.text_confirm), color = NeonCyan, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("СКАСУВАТИ", color = TextSecondary, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                Text(stringResource(R.string.text_cancel), color = TextSecondary, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
             }
         }
     )

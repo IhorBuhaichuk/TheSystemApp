@@ -24,7 +24,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
 import kotlinx.coroutines.launch
@@ -163,7 +165,7 @@ private fun ChatBubble(msg: ChatMessage) {
                 modifier = Modifier.widthIn(max = 280.dp)
             ) {
                 Text(
-                    text = msg.text,
+                    text = msg.text.asString(),
                     color = Color.White,
                     modifier = Modifier.padding(14.dp),
                     fontFamily = RajdhaniFamily,

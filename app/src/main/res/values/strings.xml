@@ -23,13 +23,50 @@
     <string name="text_annual_matrix">РІЧНА МАТРИЦЯ ПРОГРЕСІЇ</string>
     <string name="text_tap_log_flag_setup">TAP = LOG | FLAG = SETUP</string>
     <string name="system_loading">Завантаження системи...</string>
-    <string name="text_critical_system_error">КРИТИЧНА ПОМИЛКА СИСТЕМИ</string>
+    <string name="text_critical_error_capital">КРИТИЧНА ПОМИЛКА СИСТЕМИ</string>
+    <string name="text_terminate_system">TERMINATE SYSTEM</string>
     <string name="text_db_init_failed">Ініціалізація бази даних не вдалася:</string>
     <string name="text_restart">ПЕРЕЗАПУСТИТИ</string>
 
+    <string name="text_matrix_in_development">МАТРИЦЯ: В розробці</string>
+    <string name="text_ai_recommendation_note">Рекомендація AI (%1$d підходів, %2$s повторень)</string>
+    <string name="text_label_weight">ВАГА</string>
+    <string name="text_label_height">ЗРІСТ</string>
+    <string name="text_unit_kg">кг</string>
+    <string name="text_unit_cm">см</string>
+
+    <string name="text_rest_day_title">СЬОГОДНІ ВІДПОЧИНОК</string>
+    <string name="text_rest_day_subtitle">Час для відновлення сил</string>
+
+    <string name="text_level_up">LEVEL UP</string>
+    <string name="text_system_updated">СИСТЕМА ОНОВЛЕНА</string>
+    <string name="text_month_n">МІСЯЦЬ %1$d</string>
+    <string name="text_accept_power">ПРИЙНЯТИ СИЛУ</string>
+
+    <string name="text_greeting">Вітаю, %1$s</string>
+    <string name="text_main_quest">ОСНОВНИЙ КВЕСТ</string>
+    <string name="text_more_exercises">+ ще %1$d вправ</string>
+    <string name="text_completed_check">ЗАВЕРШЕНО ✓</string>
+    <string name="text_daily_goals">ЩОДЕННІ ЦІЛІ</string>
+    <string name="text_add_task_title">НОВА ЦІЛЬ</string>
+    <string name="text_add_task_placeholder">Що потрібно зробити?</string>
+    <string name="text_add_task_confirm">ДОДАТИ</string>
+    <string name="text_add_new_goal">ДОДАТИ НОВУ ЦІЛЬ</string>
+    <string name="text_add_task_cancel">СКАСУВАТИ</string>
+    <string name="text_confirm">ПІДТВЕРДИТИ</string>
+    <string name="text_cancel">СКАСУВАТИ</string>
+    <string name="text_edit_name_title">[ РЕДАГУВАТИ ІМ\'Я ]</string>
+    <string name="text_new_name">Нове ім\'я</string>
+
+    <string name="quest_progress">ПРОГРЕС: %1$d/%2$d</string>
+    <string name="quest_reward_week">НАГОРОДА: +1 ТИЖДЕНЬ</string>
+    <string name="quest_reward_promotion">НАГОРОДА: +500 EXP | ПІДТВЕРДЖЕННЯ РАНГУ</string>
+    <string name="quest_completed_capital">ВИКОНАНО ✓</string>
+
+
     <!-- Cycle Days -->
-    <string name="cycle_day_1">ДЕНЬ</string>
-    <string name="cycle_day_2">НІЧ</string>
+    <string name="cycle_day_1">ДЕННА ЗМІНА</string>
+    <string name="cycle_day_2">НІЧНА ЗМІНА</string>
     <string name="cycle_day_3">ВІДСИПНИЙ</string>
     <string name="cycle_day_4">ВИХІДНИЙ</string>
     <string name="cycle_day_default">ДЕНЬ %1$d</string>
@@ -45,14 +82,53 @@
     <string name="error_invalid_weight">Некоректне значення: допустима вага від 20 до 500 кг</string>
     <string name="error_invalid_height">Некоректне значення: допустимий зріст від 50 до 300 см</string>
     <string name="error_unknown">Невідома помилка</string>
+    <string name="error_disk_full">Пам’ять пристрою заповнена</string>
+    <string name="error_saving">Помилка збереження</string>
+    <string name="error_rank_update">Помилка оновлення рангу</string>
+    <string name="error_weight_update">Помилка оновлення ваги</string>
+    <string name="error_height_update">Помилка оновлення зросту</string>
+    <string name="error_ai_parsing">Помилка генерації AI, спробуйте ще раз</string>
+    <string name="error_generic">Помилка</string>
     <string name="error_operation_failed">Помилка операції</string>
+    <string name="error_ai_generic">Критична помилка AI. Перевірте конфігурацію.</string>
+    <string name="ai_analysis_complete">Аналіз завершено.</string>
+    <string name="ai_fallback_activated">ЗВ\'ЯЗОК З AI ВТРАЧЕНО. Активовано резервний протокол.</string>
+
+    <!-- Muscle Groups -->
+    <string name="muscle_group_chest">ГРУДИ</string>
+    <string name="muscle_group_back">СПИНА</string>
+    <string name="muscle_group_shoulders">ДЕЛЬТИ</string>
+    <string name="muscle_group_quads">КВАДРИЦЕПСИ</string>
+    <string name="muscle_group_hamstrings_glutes">СТЕГНА ТА СІДНИЦІ</string>
+    <string name="muscle_group_arms">РУКИ</string>
+
+    <!-- Player Ranks -->
+    <string name="rank_novice">Новачок</string>
+    <string name="rank_apprentice">Учень</string>
+    <string name="rank_adept">Адепт</string>
+    <string name="rank_expert">Експерт</string>
+    <string name="rank_master">Майстер</string>
+    <string name="rank_the_system">Система</string>
+
+    <string name="error_ai_overloaded">Сервери AI тимчасово перевантажені. Спробуйте пізніше.</string>
+    <string name="error_ai_rate_limit">Занадто багато запитів до AI. Спробуйте пізніше.</string>
     <string name="error_network_architect">ПОМИЛКА МЕРЕЖІ: %1$s</string>
     <string name="error_unknown_architect">Невідома помилка зв\'язку з архітектором</string>
     <string name="error_apply_recommendations_failed">Помилка застосування рекомендацій</string>
     <string name="error_no_internet">Відсутнє підключення до інтернету</string>
     <string name="error_server_error">Помилка сервера</string>
     <string name="error_timeout">Час очікування вичерпано</string>
-    <string name="error_disk_full">Пам\'ять пристрою заповнена</string>
+    <string name="text_system_online">SYSTEM ONLINE</string>
+    <string name="text_level_label">LEVEL %1$d</string>
+    <string name="text_next_xp">NEXT: %1$d XP</string>
+    <string name="text_character">ПЕРСОНАЖ</string>
+    <string name="text_matrix">МАТРИЦЯ</string>
+    <string name="text_analytics">АНАЛІТИКА</string>
+    <string name="text_character_stats_capital">ХАРАКТЕРИСТИКИ ПЕРСОНАЖА</string>
+    <string name="text_progress_30_days">ПРОГРЕС ЗА 30 ДНІВ</string>
+    <string name="text_exercise_label">Вправа %1$d</string>
+    <string name="text_workout_results_header">Результати останнього тренувального дня (Тоннаж: %1$dкг):</string>
+    <string name="text_workout_results_item">[ID: %1$d] %2$s: %3$.1fкг х %4$d</string>
 
     <array name="com_google_android_gms_fonts_certs">
         <item>@array/com_google_android_gms_fonts_certs_dev</item>
@@ -64,4 +140,12 @@
     <string-array name="com_google_android_gms_fonts_certs_prod">
         <item>MIIEqDCCA5CgAwIBAgIJANrd9k9SRE90MA0GCSqGSIb3DQEBBQUAMIGUMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UEChMHR29vZ2xlMRAwDgYDVQQLEwdBbmRyb2lkMRAwDgYDVQQDEwdBbmRyb2lkMSEwHwYJKoZIhvcNAQkBFhJhbmRyb2lkQGdvb2dsZS5jb20wIBcNMTMwNDI0MjI1MDU2WhcNNDAwNDEwMjI1MDU2WjCBlDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxEDAOBgNVBAoTB0dvb2dsZTEQMA4GA1UECxMHQW5kcm9pZDEQMA4GA1UEAxMHQW5kcm9pZDEhMB8GCSqGSIb3DQEJARYSYW5kcm9pZEBnb29nbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvYvOfvS98pSgd0asv8SAbS+SqcOPDr6C3A9TdVWQXZQN8pxf91Z6G1Ec4gWjyS2nW6G3Asui8BthCAJE87j6dfBCdA2ALyuH/7S8uNoGvXEA06AlS1Rpk7uErVof9Lqy8hBsuyW7OnUMNoNRRARE62UvU6Sdc1CofP/986SxoC8fLOf6lTh9V28u9Zqx+f8Wqn5vS9smhV69JyTHK6GfCoGfGPRUf9kvZyPhS3ujV5ZtSOP9mS6PJcWIrSNoSBYWvtWvrlB2XC7+Qd7n3SgukSna0lkedidP2QZND8Nf4fszFpLsd5LHqCZ6ytfW6unVr5S3OcS6pDe3fNdt8Lu9Sw=</item>
     </string-array>
+    <string name="text_workout_recommendation_format">%1$d x %2$d @ %3$.1f кг</string>
+    <string name="text_exercise_default_name">Вправа</string>
+    <string name="text_day_details">ДЕТАЛІ ДНЯ</string>
+    <string name="text_activity_day">АКТИВНІСТЬ ДНЯ</string>
+    <string name="text_system_recommendations">РЕКОМЕНДАЦІЇ СИСТЕМИ</string>
+    <string name="text_planned_program">ПЛАНОВА ПРОГРАМА</string>
+    <string name="text_active_recovery">РЕЖИМ: АКТИВНЕ ВІДНОВЛЕННЯ</string>
+    <string name="text_status_label">СТАТУС</string>
 </resources>

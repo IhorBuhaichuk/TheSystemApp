@@ -29,7 +29,7 @@ import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.focus.onFocusChanged
-import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
+import com.ihor.thesystem.domain.model.ActiveSetInput
 
 @Composable
 fun ActiveDayCard(

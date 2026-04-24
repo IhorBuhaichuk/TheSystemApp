@@ -1,6 +1,7 @@
 package com.ihor.thesystem.feature.status.viewmodel
 
 import androidx.compose.runtime.Immutable
+import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -23,14 +24,6 @@ data class ExerciseWorkoutUiModel(
     val recommendedSets: Int? = null,
     val recommendation: String? = null,
     val sets: ImmutableList<ActiveSetInput> = persistentListOf()
-)
-
-@Immutable
-data class ActiveSetInput(
-    val id: Long = System.nanoTime(),
-    val weight: String = "",
-    val reps: String = "",
-    val isCompleted: Boolean = false
 )
 
 @Immutable

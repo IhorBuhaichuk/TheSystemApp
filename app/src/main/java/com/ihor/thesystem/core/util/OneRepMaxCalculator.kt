@@ -20,6 +20,6 @@ object OneRepMaxCalculator {
     }
     
     fun format(value: Double): String {
-        return "${value.roundToInt()} кг"
+        return "${value.roundToInt()}"
     }
 }

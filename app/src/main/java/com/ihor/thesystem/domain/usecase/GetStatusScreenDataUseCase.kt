@@ -1,5 +1,7 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.R
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.QuestLogDao
 import com.ihor.thesystem.data.local.room.entity.QuestLogEntity
@@ -73,11 +75,8 @@ class GetStatusScreenDataUseCase @Inject constructor(
             
             combine(
                 questRepo.getDailyQuestsForDate(
-                    java.time.Instant.ofEpochMilli(clock.now())
-                        .atZone(java.time.ZoneId.systemDefault())
-                        .minusHours(config.dayStartOffsetHours.toLong())
-                        .toInstant()
-                        .toEpochMilli()
+                    dateMillis = clock.now(),
+                    dayOffsetHours = config.dayStartOffsetHours
                 ),
                 playerRepo.getLatestWeight(),
                 questLogDao.getFullHistory(),
@@ -137,12 +136,12 @@ private fun Quest.toUiModel() = QuestUiModel(
     title       = title,
     subtitle    = when (type) {
         DomainQuestType.DAILY ->
-            "[ ПРОГРЕС: ${tasks.count { it.isCompleted }}/${tasks.size} ]"
+            UiText.StringResource(R.string.quest_progress, listOf(tasks.count { it.isCompleted }, tasks.size))
         DomainQuestType.MAIN  ->
-            if (status == DomainQuestStatus.COMPLETED) "[ ВИКОНАНО ✓ ]"
-            else "[ НАГОРОДА: +1 ТИЖДЕНЬ ]"
+            if (status == DomainQuestStatus.COMPLETED) UiText.StringResource(R.string.quest_completed_capital)
+            else UiText.StringResource(R.string.quest_reward_week)
         DomainQuestType.PROMOTION ->
-            "[ НАГОРОДА: +500 EXP | ПІДТВЕРДЖЕННЯ РАНГУ ]"
+            UiText.StringResource(R.string.quest_reward_promotion)
     },
     tasks       = tasks.map { TaskUiModel(it.id, it.name, it.isCompleted) }.toImmutableList(),
     isCompleted = status == DomainQuestStatus.COMPLETED

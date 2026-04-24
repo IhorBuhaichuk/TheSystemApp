@@ -12,6 +12,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.BackgroundDeep
 import com.ihor.thesystem.core.theme.NeonCyan
 import com.ihor.thesystem.core.theme.TextSecondary
@@ -28,7 +30,7 @@ fun OneRepMaxText(
     if (oneRepMax <= 0) return
 
     Text(
-        text = "$label${OneRepMaxCalculator.format(oneRepMax)}",
+        text = "$label${OneRepMaxCalculator.format(oneRepMax)}${stringResource(R.string.text_unit_kg)}",
         color = NeonCyan.copy(alpha = 0.9f),
         fontFamily = FontFamily.Monospace,
         fontSize = 10.sp,
@@ -49,7 +51,7 @@ fun MaxOneRepMaxText(
     if (max1RM <= 0) return
 
     Text(
-        text = "MAX 1RM: ${OneRepMaxCalculator.format(max1RM)}",
+        text = "MAX 1RM: ${OneRepMaxCalculator.format(max1RM)}${stringResource(R.string.text_unit_kg)}",
         color = NeonCyan,
         fontFamily = FontFamily.Monospace,
         fontSize = 11.sp,

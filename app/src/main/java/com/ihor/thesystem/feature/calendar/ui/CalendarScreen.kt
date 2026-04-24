@@ -24,6 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
+import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.MaxOneRepMaxText
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarDayUiModel
@@ -111,7 +113,7 @@ private fun CalendarHeaderAndMonthSelector(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "КАЛЕНДАР",
+            text = stringResource(R.string.text_analytics),
             style = MaterialTheme.typography.titleMedium.copy(
                 color = TextPrimary,
                 fontSize = 18.sp,
@@ -370,7 +372,7 @@ fun DailyScheduleSection(
             ) {
                 Column {
                     Text(
-                        text = "ДЕТАЛІ ДНЯ",
+                        text = stringResource(R.string.text_day_details),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = NeonCyan,
                             fontWeight = FontWeight.Bold,
@@ -425,7 +427,7 @@ fun DailyScheduleSection(
                         )
                         Spacer(Modifier.width(10.dp))
                         Text(
-                            text = "СТАТУС: ${dayModel.label.uppercase()}",
+                            text = "${stringResource(R.string.text_status_label)}: ${dayModel.label.uppercase()}",
                             style = MaterialTheme.typography.labelMedium.copy(
                                 color = TextPrimary.copy(alpha = 0.8f),
                                 fontWeight = FontWeight.Bold,
@@ -436,7 +438,7 @@ fun DailyScheduleSection(
 
                     if (loggedWeight != null) {
                         Text(
-                            text = "ВАГА: $loggedWeight КГ",
+                            text = "${stringResource(R.string.text_label_weight)}: $loggedWeight ${stringResource(R.string.text_unit_kg)}".uppercase(),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = NeonCyan.copy(alpha = 0.6f),
                                 fontWeight = FontWeight.Medium
@@ -453,7 +455,7 @@ fun DailyScheduleSection(
 
                     if (results.isNotEmpty() || dailyLogs.isNotEmpty()) {
                         Text(
-                            text = "АКТИВНІСТЬ ДНЯ",
+                            text = stringResource(R.string.text_activity_day),
                             style = MaterialTheme.typography.labelSmall.copy(color = NeonCyan, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                         )
                         Spacer(Modifier.height(12.dp))
@@ -510,13 +512,13 @@ fun DailyScheduleSection(
 
                     if (recommendations.isNotEmpty()) {
                         Text(
-                            text = "РЕКОМЕНДАЦІЇ СИСТЕМИ",
+                            text = stringResource(R.string.text_system_recommendations),
                             style = MaterialTheme.typography.labelSmall.copy(color = NeonCyan, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                         )
                         Spacer(Modifier.height(8.dp))
                         recommendations.forEach { rec ->
                             Text(
-                                text = "• ${rec.exerciseName}: ${rec.nextRecommendedWeight}кг, ${rec.nextRecommendedSets}x, ${rec.nextRecommendedReps}",
+                                text = "• ${rec.exerciseName}: ${stringResource(R.string.text_workout_recommendation_format, rec.nextRecommendedSets ?: 1, rec.nextRecommendedReps ?: 0, rec.nextRecommendedWeight ?: 0f)}",
                                 color = TextPrimary,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = RajdhaniFamily,
@@ -530,7 +532,7 @@ fun DailyScheduleSection(
                         val templateName = data.workoutTemplateName
                         if (templateName != null) {
                             Text(
-                                text = "ПЛАНОВА ПРОГРАМА",
+                                text = stringResource(R.string.text_planned_program),
                                 style = MaterialTheme.typography.labelSmall.copy(color = NeonGold, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                             )
                             Text(
@@ -550,7 +552,7 @@ fun DailyScheduleSection(
                             }
                         } else {
                             Text(
-                                text = "РЕЖИМ: АКТИВНЕ ВІДНОВЛЕННЯ",
+                                text = stringResource(R.string.text_active_recovery),
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     color = NeonCyanDim,
                                     fontWeight = FontWeight.Bold,

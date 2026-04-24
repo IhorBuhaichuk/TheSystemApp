@@ -18,6 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import com.ihor.thesystem.R
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -119,7 +121,7 @@ fun StatisticsScreen(
                                 }
                                 1 -> {
                                     Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                                        Text(text = "МАТРИЦЯ: In Development", color = TextSecondary)
+                                        Text(text = stringResource(R.string.text_matrix_in_development), color = TextSecondary)
                                     }
                                 }
                                 2 -> {
@@ -157,7 +159,7 @@ fun StatisticsScreen(
 
                     is UiState.Error -> {
                         Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                            Text(text = "[ ERROR: ${state.message} ]", color = NeonRed)
+                            Text(text = "[ ERROR: ${state.message.asString()} ]", color = NeonRed)
                         }
                     }
                 }
@@ -168,7 +170,11 @@ fun StatisticsScreen(
 
 @Composable
 private fun StatisticsTabSelector(selectedTabIndex: Int, onTabSelected: (Int) -> Unit) {
-    val tabs = listOf("ПЕРСОНАЖ", "МАТРИЦЯ", "АНАЛІТИКА")
+    val tabs = listOf(
+        stringResource(R.string.text_character),
+        stringResource(R.string.text_matrix),
+        stringResource(R.string.text_analytics)
+    )
 
     Box(
         modifier = Modifier
@@ -231,9 +237,9 @@ private fun PlayerMetricsGrid(
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         MetricCard(
-            label = "ВАГА",
+            label = stringResource(R.string.text_label_weight),
             value = weight,
-            unit = "кг",
+            unit = stringResource(R.string.text_unit_kg),
             modifier = Modifier
                 .weight(1f)
                 .clickable(
@@ -243,9 +249,9 @@ private fun PlayerMetricsGrid(
                 )
         )
         MetricCard(
-            label = "ЗРІСТ",
+            label = stringResource(R.string.text_label_height),
             value = height,
-            unit = "см",
+            unit = stringResource(R.string.text_unit_cm),
             modifier = Modifier
                 .weight(1f)
                 .clickable(
@@ -315,7 +321,7 @@ private fun PlayerCharacterPanel(data: StatisticsUiData) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "ХАРАКТЕРИСТИКИ ПЕРСОНАЖА",
+                text = stringResource(R.string.text_character_stats_capital),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = TextSecondary,
                     fontSize = 12.sp,
@@ -343,7 +349,7 @@ private fun ProgressLineChartMock() {
             .padding(24.dp)
     ) {
         Text(
-            text = "ПРОГРЕС ЗА 30 ДНІВ",
+            text = stringResource(R.string.text_progress_30_days),
             style = MaterialTheme.typography.labelSmall.copy(
                 color = TextSecondary,
                 fontSize = 12.sp,
@@ -432,7 +438,7 @@ private fun StatisticsHeader(navController: NavHostController) {
         }
 
         Text(
-            text = "АНАЛІТИКА",
+            text = stringResource(R.string.text_analytics),
             style = MaterialTheme.typography.titleMedium.copy(
                 color = Color.White,
                 fontWeight = FontWeight.ExtraBold,

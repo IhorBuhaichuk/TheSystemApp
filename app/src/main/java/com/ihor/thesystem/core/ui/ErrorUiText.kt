@@ -20,7 +20,7 @@ fun DomainError.asUiText(): UiText {
         DataError.Network.UNKNOWN -> UiText.StringResource(R.string.error_unknown)
         
         AppErrorType.Unknown -> UiText.StringResource(R.string.error_unknown)
-        AppErrorType.AiParsingError -> UiText.DynamicString("Помилка генерації AI, спробуйте ще раз")
+        AppErrorType.AiParsingError -> UiText.StringResource(R.string.error_ai_parsing)
         is AppErrorType.Message -> UiText.DynamicString(this.message ?: "")
         
         else -> UiText.StringResource(R.string.error_unknown)

@@ -1,10 +1,13 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.R
+import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.util.runSuspendCatching
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.util.sanitizeForPrompt
 import com.ihor.thesystem.core.util.*
+import timber.log.Timber
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
@@ -77,6 +80,7 @@ class FinalizeSessionUseCase @Inject constructor(
                 isFallback = false
             )
         } catch (e: Exception) {
+            Timber.e(e, "Architect analysis failed")
             generateFallbackReport(sets, matrix, recoveryHours)
         }
 
@@ -127,13 +131,17 @@ class FinalizeSessionUseCase @Inject constructor(
         playerWeight: Double
     ) {
         sets.filter { it.isCompleted }.groupBy { it.exerciseId }.forEach { (exId, exerciseSets) ->
-            val maxWeight = exerciseSets.maxOf { it.weight }
+            val estimated1RM = exerciseSets
+                .filter { it.isCompleted && it.reps > 0 }
+                .maxOfOrNull { OneRepMaxCalculator.calculate(it.weight, it.reps) }
+                ?: return@forEach
+
             val matrixEntry = matrix.find { it.exerciseId == exId }
             
             if (matrixEntry != null) {
                 val newRank = AnnualMatrixProvider.getExerciseRankById(
                     exerciseId = matrixEntry.exerciseId,
-                    current1RM = maxWeight,
+                    current1RM = estimated1RM,
                     playerWeight = playerWeight
                 )
                 
@@ -166,7 +174,7 @@ class FinalizeSessionUseCase @Inject constructor(
         }
 
         return AiArchitectReport(
-            architectFeedback = "ЗВ'ЯЗОК З AI ВТРАЧЕНО. Активовано резервний протокол.",
+            architectFeedback = UiText.StringResource(R.string.ai_fallback_activated),
             currentStageStatus = "[ FALLBACK ]",
             completedExercises = sets.map { it.exerciseId }.distinct(),
             pendingExercises = emptyList(),

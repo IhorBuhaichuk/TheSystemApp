@@ -54,7 +54,7 @@ class ArchitectViewModel @Inject constructor(
                 val initialMessages = listOf(
                     ChatMessage(
                         role = ChatRole.SYSTEM,
-                        uiText = UiText.StringResource(R.string.architect_initial_message, listOf(context)),
+                        text = UiText.StringResource(R.string.architect_initial_message, listOf(context)),
                         isActionable = true
                     )
                 )
@@ -70,7 +70,7 @@ class ArchitectViewModel @Inject constructor(
                 val initialMessages = listOf(
                     ChatMessage(
                         role = ChatRole.SYSTEM,
-                        uiText = UiText.StringResource(R.string.architect_no_data),
+                        text = UiText.StringResource(R.string.architect_no_data),
                         isActionable = false
                     )
                 )
@@ -137,7 +137,7 @@ class ArchitectViewModel @Inject constructor(
             // 2. Додаємо повідомлення користувача
             val userMsg = ChatMessage(
                 role = ChatRole.USER, 
-                uiText = UiText.StringResource(R.string.architect_btn_send_analysis)
+                text = UiText.StringResource(R.string.architect_btn_send_analysis)
             )
             
             // 3. Вмикаємо завантаження
@@ -166,7 +166,7 @@ class ArchitectViewModel @Inject constructor(
                 
                 val errorMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
-                    uiText = UiText.StringResource(
+                    text = UiText.StringResource(
                         R.string.error_network_architect, 
                         listOf(e.message ?: "")
                     ),
@@ -192,7 +192,7 @@ class ArchitectViewModel @Inject constructor(
                 
                 val systemMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
-                    uiText = UiText.StringResource(R.string.architect_directives_applied)
+                    text = UiText.StringResource(R.string.architect_directives_applied)
                 )
                 
                 _uiState.update { state ->

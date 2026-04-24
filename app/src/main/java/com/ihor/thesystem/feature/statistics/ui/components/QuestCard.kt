@@ -91,7 +91,7 @@ fun QuestCard(
                     lineHeight = if (isPromotion) 32.sp else 20.sp
                 )
                 Text(
-                    text = quest.subtitle,
+                    text = quest.subtitle.asString(),
                     color = if (quest.isCompleted) TextSecondary.copy(alpha = 0.5f) else (if (isPromotion) accentColor.copy(alpha = 0.8f) else TextSecondary),
                     fontFamily = RajdhaniFamily,
                     fontSize = 11.sp,

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.ui.asUiText
 import com.ihor.thesystem.core.ui.components.RankBadge
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 
@@ -31,6 +32,7 @@ fun PlayerStatsHeaderPremium(
     data: StatisticsUiData,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -92,7 +94,7 @@ fun PlayerStatsHeaderPremium(
                             border = androidx.compose.foundation.BorderStroke(1.dp, NeonGreen.copy(alpha = 0.2f))
                         ) {
                             Text(
-                                text = data.playerClass.uppercase(),
+                                text = data.playerClass.asUiText().asString(context).uppercase(),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = NeonGreen,

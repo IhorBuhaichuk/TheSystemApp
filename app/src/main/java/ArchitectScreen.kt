@@ -322,7 +322,7 @@ fun ChatBubble(
             )
 
             Column(modifier = bubbleModifier) {
-                val contentText = message.uiText?.asString() ?: message.text
+                val contentText = message.text.asString()
                 Text(
                     text = contentText,
                     color = Color.White,

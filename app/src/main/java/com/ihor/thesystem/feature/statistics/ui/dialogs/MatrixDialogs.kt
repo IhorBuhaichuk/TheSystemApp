@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.domain.model.ExerciseSet
-import com.ihor.thesystem.feature.status.viewmodel.ActiveSetInput
+import com.ihor.thesystem.domain.model.ActiveSetInput
 
 @Composable
 fun SetupMatrixDialog(
