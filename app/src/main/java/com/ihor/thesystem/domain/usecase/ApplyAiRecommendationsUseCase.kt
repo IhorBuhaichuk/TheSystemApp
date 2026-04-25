@@ -1,20 +1,43 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
-import android.util.Log
+import com.ihor.thesystem.domain.util.sanitizeForPrompt
+import timber.log.Timber
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import java.util.Calendar
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 class ApplyAiRecommendationsUseCase @Inject constructor(
     private val matrixRepo: ProgressionMatrixRepository,
     private val playerRepo: PlayerRepository,
     private val analyticsRepo: WorkoutAnalyticsRepository,
-    private val aiRepository: AiArchitectRepository
+    private val aiRepository: AiArchitectRepository,
+    private val getWeightContext: GetPlayerWeightContextUseCase,
+    private val clock: AppClock
 ) {
+
+    @Serializable
+    private data class ExercisePromptItem(
+        val exercise_id: Int,
+        val name: String,
+        val annual_goals: String,
+        val recent_history: List<HistoryItem>,
+        val current_weight: Float,
+        val user_feedback: String
+    )
+
+    @Serializable
+    private data class HistoryItem(
+        val w: Double,
+        val r: Int,
+        val f: String
+    )
     /**
      * Виконує пакетний аналіз для списку вправ та оновлює матрицю прогресії.
      * Використовуємо @JvmName для уникнення конфлікту JVM-сигнатур після erasure.
@@ -23,14 +46,13 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
     suspend operator fun invoke(exerciseIds: List<Int>) {
         if (exerciseIds.isEmpty()) return
 
-        // 1. Збір загальних даних користувача
-        val playerWeight = playerRepo.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.MONTH, -6)
-        val weight6MonthsAgo = playerRepo.getWeightAtOrBefore(calendar.timeInMillis) ?: playerWeight.toFloat()
+        // 1. Збір загальних даних користувача через спільний UseCase
+        val weightContext = getWeightContext()
+        val playerWeight = weightContext.currentWeight
+        val weight6MonthsAgo = weightContext.weightSixMonthsAgo
         
         val matrix = matrixRepo.getAllEntries().first()
-        val now = System.currentTimeMillis()
+        val now = clock.now()
         val twelveHoursMillis = 12 * 60 * 60 * 1000L
 
         // 2. Збір детального контексту для кожної вправи (Batch Context)
@@ -39,7 +61,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             
             // Захист від занадто частих запитів (не частіше ніж раз на 12 годин для однієї вправи)
             if (now - entry.lastAnalyzedTimestamp < twelveHoursMillis) {
-                Log.d("ApplyAiRecs", "Skip AI analysis for exercise $id: analyzed recently")
+                Timber.d("Skip AI analysis for exercise $id: analyzed recently")
                 return@mapNotNull null
             }
 
@@ -49,26 +71,26 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             
             val todayLog = recentLogs.firstOrNull()
             
-            """
-            {
-                "exercise_id": $id,
-                "name": "${entry.exerciseName}",
-                "annual_goals": "$annualGoals",
-                "recent_history": [${recentLogs.joinToString { "{\"w\": ${it.weight}, \"r\": ${it.reps}, \"f\": \"${it.userFeedback?.replace("\"", "'") ?: ""}\"}" }}],
-                "current_weight": ${entry.currentWeight},
-                "user_feedback": "${todayLog?.userFeedback?.replace("\"", "'") ?: ""}"
-            }
-            """.trimIndent()
-        }.joinToString(",\n")
+            ExercisePromptItem(
+                exercise_id = id,
+                name = entry.exerciseName.sanitizeForPrompt(),
+                annual_goals = annualGoals.sanitizeForPrompt(),
+                recent_history = recentLogs.map { 
+                    HistoryItem(it.weight, it.reps, it.userFeedback?.sanitizeForPrompt() ?: "") 
+                },
+                current_weight = entry.currentWeight,
+                user_feedback = todayLog?.userFeedback?.sanitizeForPrompt() ?: ""
+            )
+        }
+
+        val exercisesJson = Json.encodeToString(exercisesContext)
 
         val prompt = """
             ПАКЕТНИЙ АНАЛІЗ ТРЕНУВАННЯ.
             Вага гравця: $playerWeight кг (6 міс. тому: $weight6MonthsAgo кг).
             
             Дані вправ:
-            [
-            $exercisesContext
-            ]
+            $exercisesJson
             
             Проаналізуй кожну вправу. 
             Відповідь поверни СУВОРО у форматі JSON об'єкта наступної структури:
@@ -99,7 +121,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             }
             if (responseText == "Помилка генерації AI, спробуйте ще раз" || 
                 response.text is UiText.StringResource) {
-                Log.e("ApplyAiRecs", "AI returned error or parsing failed. Aborting database update.")
+                Timber.e("AI returned error or parsing failed. Aborting database update.")
                 return
             }
 
@@ -114,12 +136,11 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
                         aiFeedback = rec.aiFeedback ?: response.aiFeedback
                     )
                 } catch (e: Exception) {
-                    Log.e("ApplyAiRecs", "Failed to update target for exercise ${rec.exerciseId}: ${e.message}")
+                    Timber.e(e, "Failed to update target for exercise ${rec.exerciseId}")
                 }
             }
         } catch (e: Exception) {
-            Log.e("ApplyAiRecs", "Critical error in ApplyAiRecommendationsUseCase: ${e.message}")
-            e.printStackTrace()
+            Timber.e(e, "Critical error in ApplyAiRecommendationsUseCase")
         }
     }
 

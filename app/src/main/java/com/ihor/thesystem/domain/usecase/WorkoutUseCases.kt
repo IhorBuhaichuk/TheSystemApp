@@ -19,6 +19,7 @@ data class WorkoutUseCases @Inject constructor(
     val updateMatrixGoals: UpdateMatrixGoalsUseCase,
     val getPlayerFlow: GetPlayerFlowUseCase,
     val getStatisticsData: GetStatisticsDataUseCase,
+    val finalizeSession: FinalizeSessionUseCase,
     private val scheduleRepo: ScheduleRepository,
     private val viewingDateRepo: ViewingDateRepository,
     private val analyticsRepo: WorkoutAnalyticsRepository

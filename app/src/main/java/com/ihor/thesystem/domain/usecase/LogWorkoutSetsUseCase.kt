@@ -81,7 +81,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
                 durationMinutes = 0
             )
 
-            val entities = validSets.map { input ->
+            val setsToSave = validSets.map { input ->
                 ExerciseSet(
                     sessionId = 0,
                     exerciseId = exerciseId,
@@ -91,7 +91,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
                     userFeedback = userFeedback
                 )
             }
-            analyticsRepo.saveFullSessionLog(sessionLog, entities)
+            analyticsRepo.saveFullSessionLog(sessionLog, setsToSave)
         }
         
         // Оновлюємо поточну вагу в матриці

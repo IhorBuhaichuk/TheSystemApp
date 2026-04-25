@@ -43,22 +43,27 @@ abstract class AiModule {
     ): LiveCoachRepository
 
     companion object {
+
+        private val defaultSafetySettings = listOf(
+            // Помірний фільтр для дотримання етики спілкування
+            SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.MEDIUM_AND_ABOVE),
+            // Захист від мови ворожнечі
+            SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.MEDIUM_AND_ABOVE),
+            // Низький поріг блокування, щоб дозволити обговорення анатомії, але без вульгарності
+            SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.LOW_AND_ABOVE),
+            // Низький поріг, щоб назви вправ (напр. "мертва тяга") не тригерили помилкові блокування
+            SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.LOW_AND_ABOVE)
+        )
+
         @Provides
         @Singleton
         @Named("ArchitectModel")
         fun provideArchitectGenerativeModel(): GenerativeModel {
-            val safetySettings = listOf(
-                SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
-                SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
-                SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.NONE),
-                SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE)
-            )
-
             return GenerativeModel(
                 modelName = "gemini-2.5-flash",
                 apiKey = BuildConfig.GEMINI_API_KEY,
                 requestOptions = RequestOptions(timeout = 60.seconds),
-                safetySettings = safetySettings,
+                safetySettings = defaultSafetySettings,
                 generationConfig = generationConfig {
                     responseMimeType = "application/json"
                 },
@@ -72,18 +77,11 @@ abstract class AiModule {
         @Singleton
         @Named("LiveCoachModel")
         fun provideLiveCoachGenerativeModel(): GenerativeModel {
-            val safetySettings = listOf(
-                SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
-                SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
-                SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.NONE),
-                SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE)
-            )
-
             return GenerativeModel(
                 modelName = "gemini-2.5-flash",
                 apiKey = BuildConfig.GEMINI_API_KEY,
                 requestOptions = RequestOptions(timeout = 60.seconds),
-                safetySettings = safetySettings,
+                safetySettings = defaultSafetySettings,
                 systemInstruction = content {
                     text("Ти 'ТРЕНЕР' - елітний живий ШІ-наставник. Спілкуйся природно, як людина. Відповідай коротко і по суті на питання гравця щодо поточного тренування, техніки чи болю. НЕ використовуй JSON та маркдаун. ЗАВЖДИ відповідай УКРАЇНСЬКОЮ мовою.")
                 }

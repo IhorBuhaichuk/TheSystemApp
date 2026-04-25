@@ -7,8 +7,12 @@ import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ExerciseDetails
+import com.ihor.thesystem.domain.model.ExerciseSet
+import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.domain.usecase.GetSystemConfigUseCase
 import com.ihor.thesystem.domain.usecase.WorkoutUseCases
+import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
@@ -191,6 +195,48 @@ class WorkoutViewModel @Inject constructor(
                 ?: activeWorkoutState.value?.exercises?.find { it.exerciseId == exerciseId }?.sets
                 ?: return@launch
             _saveEvents.emit(SetSavePayload(exerciseId, setId, currentSets.toList()))
+        }
+    }
+
+    fun onFinishWorkout() {
+        val currentWorkout = activeWorkoutState.value ?: return
+        val questId = currentWorkout.dailyTasks.firstOrNull()?.id?.toLong() ?: 0L
+        
+        viewModelScope.launch {
+            val allSessionSets = currentWorkout.exercises.flatMap { exercise ->
+                exercise.sets.filter { it.isCompleted }.map { setInput ->
+                    ExerciseSet(
+                        sessionId = 0L,
+                        exerciseId = exercise.exerciseId,
+                        weight = setInput.weight.toDoubleOrNull() ?: 0.0,
+                        reps = setInput.reps.toIntOrNull() ?: 0,
+                        isCompleted = true
+                    )
+                }
+            }
+
+            if (allSessionSets.isEmpty()) {
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_no_completed_exercises)))
+                return@launch
+            }
+
+            val session = WorkoutSession(
+                questId = questId,
+                timestamp = System.currentTimeMillis(),
+                totalTonnage = allSessionSets.sumOf { it.weight * it.reps },
+                cycleDay = currentWorkout.dayNumber
+            )
+
+            _dialogState.value = StatusDialogState.None // Close workout dialog show loading?
+            
+            when (val result = useCases.finalizeSession(session, allSessionSets)) {
+                is Result.Success -> {
+                    _dialogState.value = StatusDialogState.WorkoutReport(result.data)
+                }
+                is Result.Error -> {
+                    _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+                }
+            }
         }
     }
 

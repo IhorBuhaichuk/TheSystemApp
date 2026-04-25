@@ -22,6 +22,7 @@ object UseCaseModule {
         updateMatrixGoals: UpdateMatrixGoalsUseCase,
         getPlayerFlow: GetPlayerFlowUseCase,
         getStatisticsData: GetStatisticsDataUseCase,
+        finalizeSession: FinalizeSessionUseCase,
         scheduleRepo: ScheduleRepository,
         viewingDateRepo: ViewingDateRepository,
         analyticsRepo: WorkoutAnalyticsRepository
@@ -33,6 +34,7 @@ object UseCaseModule {
         updateMatrixGoals,
         getPlayerFlow,
         getStatisticsData,
+        finalizeSession,
         scheduleRepo,
         viewingDateRepo,
         analyticsRepo

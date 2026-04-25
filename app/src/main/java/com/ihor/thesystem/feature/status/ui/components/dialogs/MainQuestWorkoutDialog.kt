@@ -35,6 +35,7 @@ fun MainQuestWorkoutDialog(
     onSetFocusLost: (Int, Long) -> Unit,
     onSetCompleted: (Int, Long) -> Unit,
     onOpenSetup: (MatrixEntryUiModel) -> Unit,
+    onFinishWorkout: () -> Unit,
     onDismiss: () -> Unit
 ) {
     Dialog(
@@ -98,6 +99,28 @@ fun MainQuestWorkoutDialog(
                                 onSetCompleted = onSetCompleted,
                                 onOpenSetup = onOpenSetup
                             )
+                            
+                            Spacer(modifier = Modifier.height(32.dp))
+
+                            Button(
+                                onClick = onFinishWorkout,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .padding(bottom = 8.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF00F0FF),
+                                    contentColor = Color.Black
+                                )
+                            ) {
+                                Text(
+                                    text = "ЗАВЕРШИТИ ТРЕНУВАННЯ",
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.5.sp,
+                                    fontFamily = RajdhaniFamily
+                                )
+                            }
                             
                             Spacer(modifier = Modifier.height(32.dp))
                         }

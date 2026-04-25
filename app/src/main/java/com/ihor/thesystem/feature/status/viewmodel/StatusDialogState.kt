@@ -15,4 +15,5 @@ sealed class StatusDialogState {
     data object WorkoutScheduleSettings                                   : StatusDialogState()
     data class SetupMatrix(val entry: MatrixEntryUiModel, val startWeight: String, val targetWeight: String, val showWorkoutAfter: Boolean = false) : StatusDialogState()
     data class LogWorkoutSets(val entry: MatrixEntryUiModel, val sets: List<ActiveSetInput>, val existingLogs: List<com.ihor.thesystem.domain.model.ExerciseSet> = emptyList(), val showWorkoutAfter: Boolean = false) : StatusDialogState()
+    data class WorkoutReport(val report: com.ihor.thesystem.domain.model.AiArchitectReport) : StatusDialogState()
 }

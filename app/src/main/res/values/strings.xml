@@ -96,6 +96,7 @@
     <string name="error_ai_parsing">Помилка генерації AI, спробуйте ще раз</string>
     <string name="error_generic">Помилка</string>
     <string name="error_operation_failed">Помилка операції</string>
+    <string name="error_no_completed_exercises">Завершіть хоча б один підхід</string>
     <string name="error_ai_generic">Критична помилка AI. Перевірте конфігурацію.</string>
     <string name="ai_analysis_complete">Аналіз завершено.</string>
     <string name="ai_fallback_activated">ЗВ\'ЯЗОК З AI ВТРАЧЕНО. Активовано резервний протокол.</string>

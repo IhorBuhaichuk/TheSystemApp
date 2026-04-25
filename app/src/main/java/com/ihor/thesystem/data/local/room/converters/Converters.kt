@@ -53,4 +53,17 @@ class Converters {
 
     @TypeConverter
     fun toIntMap(value: String?): Map<String, Int>? = value?.let { Json.decodeFromString(it) }
+
+    @TypeConverter
+    fun fromMuscleGroupList(value: List<com.ihor.thesystem.domain.model.MuscleGroup>?): String? {
+        return value?.joinToString(",") { it.name }
+    }
+
+    @TypeConverter
+    fun toMuscleGroupList(value: String?): List<com.ihor.thesystem.domain.model.MuscleGroup>? {
+        if (value.isNullOrBlank()) return emptyList()
+        return value.split(",").mapNotNull {
+            try { com.ihor.thesystem.domain.model.MuscleGroup.valueOf(it) } catch (e: Exception) { null }
+        }
+    }
 }

@@ -6,12 +6,15 @@ package com.ihor.thesystem.domain.util
  * замінює переноси рядків на пробіли та обмежує довжину.
  */
 fun String.sanitizeForPrompt(): String {
-    return this.replace("\"", "")
+    return this.replace("\\", "")
+        .replace("\"", "")
         .replace("'", "")
         .replace("{", "[")
         .replace("}", "]")
         .replace("\n", " ")
         .replace("\r", " ")
+        .replace("\t", " ")
+        .replace("\b", " ")
         .trim()
-        .let { if (it.length > 500) it.take(500) else it }
+        .let { if (it.length > 200) it.take(200) else it }
 }

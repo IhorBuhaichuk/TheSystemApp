@@ -2,16 +2,15 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiText
-import com.ihor.thesystem.core.util.runSuspendCatching
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.util.sanitizeForPrompt
+import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.core.util.*
 import timber.log.Timber
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
-import java.util.Calendar
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
 
@@ -24,37 +23,42 @@ class FinalizeSessionUseCase @Inject constructor(
     private val calculateRecovery: CalculateRecoveryWindowUseCase,
     private val validateDirectives: ValidateDirectivesUseCase,
     private val transactionProvider: TransactionProvider,
-    private val annualMatrixRepository: AnnualMatrixRepository
+    private val annualMatrixRepository: AnnualMatrixRepository,
+    private val getWeightContext: GetPlayerWeightContextUseCase
 ) {
     suspend operator fun invoke(
         session: WorkoutSession,
         sets: List<ExerciseSet>
-    ): kotlin.Result<AiArchitectReport> = runSuspendCatching {
+    ): Result<AiArchitectReport, DomainError> = try {
         
         // 1. Гарантоване локальне збереження в БД
-        val localData = transactionProvider.runInTransaction {
-            val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
-            
-            val playerWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
-            val calendar = Calendar.getInstance()
-            calendar.add(Calendar.MONTH, -6)
-            val weight6MonthsAgo = playerRepository.getWeightAtOrBefore(calendar.timeInMillis).getOrNull() ?: playerWeight.toFloat()
+        val localData = try {
+            transactionProvider.runInTransaction {
+                val sessionId = analyticsRepository.saveFullSessionLog(session, sets)
+                
+                val weightContext = getWeightContext()
+                val playerWeight = weightContext.currentWeight
+                val weight6MonthsAgo = weightContext.weightSixMonthsAgo
 
-            val matrix = progressionMatrixRepository.getAllEntries().first()
-            updateExerciseRanks(sets, matrix, playerWeight)
+                val matrix = progressionMatrixRepository.getAllEntries().first()
+                updateExerciseRanks(sets, matrix, playerWeight)
 
-            val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
-            val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
-            val recoveryHours = calculateRecovery(finalTonnage).toDouble(DurationUnit.HOURS)
+                val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
+                val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
+                val recoveryHours = calculateRecovery(finalTonnage).toDouble(DurationUnit.HOURS)
 
-            recalculateGlobalRank()
-            
-            LocalSessionData(
-                playerWeight = playerWeight,
-                weight6MonthsAgo = weight6MonthsAgo,
-                matrix = matrix,
-                recoveryHours = recoveryHours
-            )
+                recalculateGlobalRank()
+                
+                LocalSessionData(
+                    playerWeight = playerWeight,
+                    weight6MonthsAgo = weight6MonthsAgo,
+                    matrix = matrix,
+                    recoveryHours = recoveryHours
+                )
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Local session saving failed")
+            return Result.Error(DataError.Local.SQLITE_EXCEPTION)
         }
 
         // 2. Асинхронний запит до AiArchitectRepository та оновлення матриці
@@ -95,10 +99,15 @@ class FinalizeSessionUseCase @Inject constructor(
 
         analyticsRepository.saveDirectives(validatedDirectives)
 
-        report.copy(
-            nextWorkoutDirectives = validatedDirectives,
-            recoveryWindowHours = localData.recoveryHours
+        Result.Success(
+            report.copy(
+                nextWorkoutDirectives = validatedDirectives,
+                recoveryWindowHours = localData.recoveryHours
+            )
         )
+    } catch (e: Exception) {
+        Timber.e(e, "Unexpected error in FinalizeSessionUseCase")
+        Result.Error(DataError.Local.UNKNOWN)
     }
 
     private data class LocalSessionData(

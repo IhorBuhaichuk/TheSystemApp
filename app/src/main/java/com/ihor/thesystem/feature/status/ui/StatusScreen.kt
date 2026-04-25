@@ -43,6 +43,7 @@ import com.ihor.thesystem.core.ui.components.GlitchText
 import com.ihor.thesystem.feature.status.ui.components.dialogs.AddTaskDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.LevelUpDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.MainQuestWorkoutDialog
+import com.ihor.thesystem.feature.status.ui.components.dialogs.WorkoutReportDialog
 import com.ihor.thesystem.feature.status.viewmodel.*
 import kotlin.system.exitProcess
 
@@ -158,6 +159,7 @@ fun StatusScreen(
                 onSetFocusLost = { exId, setId -> workoutViewModel.onSetFocusLost(exId, setId) },
                 onSetCompleted = { exId, setId -> workoutViewModel.onSetCompleted(exId, setId) },
                 onOpenSetup = { workoutViewModel.onOpenSetup(it, fromWorkout = true) },
+                onFinishWorkout = { workoutViewModel.onFinishWorkout() },
                 onDismiss = { workoutViewModel.onDismissDialog() }
             )
             is StatusDialogState.SetupMatrix -> {
@@ -213,6 +215,10 @@ fun StatusScreen(
                     onDeleteExercise = { workoutViewModel.onDeleteExercise(it) }
                 )
             }
+            is StatusDialogState.WorkoutReport -> WorkoutReportDialog(
+                report = dState.report,
+                onDismiss = { workoutViewModel.onDismissDialog() }
+            )
             else -> {}
         }
     }
