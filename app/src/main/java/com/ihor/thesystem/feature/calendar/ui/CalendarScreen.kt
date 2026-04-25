@@ -427,21 +427,31 @@ fun DailyScheduleSection(
                     Spacer(Modifier.height(20.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        val isActuallyWorkoutDay = schedule?.let { it.workoutTemplateId != null && it.exercises.isNotEmpty() } ?: false
+
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    when(dayModel.cycleDay) {
-                                        1 -> StatusWarning
-                                        2 -> Primary
-                                        else -> StatusSuccess
+                                    if (isActuallyWorkoutDay) {
+                                        when(dayModel.cycleDay) {
+                                            1 -> StatusWarning
+                                            2 -> Primary
+                                            else -> StatusSuccess
+                                        }
+                                    } else {
+                                        StatusSuccess
                                     }
                                 )
                         )
                         Spacer(Modifier.width(10.dp))
                         Text(
-                            text = "${stringResource(R.string.text_status_label)}: ${dayModel.label.uppercase()}",
+                            text = if (isActuallyWorkoutDay) {
+                                "${stringResource(R.string.text_status_label)}: ${dayModel.label.uppercase()}"
+                            } else {
+                                "${stringResource(R.string.text_status_label)}: ${stringResource(R.string.text_active_recovery).uppercase()}"
+                            },
                             style = MaterialTheme.typography.labelMedium.copy(
                                 color = OnBackground.copy(alpha = 0.8f),
                                 fontWeight = FontWeight.Bold,
@@ -542,9 +552,9 @@ fun DailyScheduleSection(
                         HorizontalDivider(color = OnBackground.copy(alpha = 0.05f), thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
                     }
 
-            schedule?.let { data ->
+                    schedule?.let { data ->
                         val templateName = data.workoutTemplateName
-                        if (templateName != null) {
+                        if (templateName != null && data.exercises.isNotEmpty()) {
                             Text(
                                 text = stringResource(R.string.text_planned_program),
                                 style = MaterialTheme.typography.labelSmall.copy(color = StatusWarning, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)

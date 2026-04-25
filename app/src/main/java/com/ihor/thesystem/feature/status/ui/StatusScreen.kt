@@ -95,14 +95,16 @@ fun StatusScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    if (data.mainQuest != null) {
+                    if (data.mainQuest != null && data.mainQuest.tasks.isNotEmpty()) {
                         MainWorkoutCardPremium(
                             data = data,
                             onStartWorkout = { workoutViewModel.onOpenMainWorkout() },
                             onOpenWorkoutSettings = { workoutViewModel.onOpenWorkoutSettings() }
                         )
                     } else {
-                        RestDayCard()
+                        ActiveRecoveryCard(
+                            onOpenWorkoutSettings = { workoutViewModel.onOpenWorkoutSettings() }
+                        )
                     }
 
                     DailyQuestsSectionPremium(
@@ -421,6 +423,63 @@ private fun XpProgressBarPremium(data: StatusUiData) {
 }
 
 @Composable
+private fun ActiveRecoveryCard(
+    onOpenWorkoutSettings: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
+            .clip(RoundedCornerShape(32.dp))
+            .background(Color.White.copy(alpha = 0.03f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(32.dp))
+            .padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(
+                    onClick = onOpenWorkoutSettings,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = null,
+                        tint = OnSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Surface(
+                shape = CircleShape,
+                color = Color.White.copy(alpha = 0.05f),
+                modifier = Modifier.size(64.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text("💤", fontSize = 28.sp)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.text_active_recovery),
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = Color(0xFF00F0FF).copy(alpha = 0.7f),
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp
+                )
+            )
+            Text(
+                text = stringResource(R.string.text_rest_day_subtitle),
+                style = MaterialTheme.typography.bodySmall.copy(color = Color.White.copy(alpha = 0.4f))
+            )
+        }
+    }
+}
+
+@Composable
 private fun RestDayCard() {
     Box(
         modifier = Modifier
@@ -544,10 +603,6 @@ private fun MainWorkoutCardPremium(
                                 modifier = Modifier.size(20.dp)
                             )
                         }
-                        Text(
-                            text = "🔥",
-                            fontSize = 20.sp
-                        )
                     }
                 }
             }

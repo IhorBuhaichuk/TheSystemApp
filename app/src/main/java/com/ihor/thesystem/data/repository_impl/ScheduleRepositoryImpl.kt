@@ -98,6 +98,17 @@ class ScheduleRepositoryImpl @Inject constructor(
         val scheduleWithDetails = scheduleDao.getScheduleForDay(cycleDay).firstOrNull()
         val schedule = scheduleWithDetails?.schedule ?: ScheduleEntity(cycleDay = cycleDay)
 
+        if (exerciseIds.isEmpty()) {
+            // If exercise list is empty, we treat this as a non-workout day
+            val updatedSchedule = schedule.copy(workoutTemplateId = null)
+            if (schedule.id == 0) {
+                scheduleDao.insertSchedule(updatedSchedule)
+            } else {
+                scheduleDao.updateSchedule(updatedSchedule)
+            }
+            return
+        }
+
         // 2. Find or create WorkoutTemplateEntity
         val templateId = schedule.workoutTemplateId ?: 0
         val existingTemplate = if (templateId != 0) workoutDao.getTemplateById(templateId) else null
@@ -109,14 +120,12 @@ class ScheduleRepositoryImpl @Inject constructor(
             workoutDao.insertTemplate(WorkoutTemplateEntity(name = workoutName)).toInt()
         }
 
-        // 3. Update Schedule with new template if it was null
-        if (schedule.workoutTemplateId == null) {
-            val updatedSchedule = schedule.copy(workoutTemplateId = newTemplateId)
-            if (schedule.id == 0) {
-                scheduleDao.insertSchedule(updatedSchedule)
-            } else {
-                scheduleDao.updateSchedule(updatedSchedule)
-            }
+        // 3. Update Schedule with new template
+        val updatedSchedule = schedule.copy(workoutTemplateId = newTemplateId)
+        if (schedule.id == 0) {
+            scheduleDao.insertSchedule(updatedSchedule)
+        } else {
+            scheduleDao.updateSchedule(updatedSchedule)
         }
 
         // 4. Update CrossRefs
@@ -127,8 +136,19 @@ class ScheduleRepositoryImpl @Inject constructor(
     }
 
     override suspend fun removeExerciseFromDay(cycleDay: Int, exerciseId: Int) {
-        val scheduleWithDetails = scheduleDao.getScheduleForDay(cycleDay).firstOrNull()
-        val templateId = scheduleWithDetails?.schedule?.workoutTemplateId ?: return
+        val scheduleWithDetails = scheduleDao.getScheduleForDay(cycleDay).firstOrNull() ?: return
+        val schedule = scheduleWithDetails.schedule
+        val templateId = schedule.workoutTemplateId ?: return
+
+        // 1. Delete the exercise cross-reference
         workoutDao.deleteCrossRef(templateId, exerciseId)
+
+        // 2. Check if any exercises remain for this template
+        val remainingExercises = workoutDao.getExercisesForTemplateSync(templateId)
+        if (remainingExercises.isEmpty()) {
+            // 3. If no exercises remain, set workoutTemplateId to null (Active Recovery)
+            val updatedSchedule = schedule.copy(workoutTemplateId = null)
+            scheduleDao.updateSchedule(updatedSchedule)
+        }
     }
 }

@@ -125,13 +125,15 @@ class CalendarViewModel @Inject constructor(
             anchorCycleDay = config.cycleAnchorDay
         )
 
-        val cycleDays = (1..4).map { d ->
-            CycleDayUiModel(
-                dayNumber = d,
-                type = if (d <= 2) DayType.WORKOUT else DayType.REST,
-                isActive = d == player.currentCycleDay,
-                isSelected = false
-            )
+        val cycleDays = config.cycleDaysPerMicrocycle.let { total ->
+            (1..total).map { d ->
+                CycleDayUiModel(
+                    dayNumber = d,
+                    type = DayType.WORKOUT, // Default to WORKOUT, but logic below handles it
+                    isActive = d == player.currentCycleDay,
+                    isSelected = false
+                )
+            }
         }
         
         CalendarUiState(

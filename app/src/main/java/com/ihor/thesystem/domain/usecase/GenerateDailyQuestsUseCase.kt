@@ -76,7 +76,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         }
 
         val workoutTemplateName = schedule.workoutTemplateName
-        if (workoutTemplateName != null) {
+        if (workoutTemplateName != null && schedule.exercises.isNotEmpty()) {
             val recommendations = schedule.exercises.map { ex ->
                 val rec = calculateRecommendation(ex.id, ex.name)
                 ExerciseRecommendation(ex.id, ex.name, rec.weight, rec.sets, rec.reps)
