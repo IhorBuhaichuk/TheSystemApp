@@ -84,8 +84,8 @@ class ScheduleRepositoryImpl @Inject constructor(
             entities.map { ExerciseDetails(it.id, it.name) }
         }
 
-    override suspend fun createExercise(name: String) {
-        workoutDao.insertExercise(ExerciseEntity(name = name))
+    override suspend fun createExercise(name: String): Int {
+        return workoutDao.insertExercise(ExerciseEntity(name = name)).toInt()
     }
 
     override suspend fun deleteExercise(exerciseId: Int) {

@@ -35,7 +35,7 @@ data class WorkoutUseCases @Inject constructor(
     fun getAllExercises(): Flow<List<ExerciseDetails>> =
         scheduleRepo.getAllExercises()
 
-    suspend fun createExercise(name: String) =
+    suspend fun createExercise(name: String): Int =
         scheduleRepo.createExercise(name)
 
     suspend fun deleteExercise(exerciseId: Int) =

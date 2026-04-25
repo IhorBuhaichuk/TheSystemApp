@@ -61,7 +61,25 @@ fun ActiveDayCard(
                         onSetRepsChanged = { setId, r -> onSetRepsChanged(exercise.exerciseId, setId, r) },
                         onSetFocusLost = { setId -> onSetFocusLost(exercise.exerciseId, setId) },
                         onSetCompleted = { setId -> onSetCompleted(exercise.exerciseId, setId) },
-                        onSetup = { matrixEntry?.let(onOpenSetup) }
+                        onSetup = { 
+                            if (matrixEntry != null) {
+                                onOpenSetup(matrixEntry)
+                            } else {
+                                onOpenSetup(
+                                    MatrixEntryUiModel(
+                                        exerciseId = exercise.exerciseId,
+                                        exerciseName = exercise.name,
+                                        startWeight = 0f,
+                                        targetWeight = 0f,
+                                        currentWeight = 0f,
+                                        targetWeightNote = null,
+                                        weeklyStep = 0f,
+                                        progressPercent = 0f,
+                                        currentRank = com.ihor.thesystem.domain.model.Rank.E
+                                    )
+                                )
+                            }
+                        }
                     )
                 }
             }
@@ -213,19 +231,19 @@ fun ActiveDayCard(
                         }
                         
                         Spacer(modifier = Modifier.height(12.dp))
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        IconButton(
+                            onClick = onSetup,
+                            modifier = Modifier
+                                .background(OnBackground.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
+                                .size(40.dp)
                         ) {
-                            IconButton(
-                                onClick = onSetup,
-                                modifier = Modifier
-                                    .background(OnBackground.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
-                                    .size(40.dp)
-                            ) {
-                                Icon(Icons.Default.Settings, null, tint = OnSurfaceVariant, modifier = Modifier.size(20.dp))
-                            }
+                            Icon(Icons.Default.Settings, null, tint = OnSurfaceVariant, modifier = Modifier.size(20.dp))
                         }
                     }
                 }

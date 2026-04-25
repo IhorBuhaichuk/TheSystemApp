@@ -20,7 +20,7 @@ interface WorkoutDao {
     suspend fun getExerciseNameById(id: Int): String?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertExercise(exercise: ExerciseEntity)
+    suspend fun insertExercise(exercise: ExerciseEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTemplate(template: WorkoutTemplateEntity): Long

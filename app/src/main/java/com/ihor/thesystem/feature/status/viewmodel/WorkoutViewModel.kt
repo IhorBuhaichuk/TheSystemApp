@@ -17,6 +17,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -32,7 +33,7 @@ data class SetSavePayload(
 @HiltViewModel
 class WorkoutViewModel @Inject constructor(
     private val useCases: WorkoutUseCases,
-    getSystemConfig: GetSystemConfigUseCase
+    private val getSystemConfig: GetSystemConfigUseCase
 ) : ViewModel() {
 
     private val _uiEvents = MutableSharedFlow<UiEvent>()
@@ -43,6 +44,8 @@ class WorkoutViewModel @Inject constructor(
 
     private val _settingsUiState = MutableStateFlow(WorkoutScheduleSettingsUiState())
     val settingsUiState: StateFlow<WorkoutScheduleSettingsUiState> = _settingsUiState.asStateFlow()
+
+    private var settingsDayJob: Job? = null
 
     private val _currentLogSets = MutableStateFlow<List<ActiveSetInput>>(emptyList())
     private val _userEdits = MutableStateFlow<Map<Int, List<ActiveSetInput>>>(emptyMap())
@@ -77,7 +80,12 @@ class WorkoutViewModel @Inject constructor(
             val schedule = schedules.firstOrNull() ?: return@map null
             
             val exercisesWithRecs = schedule.exercises.map { ex ->
-                val rec = useCases.calculateRecommendation(ex.id, ex.name)
+                val rec = try {
+                    useCases.calculateRecommendation(ex.id, ex.name)
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    com.ihor.thesystem.domain.usecase.SetRecommendation(weight = 0.0, reps = 12, sets = 3, isProgression = false)
+                }
                 ExerciseWorkoutUiModel(
                     exerciseId = ex.id,
                     name = ex.name,
@@ -96,6 +104,10 @@ class WorkoutViewModel @Inject constructor(
                 exercises = exercisesWithRecs,
                 matrixEntries = persistentListOf()
             )
+        }
+        .catch { e ->
+            e.printStackTrace()
+            emit(null)
         }
 
     private val statsFlow = useCases.getStatisticsData()
@@ -221,12 +233,16 @@ class WorkoutViewModel @Inject constructor(
 
     fun onOpenWorkoutSettings() {
         viewModelScope.launch {
-            // Get current config for total days
-            val config = useCases.getPlayerFlow().first() // Simplified, should ideally use GetSystemConfig
-            val totalDays = 4 // Default as per requirements, but should be dynamic
-            _settingsUiState.update { it.copy(totalCycleDays = totalDays) }
+            val today = cycleDay.first()
+            val config = getSystemConfig().filterNotNull().first()
+            _settingsUiState.update {
+                it.copy(
+                    totalCycleDays = config.cycleDaysPerMicrocycle,
+                    selectedDay = today
+                )
+            }
             _dialogState.value = StatusDialogState.WorkoutScheduleSettings
-            loadSettingsForDay(1)
+            loadSettingsForDay(today)
         }
     }
 
@@ -257,10 +273,9 @@ class WorkoutViewModel @Inject constructor(
                 currentIds.add(exerciseId)
                 useCases.saveWorkoutForDay(
                     cycleDay = state.selectedDay,
-                    workoutName = state.workoutNameDraft,
+                    workoutName = state.workoutNameDraft.ifBlank { "День ${state.selectedDay}" },
                     exerciseIds = currentIds
                 )
-                loadSettingsForDay(state.selectedDay)
             }
         }
     }
@@ -269,14 +284,22 @@ class WorkoutViewModel @Inject constructor(
         val state = _settingsUiState.value
         viewModelScope.launch(Dispatchers.IO) {
             useCases.removeExerciseFromDay(state.selectedDay, exerciseId)
-            loadSettingsForDay(state.selectedDay)
         }
     }
 
     fun onCreateExercise(name: String) {
+        val state = _settingsUiState.value
         viewModelScope.launch(Dispatchers.IO) {
-            useCases.createExercise(name)
+            val newExerciseId = useCases.createExercise(name)
             refreshAllExercises()
+            // Одразу додати нову вправу до поточного дня
+            val currentIds = state.exercisesForSelectedDay.map { it.id }.toMutableList()
+            currentIds.add(newExerciseId)
+            useCases.saveWorkoutForDay(
+                cycleDay = state.selectedDay,
+                workoutName = state.workoutNameDraft.ifBlank { "День ${state.selectedDay}" },
+                exerciseIds = currentIds
+            )
         }
     }
 
@@ -284,12 +307,12 @@ class WorkoutViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             useCases.deleteExercise(exerciseId)
             refreshAllExercises()
-            loadSettingsForDay(_settingsUiState.value.selectedDay)
         }
     }
 
     private fun loadSettingsForDay(day: Int) {
-        viewModelScope.launch {
+        settingsDayJob?.cancel()
+        settingsDayJob = viewModelScope.launch {
             _settingsUiState.update { it.copy(selectedDay = day, isLoading = true) }
             
             if (_settingsUiState.value.allExercises.isEmpty()) {
@@ -298,18 +321,23 @@ class WorkoutViewModel @Inject constructor(
 
             useCases.getSchedulesForDays(listOf(day)).collectLatest { schedules ->
                 val schedule = schedules.firstOrNull()
-                _settingsUiState.update { it.copy(
-                    workoutNameDraft = schedule?.workoutTemplateName ?: "",
-                    exercisesForSelectedDay = schedule?.exercises?.toImmutableList() ?: persistentListOf(),
-                    isLoading = false
-                )}
+                _settingsUiState.update {
+                    it.copy(
+                        workoutNameDraft = schedule?.workoutTemplateName ?: "",
+                        exercisesForSelectedDay = schedule?.exercises?.toImmutableList()
+                            ?: persistentListOf(),
+                        isLoading = false
+                    )
+                }
             }
         }
     }
 
     private suspend fun refreshAllExercises() {
         useCases.getAllExercises().first().let { exercises ->
-            _settingsUiState.update { it.copy(allExercises = exercises.toImmutableList()) }
+            _settingsUiState.update { current ->
+                current.copy(allExercises = exercises.toImmutableList())
+            }
         }
     }
 

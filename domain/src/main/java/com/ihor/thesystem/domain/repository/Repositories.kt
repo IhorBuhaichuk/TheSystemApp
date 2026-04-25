@@ -22,7 +22,7 @@ interface ScheduleRepository {
     fun getScheduleForDay(day: Int): Flow<ScheduleDay?>
     fun getSchedulesForDays(days: List<Int>): Flow<List<ScheduleDay>>
     fun getAllExercises(): Flow<List<ExerciseDetails>>
-    suspend fun createExercise(name: String)
+    suspend fun createExercise(name: String): Int
     suspend fun deleteExercise(exerciseId: Int)
     suspend fun saveWorkoutForDay(cycleDay: Int, workoutName: String, exerciseIds: List<Int>)
     suspend fun removeExerciseFromDay(cycleDay: Int, exerciseId: Int)
