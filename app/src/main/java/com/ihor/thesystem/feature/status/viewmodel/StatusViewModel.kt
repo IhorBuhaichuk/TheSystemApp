@@ -19,8 +19,11 @@ import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import timber.log.Timber
 import javax.inject.Inject
 import kotlinx.collections.immutable.toImmutableList
 
@@ -39,7 +42,7 @@ class StatusViewModel @Inject constructor(
     val uiState: StateFlow<UiState<StatusUiData>> = useCases.getStatusData()
         .map<StatusUiData, UiState<StatusUiData>> { UiState.Content(it) }
         .catch { 
-            it.printStackTrace()
+            Timber.e(it, "Error loading status data")
             emit(UiState.Error(UiText.StringResource(R.string.system_loading)))
         }
         .stateIn(
@@ -64,16 +67,28 @@ class StatusViewModel @Inject constructor(
         // Initialization Group 1: Database Readiness and Initial Calculations
         viewModelScope.launch {
             try {
-                kotlinx.coroutines.withTimeout(10_000) {
+                withTimeout(10_000) {
                     databaseReadinessRepo.status.first { it is DatabaseStatus.Ready }
-                    useCases.getPlayerFlow().filterNotNull().first()
+                    
+                    // Очікуємо гравця, але обробляємо тайм-аут як нормальний кейс для нового користувача
+                    try {
+                        withTimeout(3000) {
+                            useCases.getPlayerFlow().filterNotNull().first()
+                        }
+                    } catch (e: TimeoutCancellationException) {
+                        Timber.i("New user detected or player data not yet initialized")
+                    }
                 }
+                
+                // Виконуємо розрахунки тільки якщо база готова
                 useCases.generateDailyQuests()
                 useCases.calculateAttributes()
+                
+            } catch (e: TimeoutCancellationException) {
+                Timber.w("Database initialization timeout")
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_unknown)))
+                Timber.e(e, "Error during StatusViewModel initialization")
             }
         }
 
@@ -97,14 +112,17 @@ class StatusViewModel @Inject constructor(
         }
     }
 
-    private inline fun launchCatching(crossinline block: suspend () -> Unit) {
+    private fun launchCatching(block: suspend () -> Unit) {
         viewModelScope.launch {
             try {
                 block()
+            } catch (e: StringResourceException) {
+                Timber.e(e, "Domain error in launchCatching")
+                _uiEvents.emit(UiEvent.ShowError(e.uiText))
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
-                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_unknown)))
+                Timber.e(e, "Unexpected error in StatusViewModel action")
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
             }
         }
     }
@@ -149,7 +167,7 @@ class StatusViewModel @Inject constructor(
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
         } catch (e: SecurityException) {
-            e.printStackTrace()
+            Timber.e(e, "Security error when updating avatar URI")
         }
 
         useCases.updatePlayerAvatar(player, uri.toString()).onFailure { e ->
@@ -161,7 +179,8 @@ class StatusViewModel @Inject constructor(
         if (e is StringResourceException) {
             _uiEvents.emit(UiEvent.ShowError(e.uiText))
         } else {
-            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_unknown)))
+            Timber.e(e, "Handled unknown error")
+            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
         }
     }
 

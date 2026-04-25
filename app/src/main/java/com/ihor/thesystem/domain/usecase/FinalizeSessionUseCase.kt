@@ -44,7 +44,7 @@ class FinalizeSessionUseCase @Inject constructor(
 
             val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
             val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
-            val recoveryHours = calculateRecovery(finalTonnage).getOrDefault(24.hours).inWholeHours.toDouble()
+            val recoveryHours = calculateRecovery(finalTonnage).inWholeHours.toDouble()
 
             recalculateGlobalRank()
             

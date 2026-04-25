@@ -11,6 +11,7 @@ import com.ihor.thesystem.domain.model.ChatRole
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
 import timber.log.Timber
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
@@ -38,64 +39,49 @@ class AiArchitectRepositoryImpl @Inject constructor(
         }
 
         try {
-            repeat(3) { attempt ->
-                try {
-                    return@withContext withTimeout(30_000L) {
-                        val response = generativeModel.generateContent(prompt)
-                        val responseText = response.text ?: throw IllegalStateException("Empty AI response")
+            retry(times = 3, initialDelay = 1000L) {
+                withTimeout(30_000L) {
+                    val response = generativeModel.generateContent(prompt)
+                    val responseText = response.text ?: throw IllegalStateException("Empty AI response")
 
-                        val cleanJson = extractJson(responseText)
-                        val dto = try {
-                            json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
-                        } catch (e: Exception) {
-                            Timber.e("JSON parsing error: %s", e.message)
-                            return@withTimeout ChatMessage(
-                                role = ChatRole.AI,
-                                text = UiText.DynamicString(responseText),
-                                isActionable = false
-                            )
-                        }
-
-                        val targets = dto.nextWorkoutTargets.map { target ->
-                            AiWorkoutRecommendation(
-                                exerciseId = target.exerciseId,
-                                weight = target.weight,
-                                sets = target.recommendedSets,
-                                reps = target.recommendedReps,
-                                aiFeedback = target.aiFeedback
-                            )
-                        }
-
-                        ChatMessage(
+                    val cleanJson = extractJson(responseText)
+                    val dto = try {
+                        json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
+                    } catch (e: Exception) {
+                        Timber.e(e, "JSON parsing error in AI response")
+                        // Якщо JSON не розпарсився, повертаємо текст як є без ретраю
+                        return@withTimeout ChatMessage(
                             role = ChatRole.AI,
-                            text = if (dto.feedbackText.isBlank()) {
-                                UiText.StringResource(R.string.ai_analysis_complete)
-                            } else {
-                                UiText.DynamicString(dto.feedbackText)
-                            },
-                            recommendations = targets,
-                            isActionable = targets.isNotEmpty(),
-                            aiFeedback = dto.aiFeedback ?: targets.firstOrNull()?.aiFeedback
+                            text = UiText.DynamicString(responseText),
+                            isActionable = false
                         )
                     }
-                } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    
-                    val isRetryable = e is kotlinx.coroutines.TimeoutCancellationException || 
-                                     e.message?.contains("429") == true
-                    
-                    if (attempt < 2 && isRetryable) {
-                        val delayMs = if (attempt == 0) 1000L else 2000L
-                        kotlinx.coroutines.delay(delayMs)
-                    } else {
-                        throw e
+
+                    val targets = dto.nextWorkoutTargets.map { target ->
+                        AiWorkoutRecommendation(
+                            exerciseId = target.exerciseId,
+                            weight = target.weight,
+                            sets = target.recommendedSets,
+                            reps = target.recommendedReps,
+                            aiFeedback = target.aiFeedback
+                        )
                     }
+
+                    ChatMessage(
+                        role = ChatRole.AI,
+                        text = if (dto.feedbackText.isBlank()) {
+                            UiText.StringResource(R.string.ai_analysis_complete)
+                        } else {
+                            UiText.DynamicString(dto.feedbackText)
+                        },
+                        recommendations = targets,
+                        isActionable = targets.isNotEmpty(),
+                        aiFeedback = dto.aiFeedback ?: targets.firstOrNull()?.aiFeedback
+                    )
                 }
             }
-            // Should not be reached due to throw e in the last attempt
-            error("Unexpected end of retry loop: this line should never execute")
         } catch (e: Exception) {
-            Timber.e(e, "Request failed after retries")
+            Timber.e(e, "Request failed after all retries")
             if (e is kotlinx.coroutines.CancellationException) throw e
             
             val errorText = when {
@@ -118,11 +104,38 @@ class AiArchitectRepositoryImpl @Inject constructor(
     }
 
     private fun extractJson(input: String): String {
-        val start = input.indexOf('{')
-        val end = input.lastIndexOf('}')
-        if (start != -1 && end != -1 && end > start) {
-            return input.substring(start, end + 1)
+        // Шукаємо блок, що починається з { і закінчується }, включаючи переноси рядків.
+        // Це дозволяє витягти JSON навіть якщо він оточений Markdown тегами або пояснювальним текстом.
+        val fallbackRegex = Regex("""\{.*\}""", RegexOption.DOT_MATCHES_ALL)
+        
+        return fallbackRegex.find(input)?.value ?: input
+    }
+
+    private suspend fun <T> retry(
+        times: Int,
+        initialDelay: Long = 100L,
+        maxDelay: Long = 2000L,
+        factor: Double = 2.0,
+        block: suspend () -> T
+    ): T {
+        var currentDelay = initialDelay
+        repeat(times - 1) { attempt ->
+            try {
+                return block()
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                
+                val isRetryable = e is kotlinx.coroutines.TimeoutCancellationException || 
+                                 e.message?.contains("429") == true ||
+                                 e.message?.contains("503") == true
+
+                if (!isRetryable) throw e
+                
+                Timber.w(e, "Retry attempt $attempt failed")
+            }
+            delay(currentDelay)
+            currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
         }
-        return input.replace("```json", "").replace("```", "").trim()
+        return block() // Остання спроба
     }
 }
