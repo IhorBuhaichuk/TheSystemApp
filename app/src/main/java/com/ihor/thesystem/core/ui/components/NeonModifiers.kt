@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 
+import com.ihor.thesystem.core.theme.CornerRadius
+
 /**
  * Малює статичну sci-fi панель із зрізаними кутами.
  * Оптимізовано для високої продуктивності UI.
@@ -63,7 +65,7 @@ fun Modifier.neonGlow(color: Color, radius: Dp = 10.dp): Modifier = this.drawBeh
     }
 }
 
-fun Modifier.glassCard(): Modifier = this
-    .clip(RoundedCornerShape(16.dp))
+fun Modifier.glassCard(radius: Dp = CornerRadius): Modifier = this
+    .clip(RoundedCornerShape(radius))
     .background(Color.White.copy(alpha = 0.08f))
-    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(radius))

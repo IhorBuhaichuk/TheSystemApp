@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -47,7 +46,6 @@ fun AddTaskDialog(
                 modifier = Modifier
                     .size(100.dp)
                     .offset(x = (-40).dp, y = (-40).dp)
-                    .blur(40.dp)
                     .background(Color(0xFF00F0FF).copy(alpha = 0.15f), CircleShape)
             )
 

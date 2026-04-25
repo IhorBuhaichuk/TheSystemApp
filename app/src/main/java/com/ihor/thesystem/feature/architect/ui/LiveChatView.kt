@@ -17,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -60,7 +59,7 @@ fun LiveChatView(
             state = listState,
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
         ) {
@@ -74,7 +73,7 @@ fun LiveChatView(
             color = Color.Transparent,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -136,8 +135,8 @@ private fun ChatBubble(msg: ChatMessage) {
     val isUser = msg.role == ChatRole.USER
     val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
     
-    val bgColor = if (isUser) Color.White.copy(alpha = 0.05f) else GlitchPink.copy(alpha = 0.03f)
-    val borderColor = if (isUser) Color.White.copy(alpha = 0.1f) else GlitchPink.copy(alpha = 0.2f)
+    val bgColor = if (isUser) Color.White.copy(alpha = 0.05f) else StatusError.copy(alpha = 0.03f)
+    val borderColor = if (isUser) Color.White.copy(alpha = 0.15f) else StatusError.copy(alpha = 0.2f)
     
     val shape = if (isUser) {
         RoundedCornerShape(topStart = 20.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
@@ -154,7 +153,7 @@ private fun ChatBubble(msg: ChatMessage) {
                 text = if (isUser) "ВИ" else "ТРЕНЕР",
                 fontFamily = TekoFamily,
                 fontSize = 10.sp,
-                color = if (isUser) Color.White.copy(alpha = 0.3f) else GlitchPink,
+                color = if (isUser) OnSurfaceVariant else StatusError,
                 letterSpacing = 2.sp,
                 modifier = Modifier.padding(bottom = 4.dp, start = 8.dp, end = 8.dp)
             )
@@ -174,7 +173,7 @@ private fun ChatBubble(msg: ChatMessage) {
 private fun ChatMessageItem(text: String) {
     val paragraphs = remember(text) { text.split("\n\n") }
     Column(
-        modifier = Modifier.padding(14.dp),
+        modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         paragraphs.forEach { paragraph ->

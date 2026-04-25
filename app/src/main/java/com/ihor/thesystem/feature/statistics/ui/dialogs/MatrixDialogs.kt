@@ -18,7 +18,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -215,7 +214,6 @@ fun PremiumDialogContainer(
                 .size(150.dp)
                 .align(Alignment.TopEnd)
                 .offset(x = 40.dp, y = (-40).dp)
-                .blur(40.dp)
                 .background(accentColor.copy(alpha = 0.1f), CircleShape)
         )
 

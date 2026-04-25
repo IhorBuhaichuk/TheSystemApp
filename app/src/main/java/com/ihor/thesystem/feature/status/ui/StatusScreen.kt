@@ -15,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
@@ -111,7 +110,7 @@ fun StatusScreen(
                         onRemoveTask = { id -> statusViewModel.onRemoveTask(id) }
                     )
 
-                    Spacer(modifier = Modifier.height(110.dp))
+                    Spacer(modifier = Modifier.height(88.dp))
                 }
                 is UiState.Error -> DatabaseErrorScreen(state.message)
             }
@@ -478,7 +477,6 @@ private fun MainWorkoutCardPremium(
                 .size(150.dp)
                 .align(Alignment.TopEnd)
                 .offset(x = 60.dp, y = (-50).dp)
-                .blur(60.dp)
                 .background(Color(0xFFB257FF).copy(alpha = 0.15f), CircleShape)
         )
 
@@ -550,7 +548,7 @@ private fun MainWorkoutCardPremium(
                         Text(
                             text = stringResource(R.string.text_more_exercises, mainQuest.tasks.size - 5),
                             style = MaterialTheme.typography.labelSmall.copy(color = Color.White.copy(alpha = 0.3f)),
-                            modifier = Modifier.padding(start = 18.dp)
+                            modifier = Modifier.padding(start = 14.dp)
                         )
                     }
                 }

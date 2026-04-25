@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -55,7 +54,7 @@ fun AnnualProgressionScreen(navController: NavHostController) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 24.dp),
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -97,7 +96,7 @@ fun AnnualProgressionScreen(navController: NavHostController) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 32.dp, vertical = 8.dp)
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
                     .clip(RoundedCornerShape(24.dp))
                     .background(Color.White.copy(alpha = 0.02f))
                     .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))

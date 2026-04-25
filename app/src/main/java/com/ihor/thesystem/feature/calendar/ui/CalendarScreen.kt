@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -48,7 +47,7 @@ fun CalendarScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF020408))) {
+    Box(modifier = Modifier.fillMaxSize().background(BackgroundDeep)) {
         // Shared dynamic background
         AnimatedCalendarBackground()
 
@@ -100,7 +99,7 @@ fun CalendarScreen(
                 }
             }
 
-            Spacer(Modifier.height(100.dp))
+            Spacer(Modifier.height(88.dp))
         }
     }
 }
@@ -175,19 +174,20 @@ private fun CalendarHeaderAndMonthSelector(
 
 @Composable
 private fun AnimatedCalendarBackground() {
-    val infiniteTransition = rememberInfiniteTransition()
+    val infiniteTransition = rememberInfiniteTransition(label = "calendar_bg")
     val colorShift by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(20000, easing = LinearEasing), RepeatMode.Reverse)
+        animationSpec = infiniteRepeatable(tween(20000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "shift"
     )
 
     Canvas(modifier = Modifier.fillMaxSize()) {
-        drawRect(Color(0xFF020408))
+        drawRect(BackgroundDeep)
         
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(NeonCyan.copy(alpha = 0.05f), Color.Transparent),
+                colors = listOf(Primary.copy(alpha = 0.05f), Color.Transparent),
                 center = Offset(size.width * 0.9f, size.height * 0.1f + (size.height * 0.2f * colorShift)),
                 radius = 800.dp.toPx()
             )
@@ -195,7 +195,7 @@ private fun AnimatedCalendarBackground() {
         
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(NeonGold.copy(alpha = 0.03f), Color.Transparent),
+                colors = listOf(StatusWarning.copy(alpha = 0.03f), Color.Transparent),
                 center = Offset(size.width * 0.1f, size.height * 0.9f - (size.height * 0.2f * colorShift)),
                 radius = 700.dp.toPx()
             )
@@ -373,15 +373,12 @@ fun DailyScheduleSection(
             .padding(vertical = 16.dp)
             .animateContentSize()
     ) {
-        // Background layer with blur
-        Box(
+        Column(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxWidth()
                 .glassCard()
-                .blur(12.dp)
-        )
-
-        Column(modifier = Modifier.padding(24.dp)) {
+                .padding(24.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -460,7 +457,7 @@ fun DailyScheduleSection(
                                 color = OnSurfaceVariant,
                                 fontWeight = FontWeight.Medium
                             ),
-                            modifier = Modifier.padding(start = 18.dp, top = 4.dp)
+                            modifier = Modifier.padding(start = 14.dp, top = 4.dp)
                         )
                     }
 
@@ -480,7 +477,7 @@ fun DailyScheduleSection(
                         // Render Unified Logs (Quests + Completed Exercises)
                         dailyLogs.forEach { log ->
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                modifier = Modifier.fillMaxWidth().padding(start = 14.dp, bottom = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -508,7 +505,7 @@ fun DailyScheduleSection(
                             Spacer(Modifier.height(8.dp))
                             results.forEach { result ->
                                 Row(
-                                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(start = 14.dp, bottom = 8.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -539,13 +536,13 @@ fun DailyScheduleSection(
                                 color = OnBackground,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = RajdhaniFamily,
-                                modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
+                                modifier = Modifier.padding(start = 14.dp, bottom = 4.dp)
                             )
                         }
                         HorizontalDivider(color = OnBackground.copy(alpha = 0.05f), thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
                     }
 
-                    schedule?.let { data ->
+            schedule?.let { data ->
                         val templateName = data.workoutTemplateName
                         if (templateName != null) {
                             Text(
@@ -558,9 +555,12 @@ fun DailyScheduleSection(
                             )
                             Spacer(Modifier.height(12.dp))
                             data.exercises.forEach { exercise ->
-                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically, 
+                                    modifier = Modifier.padding(start = 14.dp, bottom = 6.dp)
+                                ) {
                                     Box(modifier = Modifier.size(4.dp).clip(CircleShape).background(StatusWarning.copy(0.4f)))
-                                    Spacer(Modifier.width(12.dp))
+                                    Spacer(Modifier.width(8.dp))
                                     Text(
                                         text = exercise.name,
                                         style = MaterialTheme.typography.bodyMedium.copy(color = OnSurfaceVariant, fontFamily = RajdhaniFamily)

@@ -56,7 +56,7 @@ fun QuestCard(
             )
             .glassCard()
             .then(
-                if (isPromotion) Modifier.border(1.dp, accentColor, RoundedCornerShape(16.dp))
+                if (isPromotion) Modifier.border(2.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
                 else Modifier
             )
             .combinedClickable(

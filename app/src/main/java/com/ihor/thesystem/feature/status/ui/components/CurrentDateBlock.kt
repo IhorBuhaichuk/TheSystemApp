@@ -14,7 +14,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.NeonCyan
+import com.ihor.thesystem.core.theme.Primary
+import com.ihor.thesystem.core.ui.components.glassCard
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.*
@@ -31,16 +32,14 @@ fun CurrentDateBlock(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(100.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(100.dp))
+            .glassCard(radius = 100.dp)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = dateDisplay.uppercase(),
             style = MaterialTheme.typography.labelLarge.copy(
-                color = NeonCyan,
+                color = Primary,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp
             )

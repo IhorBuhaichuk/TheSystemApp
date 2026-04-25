@@ -41,9 +41,9 @@ fun SystemBottomNavBar(navController: NavHostController) {
             .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
         Surface(
-            color = Color(0xFF0A0A10).copy(alpha = 0.8f),
+            color = BackgroundDeep.copy(alpha = 0.85f),
             shape = RoundedCornerShape(24.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(72.dp)
@@ -122,8 +122,7 @@ private fun NavIconButton(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .blur(20.dp)
-                    .background(activeColor.copy(alpha = 0.3f), CircleShape)
+                    .background(activeColor.copy(alpha = 0.15f), CircleShape)
             )
         }
         

@@ -30,6 +30,7 @@ import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.RankBadge
+import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.feature.statistics.ui.components.*
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogHeightDialog
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogWeightDialog
@@ -80,7 +81,7 @@ fun StatisticsScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 24.dp)
-                    .padding(top = 32.dp, bottom = 120.dp)
+                    .padding(top = 32.dp, bottom = 88.dp)
             ) {
                 StatisticsHeader(navController)
 
@@ -179,8 +180,7 @@ private fun StatisticsTabSelector(selectedTabIndex: Int, onTabSelected: (Int) ->
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(PanelSurface, RoundedCornerShape(16.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+            .glassCard()
             .padding(4.dp)
     ) {
         Row(
@@ -191,13 +191,13 @@ private fun StatisticsTabSelector(selectedTabIndex: Int, onTabSelected: (Int) ->
                 val isSelected = selectedTabIndex == index
                 
                 val backgroundColor by animateColorAsState(
-                    targetValue = if (isSelected) NeonCyan else Color.Transparent,
+                    targetValue = if (isSelected) Primary else Color.Transparent,
                     animationSpec = tween(durationMillis = 300),
                     label = "TabBackground"
                 )
                 
                 val contentColor by animateColorAsState(
-                    targetValue = if (isSelected) BackgroundDeep else TextSecondary,
+                    targetValue = if (isSelected) BackgroundDeep else OnSurfaceVariant,
                     animationSpec = tween(durationMillis = 300),
                     label = "TabContent"
                 )
@@ -267,8 +267,7 @@ private fun PlayerMetricsGrid(
 private fun MetricCard(label: String, value: String, unit: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(PanelSurface, RoundedCornerShape(24.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))
+            .glassCard(radius = 24.dp)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -276,7 +275,7 @@ private fun MetricCard(label: String, value: String, unit: String, modifier: Mod
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = TextSecondary,
+                color = OnSurfaceVariant,
                 fontSize = 12.sp,
                 letterSpacing = 2.sp
             )
@@ -288,7 +287,7 @@ private fun MetricCard(label: String, value: String, unit: String, modifier: Mod
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    color = TextPrimary,
+                    color = OnBackground,
                     fontWeight = FontWeight.Bold,
                     fontSize = 32.sp
                 )
@@ -297,7 +296,7 @@ private fun MetricCard(label: String, value: String, unit: String, modifier: Mod
             Text(
                 text = unit,
                 style = MaterialTheme.typography.titleMedium.copy(
-                    color = TextSecondary,
+                    color = OnSurfaceVariant,
                     fontSize = 20.sp
                 ),
                 modifier = Modifier.padding(bottom = 4.dp)
@@ -311,15 +310,14 @@ private fun PlayerCharacterPanel(data: StatisticsUiData) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(PanelSurface, RoundedCornerShape(24.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))
+            .glassCard(radius = 24.dp)
             .padding(24.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = stringResource(R.string.text_character_stats_capital),
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = TextSecondary,
+                    color = OnSurfaceVariant,
                     fontSize = 12.sp,
                     letterSpacing = 2.sp
                 ),
@@ -345,14 +343,13 @@ private fun ProgressLineChartMock() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(PanelSurface, RoundedCornerShape(24.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))
+            .glassCard(radius = 24.dp)
             .padding(24.dp)
     ) {
         Text(
             text = stringResource(R.string.text_progress_30_days),
             style = MaterialTheme.typography.labelSmall.copy(
-                color = TextSecondary,
+                color = OnSurfaceVariant,
                 fontSize = 12.sp,
                 letterSpacing = 2.sp
             )
@@ -460,7 +457,7 @@ private fun AnimatedStatisticsBackground() {
         // Matrix Green Glow
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(NeonGreen.copy(alpha = 0.05f), Color.Transparent),
+                colors = listOf(StatusSuccess.copy(alpha = 0.05f), Color.Transparent),
                 center = Offset(size.width * 0.8f, size.height * 0.2f + (size.height * 0.1f * colorShift)),
                 radius = 500.dp.toPx()
             )
@@ -469,7 +466,7 @@ private fun AnimatedStatisticsBackground() {
         // Cyber Blue Glow
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(NeonCyan.copy(alpha = 0.05f), Color.Transparent),
+                colors = listOf(Primary.copy(alpha = 0.05f), Color.Transparent),
                 center = Offset(size.width * 0.2f, size.height * 0.8f - (size.height * 0.1f * colorShift)),
                 radius = 600.dp.toPx()
             )

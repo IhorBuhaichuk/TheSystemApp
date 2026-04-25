@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.RankBadge
+import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 import coil.compose.AsyncImage
@@ -35,7 +36,7 @@ fun PlayerStatsHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .sciPanel(PanelBorder, PanelSurface, 12.dp)
+            .glassCard()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -146,22 +147,22 @@ private fun RowScope.StatChip(
     Column(
         modifier = Modifier
             .weight(1f)
-            .sciPanel(NeonCyan.copy(0.2f), NeonCyan.copy(0.05f), 8.dp)
+            .glassCard(radius = 12.dp)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Icon(icon, null, tint = NeonCyanDim, modifier = Modifier.size(14.dp))
+        Icon(icon, null, tint = OnSurfaceVariant, modifier = Modifier.size(14.dp))
         Text(
             text       = value,
-            color      = TextPrimary,
+            color      = OnBackground,
             fontFamily = TekoFamily,
             fontWeight = FontWeight.Bold,
             fontSize   = 18.sp
         )
         Text(
             text       = label,
-            color      = TextSecondary,
+            color      = OnSurfaceVariant,
             fontFamily = RajdhaniFamily,
             fontSize   = 8.sp
         )

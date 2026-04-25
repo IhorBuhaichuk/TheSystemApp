@@ -57,7 +57,7 @@ fun PlayerStatsHeaderPremium(
                                 .build(),
                             contentDescription = "Avatar",
                             modifier = Modifier
-                                .size(150.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
                                 .border(2.dp, Color.White.copy(alpha = 0.1f), CircleShape),
                             contentScale = ContentScale.Crop
@@ -65,7 +65,7 @@ fun PlayerStatsHeaderPremium(
                     } else {
                         Box(
                             modifier = Modifier
-                                .size(150.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
                                 .background(Color.Black.copy(alpha = 0.4f))
                                 .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape),
@@ -74,12 +74,12 @@ fun PlayerStatsHeaderPremium(
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                modifier = Modifier.size(90.dp),
+                                modifier = Modifier.size(28.dp),
                                 tint = Color.White.copy(alpha = 0.4f)
                             )
                         }
                     }
-                    Spacer(Modifier.width(20.dp))
+                    Spacer(Modifier.width(12.dp))
                     Column {
                         Text(
                             text = data.playerName,

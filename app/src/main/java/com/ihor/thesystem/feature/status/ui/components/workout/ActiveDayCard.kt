@@ -83,17 +83,10 @@ fun ActiveDayCard(
     var isExpanded by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxWidth()) {
-        // Background layer with blur
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .glassCard()
-                .blur(12.dp)
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .glassCard()
                 .clickable { isExpanded = !isExpanded }
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -256,8 +249,8 @@ private fun SetInputRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(CornerRadius))
-            .background(if (set.isCompleted) StatusSuccess.copy(alpha = 0.1f) else OnBackground.copy(alpha = 0.03f))
+            .glassCard(radius = 12.dp)
+            .background(if (set.isCompleted) StatusSuccess.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.03f))
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
