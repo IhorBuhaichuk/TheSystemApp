@@ -5,6 +5,7 @@ import com.ihor.thesystem.data.local.room.entity.SystemConfigEntity
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -17,6 +18,11 @@ class SystemConfigRepositoryImpl @Inject constructor(
 
     override suspend fun updateConfig(config: SystemConfig) =
         dao.insertOrUpdate(config.toEntity())
+
+    override suspend fun setNeedsDailyInit(needed: Boolean) {
+        val current = dao.getConfigFlow().firstOrNull() ?: SystemConfigEntity()
+        dao.insertOrUpdate(current.copy(needsDailyInit = needed))
+    }
 }
 
 private fun SystemConfigEntity.toDomain() =
@@ -30,7 +36,8 @@ private fun SystemConfigEntity.toDomain() =
         cycleAnchorDay = cycleAnchorDay,
         cycleDaysPerMicrocycle = cycleDaysPerMicrocycle,
         microCyclesPerMonth = microCyclesPerMonth,
-        dayStartOffsetHours = dayStartOffsetHours
+        dayStartOffsetHours = dayStartOffsetHours,
+        needsDailyInit = needsDailyInit
     )
 
 private fun SystemConfig.toEntity() =
@@ -44,5 +51,6 @@ private fun SystemConfig.toEntity() =
         cycleAnchorDay = cycleAnchorDay,
         cycleDaysPerMicrocycle = cycleDaysPerMicrocycle,
         microCyclesPerMonth = microCyclesPerMonth,
-        dayStartOffsetHours = dayStartOffsetHours
+        dayStartOffsetHours = dayStartOffsetHours,
+        needsDailyInit = needsDailyInit
     )

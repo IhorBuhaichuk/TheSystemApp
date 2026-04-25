@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import java.util.Calendar
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.DurationUnit
 
 class FinalizeSessionUseCase @Inject constructor(
     private val analyticsRepository: WorkoutAnalyticsRepository,
@@ -44,7 +45,7 @@ class FinalizeSessionUseCase @Inject constructor(
 
             val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
             val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
-            val recoveryHours = calculateRecovery(finalTonnage).inWholeHours.toDouble()
+            val recoveryHours = calculateRecovery(finalTonnage).toDouble(DurationUnit.HOURS)
 
             recalculateGlobalRank()
             

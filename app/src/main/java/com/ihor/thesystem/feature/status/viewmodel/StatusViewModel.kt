@@ -81,8 +81,12 @@ class StatusViewModel @Inject constructor(
                 }
                 
                 // Виконуємо розрахунки тільки якщо база готова
-                useCases.generateDailyQuests()
-                useCases.calculateAttributes()
+                val config = useCases.getSystemConfig().first()
+                if (config?.needsDailyInit == true) {
+                    useCases.generateDailyQuests()
+                    useCases.calculateAttributes()
+                    useCases.setNeedsDailyInit(false)
+                }
                 
             } catch (e: TimeoutCancellationException) {
                 Timber.w("Database initialization timeout")

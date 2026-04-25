@@ -44,15 +44,21 @@ class FinalizeDayUseCase @Inject constructor(
                 // 4. Просування часу (Cycle Day / Week / Month)
                 val finalPlayer = playerAfterXP.advanceTime(config)
 
-                // 5. Збереження оновленого стану гравця
+                // 5. Встановлюємо прапорець потреби ініціалізації перед оновленням гравця
+                configRepo.setNeedsDailyInit(true)
+
+                // 6. Збереження оновленого стану гравця
                 playerRepo.updatePlayer(finalPlayer)
 
-                // 6. Архівація квестів
+                // 7. Архівація квестів
                 questRepo.archiveActiveQuests()
 
-                // 7. Генерація нового дня та оновлення атрибутів всередині транзакції
+                // 8. Генерація нового дня та оновлення атрибутів всередині транзакції
                 generateDailyQuests.invoke()
                 calculateAttributes.invoke()
+
+                // 9. Скидаємо прапорець після успішної ініціалізації
+                configRepo.setNeedsDailyInit(false)
 
                 val result = when {
                     levelUpTriggered -> DayFinalizationResult.LevelUp

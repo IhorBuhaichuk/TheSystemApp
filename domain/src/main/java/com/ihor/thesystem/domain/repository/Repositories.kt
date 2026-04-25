@@ -7,15 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface SystemConfigRepository {
     fun getConfigFlow(): Flow<SystemConfig?>
     suspend fun updateConfig(config: SystemConfig)
-}
-
-data class ActiveDebuff(
-    val name: String,
-    val penaltyPercent: Int
-)
-
-interface DebuffRepository {
-    fun getActiveDebuffs(): Flow<List<ActiveDebuff>>
+    suspend fun setNeedsDailyInit(needed: Boolean)
 }
 
 interface ScheduleRepository {

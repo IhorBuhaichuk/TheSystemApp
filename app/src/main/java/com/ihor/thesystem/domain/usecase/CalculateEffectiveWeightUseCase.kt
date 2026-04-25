@@ -1,14 +1,12 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.domain.repository.DebuffRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import kotlin.math.round
 
 class CalculateEffectiveWeightUseCase @Inject constructor(
-    private val configRepo: SystemConfigRepository,
-    private val debuffRepo: DebuffRepository
+    private val configRepo: SystemConfigRepository
 ) {
     /**
      * Calculates the effective weight by applying penalties.
@@ -18,7 +16,6 @@ class CalculateEffectiveWeightUseCase @Inject constructor(
      */
     suspend operator fun invoke(baseWeight: Double, isPenaltyActive: Boolean): Double {
         val config = configRepo.getConfigFlow().firstOrNull() ?: return baseWeight
-        val activeDebuffs = debuffRepo.getActiveDebuffs().firstOrNull() ?: emptyList()
 
         var totalPenaltyPercent = 0
         
@@ -26,9 +23,6 @@ class CalculateEffectiveWeightUseCase @Inject constructor(
         if (isPenaltyActive) {
             totalPenaltyPercent += config.defaultPenalty
         }
-        
-        // Локальні дебафи (наприклад, втома ЦНС)
-        totalPenaltyPercent += activeDebuffs.sumOf { it.penaltyPercent }
 
         // Max penalty is 50% (Floor)
         val finalPenaltyFactor = (totalPenaltyPercent.toDouble() / PERCENT_DIVISOR).coerceAtMost(MAX_PENALTY_FACTOR)

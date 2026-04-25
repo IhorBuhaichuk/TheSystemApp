@@ -15,5 +15,6 @@ data class StatusUseCases @Inject constructor(
     val updatePlayerAvatar: UpdatePlayerAvatarUseCase,
     val addTaskToQuest: AddTaskToQuestUseCase,
     val removeQuestTask: RemoveQuestTaskUseCase,
-    val calculateAttributes: CalculateAttributesUseCase
+    val calculateAttributes: CalculateAttributesUseCase,
+    val setNeedsDailyInit: SetNeedsDailyInitUseCase
 )
