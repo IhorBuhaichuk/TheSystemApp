@@ -56,7 +56,7 @@ fun SystemBottomNavBar(navController: NavHostController) {
                 NavIconButton(
                     icon = Icons.Filled.Dashboard,
                     isSelected = destination?.hasRoute<Routes.Status>() == true,
-                    activeColor = NeonCyan,
+                    activeColor = Primary,
                     onClick = {
                         navController.navigate(Routes.Status) {
                             popUpTo<Routes.Status> { inclusive = false }
@@ -67,7 +67,7 @@ fun SystemBottomNavBar(navController: NavHostController) {
                 NavIconButton(
                     icon = Icons.Filled.CalendarToday,
                     isSelected = destination?.hasRoute<Routes.Calendar>() == true,
-                    activeColor = GlitchPink,
+                    activeColor = Primary,
                     onClick = {
                         navController.navigate(Routes.Calendar) {
                             popUpTo<Routes.Status> { inclusive = false }
@@ -78,7 +78,7 @@ fun SystemBottomNavBar(navController: NavHostController) {
                 NavIconButton(
                     icon = Icons.Filled.BarChart,
                     isSelected = destination?.hasRoute<Routes.Statistics>() == true,
-                    activeColor = NeonGreen,
+                    activeColor = Primary,
                     onClick = {
                         navController.navigate(Routes.Statistics) {
                             popUpTo<Routes.Status> { inclusive = false }
@@ -89,7 +89,7 @@ fun SystemBottomNavBar(navController: NavHostController) {
                 NavIconButton(
                     icon = Icons.Filled.AutoAwesome,
                     isSelected = destination?.hasRoute<Routes.Architect>() == true,
-                    activeColor = GlitchPink,
+                    activeColor = Primary,
                     onClick = {
                         navController.navigate(Routes.Architect) {
                             popUpTo<Routes.Status> { inclusive = false }
@@ -110,7 +110,6 @@ private fun NavIconButton(
     onClick: () -> Unit
 ) {
     val scale by animateFloatAsState(if (isSelected) 1.2f else 1f, label = "scale")
-    val alpha by animateFloatAsState(if (isSelected) 1f else 0.4f, label = "alpha")
 
     Box(
         modifier = Modifier
@@ -131,10 +130,10 @@ private fun NavIconButton(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (isSelected) activeColor else Color.White,
+            tint = if (isSelected) activeColor else OnSurfaceVariant,
             modifier = Modifier
                 .size(24.dp)
-                .graphicsLayer(scaleX = scale, scaleY = scale, alpha = alpha)
+                .graphicsLayer(scaleX = scale, scaleY = scale)
         )
         
         if (isSelected) {

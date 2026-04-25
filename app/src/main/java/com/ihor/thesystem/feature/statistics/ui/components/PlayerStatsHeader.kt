@@ -54,7 +54,7 @@ fun PlayerStatsHeader(
                             .build(),
                         contentDescription = "Avatar",
                         modifier = Modifier
-                            .size(130.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
                             .border(2.dp, NeonCyan.copy(alpha = 0.3f), CircleShape),
                         contentScale = ContentScale.Crop
@@ -62,7 +62,7 @@ fun PlayerStatsHeader(
                 } else {
                     Box(
                         modifier = Modifier
-                            .size(130.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
                             .background(Color.Black)
                             .border(1.dp, NeonCyan.copy(alpha = 0.2f), CircleShape),
@@ -71,7 +71,7 @@ fun PlayerStatsHeader(
                         Icon(
                             imageVector = Icons.Filled.Person,
                             contentDescription = null,
-                            modifier = Modifier.size(80.dp),
+                            modifier = Modifier.size(32.dp),
                             tint = NeonCyan.copy(alpha = 0.5f)
                         )
                     }
@@ -83,7 +83,7 @@ fun PlayerStatsHeader(
                         color      = TextPrimary,
                         fontFamily = RajdhaniFamily,
                         fontWeight = FontWeight.Bold,
-                        fontSize   = 24.sp
+                        fontSize   = 18.sp
                     )
                     Text(
                         text       = "[ ${data.playerClass} ]",

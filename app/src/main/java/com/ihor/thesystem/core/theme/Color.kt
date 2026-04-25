@@ -16,3 +16,11 @@ val HexBorder        = Color(0xFF1DE9B6)
 val GlitchPink       = Color(0xFFFF4081)
 val GlitchCyan       = Color(0xFF18FFFF)
 val DangerRed        = Color(0xFFB71C1C)
+
+// New Tokens
+val Primary = Color(0xFF00F0FF) // кібер-блакитний
+val OnBackground = Color(0xFFFFFFFF)
+val OnSurfaceVariant = Color(0xFF94A3B8) // неактивні елементи
+val StatusSuccess = Color(0xFF00E676)
+val StatusWarning = Color(0xFFFF9100)
+val StatusError = Color(0xFFFF1744)

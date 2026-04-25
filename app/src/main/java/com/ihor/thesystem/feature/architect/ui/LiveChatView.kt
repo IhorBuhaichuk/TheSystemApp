@@ -164,15 +164,29 @@ private fun ChatBubble(msg: ChatMessage) {
                 border = BorderStroke(1.dp, borderColor),
                 modifier = Modifier.widthIn(max = 280.dp)
             ) {
-                Text(
-                    text = msg.text.asString(),
-                    color = Color.White,
-                    modifier = Modifier.padding(14.dp),
-                    fontFamily = RajdhaniFamily,
-                    fontSize = 15.sp,
-                    lineHeight = 20.sp
-                )
+                ChatMessageItem(text = msg.text.asString())
             }
+        }
+    }
+}
+
+@Composable
+private fun ChatMessageItem(text: String) {
+    val paragraphs = remember(text) { text.split("\n\n") }
+    Column(
+        modifier = Modifier.padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        paragraphs.forEach { paragraph ->
+            val isHeader = paragraph.trimEnd().endsWith(":")
+            Text(
+                text = paragraph,
+                color = Color.White,
+                fontFamily = RajdhaniFamily,
+                fontSize = 15.sp,
+                lineHeight = 24.sp,
+                modifier = if (isHeader) Modifier.padding(bottom = 6.dp) else Modifier
+            )
         }
     }
 }

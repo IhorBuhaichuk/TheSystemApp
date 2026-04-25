@@ -10,6 +10,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 
 /**
  * Малює статичну sci-fi панель із зрізаними кутами.
@@ -57,3 +62,8 @@ fun Modifier.neonGlow(color: Color, radius: Dp = 10.dp): Modifier = this.drawBeh
         )
     }
 }
+
+fun Modifier.glassCard(): Modifier = this
+    .clip(RoundedCornerShape(16.dp))
+    .background(Color.White.copy(alpha = 0.08f))
+    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp))

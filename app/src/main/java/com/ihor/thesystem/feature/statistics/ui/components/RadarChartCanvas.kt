@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import com.ihor.thesystem.core.theme.RajdhaniFamily
+import com.ihor.thesystem.core.theme.Primary
 import com.ihor.thesystem.core.ui.asUiText
 import com.ihor.thesystem.domain.model.MuscleGroup
 import kotlin.math.cos
@@ -93,13 +94,13 @@ fun RadarChartCanvas(
             // Fill
             drawPath(
                 path = progressPath,
-                color = Color.Cyan.copy(alpha = 0.35f)
+                color = Primary.copy(alpha = 0.15f)
             )
 
             // Stroke with Glow effect using native canvas
             drawContext.canvas.nativeCanvas.apply {
                 val paint = Paint().asFrameworkPaint().apply {
-                    color = Color.Cyan.toArgb()
+                    color = Primary.toArgb()
                     strokeWidth = 4f
                     style = android.graphics.Paint.Style.STROKE
                     maskFilter = BlurMaskFilter(15f, BlurMaskFilter.Blur.NORMAL)
@@ -110,7 +111,7 @@ fun RadarChartCanvas(
 
             drawPath(
                 path = progressPath,
-                color = Color.Cyan,
+                color = Primary,
                 style = Stroke(width = 2.dp.toPx())
             )
         }
@@ -125,7 +126,7 @@ fun RadarChartCanvas(
                 text = AnnotatedString(labelText),
                 style = TextStyle(
                     color = Color.White,
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontFamily = RajdhaniFamily
                 )
             )

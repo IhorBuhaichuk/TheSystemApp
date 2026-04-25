@@ -315,20 +315,21 @@ private fun PlayerCharacterPanel(data: StatisticsUiData) {
             .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(24.dp))
             .padding(24.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = stringResource(R.string.text_character_stats_capital),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = TextSecondary,
                     fontSize = 12.sp,
                     letterSpacing = 2.sp
-                )
+                ),
+                modifier = Modifier.align(Alignment.CenterStart)
             )
-            RankBadge(rank = data.globalRank, size = 32.dp)
+            RankBadge(
+                rank = data.globalRank, 
+                size = 32.dp,
+                modifier = Modifier.align(Alignment.TopEnd)
+            )
         }
         
         Spacer(modifier = Modifier.height(24.dp))
@@ -437,16 +438,9 @@ private fun StatisticsHeader(navController: NavHostController) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
 
-        Text(
-            text = stringResource(R.string.text_analytics),
-            style = MaterialTheme.typography.titleMedium.copy(
-                color = Color.White,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 4.sp
-            )
-        )
+        Spacer(modifier = Modifier.weight(1f))
 
-        Box(modifier = Modifier.size(40.dp)) // Spacer to keep title centered
+        Box(modifier = Modifier.size(40.dp)) // Spacer to keep layout structure
     }
 }
 

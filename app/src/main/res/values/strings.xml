@@ -46,6 +46,12 @@
     <string name="text_greeting">Вітаю, %1$s</string>
     <string name="text_main_quest">ОСНОВНИЙ КВЕСТ</string>
     <string name="text_more_exercises">+ ще %1$d вправ</string>
+    <plurals name="quest_tasks_more">
+        <item quantity="one">+ ще %d вправа</item>
+        <item quantity="few">+ ще %d вправи</item>
+        <item quantity="many">+ ще %d вправ</item>
+        <item quantity="other">+ ще %d вправ</item>
+    </plurals>
     <string name="text_completed_check">ЗАВЕРШЕНО ✓</string>
     <string name="text_daily_goals">ЩОДЕННІ ЦІЛІ</string>
     <string name="text_add_task_title">НОВА ЦІЛЬ</string>
@@ -124,6 +130,7 @@
     <string name="text_character">ПЕРСОНАЖ</string>
     <string name="text_matrix">МАТРИЦЯ</string>
     <string name="text_analytics">АНАЛІТИКА</string>
+    <string name="text_calendar_title">КАЛЕНДАР</string>
     <string name="text_character_stats_capital">ХАРАКТЕРИСТИКИ ПЕРСОНАЖА</string>
     <string name="text_progress_30_days">ПРОГРЕС ЗА 30 ДНІВ</string>
     <string name="text_exercise_label">Вправа %1$d</string>
@@ -148,4 +155,25 @@
     <string name="text_planned_program">ПЛАНОВА ПРОГРАМА</string>
     <string name="text_active_recovery">РЕЖИМ: АКТИВНЕ ВІДНОВЛЕННЯ</string>
     <string name="text_status_label">СТАТУС</string>
+
+    <!-- Calendar Weekdays -->
+    <string name="text_day_mon">Пн</string>
+    <string name="text_day_tue">Вт</string>
+    <string name="text_day_wed">Ср</string>
+    <string name="text_day_thu">Чт</string>
+    <string name="text_day_fri">Пт</string>
+    <string name="text_day_sat">Сб</string>
+    <string name="text_day_sun">Нд</string>
+
+    <!-- Quests -->
+    <string name="text_exam">ЕКЗАМЕН</string>
+    <string name="text_empty_routine">РУТИНА ВІДСУТНЯ</string>
+    <string name="text_empty_main_quest">ОСНОВНИЙ КВЕСТ ВІДСУТНІЙ</string>
+    <string name="text_empty_promotions">ЕКЗАМЕНИ ВІДСУТНІ</string>
+
+    <!-- Exercise Stats -->
+    <string name="text_exercise_progress">ПРОГРЕС ВПРАВИ</string>
+    <string name="text_current">Поточна</string>
+    <string name="text_target">Ціль</string>
+    <string name="text_rank_label">Ранг</string>
 </resources>

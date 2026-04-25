@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.MaxOneRepMaxText
+import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarDayUiModel
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarViewModel
 import com.ihor.thesystem.feature.calendar.viewmodel.WorkoutResultUiModel
@@ -69,6 +70,9 @@ fun CalendarScreen(
                 currentMonth = uiState.currentMonth,
                 onMonthChange = { viewModel.onMonthChange(it) }
             )
+
+            CalendarLegend()
+            Spacer(Modifier.height(16.dp))
 
             // ── Calendar Grid ─────────────────────────────────────────
             CalendarGrid(
@@ -113,7 +117,7 @@ private fun CalendarHeaderAndMonthSelector(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(R.string.text_analytics),
+            text = stringResource(R.string.text_calendar_title),
             style = MaterialTheme.typography.titleMedium.copy(
                 color = TextPrimary,
                 fontSize = 18.sp,
@@ -206,7 +210,15 @@ fun CalendarGrid(
     selectedDate: LocalDate?,
     onDateClick: (LocalDate) -> Unit
 ) {
-    val weekDays = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд")
+    val weekDays = listOf(
+        stringResource(R.string.text_day_mon),
+        stringResource(R.string.text_day_tue),
+        stringResource(R.string.text_day_wed),
+        stringResource(R.string.text_day_thu),
+        stringResource(R.string.text_day_fri),
+        stringResource(R.string.text_day_sat),
+        stringResource(R.string.text_day_sun)
+    )
     val firstDayOfMonth = currentMonth.atDay(1)
     val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value 
 
@@ -263,6 +275,9 @@ fun CalendarDayCell(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val dayColor = StatusWarning
+    val nightColor = Primary
+    
     Box(
         modifier = Modifier
             .aspectRatio(1f)
@@ -270,9 +285,9 @@ fun CalendarDayCell(
             .clickable { onClick() }
             .drawBehind {
                 val baseColor = when (model.cycleDay) {
-                    1 -> NeonGold
-                    2 -> NeonCyan
-                    else -> Color.White.copy(alpha = 0.08f)
+                    1 -> dayColor
+                    2 -> nightColor
+                    else -> OnBackground.copy(alpha = 0.08f)
                 }
 
                 drawCircle(
@@ -288,14 +303,14 @@ fun CalendarDayCell(
 
                 if (isSelected) {
                     drawCircle(
-                        color = NeonCyan.copy(alpha = 0.1f),
+                        color = Primary.copy(alpha = 0.1f),
                         radius = size.width / 2f
                     )
                 }
 
                 if (model.isToday && !isSelected) {
                     drawCircle(
-                        color = NeonCyan,
+                        color = Primary,
                         radius = 2.dp.toPx(),
                         center = Offset(center.x, size.height * 0.85f)
                     )
@@ -306,15 +321,35 @@ fun CalendarDayCell(
         Text(
             text = model.date.dayOfMonth.toString(),
             color = when {
-                model.isToday -> NeonCyan
-                model.cycleDay == 1 -> NeonGold
-                model.cycleDay == 2 -> NeonCyan
-                else -> TextPrimary.copy(alpha = 0.6f)
+                model.isToday -> Primary
+                model.cycleDay == 1 -> StatusWarning
+                model.cycleDay == 2 -> Primary
+                else -> OnBackground.copy(alpha = 0.6f)
             },
             fontSize = 14.sp,
             fontFamily = RajdhaniFamily,
             fontWeight = if (model.isToday || isSelected) FontWeight.Bold else FontWeight.Normal
         )
+    }
+}
+
+@Composable
+private fun CalendarLegend() {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        LegendItem(label = "ДЕНЬ", color = StatusWarning)
+        LegendItem(label = "НІЧ", color = Primary)
+    }
+}
+
+@Composable
+private fun LegendItem(label: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(color))
+        Text(text = label, color = color, fontSize = 10.sp, fontFamily = RajdhaniFamily, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -336,32 +371,14 @@ fun DailyScheduleSection(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp)
-            .clip(RoundedCornerShape(32.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFF1A1A2E), Color(0xFF0F0F1A)),
-                    start = Offset(0f, 0f),
-                    end = Offset(1000f, 1000f)
-                )
-            )
-            .border(
-                1.dp,
-                Brush.horizontalGradient(listOf(NeonCyan.copy(0.2f), NeonGold.copy(0.1f))),
-                RoundedCornerShape(32.dp)
-            )
             .animateContentSize()
     ) {
-        // Decorative glow
+        // Background layer with blur
         Box(
             modifier = Modifier
-                .size(120.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = 40.dp, y = (-40).dp)
-                .blur(50.dp)
-                .background(
-                    if (dayModel.cycleDay == 1) NeonGold.copy(0.1f) else NeonCyan.copy(0.1f),
-                    CircleShape
-                )
+                .matchParentSize()
+                .glassCard()
+                .blur(12.dp)
         )
 
         Column(modifier = Modifier.padding(24.dp)) {
@@ -374,7 +391,7 @@ fun DailyScheduleSection(
                     Text(
                         text = stringResource(R.string.text_day_details),
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = NeonCyan,
+                            color = Primary,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 2.sp
                         )
@@ -382,7 +399,7 @@ fun DailyScheduleSection(
                     Text(
                         text = "${date.dayOfMonth}.${date.monthValue}.${date.year}",
                         style = MaterialTheme.typography.headlineSmall.copy(
-                            color = Color.White,
+                            color = OnBackground,
                             fontWeight = FontWeight.ExtraBold,
                             fontFamily = RajdhaniFamily
                         )
@@ -393,12 +410,12 @@ fun DailyScheduleSection(
                     onClick = { isExpanded = !isExpanded },
                     modifier = Modifier
                         .size(36.dp)
-                        .background(Color.White.copy(alpha = 0.05f), CircleShape)
+                        .background(OnBackground.copy(alpha = 0.05f), CircleShape)
                 ) {
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = NeonCyan,
+                        tint = Primary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -419,9 +436,9 @@ fun DailyScheduleSection(
                                 .clip(CircleShape)
                                 .background(
                                     when(dayModel.cycleDay) {
-                                        1 -> NeonGold
-                                        2 -> NeonCyan
-                                        else -> NeonGreen
+                                        1 -> StatusWarning
+                                        2 -> Primary
+                                        else -> StatusSuccess
                                     }
                                 )
                         )
@@ -429,7 +446,7 @@ fun DailyScheduleSection(
                         Text(
                             text = "${stringResource(R.string.text_status_label)}: ${dayModel.label.uppercase()}",
                             style = MaterialTheme.typography.labelMedium.copy(
-                                color = TextPrimary.copy(alpha = 0.8f),
+                                color = OnBackground.copy(alpha = 0.8f),
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 1.sp
                             )
@@ -440,7 +457,7 @@ fun DailyScheduleSection(
                         Text(
                             text = "${stringResource(R.string.text_label_weight)}: $loggedWeight ${stringResource(R.string.text_unit_kg)}".uppercase(),
                             style = MaterialTheme.typography.labelSmall.copy(
-                                color = NeonCyan.copy(alpha = 0.6f),
+                                color = OnSurfaceVariant,
                                 fontWeight = FontWeight.Medium
                             ),
                             modifier = Modifier.padding(start = 18.dp, top = 4.dp)
@@ -448,7 +465,7 @@ fun DailyScheduleSection(
                     }
 
                     HorizontalDivider(
-                        color = Color.White.copy(alpha = 0.05f),
+                        color = OnBackground.copy(alpha = 0.05f),
                         thickness = 1.dp,
                         modifier = Modifier.padding(vertical = 20.dp)
                     )
@@ -456,7 +473,7 @@ fun DailyScheduleSection(
                     if (results.isNotEmpty() || dailyLogs.isNotEmpty()) {
                         Text(
                             text = stringResource(R.string.text_activity_day),
-                            style = MaterialTheme.typography.labelSmall.copy(color = NeonCyan, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                            style = MaterialTheme.typography.labelSmall.copy(color = Primary, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                         )
                         Spacer(Modifier.height(12.dp))
                         
@@ -470,19 +487,19 @@ fun DailyScheduleSection(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = log.title.uppercase(),
-                                        color = if (log.type == LogType.WORKOUT) NeonGold else NeonCyan,
+                                        color = if (log.type == LogType.WORKOUT) StatusWarning else Primary,
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
                                         text = log.subtitle,
-                                        color = Color.White,
+                                        color = OnBackground,
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontFamily = RajdhaniFamily
                                     )
                                 }
                                 if (log.isCompleted) {
-                                    Icon(Icons.Default.CheckCircle, "Completed", tint = NeonGreen, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.CheckCircle, "Completed", tint = StatusSuccess, modifier = Modifier.size(18.dp))
                                 }
                             }
                         }
@@ -496,9 +513,9 @@ fun DailyScheduleSection(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(result.exerciseName.uppercase(), color = NeonGold.copy(0.7f), style = MaterialTheme.typography.labelMedium, fontFamily = RajdhaniFamily)
+                                        Text(result.exerciseName.uppercase(), color = StatusWarning.copy(0.7f), style = MaterialTheme.typography.labelMedium, fontFamily = RajdhaniFamily)
                                         val setsText = result.sets.joinToString(" | ") { "${it.weight}кг x ${it.reps}" }
-                                        Text(setsText, color = TextSecondary, fontSize = 11.sp, fontFamily = RajdhaniFamily)
+                                        Text(setsText, color = OnSurfaceVariant, fontSize = 11.sp, fontFamily = RajdhaniFamily)
                                     }
                                     MaxOneRepMaxText(
                                         sets = result.sets.map { it.weight to it.reps },
@@ -507,25 +524,25 @@ fun DailyScheduleSection(
                                 }
                             }
                         }
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.05f), thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
+                        HorizontalDivider(color = OnBackground.copy(alpha = 0.05f), thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
                     }
 
                     if (recommendations.isNotEmpty()) {
                         Text(
                             text = stringResource(R.string.text_system_recommendations),
-                            style = MaterialTheme.typography.labelSmall.copy(color = NeonCyan, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                            style = MaterialTheme.typography.labelSmall.copy(color = Primary, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                         )
                         Spacer(Modifier.height(8.dp))
                         recommendations.forEach { rec ->
                             Text(
                                 text = "• ${rec.exerciseName}: ${stringResource(R.string.text_workout_recommendation_format, rec.nextRecommendedSets ?: 1, rec.nextRecommendedReps ?: 0, rec.nextRecommendedWeight ?: 0f)}",
-                                color = TextPrimary,
+                                color = OnBackground,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = RajdhaniFamily,
                                 modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
                             )
                         }
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.05f), thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
+                        HorizontalDivider(color = OnBackground.copy(alpha = 0.05f), thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
                     }
 
                     schedule?.let { data ->
@@ -533,20 +550,20 @@ fun DailyScheduleSection(
                         if (templateName != null) {
                             Text(
                                 text = stringResource(R.string.text_planned_program),
-                                style = MaterialTheme.typography.labelSmall.copy(color = NeonGold, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                style = MaterialTheme.typography.labelSmall.copy(color = StatusWarning, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                             )
                             Text(
                                 text = templateName.uppercase(),
-                                style = MaterialTheme.typography.titleMedium.copy(color = Color.White, fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
+                                style = MaterialTheme.typography.titleMedium.copy(color = OnBackground, fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
                             )
                             Spacer(Modifier.height(12.dp))
                             data.exercises.forEach { exercise ->
                                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
-                                    Box(modifier = Modifier.size(4.dp).clip(CircleShape).background(NeonGold.copy(0.4f)))
+                                    Box(modifier = Modifier.size(4.dp).clip(CircleShape).background(StatusWarning.copy(0.4f)))
                                     Spacer(Modifier.width(12.dp))
                                     Text(
                                         text = exercise.name,
-                                        style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary, fontFamily = RajdhaniFamily)
+                                        style = MaterialTheme.typography.bodyMedium.copy(color = OnSurfaceVariant, fontFamily = RajdhaniFamily)
                                     )
                                 }
                             }
@@ -554,7 +571,7 @@ fun DailyScheduleSection(
                             Text(
                                 text = stringResource(R.string.text_active_recovery),
                                 style = MaterialTheme.typography.titleSmall.copy(
-                                    color = NeonCyanDim,
+                                    color = Primary.copy(0.7f),
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = RajdhaniFamily
                                 )

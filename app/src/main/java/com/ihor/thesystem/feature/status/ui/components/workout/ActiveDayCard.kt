@@ -29,7 +29,11 @@ import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.focus.onFocusChanged
+import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.res.stringResource
+import com.ihor.thesystem.R
 
 @Composable
 fun ActiveDayCard(
@@ -50,7 +54,7 @@ fun ActiveDayCard(
                 key(exercise.exerciseId) {
                     val matrixEntry = data.matrixEntries.find { it.exerciseId == exercise.exerciseId }
                     
-                    ExerciseItem(
+                    ActiveDayCard(
                         exercise = exercise,
                         matrixEntry = matrixEntry,
                         onSetWeightChanged = { setId, w -> onSetWeightChanged(exercise.exerciseId, setId, w) },
@@ -66,160 +70,169 @@ fun ActiveDayCard(
 }
 
 @Composable
-private fun ExerciseItem(
+fun ActiveDayCard(
     exercise: com.ihor.thesystem.feature.status.viewmodel.ExerciseWorkoutUiModel,
     matrixEntry: MatrixEntryUiModel?,
     onSetWeightChanged: (Long, String) -> Unit,
     onSetRepsChanged: (Long, String) -> Unit,
     onSetFocusLost: (Long) -> Unit,
     onSetCompleted: (Long) -> Unit,
-    onSetup: () -> Unit
+    onSetup: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .clickable { isExpanded = !isExpanded }
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+    Box(modifier = modifier.fillMaxWidth()) {
+        // Background layer with blur
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .glassCard()
+                .blur(12.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isExpanded = !isExpanded }
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(NeonCyan.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.FitnessCenter,
-                    contentDescription = null,
-                    tint = NeonCyan,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = exercise.name.uppercase(),
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontFamily = RajdhaniFamily,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-                if (exercise.recommendation != null) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Primary.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FitnessCenter,
+                        contentDescription = null,
+                        tint = Primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = exercise.recommendation,
-                        color = NeonCyan,
-                        fontSize = 13.sp,
+                        text = exercise.name.uppercase(),
+                        color = OnBackground,
+                        fontSize = 18.sp,
                         fontFamily = RajdhaniFamily,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     )
+                    if (exercise.recommendation != null) {
+                        Text(
+                            text = exercise.recommendation,
+                            color = OnSurfaceVariant,
+                            fontSize = 13.sp,
+                            fontFamily = RajdhaniFamily,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
+
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = OnSurfaceVariant
+                )
             }
 
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = null,
-                tint = Color.White.copy(alpha = 0.3f)
-            )
-        }
-
-        AnimatedVisibility(
-            visible = isExpanded,
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .fillMaxWidth()
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
             ) {
-                // Sets Input Area
-                exercise.sets.forEachIndexed { index, set ->
-                    SetInputRow(
-                        index = index + 1,
-                        set = set,
-                        onWeightChange = { onSetWeightChanged(set.id, it) },
-                        onRepsChange = { onSetRepsChanged(set.id, it) },
-                        onFocusLost = { onSetFocusLost(set.id) },
-                        onComplete = { onSetCompleted(set.id) }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (matrixEntry != null) {
-                    // Progress Bar
-                    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "ПРОГРЕС ВПРАВИ",
-                                color = Color.White.copy(alpha = 0.4f),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
-                            )
-                            Text(
-                                text = "${(matrixEntry.progressPercent * 100).toInt()}%",
-                                color = NeonCyan,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Sets Input Area
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        exercise.sets.forEachIndexed { index, set ->
+                            SetInputRow(
+                                index = index + 1,
+                                set = set,
+                                onWeightChange = { onSetWeightChanged(set.id, it) },
+                                onRepsChange = { onSetRepsChanged(set.id, it) },
+                                onFocusLost = { onSetFocusLost(set.id) },
+                                onComplete = { onSetCompleted(set.id) }
                             )
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(4.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.05f))
-                        ) {
+                    }
+
+                    if (matrixEntry != null) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Progress Bar
+                        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.text_exercise_progress),
+                                    color = OnSurfaceVariant,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp
+                                )
+                                Text(
+                                    text = "${(matrixEntry.progressPercent * 100).toInt()}%",
+                                    color = Primary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth(matrixEntry.progressPercent.coerceIn(0f, 1f))
-                                    .fillMaxHeight()
+                                    .fillMaxWidth()
+                                    .height(4.dp)
                                     .clip(CircleShape)
-                                    .background(Brush.horizontalGradient(listOf(NeonCyan, Color(0xFFB257FF))))
-                            )
+                                    .background(OnBackground.copy(alpha = 0.05f))
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(matrixEntry.progressPercent.coerceIn(0f, 1f))
+                                        .fillMaxHeight()
+                                        .clip(CircleShape)
+                                        .background(Brush.horizontalGradient(listOf(Primary, Color(0xFFB257FF))))
+                                )
+                            }
                         }
-                    }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        StatItem("Поточна", matrixEntry.displayCurrent)
-                        StatItem("Ціль", matrixEntry.displayTarget)
-                        StatItem("Ранг", matrixEntry.currentRank.name)
-                    }
-                    
-                    Spacer(modifier = Modifier.height(20.dp))
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        IconButton(
-                            onClick = onSetup,
-                            modifier = Modifier
-                                .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
-                                .size(40.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(Icons.Default.Settings, null, tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
+                            StatItem(stringResource(R.string.text_current), matrixEntry.displayCurrent)
+                            StatItem(stringResource(R.string.text_target), matrixEntry.displayTarget)
+                            StatItem(stringResource(R.string.text_rank_label), matrixEntry.currentRank.name)
+                        }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            IconButton(
+                                onClick = onSetup,
+                                modifier = Modifier
+                                    .background(OnBackground.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
+                                    .size(40.dp)
+                            ) {
+                                Icon(Icons.Default.Settings, null, tint = OnSurfaceVariant, modifier = Modifier.size(20.dp))
+                            }
                         }
                     }
                 }
@@ -243,14 +256,14 @@ private fun SetInputRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(if (set.isCompleted) NeonCyan.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.03f))
+            .clip(RoundedCornerShape(CornerRadius))
+            .background(if (set.isCompleted) StatusSuccess.copy(alpha = 0.1f) else OnBackground.copy(alpha = 0.03f))
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "$index",
-            color = if (set.isCompleted) NeonCyan else Color.White.copy(alpha = 0.3f),
+            color = if (set.isCompleted) StatusSuccess else OnSurfaceVariant,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.width(24.dp),
             textAlign = TextAlign.Center
@@ -272,13 +285,13 @@ private fun SetInputRow(
                         onFocusLost()
                     }
                 },
-            placeholder = { Text("кг", fontSize = 12.sp) },
+            placeholder = { Text("кг", fontSize = 12.sp, color = OnSurfaceVariant) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                focusedBorderColor = NeonCyan,
-                unfocusedTextColor = Color.White,
-                focusedTextColor = Color.White
+                unfocusedBorderColor = OnBackground.copy(alpha = 0.1f),
+                focusedBorderColor = Primary,
+                unfocusedTextColor = OnBackground,
+                focusedTextColor = OnBackground
             ),
             shape = RoundedCornerShape(8.dp),
             singleLine = true
@@ -300,13 +313,13 @@ private fun SetInputRow(
                         onFocusLost()
                     }
                 },
-            placeholder = { Text("reps", fontSize = 12.sp) },
+            placeholder = { Text("reps", fontSize = 12.sp, color = OnSurfaceVariant) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                focusedBorderColor = NeonCyan,
-                unfocusedTextColor = Color.White,
-                focusedTextColor = Color.White
+                unfocusedBorderColor = OnBackground.copy(alpha = 0.1f),
+                focusedBorderColor = Primary,
+                unfocusedTextColor = OnBackground,
+                focusedTextColor = OnBackground
             ),
             shape = RoundedCornerShape(8.dp),
             singleLine = true
@@ -319,12 +332,12 @@ private fun SetInputRow(
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(if (set.isCompleted) NeonCyan else Color.White.copy(alpha = 0.1f))
+                .background(if (set.isCompleted) StatusSuccess else OnBackground.copy(alpha = 0.1f))
         ) {
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = null,
-                tint = if (set.isCompleted) Color.Black else Color.White.copy(alpha = 0.3f),
+                tint = if (set.isCompleted) Color.Black else OnSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -334,7 +347,7 @@ private fun SetInputRow(
 @Composable
 private fun StatItem(label: String, value: String) {
     Column {
-        Text(label, color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp)
-        Text(value, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text(label, color = OnSurfaceVariant, fontSize = 10.sp)
+        Text(value, color = OnBackground, fontSize = 14.sp, fontWeight = FontWeight.Bold)
     }
 }

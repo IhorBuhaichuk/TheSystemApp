@@ -23,15 +23,10 @@ import java.util.*
 fun CurrentDateBlock(modifier: Modifier = Modifier) {
     val today = LocalDate.now()
     
-    // Форматування: "Чт."
-    val dayOfWeek = today.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("uk"))
-        .replaceFirstChar { it.uppercase() }
+    val day = today.dayOfMonth
+    val monthName = today.month.getDisplayName(TextStyle.FULL, Locale("uk"))
     
-    // Форматування: "27/03"
-    val day = String.format("%02d", today.dayOfMonth)
-    val month = String.format("%02d", today.monthValue)
-    
-    val dateDisplay = "$dayOfWeek. $day/$month"
+    val dateDisplay = "$day $monthName"
 
     Box(
         modifier = modifier

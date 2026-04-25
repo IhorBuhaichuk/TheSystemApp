@@ -1,6 +1,7 @@
 package com.ihor.thesystem.feature.statistics.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,7 +20,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.sciPanel
+import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.core.ui.components.neonGlow
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.ihor.thesystem.R
 import com.ihor.thesystem.feature.status.viewmodel.QuestUiModel
 import com.ihor.thesystem.domain.model.DomainQuestType
 
@@ -49,11 +54,10 @@ fun QuestCard(
                 if (!quest.isCompleted) Modifier.neonGlow(accentColor, radius = if (isPromotion) 12.dp else 8.dp)
                 else Modifier
             )
-            .sciPanel(
-                borderColor = if (isPromotion) accentColor else accentColor.copy(alpha = 0.8f),
-                backgroundColor = PanelSurface,
-                cornerCut = 12.dp,
-                borderWidth = if (isPromotion) 2.dp else 1.dp
+            .glassCard()
+            .then(
+                if (isPromotion) Modifier.border(1.dp, accentColor, RoundedCornerShape(16.dp))
+                else Modifier
             )
             .combinedClickable(
                 enabled = true, // Завжди клікабельна для перегляду деталей
@@ -71,7 +75,7 @@ fun QuestCard(
                     .padding(horizontal = 8.dp, vertical = 2.dp)
             ) {
                 Text(
-                    text = "ЕКЗАМЕН",
+                    text = stringResource(R.string.text_exam),
                     color = accentColor,
                     fontFamily = RajdhaniFamily,
                     fontWeight = FontWeight.Black,
@@ -119,25 +123,40 @@ fun QuestCard(
         // Відображення прогресу завдань
         if (quest.tasks.isNotEmpty()) {
             Spacer(Modifier.height(4.dp))
-            quest.tasks.forEach { task ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(RoundedCornerShape(1.dp))
-                            .background(if (task.isCompleted) accentColor else Color.Gray.copy(alpha = 0.4f))
-                    )
+            val visibleTasks = quest.tasks.take(3)
+            val remainingCount = quest.tasks.size - 3
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                visibleTasks.forEach { task ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(RoundedCornerShape(1.dp))
+                                .background(if (task.isCompleted) accentColor else Color.Gray.copy(alpha = 0.4f))
+                        )
+                        Text(
+                            text = task.name,
+                            color = if (task.isCompleted) TextSecondary else TextPrimary,
+                            fontFamily = RajdhaniFamily,
+                            fontSize = 12.sp,
+                            style = if (task.isCompleted) androidx.compose.ui.text.TextStyle(
+                                textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
+                            ) else androidx.compose.ui.text.TextStyle.Default
+                        )
+                    }
+                }
+                
+                if (remainingCount > 0) {
                     Text(
-                        text = task.name,
-                        color = if (task.isCompleted) TextSecondary else TextPrimary,
+                        text = pluralStringResource(R.plurals.quest_tasks_more, remainingCount, remainingCount),
+                        color = accentColor.copy(alpha = 0.7f),
                         fontFamily = RajdhaniFamily,
-                        fontSize = 12.sp,
-                        style = if (task.isCompleted) androidx.compose.ui.text.TextStyle(
-                            textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
-                        ) else androidx.compose.ui.text.TextStyle.Default
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(start = 14.dp)
                     )
                 }
             }
@@ -148,9 +167,9 @@ fun QuestCard(
 @Composable
 fun EmptyQuestCard(type: DomainQuestType) {
     val label = when(type) {
-        DomainQuestType.DAILY -> "РУТИНА ВІДСУТНЯ"
-        DomainQuestType.MAIN -> "ОСНОВНИЙ КВЕСТ ВІДСУТНІЙ"
-        DomainQuestType.PROMOTION -> "ЕКЗАМЕНИ ВІДСУТНІ"
+        DomainQuestType.DAILY -> stringResource(R.string.text_empty_routine)
+        DomainQuestType.MAIN -> stringResource(R.string.text_empty_main_quest)
+        DomainQuestType.PROMOTION -> stringResource(R.string.text_empty_promotions)
     }
     
     Box(

@@ -15,6 +15,7 @@ private val SystemColorScheme = darkColorScheme(
     onTertiary       = BackgroundDeep,
     onBackground     = TextPrimary,
     onSurface        = TextPrimary,
+    onSurfaceVariant = OnSurfaceVariant,
     error            = NeonRed,
     outline          = PanelBorder
 )
