@@ -23,7 +23,7 @@ interface WorkoutDao {
     suspend fun insertExercise(exercise: ExerciseEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTemplate(template: WorkoutTemplateEntity)
+    suspend fun insertTemplate(template: WorkoutTemplateEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCrossRef(crossRef: WorkoutExerciseCrossRef)
@@ -51,6 +51,18 @@ interface WorkoutDao {
 
     @Query("DELETE FROM workout_templates")
     suspend fun deleteAllTemplates()
+
+    @Delete
+    suspend fun deleteExercise(exercise: ExerciseEntity)
+
+    @Query("DELETE FROM workout_exercise_cross_ref WHERE workoutTemplateId = :templateId")
+    suspend fun deleteAllCrossRefsForTemplate(templateId: Int)
+
+    @Query("DELETE FROM workout_exercise_cross_ref WHERE workoutTemplateId = :templateId AND exerciseId = :exerciseId")
+    suspend fun deleteCrossRef(templateId: Int, exerciseId: Int)
+
+    @Query("SELECT * FROM workout_templates WHERE id = :id")
+    suspend fun getTemplateById(id: Int): WorkoutTemplateEntity?
 }
 
 

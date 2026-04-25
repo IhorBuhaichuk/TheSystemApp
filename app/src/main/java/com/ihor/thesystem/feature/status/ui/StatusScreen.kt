@@ -58,6 +58,7 @@ fun StatusScreen(
     val statusDialogState by statusViewModel.dialogState.collectAsStateWithLifecycle()
     val workoutDialogState by workoutViewModel.dialogState.collectAsStateWithLifecycle()
     val activeDayWorkout by workoutViewModel.activeWorkoutState.collectAsStateWithLifecycle()
+    val settingsUiState by workoutViewModel.settingsUiState.collectAsStateWithLifecycle()
 
     var levelUpEvent by remember { mutableStateOf<Any?>(null) }
 
@@ -97,7 +98,8 @@ fun StatusScreen(
                     if (data.mainQuest != null) {
                         MainWorkoutCardPremium(
                             data = data,
-                            onStartWorkout = { workoutViewModel.onOpenMainWorkout() }
+                            onStartWorkout = { workoutViewModel.onOpenMainWorkout() },
+                            onOpenWorkoutSettings = { workoutViewModel.onOpenWorkoutSettings() }
                         )
                     } else {
                         RestDayCard()
@@ -193,6 +195,20 @@ fun StatusScreen(
                         }
                     },
                     existingLogs = dState.existingLogs
+                )
+            }
+            is StatusDialogState.WorkoutScheduleSettings -> {
+                com.ihor.thesystem.feature.status.ui.components.dialogs.WorkoutScheduleSettingsDialog(
+                    uiState = settingsUiState,
+                    onDismiss = { workoutViewModel.onDismissDialog() },
+                    onSelectDay = { workoutViewModel.onSettingsSelectDay(it) },
+                    onWorkoutNameChange = { workoutViewModel.onWorkoutNameChange(it) },
+                    onSaveWorkoutName = { workoutViewModel.onSaveWorkoutName() },
+                    onAddExercise = { workoutViewModel.onAddExerciseToDay(it.toInt()) },
+                    onRemoveExercise = { workoutViewModel.onRemoveExerciseFromDay(it) },
+                    onDeleteAllExercises = { },
+                    onCreateNewExercise = { workoutViewModel.onCreateExercise(it) },
+                    onDeleteExercise = { workoutViewModel.onDeleteExercise(it) }
                 )
             }
             else -> {}
@@ -446,7 +462,8 @@ private fun RestDayCard() {
 @Composable
 private fun MainWorkoutCardPremium(
     data: StatusUiData,
-    onStartWorkout: () -> Unit
+    onStartWorkout: () -> Unit,
+    onOpenWorkoutSettings: () -> Unit
 ) {
     val mainQuest = data.mainQuest ?: return
 
@@ -511,11 +528,27 @@ private fun MainWorkoutCardPremium(
                     color = Color.White.copy(alpha = 0.05f),
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
                 ) {
-                    Text(
-                        text = "🔥",
-                        modifier = Modifier.padding(12.dp),
-                        fontSize = 20.sp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        IconButton(
+                            onClick = onOpenWorkoutSettings,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = null,
+                                tint = OnSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Text(
+                            text = "🔥",
+                            fontSize = 20.sp
+                        )
+                    }
                 }
             }
 

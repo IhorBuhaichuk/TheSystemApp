@@ -6,6 +6,7 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.usecase.GetSystemConfigUseCase
 import com.ihor.thesystem.domain.usecase.WorkoutUseCases
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
@@ -13,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
@@ -38,6 +40,9 @@ class WorkoutViewModel @Inject constructor(
 
     private val _dialogState = MutableStateFlow<StatusDialogState>(StatusDialogState.None)
     val dialogState: StateFlow<StatusDialogState> = _dialogState.asStateFlow()
+
+    private val _settingsUiState = MutableStateFlow(WorkoutScheduleSettingsUiState())
+    val settingsUiState: StateFlow<WorkoutScheduleSettingsUiState> = _settingsUiState.asStateFlow()
 
     private val _currentLogSets = MutableStateFlow<List<ActiveSetInput>>(emptyList())
     private val _userEdits = MutableStateFlow<Map<Int, List<ActiveSetInput>>>(emptyMap())
@@ -212,6 +217,100 @@ class WorkoutViewModel @Inject constructor(
 
     fun onOpenMainWorkout() {
         _dialogState.value = StatusDialogState.MainQuestWorkout
+    }
+
+    fun onOpenWorkoutSettings() {
+        viewModelScope.launch {
+            // Get current config for total days
+            val config = useCases.getPlayerFlow().first() // Simplified, should ideally use GetSystemConfig
+            val totalDays = 4 // Default as per requirements, but should be dynamic
+            _settingsUiState.update { it.copy(totalCycleDays = totalDays) }
+            _dialogState.value = StatusDialogState.WorkoutScheduleSettings
+            loadSettingsForDay(1)
+        }
+    }
+
+    fun onSettingsSelectDay(day: Int) {
+        loadSettingsForDay(day)
+    }
+
+    fun onWorkoutNameChange(name: String) {
+        _settingsUiState.update { it.copy(workoutNameDraft = name) }
+    }
+
+    fun onSaveWorkoutName() {
+        val state = _settingsUiState.value
+        viewModelScope.launch(Dispatchers.IO) {
+            useCases.saveWorkoutForDay(
+                cycleDay = state.selectedDay,
+                workoutName = state.workoutNameDraft,
+                exerciseIds = state.exercisesForSelectedDay.map { it.id }
+            )
+        }
+    }
+
+    fun onAddExerciseToDay(exerciseId: Int) {
+        val state = _settingsUiState.value
+        viewModelScope.launch(Dispatchers.IO) {
+            val currentIds = state.exercisesForSelectedDay.map { it.id }.toMutableList()
+            if (!currentIds.contains(exerciseId)) {
+                currentIds.add(exerciseId)
+                useCases.saveWorkoutForDay(
+                    cycleDay = state.selectedDay,
+                    workoutName = state.workoutNameDraft,
+                    exerciseIds = currentIds
+                )
+                loadSettingsForDay(state.selectedDay)
+            }
+        }
+    }
+
+    fun onRemoveExerciseFromDay(exerciseId: Int) {
+        val state = _settingsUiState.value
+        viewModelScope.launch(Dispatchers.IO) {
+            useCases.removeExerciseFromDay(state.selectedDay, exerciseId)
+            loadSettingsForDay(state.selectedDay)
+        }
+    }
+
+    fun onCreateExercise(name: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            useCases.createExercise(name)
+            refreshAllExercises()
+        }
+    }
+
+    fun onDeleteExercise(exerciseId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            useCases.deleteExercise(exerciseId)
+            refreshAllExercises()
+            loadSettingsForDay(_settingsUiState.value.selectedDay)
+        }
+    }
+
+    private fun loadSettingsForDay(day: Int) {
+        viewModelScope.launch {
+            _settingsUiState.update { it.copy(selectedDay = day, isLoading = true) }
+            
+            if (_settingsUiState.value.allExercises.isEmpty()) {
+                refreshAllExercises()
+            }
+
+            useCases.getSchedulesForDays(listOf(day)).collectLatest { schedules ->
+                val schedule = schedules.firstOrNull()
+                _settingsUiState.update { it.copy(
+                    workoutNameDraft = schedule?.workoutTemplateName ?: "",
+                    exercisesForSelectedDay = schedule?.exercises?.toImmutableList() ?: persistentListOf(),
+                    isLoading = false
+                )}
+            }
+        }
+    }
+
+    private suspend fun refreshAllExercises() {
+        useCases.getAllExercises().first().let { exercises ->
+            _settingsUiState.update { it.copy(allExercises = exercises.toImmutableList()) }
+        }
     }
 
     fun onOpenSetup(entry: MatrixEntryUiModel, fromWorkout: Boolean = false) {

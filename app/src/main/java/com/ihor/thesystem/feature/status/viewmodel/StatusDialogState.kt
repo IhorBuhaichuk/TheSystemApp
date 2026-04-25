@@ -12,6 +12,7 @@ sealed class StatusDialogState {
     data class QuestChecklist(val questId: Int, val isDaily: Boolean) : StatusDialogState()
     data class AddTask(val questId: Int)                             : StatusDialogState()
     data object MainQuestWorkout                                          : StatusDialogState()
+    data object WorkoutScheduleSettings                                   : StatusDialogState()
     data class SetupMatrix(val entry: MatrixEntryUiModel, val startWeight: String, val targetWeight: String, val showWorkoutAfter: Boolean = false) : StatusDialogState()
     data class LogWorkoutSets(val entry: MatrixEntryUiModel, val sets: List<ActiveSetInput>, val existingLogs: List<com.ihor.thesystem.domain.model.ExerciseSet> = emptyList(), val showWorkoutAfter: Boolean = false) : StatusDialogState()
 }

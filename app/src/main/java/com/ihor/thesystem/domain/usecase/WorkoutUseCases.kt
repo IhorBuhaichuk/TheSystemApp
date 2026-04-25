@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.ScheduleDay
 import com.ihor.thesystem.domain.repository.ScheduleRepository
@@ -30,4 +31,19 @@ data class WorkoutUseCases @Inject constructor(
 
     suspend fun getLastSetsForExercise(exerciseId: Int): List<ExerciseSet> =
         analyticsRepo.getLastSetsForExercise(exerciseId)
+
+    fun getAllExercises(): Flow<List<ExerciseDetails>> =
+        scheduleRepo.getAllExercises()
+
+    suspend fun createExercise(name: String) =
+        scheduleRepo.createExercise(name)
+
+    suspend fun deleteExercise(exerciseId: Int) =
+        scheduleRepo.deleteExercise(exerciseId)
+
+    suspend fun saveWorkoutForDay(cycleDay: Int, workoutName: String, exerciseIds: List<Int>) =
+        scheduleRepo.saveWorkoutForDay(cycleDay, workoutName, exerciseIds)
+
+    suspend fun removeExerciseFromDay(cycleDay: Int, exerciseId: Int) =
+        scheduleRepo.removeExerciseFromDay(cycleDay, exerciseId)
 }

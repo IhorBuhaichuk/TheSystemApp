@@ -3,8 +3,19 @@ package com.ihor.thesystem.feature.status.viewmodel
 import androidx.compose.runtime.Immutable
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
+import com.ihor.thesystem.domain.model.ExerciseDetails
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+
+@Immutable
+data class WorkoutScheduleSettingsUiState(
+    val selectedDay: Int = 1,
+    val totalCycleDays: Int = 4,
+    val workoutNameDraft: String = "",
+    val exercisesForSelectedDay: ImmutableList<ExerciseDetails> = persistentListOf(),
+    val allExercises: ImmutableList<ExerciseDetails> = persistentListOf(),
+    val isLoading: Boolean = false
+)
 
 @Immutable
 data class ActiveDayUiModel(
