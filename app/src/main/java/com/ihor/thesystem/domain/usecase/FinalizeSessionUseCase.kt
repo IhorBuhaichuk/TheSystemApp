@@ -21,43 +21,48 @@ class FinalizeSessionUseCase @Inject constructor(
     private val playerRepository: PlayerRepository,
     private val recalculateGlobalRank: RecalculateGlobalRankUseCase,
     private val calculateRecovery: CalculateRecoveryWindowUseCase,
-    private val validateDirectives: ValidateDirectivesUseCase
+    private val validateDirectives: ValidateDirectivesUseCase,
+    private val transactionProvider: TransactionProvider,
+    private val annualMatrixRepository: AnnualMatrixRepository
 ) {
     suspend operator fun invoke(
         session: WorkoutSession,
         sets: List<ExerciseSet>
     ): kotlin.Result<AiArchitectReport> = runSuspendCatching {
-        // 1. Зберегти сесію та сети
-        val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
+        
+        // 1. Гарантоване локальне збереження в БД
+        val localData = transactionProvider.runInTransaction {
+            val sessionId = analyticsRepository.saveSessionWithSets(session, sets)
             
-        // 2. Отримати актуальну вагу гравця та вагу 6 місяців тому
-        val playerWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
+            val playerWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.MONTH, -6)
+            val weight6MonthsAgo = playerRepository.getWeightAtOrBefore(calendar.timeInMillis).getOrNull() ?: playerWeight.toFloat()
+
+            val matrix = progressionMatrixRepository.getAllEntries().first()
+            updateExerciseRanks(sets, matrix, playerWeight)
+
+            val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
+            val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
+            val recoveryHours = calculateRecovery(finalTonnage).getOrDefault(24.hours).inWholeHours.toDouble()
+
+            recalculateGlobalRank()
             
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.MONTH, -6)
-        val timestampSixMonthsAgo = calendar.timeInMillis
-        val weight6MonthsAgo = playerRepository.getWeightAtOrBefore(timestampSixMonthsAgo).getOrNull() ?: playerWeight.toFloat()
+            LocalSessionData(
+                playerWeight = playerWeight,
+                weight6MonthsAgo = weight6MonthsAgo,
+                matrix = matrix,
+                recoveryHours = recoveryHours
+            )
+        }
 
-        // 3. Отримати матрицю прогресії
-        val matrix = progressionMatrixRepository.getAllEntries().first()
-
-        // 4. Оновити ранги вправ
-        updateExerciseRanks(sets, matrix, playerWeight)
-
-        val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
-        val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
-
-        // 5. Розрахунок відновлення
-        val recoveryDuration = calculateRecovery(finalTonnage).getOrDefault(24.hours)
-        val recoveryHours = recoveryDuration.inWholeHours.toDouble()
-
-        // 6. Формування контексту для AI
-        val exerciseContexts = generateAiPrompt(sets, matrix, playerWeight, weight6MonthsAgo)
-
-        // 7. Виконання запиту через SendArchitectAnalysisUseCase
+        // 2. Асинхронний запит до AiArchitectRepository та оновлення матриці
+        val exerciseContexts = generateAiPrompt(sets, localData.matrix, localData.playerWeight, localData.weight6MonthsAgo)
+        
         val report = try {
             val chatMsg = sendArchitectAnalysis(exerciseContexts)
-                
+            
+            // Оновлення цілей у матриці на основі AI-аналізу
             chatMsg.recommendations.forEach { rec ->
                 progressionMatrixRepository.updateTarget(
                     exerciseId = rec.exerciseId,
@@ -75,29 +80,32 @@ class FinalizeSessionUseCase @Inject constructor(
                 nextWorkoutDirectives = chatMsg.recommendations.map { 
                     WorkoutDirective(it.exerciseId, it.weight.toDouble(), it.sets, it.reps)
                 },
-                recoveryWindowHours = recoveryHours,
+                recoveryWindowHours = localData.recoveryHours,
                 isFallback = false
             )
         } catch (e: Exception) {
             Timber.e(e, "Architect analysis failed")
-            generateFallbackReport(sets, matrix, recoveryHours)
+            generateFallbackReport(sets, localData.matrix, localData.recoveryHours)
         }
 
-        // 8. Валідація директив
-        val validatedDirectives = validateDirectives(report.nextWorkoutDirectives, matrix)
+        // 3. Валідація та збереження фінальних директив
+        val validatedDirectives = validateDirectives(report.nextWorkoutDirectives, localData.matrix)
             .getOrDefault(report.nextWorkoutDirectives)
 
-        // 9. Зберегти директиви
         analyticsRepository.saveDirectives(validatedDirectives)
-
-        // 10. Оновити Глобальний Ранг
-        recalculateGlobalRank()
 
         report.copy(
             nextWorkoutDirectives = validatedDirectives,
-            recoveryWindowHours = recoveryHours
+            recoveryWindowHours = localData.recoveryHours
         )
     }
+
+    private data class LocalSessionData(
+        val playerWeight: Double,
+        val weight6MonthsAgo: Float,
+        val matrix: List<ProgressionMatrixEntry>,
+        val recoveryHours: Double
+    )
 
     private suspend fun generateAiPrompt(
         sets: List<ExerciseSet>,
@@ -105,10 +113,13 @@ class FinalizeSessionUseCase @Inject constructor(
         playerWeight: Double,
         weight6MonthsAgo: Float
     ): String {
+        val matrixMap = matrix.associateBy { it.exerciseId }
+        val annualMatrixMap = annualMatrixRepository.getMatrix().associateBy { it.exerciseId }
+        
         return sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
-            val matrixEntry = matrix.find { it.exerciseId == exId }
+            val matrixEntry = matrixMap[exId]
             val recentLogs = analyticsRepository.getRecentLogsForExercise(exId)
-            val annualGoals = AnnualMatrixProvider.getMatrix().find { it.exerciseId == exId }?.targets?.joinToString(", ") ?: "немає"
+            val annualGoals = annualMatrixMap[exId]?.targets?.joinToString(", ") ?: "немає"
             
             val sanitizedExerciseName = (matrixEntry?.exerciseName ?: "ID $exId").sanitizeForPrompt()
             val sanitizedFeedback = (exerciseSets.firstOrNull()?.userFeedback ?: "відсутній").sanitizeForPrompt()
@@ -129,24 +140,23 @@ class FinalizeSessionUseCase @Inject constructor(
         matrix: List<ProgressionMatrixEntry>,
         playerWeight: Double
     ) {
+        val matrixMap = matrix.associateBy { it.exerciseId }
         sets.filter { it.isCompleted }.groupBy { it.exerciseId }.forEach { (exId, exerciseSets) ->
             val estimated1RM = exerciseSets
                 .filter { it.isCompleted && it.reps > 0 }
                 .maxOfOrNull { OneRepMaxCalculator.calculate(it.weight, it.reps) }
                 ?: return@forEach
 
-            val matrixEntry = matrix.find { it.exerciseId == exId }
+            val matrixEntry = matrixMap[exId] ?: return@forEach
             
-            if (matrixEntry != null) {
-                val newRank = AnnualMatrixProvider.getExerciseRankById(
-                    exerciseId = matrixEntry.exerciseId,
-                    current1RM = estimated1RM,
-                    playerWeight = playerWeight
-                )
-                
-                if (newRank.weight > matrixEntry.currentRank.weight) {
-                    progressionMatrixRepository.updateRank(matrixEntry.exerciseId, newRank)
-                }
+            val newRank = annualMatrixRepository.getExerciseRankById(
+                exerciseId = matrixEntry.exerciseId,
+                current1RM = estimated1RM,
+                playerWeight = playerWeight
+            )
+            
+            if (newRank.weight > matrixEntry.currentRank.weight) {
+                progressionMatrixRepository.updateRank(matrixEntry.exerciseId, newRank)
             }
         }
     }
@@ -156,11 +166,11 @@ class FinalizeSessionUseCase @Inject constructor(
         matrix: List<ProgressionMatrixEntry>,
         recoveryHours: Double
     ): AiArchitectReport {
+        val matrixMap = matrix.associateBy { it.exerciseId }
         val fallbackDirectives = sets.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
-            val entry = matrix.find { it.exerciseId == exId }
+            val entry = matrixMap[exId]
             val lastSet = exerciseSets.lastOrNull { it.isCompleted } ?: exerciseSets.last()
             
-            // Використовуємо вагу останнього успішного підходу або стандартне зниження на 5% від цілі
             val fallbackWeight = lastSet.weight.takeIf { it > 0 } 
                 ?: ((entry?.targetWeight?.toDouble() ?: lastSet.weight) * 0.95)
 
