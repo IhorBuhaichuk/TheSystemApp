@@ -104,11 +104,10 @@ class AiArchitectRepositoryImpl @Inject constructor(
     }
 
     private fun extractJson(input: String): String {
-        // Шукаємо блок, що починається з { і закінчується }, включаючи переноси рядків.
-        // Це дозволяє витягти JSON навіть якщо він оточений Markdown тегами або пояснювальним текстом.
-        val fallbackRegex = Regex("""\{.*\}""", RegexOption.DOT_MATCHES_ALL)
-        
-        return fallbackRegex.find(input)?.value ?: input
+        // Використовуємо регулярний вираз для пошуку JSON-об'єкта. 
+        // Шукаємо першу фігурну дужку '{' та останню '}', включаючи все між ними.
+        val jsonRegex = Regex("""\{.*\}""", RegexOption.DOT_MATCHES_ALL)
+        return jsonRegex.find(input)?.value ?: input
     }
 
     private suspend fun <T> retry(
@@ -118,24 +117,40 @@ class AiArchitectRepositoryImpl @Inject constructor(
         factor: Double = 2.0,
         block: suspend () -> T
     ): T {
-        var currentDelay = initialDelay
-        repeat(times - 1) { attempt ->
-            try {
-                return block()
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                
-                val isRetryable = e is kotlinx.coroutines.TimeoutCancellationException || 
-                                 e.message?.contains("429") == true ||
-                                 e.message?.contains("503") == true
+        return performRetry(times, 1, initialDelay, maxDelay, factor, block)
+    }
 
-                if (!isRetryable) throw e
-                
-                Timber.w(e, "Retry attempt $attempt failed")
+    private suspend fun <T> performRetry(
+        maxAttempts: Int,
+        currentAttempt: Int,
+        delayMillis: Long,
+        maxDelay: Long,
+        factor: Double,
+        block: suspend () -> T
+    ): T {
+        return try {
+            block()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            
+            val isRetryable = e is kotlinx.coroutines.TimeoutCancellationException || 
+                             e.message?.contains("429") == true ||
+                             e.message?.contains("503") == true
+
+            if (!isRetryable || currentAttempt >= maxAttempts) {
+                throw e
             }
-            delay(currentDelay)
-            currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
+
+            Timber.w(e, "Retry attempt $currentAttempt failed. Retrying in ${delayMillis}ms...")
+            delay(delayMillis)
+            performRetry(
+                maxAttempts = maxAttempts,
+                currentAttempt = currentAttempt + 1,
+                delayMillis = (delayMillis * factor).toLong().coerceAtMost(maxDelay),
+                maxDelay = maxDelay,
+                factor = factor,
+                block = block
+            )
         }
-        return block() // Остання спроба
     }
 }

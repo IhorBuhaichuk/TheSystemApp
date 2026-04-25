@@ -50,6 +50,10 @@ class FinalizeDayUseCase @Inject constructor(
                 // 6. Архівація квестів
                 questRepo.archiveActiveQuests()
 
+                // 7. Генерація нового дня та оновлення атрибутів всередині транзакції
+                generateDailyQuests.invoke()
+                calculateAttributes.invoke()
+
                 val result = when {
                     levelUpTriggered -> DayFinalizationResult.LevelUp
                     !wasPenaltyActive && finalPlayer.isPenaltyActive -> DayFinalizationResult.PenaltyZoneEntered
@@ -57,10 +61,6 @@ class FinalizeDayUseCase @Inject constructor(
                 }
                 result
             }
-
-            // 7. Поза транзакцією: Генерація нового дня та оновлення атрибутів
-            generateDailyQuests.invoke()
-            calculateAttributes.invoke()
 
             Timber.d("Day Finalization completed successfully")
             Result.Success(transactionResult)

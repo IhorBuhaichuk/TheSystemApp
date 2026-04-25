@@ -70,13 +70,13 @@ class StatusViewModel @Inject constructor(
                 withTimeout(10_000) {
                     databaseReadinessRepo.status.first { it is DatabaseStatus.Ready }
                     
-                    // Очікуємо гравця, але обробляємо тайм-аут як нормальний кейс для нового користувача
+                    // Очікуємо гравця, але обробляємо null як нормальний кейс для нового користувача
                     try {
                         withTimeout(3000) {
-                            useCases.getPlayerFlow().filterNotNull().first()
+                            useCases.getPlayerFlow().first()
                         }
                     } catch (e: TimeoutCancellationException) {
-                        Timber.i("New user detected or player data not yet initialized")
+                        Timber.i("New user detected or player data not yet initialized (timeout)")
                     }
                 }
                 
@@ -119,6 +119,12 @@ class StatusViewModel @Inject constructor(
             } catch (e: StringResourceException) {
                 Timber.e(e, "Domain error in launchCatching")
                 _uiEvents.emit(UiEvent.ShowError(e.uiText))
+            } catch (e: SecurityException) {
+                Timber.e(e, "Security error in StatusViewModel")
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_unknown)))
+            } catch (e: IllegalStateException) {
+                Timber.e(e, "Invalid state in StatusViewModel")
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Unexpected error in StatusViewModel action")
