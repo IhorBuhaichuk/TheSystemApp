@@ -38,5 +38,8 @@ enum class MuscleGroup {
     SHOULDERS,
     QUADS,
     HAMSTRINGS_GLUTES,
-    ARMS
+    ARMS,
+    ABS,
+    LEGS,
+    CORE
 }

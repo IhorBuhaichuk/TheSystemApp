@@ -108,6 +108,9 @@
     <string name="muscle_group_quads">КВАДРИЦЕПСИ</string>
     <string name="muscle_group_hamstrings_glutes">СТЕГНА ТА СІДНИЦІ</string>
     <string name="muscle_group_arms">РУКИ</string>
+    <string name="muscle_group_abs">ПРЕС</string>
+    <string name="muscle_group_legs">НОГИ</string>
+    <string name="muscle_group_core">КОР</string>
 
     <!-- Player Ranks -->
     <string name="rank_novice">Новачок</string>

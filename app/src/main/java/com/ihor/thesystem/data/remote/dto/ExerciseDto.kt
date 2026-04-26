@@ -17,7 +17,8 @@ data class ExerciseDto(
     val images: List<String> = emptyList()
 ) {
     val gifUrl: String?
-        get() = images.firstOrNull()?.let { 
-            "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${it.replace(".jpg", ".gif")}" 
+        get() = images.firstOrNull()?.let { imagePath ->
+            val pathWithoutExtension = imagePath.substringBeforeLast(".")
+            "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/$pathWithoutExtension.gif"
         }
 }

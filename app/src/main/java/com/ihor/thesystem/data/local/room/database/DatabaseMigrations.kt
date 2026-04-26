@@ -344,12 +344,98 @@ object DatabaseMigrations {
         }
     }
 
+    val MIGRATION_29_30 = object : Migration(29, 30) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No schema changes — version bump for exercise data seeding
+        }
+    }
+
+    val MIGRATION_30_31 = object : Migration(30, 31) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No schema changes — version bump for exercise data seeding
+        }
+    }
+
+    val MIGRATION_31_32 = object : Migration(31, 32) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No schema changes — version bump for exercise data seeding
+        }
+    }
+
+    val MIGRATION_32_33 = object : Migration(32, 33) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No schema changes — version bump for exercise data seeding
+        }
+    }
+
+    val MIGRATION_33_34 = object : Migration(33, 34) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Recreate player table to ensure exact schema match for version 34/35
+            db.execSQL("""
+                CREATE TABLE `player_new` (
+                    `id` INTEGER NOT NULL, 
+                    `name` TEXT NOT NULL, 
+                    `level` INTEGER NOT NULL, 
+                    `playerClass` TEXT NOT NULL, 
+                    `height` REAL NOT NULL, 
+                    `currentMonth` INTEGER NOT NULL, 
+                    `currentWeek` INTEGER NOT NULL, 
+                    `currentCycleDay` INTEGER NOT NULL, 
+                    `consecutiveMainQuestFailures` INTEGER NOT NULL, 
+                    `isPenaltyActive` INTEGER NOT NULL, 
+                    `globalRank` TEXT NOT NULL, 
+                    `avatarUri` TEXT, 
+                    `currentStreak` INTEGER NOT NULL, 
+                    `maxStreak` INTEGER NOT NULL, 
+                    `xpTotal` INTEGER NOT NULL, 
+                    `xpThisWeek` INTEGER NOT NULL, 
+                    `chestAttr` INTEGER NOT NULL, 
+                    `backAttr` INTEGER NOT NULL, 
+                    `shouldersAttr` INTEGER NOT NULL, 
+                    `quadsAttr` INTEGER NOT NULL, 
+                    `legsAttr` INTEGER NOT NULL, 
+                    `armsAttr` INTEGER NOT NULL, 
+                    `absAttr` INTEGER NOT NULL, 
+                    `legsGroupAttr` INTEGER NOT NULL, 
+                    `coreAttr` INTEGER NOT NULL, 
+                    PRIMARY KEY(`id`)
+                )
+            """.trimIndent())
+
+            db.execSQL("""
+                INSERT INTO `player_new` (
+                    `id`, `name`, `level`, `playerClass`, `height`, `currentMonth`, `currentWeek`, 
+                    `currentCycleDay`, `consecutiveMainQuestFailures`, `isPenaltyActive`, `globalRank`, 
+                    `avatarUri`, `currentStreak`, `maxStreak`, `xpTotal`, `xpThisWeek`, `chestAttr`, 
+                    `backAttr`, `shouldersAttr`, `quadsAttr`, `legsAttr`, `armsAttr`, `absAttr`, 
+                    `legsGroupAttr`, `coreAttr`
+                )
+                SELECT 
+                    `id`, `name`, `level`, `playerClass`, `height`, `currentMonth`, `currentWeek`, 
+                    `currentCycleDay`, `consecutiveMainQuestFailures`, `isPenaltyActive`, `globalRank`, 
+                    `avatarUri`, `currentStreak`, `maxStreak`, `xpTotal`, `xpThisWeek`, `chestAttr`, 
+                    `backAttr`, `shouldersAttr`, `quadsAttr`, `legsAttr`, `armsAttr`, 0, 0, 0 
+                FROM `player`
+            """.trimIndent())
+
+            db.execSQL("DROP TABLE `player`")
+            db.execSQL("ALTER TABLE `player_new` RENAME TO `player`")
+        }
+    }
+
+    val MIGRATION_34_35 = object : Migration(34, 35) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No schema changes — version bump to match current AppDatabase version
+        }
+    }
+
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7,
         MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12,
         MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
         MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22,
         MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27,
-        MIGRATION_27_28, MIGRATION_28_29
+        MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32,
+        MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35
     )
 }

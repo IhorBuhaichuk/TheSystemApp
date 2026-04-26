@@ -36,14 +36,34 @@ class StatusViewModel @Inject constructor(
 
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
 
-    val systemConfig: StateFlow<SystemConfig?> = useCases.getSystemConfig()
+    val systemConfig: StateFlow<SystemConfig?> = databaseStatus
+        .flatMapLatest { status ->
+            if (status is DatabaseStatus.Ready) {
+                useCases.getSystemConfig()
+            } else {
+                flowOf(null)
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), null)
 
-    val uiState: StateFlow<UiState<StatusUiData>> = useCases.getStatusData()
-        .map<StatusUiData, UiState<StatusUiData>> { UiState.Content(it) }
-        .catch { 
-            Timber.e(it, "Error loading status data")
-            emit(UiState.Error(UiText.StringResource(R.string.system_loading)))
+    val uiState: StateFlow<UiState<StatusUiData>> = databaseStatus
+        .flatMapLatest { status ->
+            when (status) {
+                is DatabaseStatus.Ready -> {
+                    useCases.getStatusData()
+                        .map { data -> UiState.Content(data) as UiState<StatusUiData> }
+                        .catch { e ->
+                            Timber.e(e, "Error loading status data")
+                            emit(UiState.Error(UiText.StringResource(R.string.system_loading)))
+                        }
+                }
+                is DatabaseStatus.Failed -> {
+                    flowOf(UiState.Error(UiText.DynamicString(status.reason)))
+                }
+                else -> {
+                    flowOf(UiState.Loading)
+                }
+            }
         }
         .stateIn(
             scope        = viewModelScope,
@@ -60,15 +80,30 @@ class StatusViewModel @Inject constructor(
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
 
-    val currentPlayer: StateFlow<Player?> = useCases.getPlayerFlow()
+    val currentPlayer: StateFlow<Player?> = databaseStatus
+        .flatMapLatest { status ->
+            if (status is DatabaseStatus.Ready) {
+                useCases.getPlayerFlow()
+            } else {
+                flowOf(null)
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
         // Initialization Group 1: Database Readiness and Initial Calculations
         viewModelScope.launch {
             try {
-                withTimeout(10_000) {
-                    databaseReadinessRepo.status.first { it is DatabaseStatus.Ready }
+                withTimeout(15_000) {
+                    val readiness = databaseReadinessRepo.status.first { 
+                        it is DatabaseStatus.Ready || it is DatabaseStatus.Failed 
+                    }
+
+                    if (readiness is DatabaseStatus.Failed) {
+                        Timber.e("Database initialization failed: ${readiness.reason}")
+                        // status data mapping already emits Error if initialization fails
+                        return@withTimeout
+                    }
                     
                     // Очікуємо гравця, але обробляємо null як нормальний кейс для нового користувача
                     try {
@@ -82,7 +117,7 @@ class StatusViewModel @Inject constructor(
                 
                 // Виконуємо розрахунки тільки якщо база готова
                 val config = useCases.getSystemConfig().first()
-                val statusData = useCases.getStatusData().first()
+                val statusData = useCases.getStatusData().firstOrNull() ?: return@launch
                 val hasNoQuests = statusData.dailyQuest == null && statusData.mainQuest == null && statusData.promotionQuests.isEmpty()
 
                 if (config?.needsDailyInit == true || hasNoQuests) {

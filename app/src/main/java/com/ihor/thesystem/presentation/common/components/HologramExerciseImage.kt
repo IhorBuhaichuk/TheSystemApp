@@ -1,14 +1,20 @@
 package com.ihor.thesystem.presentation.common.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 
 /**
  * Composable компонент для відображення вправ з ефектом "голограми".
@@ -33,13 +39,31 @@ fun HologramExerciseImage(
         )
     )
 
-    AsyncImage(
+    SubcomposeAsyncImage(
         model = gifUrl,
         contentDescription = "Exercise Hologram",
-        modifier = modifier
-            .background(Color.Black)
-            .fillMaxSize(),
+        modifier = modifier.background(Color.Black),
         contentScale = ContentScale.Fit,
-        colorFilter = ColorFilter.colorMatrix(hologramMatrix)
+        colorFilter = ColorFilter.colorMatrix(hologramMatrix),
+        loading = {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.Cyan)
+            }
+        },
+        error = {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FitnessCenter,
+                    contentDescription = null,
+                    tint = Color.Cyan.copy(alpha = 0.4f)
+                )
+            }
+        }
     )
 }

@@ -182,7 +182,7 @@ class QuestRepositoryImpl @Inject constructor(
 
     override suspend fun logQuestResult(
         questId: Int,
-        questType: com.ihor.thesystem.data.local.room.entity.QuestType,
+        questType: EntityQuestType,
         wasSuccessful: Boolean
     ) {
         questLogDao.insert(

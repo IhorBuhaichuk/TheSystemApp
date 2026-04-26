@@ -12,6 +12,9 @@ fun MuscleGroup.asUiText(): UiText {
         MuscleGroup.QUADS -> UiText.StringResource(R.string.muscle_group_quads)
         MuscleGroup.HAMSTRINGS_GLUTES -> UiText.StringResource(R.string.muscle_group_hamstrings_glutes)
         MuscleGroup.ARMS -> UiText.StringResource(R.string.muscle_group_arms)
+        MuscleGroup.ABS -> UiText.StringResource(R.string.muscle_group_abs)
+        MuscleGroup.LEGS -> UiText.StringResource(R.string.muscle_group_legs)
+        MuscleGroup.CORE -> UiText.StringResource(R.string.muscle_group_core)
     }
 }
 

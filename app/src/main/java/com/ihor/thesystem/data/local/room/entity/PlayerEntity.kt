@@ -28,5 +28,8 @@ data class PlayerEntity(
     val shouldersAttr: Int = 0,
     val quadsAttr: Int = 0,
     val legsAttr: Int = 0,
-    val armsAttr: Int = 0
+    val armsAttr: Int = 0,
+    val absAttr: Int = 0,
+    val legsGroupAttr: Int = 0,
+    val coreAttr: Int = 0
 )

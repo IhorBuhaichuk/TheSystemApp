@@ -80,7 +80,10 @@ private fun PlayerEntity.toDomain() = Player(
     shouldersAttr = shouldersAttr,
     quadsAttr = quadsAttr,
     legsAttr = legsAttr,
-    armsAttr = armsAttr
+    armsAttr = armsAttr,
+    absAttr = absAttr,
+    legsGroupAttr = legsGroupAttr,
+    coreAttr = coreAttr
 )
 
 private fun Player.toEntity() = PlayerEntity(
@@ -105,5 +108,8 @@ private fun Player.toEntity() = PlayerEntity(
     shouldersAttr = shouldersAttr,
     quadsAttr = quadsAttr,
     legsAttr = legsAttr,
-    armsAttr = armsAttr
+    armsAttr = armsAttr,
+    absAttr = absAttr,
+    legsGroupAttr = legsGroupAttr,
+    coreAttr = coreAttr
 )

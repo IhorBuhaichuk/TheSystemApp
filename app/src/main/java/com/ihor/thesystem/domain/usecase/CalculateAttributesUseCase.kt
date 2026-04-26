@@ -45,6 +45,9 @@ class CalculateAttributesUseCase @Inject constructor(
                 MuscleGroup.QUADS -> player.quadsAttr.toFloat()
                 MuscleGroup.HAMSTRINGS_GLUTES -> player.legsAttr.toFloat()
                 MuscleGroup.ARMS -> player.armsAttr.toFloat()
+                MuscleGroup.ABS -> player.absAttr.toFloat()
+                MuscleGroup.LEGS -> player.legsGroupAttr.toFloat()
+                MuscleGroup.CORE -> player.coreAttr.toFloat()
             }
         }
 
@@ -70,7 +73,10 @@ class CalculateAttributesUseCase @Inject constructor(
             shouldersAttr = muscleMap[MuscleGroup.SHOULDERS]?.toInt() ?: 0,
             quadsAttr = muscleMap[MuscleGroup.QUADS]?.toInt() ?: 0,
             legsAttr = muscleMap[MuscleGroup.HAMSTRINGS_GLUTES]?.toInt() ?: 0,
-            armsAttr = muscleMap[MuscleGroup.ARMS]?.toInt() ?: 0
+            armsAttr = muscleMap[MuscleGroup.ARMS]?.toInt() ?: 0,
+            absAttr = muscleMap[MuscleGroup.ABS]?.toInt() ?: 0,
+            legsGroupAttr = muscleMap[MuscleGroup.LEGS]?.toInt() ?: 0,
+            coreAttr = muscleMap[MuscleGroup.CORE]?.toInt() ?: 0
         )
 
         if (isPlayerChanged(player, updatedPlayer)) {
@@ -86,6 +92,9 @@ class CalculateAttributesUseCase @Inject constructor(
                old.shouldersAttr != new.shouldersAttr ||
                old.quadsAttr != new.quadsAttr ||
                old.legsAttr != new.legsAttr ||
-               old.armsAttr != new.armsAttr
+               old.armsAttr != new.armsAttr ||
+               old.absAttr != new.absAttr ||
+               old.legsGroupAttr != new.legsGroupAttr ||
+               old.coreAttr != new.coreAttr
     }
 }
