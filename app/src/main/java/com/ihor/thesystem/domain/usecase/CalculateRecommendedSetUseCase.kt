@@ -23,8 +23,10 @@ class CalculateRecommendedSetUseCase @Inject constructor(
         // 1. Отримуємо останні 3 сети з БД (Оптимізовано)
         val lastSets: List<ExerciseSet> = analyticsRepo.getLastSetsForExercise(exerciseId)
 
-        // 2. Отримуємо дані з еталонної матриці для вправи
-        val reference = matrixRepo.getReferenceForExercise(exerciseName) as? ReferenceMatrixEntity
+        // 2. Отримуємо дані з еталонної матриці для вправи за ID (fallback на ім'я)
+        val reference = (matrixRepo.getReferenceForExercise(exerciseId)
+            ?: matrixRepo.getReferenceForExercise(exerciseName)) as? ReferenceMatrixEntity
+
         val startWeight = reference?.milestones?.get("M0") ?: 0.0
         val progressionStep = reference?.progressionStep ?: 2.5
 
@@ -37,10 +39,11 @@ class CalculateRecommendedSetUseCase @Inject constructor(
             )
         }
 
-        // 4. Аналіз успішності (3x12)
+        // 4. Аналіз успішності (3x12 в ОСТАННІЙ сесії)
         val targetReps = 12
+        // Тепер lastSets містить всі сети ОСТАННЬОЇ сесії завдяки оновленому DAO
         val wasSuccessful = lastSets.size >= 3 && lastSets.all { it.reps >= targetReps }
-        val lastWeight = lastSets.first().weight
+        val lastWeight = lastSets.first().weight // Тепер це вага з останнього тренування
 
         return if (wasSuccessful) {
             // Якщо закрили 3х12 - підвищуємо вагу, скидаємо повтори до 8

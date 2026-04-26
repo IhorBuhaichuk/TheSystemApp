@@ -122,6 +122,10 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getReferenceForExercise(id: Int): ReferenceMatrixEntity? {
+        return matrixDao.getReferenceById(id)
+    }
+
     override suspend fun getReferenceForExercise(name: String): ReferenceMatrixEntity? {
         return matrixDao.getReferenceByName(name)
     }

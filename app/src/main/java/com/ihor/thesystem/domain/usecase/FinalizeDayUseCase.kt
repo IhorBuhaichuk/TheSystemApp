@@ -18,48 +18,39 @@ class FinalizeDayUseCase @Inject constructor(
     private val advanceCycleDayStatus: AdvanceCycleDayUseCase
 ) {
     /**
-     * Фіналізація дня з оптимізованим обсягом транзакції для запобігання ANR.
+     * Фіналізація дня з оптимізованим обсягом транзакції для запобігання ANR та Deadlocks.
+     * Reads виконуються ДО транзакції, heavy logic — ПІСЛЯ.
      */
     suspend operator fun invoke(forceComplete: Boolean = false): Result<DayFinalizationResult, DomainError> {
         return try {
+            // 1. Зчитуємо всі необхідні дані ДО початку транзакції для уникнення дедлоків
+            val player = playerRepo.getPlayer().firstOrNull()
+                ?: return Result.Error(DataError.Local.NOT_FOUND)
+            val config = configRepo.getConfigFlow().firstOrNull()
+                ?: SystemConfig()
+            val activeQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
+
+            // 2. Виконуємо транзакцію лише для швидких записів
             val transactionResult = transactionProvider.runInTransaction {
-                // 1. Оновлюємо статуси активних квестів (успіх/провал)
+                // Оновлюємо статуси (успіх/провал)
                 val statusResult = advanceCycleDayStatus(forceComplete)
                 if (statusResult is Result.Error) {
                     throw TransactionRollbackException(statusResult.error)
                 }
 
-                // 2. Отримуємо актуальний стан даних
-                val player = playerRepo.getPlayer().firstOrNull() 
-                    ?: throw TransactionRollbackException(DataError.Local.NOT_FOUND)
-                val config = configRepo.getConfigFlow().firstOrNull() 
-                    ?: SystemConfig()
-                val activeQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
-
-                // 3. Розрахунок XP та стріків на основі результатів квестів
                 val mainQuests = activeQuests.filter { it.type == DomainQuestType.MAIN }
                 val wasPenaltyActive = player.isPenaltyActive
+                
+                // Розрахунки в пам'яті на основі зчитаних даних
                 val (playerAfterXP, levelUpTriggered) = player.evaluateQuests(mainQuests).checkLevelUp()
-
-                // 4. Просування часу (Cycle Day / Week / Month)
                 val finalPlayer = playerAfterXP.advanceTime(config)
 
-                // 5. Встановлюємо прапорець потреби ініціалізації перед оновленням гравця
+                // Атомарні записи стану
                 configRepo.setNeedsDailyInit(true)
-
-                // 6. Збереження оновленого стану гравця
                 playerRepo.updatePlayer(finalPlayer)
-
-                // 7. Архівація квестів
                 questRepo.archiveActiveQuests()
 
-                // 8. Генерація нового дня та оновлення атрибутів всередині транзакції
-                generateDailyQuests.invoke()
-                calculateAttributes.invoke()
-
-                // 9. Скидаємо прапорець після успішної ініціалізації
-                configRepo.setNeedsDailyInit(false)
-
+                // Формуємо результат для повернення з транзакції
                 val result = when {
                     levelUpTriggered -> DayFinalizationResult.LevelUp
                     !wasPenaltyActive && finalPlayer.isPenaltyActive -> DayFinalizationResult.PenaltyZoneEntered
@@ -67,6 +58,13 @@ class FinalizeDayUseCase @Inject constructor(
                 }
                 result
             }
+
+            // 3. Важкі операції генерації та розрахунку атрибутів ПІСЛЯ транзакції
+            generateDailyQuests.invoke()
+            calculateAttributes.invoke()
+            
+            // Скидаємо прапорець ініціалізації після успішного виконання важких задач
+            configRepo.setNeedsDailyInit(false)
 
             Timber.d("Day Finalization completed successfully")
             Result.Success(transactionResult)

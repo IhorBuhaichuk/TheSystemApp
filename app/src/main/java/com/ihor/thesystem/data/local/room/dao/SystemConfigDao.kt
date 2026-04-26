@@ -9,6 +9,9 @@ interface SystemConfigDao {
     @Query("SELECT * FROM system_config WHERE id = 1")
     fun getConfigFlow(): Flow<SystemConfigEntity?>
 
+    @Query("SELECT * FROM system_config WHERE id = 1 LIMIT 1")
+    suspend fun getConfigSync(): SystemConfigEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(config: SystemConfigEntity)
 

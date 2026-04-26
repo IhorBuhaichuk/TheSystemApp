@@ -60,9 +60,9 @@ interface QuestDao {
     @Query("DELETE FROM quest_task WHERE id = :taskId")
     suspend fun deleteTask(taskId: Int)
 
-    @Query("UPDATE quest SET status = :targetStatus WHERE status = :sourceStatus")
-    suspend fun archiveActiveQuests(
-        sourceStatus: QuestStatus,
+    @Query("UPDATE quest SET status = :targetStatus WHERE status IN (:sourceStatuses)")
+    suspend fun archiveQuestsByStatuses(
+        sourceStatuses: List<QuestStatus>,
         targetStatus: QuestStatus
     )
 

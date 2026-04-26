@@ -7,7 +7,6 @@ import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
-import com.ihor.thesystem.domain.util.MuscleGroupMapper
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -78,17 +77,18 @@ class GetStatisticsDataUseCase @Inject constructor(
                     )
                 }.sortedWith(compareBy({ !it.isActive }, { it.orderIndex }, { it.exerciseName }))
 
-                // Live calculation of RPG muscle attributes
-                val characterAttributes = MuscleGroup.entries.associateWith { group ->
-                    val groupExercises = matrix.filter { 
-                        MuscleGroupMapper.getMuscleGroupsForExercise(it.exerciseName).contains(group)
-                    }
-                    if (groupExercises.isEmpty()) 0f else {
-                        val totalRank = groupExercises.sumOf { it.currentRank.weight }
-                        val maxPossible = groupExercises.size * 6.0
-                        (totalRank / maxPossible * 100).toFloat().coerceIn(0f, 100f)
-                    }
-                }
+                // Use already calculated RPG muscle attributes from Player
+                val characterAttributes = mapOf(
+                    MuscleGroup.CHEST            to player.chestAttr.toFloat(),
+                    MuscleGroup.BACK             to player.backAttr.toFloat(),
+                    MuscleGroup.SHOULDERS        to player.shouldersAttr.toFloat(),
+                    MuscleGroup.QUADS            to player.quadsAttr.toFloat(),
+                    MuscleGroup.HAMSTRINGS_GLUTES to player.legsAttr.toFloat(),
+                    MuscleGroup.ARMS             to player.armsAttr.toFloat(),
+                    MuscleGroup.ABS              to player.absAttr.toFloat(),
+                    MuscleGroup.LEGS             to player.legsGroupAttr.toFloat(),
+                    MuscleGroup.CORE             to player.coreAttr.toFloat()
+                )
 
                 StatisticsUiData(
                     playerName      = player.name,

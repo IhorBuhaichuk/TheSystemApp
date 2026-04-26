@@ -14,6 +14,7 @@ interface ProgressionMatrixRepository {
     suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>)
     suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<ActiveSetInput>, timestamp: Long, userFeedback: String? = null)
 
+    suspend fun getReferenceForExercise(id: Int): Any?
     suspend fun getReferenceForExercise(name: String): Any?
     fun getAllReferences(): Flow<List<Any>>
     

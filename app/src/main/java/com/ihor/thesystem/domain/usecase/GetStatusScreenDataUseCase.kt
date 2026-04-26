@@ -9,7 +9,6 @@ import com.ihor.thesystem.data.local.room.entity.QuestType
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.feature.status.viewmodel.*
-import com.ihor.thesystem.domain.util.MuscleGroupMapper
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -56,16 +55,17 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 player.currentCycleDay
             }
             
-            val muscleMap = MuscleGroup.entries.associateWith { group ->
-                val groupExercises = matrix.filter { 
-                    MuscleGroupMapper.getMuscleGroupsForExercise(it.exerciseName).contains(group)
-                }
-                if (groupExercises.isEmpty()) 0f else {
-                    val totalRank = groupExercises.sumOf { it.currentRank.weight }
-                    val maxPossible = groupExercises.size * 6.0
-                    (totalRank / maxPossible * 100).toFloat().coerceIn(0f, 100f)
-                }
-            }
+            val muscleMap = mapOf(
+                MuscleGroup.CHEST             to player.chestAttr.toFloat(),
+                MuscleGroup.BACK              to player.backAttr.toFloat(),
+                MuscleGroup.SHOULDERS         to player.shouldersAttr.toFloat(),
+                MuscleGroup.QUADS             to player.quadsAttr.toFloat(),
+                MuscleGroup.HAMSTRINGS_GLUTES  to player.legsAttr.toFloat(),
+                MuscleGroup.ARMS              to player.armsAttr.toFloat(),
+                MuscleGroup.ABS               to player.absAttr.toFloat(),
+                MuscleGroup.LEGS              to player.legsGroupAttr.toFloat(),
+                MuscleGroup.CORE              to player.coreAttr.toFloat()
+            )
             
             val scheduleFlows = (1..cycleDays).map { scheduleRepo.getScheduleForDay(it) }
             val schedulesFlow = if (scheduleFlows.isEmpty()) flowOf(emptyList<ScheduleDay>()) 
@@ -90,16 +90,16 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 val trainingDaysPerCycle = schedules.count { it.workoutTemplateName != null }
                 val monthWorkoutsTotal = trainingDaysPerCycle * config.microCyclesPerMonth
                 
-                val currentLevelXp = player.level * 1000 // Базове XP для поточного рівня
-                val xpMax = (player.level + 1) * 1000 // Ціль для наступного рівня
-                val xpProgress = player.xpTotal.coerceIn(0, xpMax)
+                val xpPerLevel = 1000
+                val xpForCurrentLevel = player.level * xpPerLevel
+                val xpProgress = (player.xpTotal - xpForCurrentLevel).coerceIn(0, xpPerLevel)
 
                 StatusUiData(
                     playerName             = player.name,
                     playerClass            = player.playerClass,
                     level                  = player.level,
                     xpTotal                = xpProgress,
-                    xpMax                  = xpMax,
+                    xpMax                  = xpPerLevel,
                     currentMonth           = player.currentMonth,
                     totalMonths            = 12,
                     currentWeight          = weight ?: 80f,

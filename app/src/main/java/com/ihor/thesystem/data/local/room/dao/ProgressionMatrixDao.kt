@@ -52,7 +52,7 @@ interface ProgressionMatrixDao {
     suspend fun getReferenceByName(name: String): ReferenceMatrixEntity?
 
     @Query("SELECT * FROM reference_matrix WHERE exerciseId = :id LIMIT 1")
-    suspend fun getReferenceById(id: String): ReferenceMatrixEntity?
+    suspend fun getReferenceById(id: Int): ReferenceMatrixEntity?
 }
 
 data class ProgressionMatrixWithExercise(

@@ -24,13 +24,6 @@ object DatabasePopulator {
 
         withContext(Dispatchers.IO) {
             val totalTime = measureTimeMillis {
-                if (workoutDao.getAllExercisesSync().isNotEmpty()) {
-                    Timber.d("Database already has exercise data. Skipping population.")
-                    return@withContext
-                }
-
-                Timber.d("Database is empty. Starting population from JSON...")
-
                 val exerciseDtos = try {
                     context.assets.open("exercises_ua.json").use { inputStream ->
                         json.decodeFromStream<List<ExerciseDto>>(inputStream)
@@ -41,11 +34,27 @@ object DatabasePopulator {
                 }
 
                 db.withTransaction {
-                    // Базова конфігурація
-                    db.playerDao().insertOrUpdate(PlayerEntity())
-                    db.systemConfigDao().insertOrUpdate(SystemConfigEntity())
+                    // 1. Атомарна перевірка: якщо вправи вже є, нічого не робимо
+                    if (workoutDao.getAllExercisesSync().isNotEmpty()) {
+                        Timber.d("Database already has exercise data. Skipping population.")
+                        return@withTransaction
+                    }
 
-                    // 3. Мапінг ExerciseDto -> ExerciseEntity та пакетне збереження
+                    Timber.d("Database is empty. Starting population...")
+
+                    // 2. Ініціалізуємо гравця ТІЛЬКИ якщо його ще немає (id=1)
+                    if (db.playerDao().getPlayerSync() == null) {
+                        db.playerDao().insertOrUpdate(PlayerEntity())
+                        Timber.d("Initial player created")
+                    }
+
+                    // 3. Ініціалізуємо конфігурацію ТІЛЬКИ якщо її немає (id=1)
+                    if (db.systemConfigDao().getConfigSync() == null) {
+                        db.systemConfigDao().insertOrUpdate(SystemConfigEntity())
+                        Timber.d("Initial system config created")
+                    }
+
+                    // 4. Мапінг ExerciseDto -> ExerciseEntity та пакетне збереження
                     val entities = exerciseDtos.map { dto ->
                         ExerciseEntity(
                             externalId = dto.id,
@@ -58,8 +67,6 @@ object DatabasePopulator {
                         )
                     }
 
-                    // Insert in chunks to avoid large transaction overhead if needed, 
-                    // though 873 is manageable in one go.
                     entities.chunked(200).forEach { chunk ->
                         workoutDao.insertExercises(chunk)
                     }
@@ -67,7 +74,7 @@ object DatabasePopulator {
                     Timber.d("Inserted ${entities.size} exercises")
                 }
             }
-            Timber.d("Database population completed in ${totalTime}ms")
+            Timber.d("Database population check/completion took ${totalTime}ms")
         }
     }
 

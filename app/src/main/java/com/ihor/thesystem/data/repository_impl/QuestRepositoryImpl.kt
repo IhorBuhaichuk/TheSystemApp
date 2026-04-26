@@ -127,9 +127,11 @@ class QuestRepositoryImpl @Inject constructor(
     }
 
     override suspend fun archiveActiveQuests() {
-        questDao.archiveActiveQuests(
-            sourceStatus = EntityQuestStatus.ACTIVE,
-            targetStatus = EntityQuestStatus.FAILED
+        // Архівуємо всі квести, які не є активними для нового дня.
+        // ACTIVE стають FAILED (не встиг виконати), COMPLETED стають LOCKED (успішно виконано і збережено в лог).
+        questDao.archiveQuestsByStatuses(
+            sourceStatuses = listOf(EntityQuestStatus.ACTIVE, EntityQuestStatus.COMPLETED),
+            targetStatus = EntityQuestStatus.LOCKED
         )
     }
 
