@@ -14,7 +14,7 @@ data class CalculatedAttributes(
 class CalculateAttributesUseCase @Inject constructor(
     private val matrixRepo: ProgressionMatrixRepository,
     private val playerRepo: PlayerRepository,
-    private val workoutDao: WorkoutDao
+    private val workoutRepo: WorkoutRepository
 ) {
     /**
      * Оновлює RPG-атрибути гравця.
@@ -24,7 +24,7 @@ class CalculateAttributesUseCase @Inject constructor(
             ?: return Result.Error(DataError.Local.NOT_FOUND)
 
         val matrixEntries = matrixRepo.getAllEntries().first()
-        val allExercises = workoutDao.getAllExercisesSync()
+        val allExercises = workoutRepo.getAllExercisesSync()
         val exerciseMap = allExercises.associateBy { it.id }
         
         // Визначаємо групи м'язів для оновлення

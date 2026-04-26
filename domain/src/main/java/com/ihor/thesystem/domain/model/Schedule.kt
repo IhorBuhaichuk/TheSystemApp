@@ -13,7 +13,9 @@ data class ScheduleDay(
 
 data class ExerciseDetails(
     val id: Int,
-    val name: String
+    val name: String,
+    val muscleGroups: List<MuscleGroup> = emptyList(),
+    val gifUrl: String? = null
 )
 
 data class ExerciseRecommendation(

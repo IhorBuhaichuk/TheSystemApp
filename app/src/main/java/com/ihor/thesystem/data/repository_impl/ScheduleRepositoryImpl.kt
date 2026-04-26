@@ -75,13 +75,27 @@ class ScheduleRepositoryImpl @Inject constructor(
             workoutTemplateId   = ordered.schedule.workoutTemplateId,
             workoutTemplateName = ordered.workoutTemplate?.name,
             dailyTaskNames      = ordered.dailyTasks.map { it.name },
-            exercises           = ordered.exercises.map { ExerciseDetails(it.exercise.id, it.exercise.name) }
+            exercises           = ordered.exercises.map { 
+                ExerciseDetails(
+                    id = it.exercise.id, 
+                    name = it.exercise.name, 
+                    muscleGroups = it.exercise.muscleGroups,
+                    gifUrl = it.exercise.gifUrl
+                ) 
+            }
         )
     }
 
     override fun getAllExercises(): Flow<List<ExerciseDetails>> =
         workoutDao.getAllExercises().map { entities ->
-            entities.map { ExerciseDetails(it.id, it.name) }
+            entities.map { 
+                ExerciseDetails(
+                    id = it.id, 
+                    name = it.name, 
+                    muscleGroups = it.muscleGroups,
+                    gifUrl = it.gifUrl
+                ) 
+            }
         }
 
     override suspend fun createExercise(name: String): Int {

@@ -36,7 +36,6 @@ private fun SystemConfigEntity.toDomain() =
         cycleAnchorDay = cycleAnchorDay,
         cycleDaysPerMicrocycle = cycleDaysPerMicrocycle,
         microCyclesPerMonth = microCyclesPerMonth,
-        dayStartOffsetHours = dayStartOffsetHours,
         needsDailyInit = needsDailyInit
     )
 
@@ -51,6 +50,5 @@ private fun SystemConfig.toEntity() =
         cycleAnchorDay = cycleAnchorDay,
         cycleDaysPerMicrocycle = cycleDaysPerMicrocycle,
         microCyclesPerMonth = microCyclesPerMonth,
-        dayStartOffsetHours = dayStartOffsetHours,
         needsDailyInit = needsDailyInit
     )

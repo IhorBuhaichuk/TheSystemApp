@@ -98,6 +98,7 @@ dependencies {
 
     implementation(libs.timber)
     implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
     implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.junit)

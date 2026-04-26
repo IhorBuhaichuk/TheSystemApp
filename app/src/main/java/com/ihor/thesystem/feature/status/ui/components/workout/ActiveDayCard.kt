@@ -165,6 +165,18 @@ fun ActiveDayCard(
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    if (exercise.gifUrl != null) {
+                        com.ihor.thesystem.presentation.common.components.HologramExerciseImage(
+                            gifUrl = exercise.gifUrl,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
                     // Sets Input Area
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         exercise.sets.forEachIndexed { index, set ->

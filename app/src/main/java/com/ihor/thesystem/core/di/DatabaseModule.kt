@@ -56,7 +56,7 @@ abstract class DatabaseModule {
 
             appScope.launch(Dispatchers.IO) {
                 try {
-                    DatabasePopulator.populate(database)
+                    DatabasePopulator.populate(context, database)
                     readinessRepo.markAsReady()
                 } catch (e: Exception) {
                     e.printStackTrace()

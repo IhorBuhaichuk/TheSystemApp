@@ -65,8 +65,7 @@ class WorkoutViewModel @Inject constructor(
         if (config.cycleAnchorDateTimestamp > 0) {
             useCases.calculateCycleDay(
                 targetDate = date,
-                anchorEpochDay = Instant.ofEpochMilli(config.cycleAnchorDateTimestamp)
-                    .atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay(),
+                anchorEpochDay = config.cycleAnchorDateTimestamp,
                 anchorCycleDay = config.cycleAnchorDay,
                 cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
             )
@@ -97,6 +96,7 @@ class WorkoutViewModel @Inject constructor(
                     recommendedReps = rec.reps,
                     recommendedSets = rec.sets,
                     recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg",
+                    gifUrl = ex.gifUrl,
                     sets = (1..(rec.sets ?: 1)).map { ActiveSetInput() }.toImmutableList()
                 )
             }.toImmutableList()

@@ -31,7 +31,7 @@ interface QuestRepository {
     suspend fun deleteQuestWithTasks(questId: Int)
 
     // Fixed methods
-    fun getDailyQuestsForDate(dateMillis: Long, dayOffsetHours: Int = 0): Flow<List<Quest>>
+    fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>>
     fun getPendingPromotionQuests(): Flow<List<Quest>>
     fun getActivePromotionQuests(): Flow<List<Quest>>
 

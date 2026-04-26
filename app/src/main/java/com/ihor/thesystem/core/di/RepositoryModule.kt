@@ -36,6 +36,12 @@ abstract class RepositoryModule {
 
     @Binds @Singleton
     abstract fun bindChatRepository(impl: ChatRepositoryImpl): ChatRepository
+
+    @Binds @Singleton
+    abstract fun bindWorkoutRepository(impl: WorkoutRepositoryImpl): WorkoutRepository
+
+    @Binds @Singleton
+    abstract fun bindAnnualMatrixRepository(impl: AnnualMatrixRepositoryImpl): AnnualMatrixRepository
     
     // ViewingDateRepository не потребує @Binds, оскільки він є Singleton класом
 }

@@ -32,7 +32,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class
     ],
-    version = 31,
+    version = 34,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

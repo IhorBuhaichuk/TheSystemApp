@@ -82,7 +82,10 @@ class StatusViewModel @Inject constructor(
                 
                 // Виконуємо розрахунки тільки якщо база готова
                 val config = useCases.getSystemConfig().first()
-                if (config?.needsDailyInit == true) {
+                val statusData = useCases.getStatusData().first()
+                val hasNoQuests = statusData.dailyQuest == null && statusData.mainQuest == null && statusData.promotionQuests.isEmpty()
+
+                if (config?.needsDailyInit == true || hasNoQuests) {
                     useCases.generateDailyQuests()
                     useCases.calculateAttributes()
                     useCases.setNeedsDailyInit(false)

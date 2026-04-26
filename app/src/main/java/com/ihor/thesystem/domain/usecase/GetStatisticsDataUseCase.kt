@@ -36,7 +36,8 @@ class GetStatisticsDataUseCase @Inject constructor(
             calculateCycleDay(
                 targetDate = date,
                 anchorEpochDay = config.cycleAnchorDateTimestamp,
-                anchorCycleDay = config.cycleAnchorDay
+                anchorCycleDay = config.cycleAnchorDay,
+                cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
             )
         }.distinctUntilChanged()
 

@@ -31,7 +31,8 @@ class SyncCycleAnchorUseCase @Inject constructor(
         playerRepo.updateCurrentCycleDay(selectedDay)
         
         // 3. Перегенеруємо квести на сьогодні відповідно до нового дня циклу
-        questRepo.archiveActiveQuests()
+        // Оскільки ми змінили день циклу, нам потрібно видалити старі квести на сьогодні
+        // і створити нові, що відповідають новому дню.
         generateQuests()
     }
 }

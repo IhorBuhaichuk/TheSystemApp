@@ -148,29 +148,24 @@ class QuestRepositoryImpl @Inject constructor(
         questDao.deleteQuestWithTasks(questId)
     }
 
-    override fun getDailyQuestsForDate(dateMillis: Long, dayOffsetHours: Int): Flow<List<Quest>> {
-        val (start, end) = getDayRange(dateMillis, dayOffsetHours)
+    override fun getDailyQuestsForDate(dateMillis: Long): Flow<List<Quest>> {
+        val (start, end) = getDayRange(dateMillis)
         return questDao.getDailyQuestsForDateRange(start, end, EntityQuestType.DAILY, EntityQuestType.MAIN)
             .map { list -> list.map { it.toDomain() } }
     }
 
-    private fun getDayRange(millis: Long, dayOffsetHours: Int = 0): Pair<Long, Long> {
+    private fun getDayRange(millis: Long): Pair<Long, Long> {
         val instant = java.time.Instant.ofEpochMilli(millis)
         val zonedDateTime = instant.atZone(java.time.ZoneId.systemDefault())
         
-        // Віднімаємо години зміщення, щоб визначити, до якої "логічної" дати належить момент
-        val logicalDate = zonedDateTime.minusHours(dayOffsetHours.toLong()).toLocalDate()
+        val logicalDate = zonedDateTime.toLocalDate()
         
-        // Початок логічної доби в реальному часі
         val start = logicalDate.atStartOfDay(java.time.ZoneId.systemDefault())
-            .plusHours(dayOffsetHours.toLong())
             .toInstant()
             .toEpochMilli()
             
-        // Кінець логічної доби (23:59:59 логічного дня)
         val end = logicalDate.atTime(java.time.LocalTime.MAX)
             .atZone(java.time.ZoneId.systemDefault())
-            .plusHours(dayOffsetHours.toLong())
             .toInstant()
             .toEpochMilli()
 

@@ -26,6 +26,7 @@ class GetWorkoutDetailsUseCase @Inject constructor(
                 recommendedReps = rec.reps,
                 recommendedSets = rec.sets,
                 recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg",
+                gifUrl = ex.gifUrl,
                 sets = (1..(rec.sets ?: 1)).map { ActiveSetInput() }.toImmutableList()
             )
         }.toImmutableList()

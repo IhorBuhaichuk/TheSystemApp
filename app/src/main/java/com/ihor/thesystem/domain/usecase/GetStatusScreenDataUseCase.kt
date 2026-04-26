@@ -44,13 +44,11 @@ class GetStatusScreenDataUseCase @Inject constructor(
             val currentCycleDay = if (config.cycleAnchorDateTimestamp > 0) {
                 val todayDate = java.time.Instant.ofEpochMilli(clock.now())
                     .atZone(java.time.ZoneId.systemDefault())
-                    .minusHours(config.dayStartOffsetHours.toLong())
                     .toLocalDate()
                 
                 calculateCycleDay(
                     targetDate = todayDate,
-                    anchorEpochDay = java.time.Instant.ofEpochMilli(config.cycleAnchorDateTimestamp)
-                        .atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay(),
+                    anchorEpochDay = config.cycleAnchorDateTimestamp,
                     anchorCycleDay = config.cycleAnchorDay,
                     cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
                 )
@@ -74,9 +72,8 @@ class GetStatusScreenDataUseCase @Inject constructor(
                                else combine(scheduleFlows) { it.filterIsInstance<ScheduleDay>() }
             
             combine(
-                questRepo.getDailyQuestsForDate(
-                    dateMillis = clock.now(),
-                    dayOffsetHours = config.dayStartOffsetHours
+                questRepo.getQuestsByDate(
+                    dateMillis = clock.now()
                 ),
                 playerRepo.getLatestWeight(),
                 questLogDao.getFullHistory(),

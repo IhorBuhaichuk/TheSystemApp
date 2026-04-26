@@ -34,6 +34,7 @@ data class ExerciseWorkoutUiModel(
     val recommendedReps: Int? = null,
     val recommendedSets: Int? = null,
     val recommendation: String? = null,
+    val gifUrl: String? = null,
     val sets: ImmutableList<ActiveSetInput> = persistentListOf()
 )
 

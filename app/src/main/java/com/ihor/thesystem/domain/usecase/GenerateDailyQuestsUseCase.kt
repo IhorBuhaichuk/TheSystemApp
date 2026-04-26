@@ -23,20 +23,16 @@ class GenerateDailyQuestsUseCase @Inject constructor(
     suspend operator fun invoke() {
         val config = configRepo.getConfigFlow().firstOrNull() ?: return
         
-        // 1. РОЗРАХУНОК ПОТОЧНОГО ДНЯ ЦИКЛУ (ЛОГІЧНА ДОБА)
+        // 1. РОЗРАХУНОК ПОТОЧНОГО ДНЯ ЦИКЛУ
         val now = clock.now()
         val todayDate = Instant.ofEpochMilli(now)
             .atZone(ZoneId.systemDefault())
-            .minusHours(config.dayStartOffsetHours.toLong())
             .toLocalDate()
 
         val currentDay = if (config.cycleAnchorDateTimestamp > 0) {
             calculateCycleDay(
                 targetDate = todayDate,
-                anchorEpochDay = java.time.Instant.ofEpochMilli(config.cycleAnchorDateTimestamp)
-                    .atZone(java.time.ZoneId.systemDefault())
-                    .toLocalDate()
-                    .toEpochDay(),
+                anchorEpochDay = config.cycleAnchorDateTimestamp,
                 anchorCycleDay = config.cycleAnchorDay,
                 cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
             )
@@ -51,20 +47,35 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         // 3. Отримуємо існуючі квести
         val todayQuests = questRepo.getDailyQuestsForDate(now).first()
         
-        // 4. ОЧИЩЕННЯ та ПЕРЕВІРКА ДУБЛІКАТІВ
+        // 4. ОЧИЩЕННЯ ТА ХАРМОНІЗАЦІЯ
+        // Перевіряємо, чи існуючі квести відповідають поточному розкладу.
+        // Якщо розклад змінився (наприклад, після синхронізації), старі квести треба видалити.
         val existingMainQuest = todayQuests.find { it.type == DomainQuestType.MAIN }
         
         if (existingMainQuest != null) {
             if (existingMainQuest.scheduleId == schedule.id) {
-                // Квест для цього розкладу вже існує, нічого не робимо
-                return 
+                // Квест для цього розкладу вже існує
             } else {
                 // Розклад змінився, видаляємо старий квест
                 questRepo.deleteQuestWithTasks(existingMainQuest.id)
             }
+        } else if (schedule.workoutTemplateId == null) {
+             // Ми на дні відпочинку, але можливо залишився старий MAIN квест від попереднього розкладу
+             // (хоча logic вище має це покрити, додамо для надійності)
+             todayQuests.filter { it.type == DomainQuestType.MAIN }.forEach {
+                 questRepo.deleteQuestWithTasks(it.id)
+             }
         }
 
-        val hasRoutine = todayQuests.any { it.type == DomainQuestType.DAILY }
+        val existingDailyQuest = todayQuests.find { it.type == DomainQuestType.DAILY }
+        if (existingDailyQuest != null && existingDailyQuest.scheduleId != schedule.id) {
+             // Видаляємо рутину, якщо вона від іншого дня циклу
+             questRepo.deleteQuestWithTasks(existingDailyQuest.id)
+        }
+
+        val updatedQuests = questRepo.getDailyQuestsForDate(now).first()
+        val hasRoutine = updatedQuests.any { it.type == DomainQuestType.DAILY }
+        val hasMain = updatedQuests.any { it.type == DomainQuestType.MAIN }
 
         // 5. ГЕНЕРАЦІЯ
         if (!hasRoutine) {
@@ -76,7 +87,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         }
 
         val workoutTemplateName = schedule.workoutTemplateName
-        if (workoutTemplateName != null && schedule.exercises.isNotEmpty()) {
+        if (!hasMain && workoutTemplateName != null && schedule.exercises.isNotEmpty()) {
             val recommendations = schedule.exercises.map { ex ->
                 val rec = calculateRecommendation(ex.id, ex.name)
                 ExerciseRecommendation(ex.id, ex.name, rec.weight, rec.sets, rec.reps)

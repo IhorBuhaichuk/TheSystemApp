@@ -107,7 +107,8 @@ class CalendarViewModel @Inject constructor(
             val cycleDay = calculateCycleDay(
                 targetDate = date,
                 anchorEpochDay = config.cycleAnchorDateTimestamp,
-                anchorCycleDay = config.cycleAnchorDay
+                anchorCycleDay = config.cycleAnchorDay,
+                cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
             )
             CalendarDayUiModel(
                 date = date,
@@ -122,7 +123,8 @@ class CalendarViewModel @Inject constructor(
         val todayCycleDay = calculateCycleDay(
             targetDate = todayDate,
             anchorEpochDay = config.cycleAnchorDateTimestamp,
-            anchorCycleDay = config.cycleAnchorDay
+            anchorCycleDay = config.cycleAnchorDay,
+            cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
         )
 
         val cycleDays = config.cycleDaysPerMicrocycle.let { total ->
@@ -214,7 +216,8 @@ class CalendarViewModel @Inject constructor(
             val cycleDay = calculateCycleDay(
                 targetDate = date,
                 anchorEpochDay = config.cycleAnchorDateTimestamp,
-                anchorCycleDay = config.cycleAnchorDay
+                anchorCycleDay = config.cycleAnchorDay,
+                cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
             )
             
             val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()

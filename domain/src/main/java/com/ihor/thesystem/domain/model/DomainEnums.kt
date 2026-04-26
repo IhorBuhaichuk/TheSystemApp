@@ -3,7 +3,7 @@ package com.ihor.thesystem.domain.model
 enum class DomainQuestType { DAILY, MAIN, PROMOTION }
 enum class DomainQuestStatus { ACTIVE, COMPLETED, FAILED, LOCKED }
 
-enum class ExerciseCategory { STRENGTH, ENDURANCE, HYPERTROPHY, UNKNOWN }
+enum class ExerciseCategory { STRENGTH, ENDURANCE, HYPERTROPHY, FLEXIBILITY, BALANCE, UNKNOWN }
 
 enum class Rank(val weight: Int) {
     E(1), D(2), C(3), B(4), A(5), S(6);
