@@ -36,6 +36,8 @@ class StatusViewModel @Inject constructor(
 
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
 
+    private val _questsReady = MutableStateFlow(false)
+
     val systemConfig: StateFlow<SystemConfig?> = databaseStatus
         .flatMapLatest { status ->
             if (status is DatabaseStatus.Ready) {
@@ -50,11 +52,15 @@ class StatusViewModel @Inject constructor(
         .flatMapLatest { status ->
             when (status) {
                 is DatabaseStatus.Ready -> {
-                    useCases.getStatusData()
-                        .map { data -> UiState.Content(data) as UiState<StatusUiData> }
-                        .catch { e ->
-                            Timber.e(e, "Error loading status data")
-                            emit(UiState.Error(UiText.StringResource(R.string.system_loading)))
+                    _questsReady
+                        .filter { it } // чекаємо поки квести готові
+                        .flatMapLatest {
+                            useCases.getStatusData()
+                                .map { data -> UiState.Content(data) as UiState<StatusUiData> }
+                                .catch { e ->
+                                    Timber.e(e, "Error loading status data")
+                                    emit(UiState.Error(UiText.StringResource(R.string.system_loading)))
+                                }
                         }
                 }
                 is DatabaseStatus.Failed -> {
@@ -67,7 +73,7 @@ class StatusViewModel @Inject constructor(
         }
         .stateIn(
             scope        = viewModelScope,
-            started      = SharingStarted.WhileSubscribed(5_000L),
+            started      = SharingStarted.Eagerly,
             initialValue = UiState.Loading
         )
 
@@ -100,8 +106,7 @@ class StatusViewModel @Inject constructor(
                     }
 
                     if (readiness is DatabaseStatus.Failed) {
-                        Timber.e("Database initialization failed: ${readiness.reason}")
-                        // status data mapping already emits Error if initialization fails
+                        Timber.e("Database initialization failed: ${(readiness as DatabaseStatus.Failed).reason}")
                         return@withTimeout
                     }
                     
@@ -117,20 +122,32 @@ class StatusViewModel @Inject constructor(
                 
                 // Виконуємо розрахунки тільки якщо база готова
                 val config = useCases.getSystemConfig().first()
-                val statusData = useCases.getStatusData().firstOrNull() ?: return@launch
+                val statusData = useCases.getStatusData().firstOrNull() ?: run {
+                    _questsReady.value = true
+                    return@launch
+                }
                 val hasNoQuests = statusData.dailyQuest == null && statusData.mainQuest == null && statusData.promotionQuests.isEmpty()
 
-                if (config?.needsDailyInit == true || hasNoQuests) {
+                val today = java.time.LocalDate.now().toEpochDay()
+                val lastDate = config?.lastInitEpochDay ?: 0L
+                val dateChanged = lastDate < today
+
+                if (config?.needsDailyInit == true || hasNoQuests || dateChanged) {
                     useCases.generateDailyQuests()
                     useCases.calculateAttributes()
                     useCases.setNeedsDailyInit(false)
+                    useCases.saveLastInitDate(today)
                 }
+                
+                _questsReady.value = true   // ← ТІЛЬКИ тут відкриваємо доступ до UI Flow
                 
             } catch (e: TimeoutCancellationException) {
                 Timber.w("Database initialization timeout")
+                _questsReady.value = true  // ← знімаємо блок навіть при таймауті, щоб UI не завис
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Error during StatusViewModel initialization")
+                _questsReady.value = true  // ← завжди знімаємо блок при будь-якій помилці
             }
         }
 
@@ -237,7 +254,17 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onAddTaskTap(questId: Int) {
-        _dialogState.value = StatusDialogState.AddTask(questId)
+        if (questId == 0) {
+            // Квест ще не ініціалізований — спочатку генеруємо, потім відкриваємо діалог
+            launchCatching {
+                useCases.generateDailyQuests()
+                val freshData = useCases.getStatusData().firstOrNull()
+                val newQuestId = freshData?.dailyQuest?.id ?: return@launchCatching
+                _dialogState.value = StatusDialogState.AddTask(newQuestId)
+            }
+        } else {
+            _dialogState.value = StatusDialogState.AddTask(questId)
+        }
     }
 
     fun onAddTaskConfirmed(questId: Int, taskName: String) = launchCatching {

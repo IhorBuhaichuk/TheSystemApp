@@ -689,11 +689,20 @@ private fun DailyQuestsSectionPremium(
     data.dailyQuest?.let { quests.add(it) }
     quests.addAll(data.promotionQuests)
 
+    // questId для кнопки "Додати завдання":
+    // якщо вже є dailyQuest — беремо його id,
+    // якщо ще немає — передаємо 0 (ViewModel обробить як "перший квест")
+    val addTaskQuestId = data.dailyQuest?.id ?: 0
+
+    val completedCount = quests.flatMap { it.tasks }.count { it.isCompleted }
+    val totalCount     = quests.flatMap { it.tasks }.size
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
     ) {
+        // Заголовок
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -707,16 +716,20 @@ private fun DailyQuestsSectionPremium(
                     letterSpacing = 1.5.sp
                 )
             )
-            Text(
-                text = "${quests.flatMap { it.tasks }.count { it.isCompleted }}/${quests.flatMap { it.tasks }.size}",
-                style = MaterialTheme.typography.labelMedium.copy(color = Color(0xFF00F0FF))
-            )
+            // Показуємо лічильник тільки якщо є таски
+            if (totalCount > 0) {
+                Text(
+                    text = "$completedCount/$totalCount",
+                    style = MaterialTheme.typography.labelMedium.copy(color = Color(0xFF00F0FF))
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Таски (якщо є)
         quests.forEach { quest ->
-            quest.tasks.forEachIndexed { index, task ->
+            quest.tasks.forEach { task ->
                 TaskItemPremium(
                     task = task,
                     onToggle = { onTaskToggled(task, quest.id) },
@@ -724,27 +737,57 @@ private fun DailyQuestsSectionPremium(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            
-            // Add Task Button
+        }
+
+        // Кнопка "Додати завдання" — ЗАВЖДИ видима, незалежно від кількості тасків
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable { onAddTask(addTaskQuestId) }
+                .background(Color.White.copy(alpha = 0.02f))
+                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.3f),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.text_add_new_goal),
+                    color = Color.White.copy(alpha = 0.3f),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TasksSkeletonPlaceholder() {
+    val infiniteTransition = rememberInfiniteTransition(label = "skeleton")
+    val shimmerAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.03f,
+        targetValue  = 0.08f,
+        animationSpec = infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Reverse),
+        label = "shimmer"
+    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        repeat(3) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .clickable { onAddTask(quest.id) }
-                    .drawBehind {
-                        // Manual dashed border drawing if needed
-                    }
-                    .background(Color.White.copy(alpha = 0.02f))
-                    .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.White.copy(alpha = 0.3f), modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.text_add_new_goal), color = Color.White.copy(alpha = 0.3f), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                }
-            }
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.White.copy(alpha = shimmerAlpha))
+            )
         }
     }
 }

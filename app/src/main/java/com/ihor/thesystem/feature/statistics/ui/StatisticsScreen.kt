@@ -83,8 +83,6 @@ fun StatisticsScreen(
                     .padding(horizontal = 24.dp)
                     .padding(top = 32.dp, bottom = 88.dp)
             ) {
-                StatisticsHeader(navController)
-
                 Spacer(modifier = Modifier.height(32.dp))
 
                 StatisticsTabSelector(
@@ -413,31 +411,6 @@ private fun ProgressLineChartMock() {
                 )
             )
         }
-    }
-}
-
-@Composable
-private fun StatisticsHeader(navController: NavHostController) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(
-            onClick = { navController.popBackStack() },
-            modifier = Modifier
-                .size(40.dp)
-                .background(Color.White.copy(alpha = 0.05f), CircleShape)
-                .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape)
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Box(modifier = Modifier.size(40.dp)) // Spacer to keep layout structure
     }
 }
 

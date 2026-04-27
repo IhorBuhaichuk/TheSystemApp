@@ -15,7 +15,8 @@ class FinalizeDayUseCase @Inject constructor(
     private val configRepo: SystemConfigRepository,
     private val generateDailyQuests: GenerateDailyQuestsUseCase,
     private val calculateAttributes: CalculateAttributesUseCase,
-    private val advanceCycleDayStatus: AdvanceCycleDayUseCase
+    private val advanceCycleDayStatus: AdvanceCycleDayUseCase,
+    private val saveLastInitDate: SaveLastInitDateUseCase
 ) {
     /**
      * Фіналізація дня з оптимізованим обсягом транзакції для запобігання ANR та Deadlocks.
@@ -65,6 +66,7 @@ class FinalizeDayUseCase @Inject constructor(
             
             // Скидаємо прапорець ініціалізації після успішного виконання важких задач
             configRepo.setNeedsDailyInit(false)
+            saveLastInitDate(java.time.LocalDate.now().toEpochDay())
 
             Timber.d("Day Finalization completed successfully")
             Result.Success(transactionResult)

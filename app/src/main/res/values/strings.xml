@@ -53,11 +53,11 @@
         <item quantity="other">+ ще %d вправ</item>
     </plurals>
     <string name="text_completed_check">ЗАВЕРШЕНО ✓</string>
-    <string name="text_daily_goals">ЩОДЕННІ ЦІЛІ</string>
+    <string name="text_daily_goals">СПИСОК ЗАВДАНЬ</string>
     <string name="text_add_task_title">НОВА ЦІЛЬ</string>
     <string name="text_add_task_placeholder">Що потрібно зробити?</string>
     <string name="text_add_task_confirm">ДОДАТИ</string>
-    <string name="text_add_new_goal">ДОДАТИ НОВУ ЦІЛЬ</string>
+    <string name="text_add_new_goal">ДОДАТИ ЗАВДАННЯ</string>
     <string name="text_add_task_cancel">СКАСУВАТИ</string>
     <string name="text_confirm">ПІДТВЕРДИТИ</string>
     <string name="text_cancel">СКАСУВАТИ</string>

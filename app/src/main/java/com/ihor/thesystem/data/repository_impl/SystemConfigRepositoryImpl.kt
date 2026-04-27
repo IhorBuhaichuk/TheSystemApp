@@ -23,6 +23,11 @@ class SystemConfigRepositoryImpl @Inject constructor(
         val current = dao.getConfigFlow().firstOrNull() ?: SystemConfigEntity()
         dao.insertOrUpdate(current.copy(needsDailyInit = needed))
     }
+
+    override suspend fun saveLastInitDate(epochDay: Long) {
+        val current = dao.getConfigFlow().firstOrNull() ?: SystemConfigEntity()
+        dao.insertOrUpdate(current.copy(lastInitEpochDay = epochDay))
+    }
 }
 
 private fun SystemConfigEntity.toDomain() =
@@ -36,7 +41,8 @@ private fun SystemConfigEntity.toDomain() =
         cycleAnchorDay = cycleAnchorDay,
         cycleDaysPerMicrocycle = cycleDaysPerMicrocycle,
         microCyclesPerMonth = microCyclesPerMonth,
-        needsDailyInit = needsDailyInit
+        needsDailyInit = needsDailyInit,
+        lastInitEpochDay = lastInitEpochDay
     )
 
 private fun SystemConfig.toEntity() =
@@ -50,5 +56,6 @@ private fun SystemConfig.toEntity() =
         cycleAnchorDay = cycleAnchorDay,
         cycleDaysPerMicrocycle = cycleDaysPerMicrocycle,
         microCyclesPerMonth = microCyclesPerMonth,
-        needsDailyInit = needsDailyInit
+        needsDailyInit = needsDailyInit,
+        lastInitEpochDay = lastInitEpochDay
     )

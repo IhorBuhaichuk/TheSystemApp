@@ -8,6 +8,7 @@ interface SystemConfigRepository {
     fun getConfigFlow(): Flow<SystemConfig?>
     suspend fun updateConfig(config: SystemConfig)
     suspend fun setNeedsDailyInit(needed: Boolean)
+    suspend fun saveLastInitDate(epochDay: Long)
 }
 
 interface ScheduleRepository {

@@ -14,5 +14,6 @@ data class SystemConfigEntity(
     val cycleAnchorDay: Int = 1,             // Який це був день циклу (1..4)
     val cycleDaysPerMicrocycle: Int = 4,
     val microCyclesPerMonth: Int = 4,
-    val needsDailyInit: Boolean = false
+    val needsDailyInit: Boolean = false,
+    val lastInitEpochDay: Long = 0L
 )
