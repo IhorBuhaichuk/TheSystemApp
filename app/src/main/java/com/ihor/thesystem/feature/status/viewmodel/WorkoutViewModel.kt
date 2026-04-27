@@ -92,6 +92,7 @@ class WorkoutViewModel @Inject constructor(
                 ExerciseWorkoutUiModel(
                     exerciseId = ex.id,
                     name = ex.name,
+                    nameUk = ex.nameUk,
                     recommendedWeight = rec.weight,
                     recommendedReps = rec.reps,
                     recommendedSets = rec.sets,

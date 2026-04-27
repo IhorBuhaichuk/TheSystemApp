@@ -10,6 +10,7 @@ data class ExerciseEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val externalId: String? = null,
     val name: String,
+    val nameUk: String? = null,
     val category: ExerciseCategory = ExerciseCategory.UNKNOWN,
     val muscleGroups: List<MuscleGroup> = emptyList(),
     val equipment: String? = null,

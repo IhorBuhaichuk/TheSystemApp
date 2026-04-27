@@ -629,7 +629,7 @@ private fun MainWorkoutCardPremium(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = task.name,
+                                text = task.nameUk ?: task.name,
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     color = Color.White.copy(alpha = 0.7f),
                                     fontWeight = FontWeight.Medium
@@ -784,7 +784,7 @@ private fun TaskItemPremium(
         Spacer(modifier = Modifier.width(16.dp))
 
         Text(
-            text = task.name,
+            text = task.nameUk ?: task.name,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyLarge.copy(
                 color = Color.White,

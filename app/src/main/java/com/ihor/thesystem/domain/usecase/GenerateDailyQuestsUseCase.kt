@@ -90,7 +90,14 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         if (!hasMain && workoutTemplateName != null && schedule.exercises.isNotEmpty()) {
             val recommendations = schedule.exercises.map { ex ->
                 val rec = calculateRecommendation(ex.id, ex.name)
-                ExerciseRecommendation(ex.id, ex.name, rec.weight, rec.sets, rec.reps)
+                ExerciseRecommendation(
+                    exerciseId = ex.id,
+                    exerciseName = ex.name,
+                    exerciseNameUk = ex.nameUk,
+                    weight = rec.weight,
+                    sets = rec.sets,
+                    reps = rec.reps
+                )
             }
 
             questRepo.createMainQuest(
@@ -109,7 +116,14 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             val active = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
             if (active.none { it.type == DomainQuestType.PROMOTION && it.targetExerciseId == pending.exerciseId }) {
                 val examWeight = (round((pending.targetWeight * 1.025f) / 2.5f) * 2.5f).toDouble()
-                questRepo.createPromotionQuest(pending.exerciseId, "ЕКЗАМЕН: ${pending.exerciseName.uppercase()}", "Тест 1RM", examWeight, 1)
+                questRepo.createPromotionQuest(
+                    exerciseId = pending.exerciseId,
+                    title = "ЕКЗАМЕН: ${(pending.exerciseNameUk ?: pending.exerciseName).uppercase()}",
+                    description = "Тест 1RM",
+                    targetWeight = examWeight,
+                    targetReps = 1,
+                    exerciseNameUk = pending.exerciseNameUk
+                )
             }
         }
     }

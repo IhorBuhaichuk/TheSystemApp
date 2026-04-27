@@ -43,7 +43,7 @@ abstract class DatabaseModule {
                 "the_system_db"
             )
                 .addMigrations(*DatabaseMigrations.ALL_MIGRATIONS)
-                .fallbackToDestructiveMigration(false)
+                .fallbackToDestructiveMigration()
                 .build()
 
             appScope.launch(Dispatchers.IO) {

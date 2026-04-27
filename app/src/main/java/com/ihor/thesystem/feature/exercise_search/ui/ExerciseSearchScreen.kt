@@ -229,7 +229,7 @@ fun ExerciseItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = exercise.name, 
+                    text = exercise.nameUk ?: exercise.name,
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold

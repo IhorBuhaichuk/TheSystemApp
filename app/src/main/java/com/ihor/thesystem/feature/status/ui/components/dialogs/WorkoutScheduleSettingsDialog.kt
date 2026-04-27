@@ -166,7 +166,7 @@ fun WorkoutScheduleSettingsDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = exercise.name,
+                                    text = exercise.nameUk ?: exercise.name,
                                     color = OnBackground,
                                     fontFamily = RajdhaniFamily
                                 )
@@ -221,7 +221,7 @@ fun WorkoutScheduleSettingsDialog(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(exercise.name, color = OnBackground.copy(alpha = 0.7f), fontSize = 14.sp)
+                                    Text(exercise.nameUk ?: exercise.name, color = OnBackground.copy(alpha = 0.7f), fontSize = 14.sp)
                                     IconButton(onClick = { onDeleteExercise(exercise.id) }, modifier = Modifier.size(32.dp)) {
                                         Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red.copy(alpha = 0.4f), modifier = Modifier.size(16.dp))
                                     }
@@ -443,7 +443,7 @@ fun ExerciseSearchItem(exercise: com.ihor.thesystem.domain.model.ExerciseDetails
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(exercise.name, color = OnBackground, fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
+            Text(exercise.nameUk ?: exercise.name, color = OnBackground, fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
             Text(
                 text = "${exercise.muscleGroups.joinToString { it.toUiText().asString(context) }} | ${exercise.equipment?.toEquipmentUiText()?.asString(context) ?: "Без обладнання"}",
                 color = OnSurfaceVariant,

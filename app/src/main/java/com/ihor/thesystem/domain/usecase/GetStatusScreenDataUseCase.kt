@@ -140,6 +140,6 @@ private fun Quest.toUiModel() = QuestUiModel(
         DomainQuestType.PROMOTION ->
             UiText.StringResource(R.string.quest_reward_promotion)
     },
-    tasks       = tasks.map { TaskUiModel(it.id, it.name, it.isCompleted) }.toImmutableList(),
+    tasks       = tasks.map { TaskUiModel(it.id, it.name, it.nameUk, it.isCompleted) }.toImmutableList(),
     isCompleted = status == DomainQuestStatus.COMPLETED
 )

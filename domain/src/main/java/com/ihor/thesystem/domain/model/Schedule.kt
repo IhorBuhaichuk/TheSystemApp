@@ -14,6 +14,7 @@ data class ScheduleDay(
 data class ExerciseDetails(
     val id: Int,
     val name: String,
+    val nameUk: String? = null,
     val category: ExerciseCategory = ExerciseCategory.UNKNOWN,
     val muscleGroups: List<MuscleGroup> = emptyList(),
     val equipment: String? = null,
@@ -27,6 +28,7 @@ data class ExerciseDetails(
 data class ExerciseRecommendation(
     val exerciseId: Int,
     val exerciseName: String,
+    val exerciseNameUk: String? = null,
     val weight: Double,
     val sets: Int,
     val reps: Int

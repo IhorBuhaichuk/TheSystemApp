@@ -42,5 +42,6 @@ data class QuestUiModel(
 data class TaskUiModel(
     val id: Int,
     val name: String,
+    val nameUk: String? = null,
     val isCompleted: Boolean
 )

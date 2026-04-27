@@ -30,6 +30,7 @@ data class ActiveDayUiModel(
 data class ExerciseWorkoutUiModel(
     val exerciseId: Int,
     val name: String,
+    val nameUk: String? = null,
     val recommendedWeight: Double? = null,
     val recommendedReps: Int? = null,
     val recommendedSets: Int? = null,

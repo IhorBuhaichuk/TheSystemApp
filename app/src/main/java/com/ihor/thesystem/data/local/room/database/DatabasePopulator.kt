@@ -9,6 +9,7 @@ import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.model.MuscleGroup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import timber.log.Timber
@@ -17,6 +18,12 @@ import kotlin.system.measureTimeMillis
 object DatabasePopulator {
 
     private val json = Json { ignoreUnknownKeys = true }
+
+    @Serializable
+    private data class ExerciseTranslationDto(
+        val id: String,
+        val name_uk: String
+    )
 
     @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
     suspend fun populate(context: Context, db: AppDatabase) {
@@ -31,6 +38,16 @@ object DatabasePopulator {
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to read or parse exercises_ua.json")
                     return@withContext
+                }
+
+                val translations = try {
+                    context.assets.open("exercises_uk.json").use { inputStream ->
+                        json.decodeFromStream<List<ExerciseTranslationDto>>(inputStream)
+                            .associate { it.id to it.name_uk }
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to read or parse exercises_uk.json")
+                    emptyMap()
                 }
 
                 db.withTransaction {
@@ -59,6 +76,7 @@ object DatabasePopulator {
                         ExerciseEntity(
                             externalId = dto.id,
                             name = dto.name,
+                            nameUk = translations[dto.id],
                             category = mapCategory(dto.category),
                             muscleGroups = mapMuscles(dto.primaryMuscles + dto.secondaryMuscles),
                             equipment = dto.equipment,

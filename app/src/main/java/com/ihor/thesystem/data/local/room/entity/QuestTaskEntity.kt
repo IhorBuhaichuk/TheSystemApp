@@ -8,6 +8,7 @@ data class QuestTaskEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val questId: Int,
     val name: String,
+    val nameUk: String? = null,
     val isCompleted: Boolean = false,
     val exerciseId: Int? = null,
     val targetWeight: Double? = null,

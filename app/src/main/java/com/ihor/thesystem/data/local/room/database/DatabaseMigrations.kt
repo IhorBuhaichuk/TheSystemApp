@@ -434,6 +434,41 @@ object DatabaseMigrations {
             db.execSQL("ALTER TABLE exercises ADD COLUMN level TEXT")
             db.execSQL("ALTER TABLE exercises ADD COLUMN mechanic TEXT")
             db.execSQL("ALTER TABLE exercises ADD COLUMN force TEXT")
+            // Note: nameUk was intended for 36 but added in 36_37 to handle missing cases
+        }
+    }
+
+    val MIGRATION_36_37 = object : Migration(36, 37) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Fix exercises table (nameUk was missed in some 35-36 transitions)
+            val cursor = db.query("PRAGMA table_info(exercises)")
+            var exercisesNameUkExists = false
+            while (cursor.moveToNext()) {
+                val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+                if (name == "nameUk") {
+                    exercisesNameUkExists = true
+                    break
+                }
+            }
+            cursor.close()
+            if (!exercisesNameUkExists) {
+                db.execSQL("ALTER TABLE exercises ADD COLUMN nameUk TEXT")
+            }
+
+            // Fix quest_task table
+            val qCursor = db.query("PRAGMA table_info(quest_task)")
+            var questTaskNameUkExists = false
+            while (qCursor.moveToNext()) {
+                val name = qCursor.getString(qCursor.getColumnIndexOrThrow("name"))
+                if (name == "nameUk") {
+                    questTaskNameUkExists = true
+                    break
+                }
+            }
+            qCursor.close()
+            if (!questTaskNameUkExists) {
+                db.execSQL("ALTER TABLE quest_task ADD COLUMN nameUk TEXT")
+            }
         }
     }
 
@@ -444,6 +479,6 @@ object DatabaseMigrations {
         MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22,
         MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27,
         MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32,
-        MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36
+        MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36, MIGRATION_36_37
     )
 }

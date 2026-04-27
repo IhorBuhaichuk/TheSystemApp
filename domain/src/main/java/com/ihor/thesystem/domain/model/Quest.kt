@@ -17,6 +17,7 @@ data class QuestTask(
     val id: Int,
     val questId: Int,
     val name: String,
+    val nameUk: String? = null,
     val isCompleted: Boolean,
     val exerciseId: Int? = null,
     val recommendedWeight: Double? = null,

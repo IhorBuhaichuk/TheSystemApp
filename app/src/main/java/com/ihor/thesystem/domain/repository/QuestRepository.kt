@@ -19,7 +19,8 @@ interface QuestRepository {
         title: String, 
         description: String,
         targetWeight: Double? = null,
-        targetReps: Int? = null
+        targetReps: Int? = null,
+        exerciseNameUk: String? = null
     )
     suspend fun addTaskToQuest(questId: Int, taskName: String)
     suspend fun removeTask(taskId: Int)

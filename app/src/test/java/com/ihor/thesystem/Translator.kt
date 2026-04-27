@@ -10,37 +10,45 @@ import java.net.URL
 
 class Translator {
 
-    private val jsonFormat = Json { prettyPrint = true }
+    private val jsonFormat = Json { prettyPrint = true; ignoreUnknownKeys = true }
 
     @Test
-    fun translate() {
-        val inputFilePath = "C:\\Users\\gesha\\AndroidStudioProjects\\TheSystem-master\\app\\src\\main\\assets\\exercises.json"
-        val outputFilePath = "C:\\Users\\gesha\\AndroidStudioProjects\\TheSystem-master\\app\\src\\main\\assets\\exercises_ua.json"
-        val apiKey = "AIzaSyCr0u0gPOs_x6VUmmg204GiiIDPrfiY8i0" // ВСТАВ КЛЮЧ ТІЛЬКИ СЮДИ
+    fun generateLocalization() {
+        val inputFilePath = "C:\\Users\\gesha\\AndroidStudioProjects\\TheSystem-master\\app\\src\\main\\assets\\exercises_ua.json"
+        val outputFilePath = "C:\\Users\\gesha\\AndroidStudioProjects\\TheSystem-master\\app\\src\\main\\assets\\exercises_uk.json"
+        val apiKey = "AIzaSyBkePsWf7e1KdfylgxryYbiIjIH3ukoQyE" // ВСТАВ ВАЛІДНИЙ КЛЮЧ
 
         val file = File(inputFilePath)
         if (!file.exists()) {
-            println("Файл не знайдено: $inputFilePath")
+            println("Помилка: Файл не знайдено: $inputFilePath")
             return
         }
 
         val originalText = file.readText()
         val jsonArray = Json.parseToJsonElement(originalText).jsonArray
-        val resultList = mutableListOf<JsonElement>()
-        val batchSize = 40
 
-        val chunks = jsonArray.chunked(batchSize)
-        println("Знайдено ${jsonArray.size} вправ. Розбито на ${chunks.size} батчів.")
+        val simplifiedList = jsonArray.map { element ->
+            val obj = element.jsonObject
+            buildJsonObject {
+                put("id", obj["id"] ?: JsonNull)
+                put("name", obj["name"] ?: JsonNull)
+            }
+        }
+
+        val resultList = mutableListOf<JsonElement>()
+        val batchSize = 60
+
+        val chunks = simplifiedList.chunked(batchSize)
+        println("Знайдено ${simplifiedList.size} назв. Розбито на ${chunks.size} батчів.")
 
         val systemPrompt = """
-            Ти професійний тренер. Твоє завдання: перекласти українською значення ключів "name" та масиву "instructions" у наданому JSON.
-            Інші ключі (id, level, mechanic, equipment, category тощо) ЗАЛИШАЙ БЕЗ ЗМІН англійською.
-            Структура об'єктів має залишитися ідентичною.
-            Поверни ВИКЛЮЧНО валідний JSON-масив без додаткового тексту.
+            Ти професійний перекладач спортивної термінології. 
+            Твоє завдання: отримати JSON-масив з об'єктами (ключі "id" та "name").
+            Поверни новий JSON-масив, де "id" залишається без змін, а замість ключа "name" використовується ключ "name_uk" з перекладеною українською назвою.
             
             Термінологія:
             - Flyes = Розведення
-            - Row = Тяга (наприклад, Barbell Row = Тяга штанги в нахилі)
+            - Row = Тяга
             - Deadlift = Станова тяга
             - Crunch = Скручування
             - Band = Еспандер (або гумова стрічка)
@@ -54,10 +62,16 @@ class Translator {
             - Curl = Згинання рук
             - Extension = Розгинання
             - Bear Crawl = Ведмежа хода
+            - Pulldown = Тяга зверху
+            - Pushdown = Розгинання на блоці
+            
+            Приклад вихідного об'єкта: {"id": "Barbell_Squat", "name_uk": "Присідання зі штангою"}
+            
+            Поверни ВИКЛЮЧНО валідний JSON-масив без додаткового тексту.
         """.trimIndent()
 
         chunks.forEachIndexed { index, chunk ->
-            println("Обробка батчу ${index + 1} з ${chunks.size}...")
+            println("\nОбробка батчу ${index + 1} з ${chunks.size}...")
 
             val payload = buildJsonObject {
                 put("system_instruction", buildJsonObject {
@@ -77,28 +91,45 @@ class Translator {
                 })
             }
 
-            val responseText = sendGeminiRequest(payload.toString(), apiKey)
+            var success = false
+            var attempts = 0
+            val maxAttempts = 5
 
-            if (responseText.isNotEmpty()) {
+            while (!success && attempts < maxAttempts) {
                 try {
+                    attempts++
+                    val responseText = sendGeminiRequest(payload.toString(), apiKey)
+
                     val cleanJson = if (responseText.contains("```json")) {
                         responseText.substringAfter("```json").substringBeforeLast("```").trim()
                     } else {
                         responseText.trim()
                     }
+
                     val translatedArray = Json.parseToJsonElement(cleanJson).jsonArray
                     resultList.addAll(translatedArray)
+                    success = true
+
+                    println("Батч ${index + 1} успішно оброблено.")
+                    Thread.sleep(4500) // Пауза після успішного запиту
+
                 } catch (e: Exception) {
-                    println("Помилка парсингу батчу ${index + 1}: ${e.message}")
+                    println("Помилка (Спроба $attempts з $maxAttempts): ${e.message}")
+                    if (attempts < maxAttempts) {
+                        val waitTime = 10000L * attempts // Затримка: 10с, 20с, 30с...
+                        println("Очікування ${waitTime / 1000} секунд перед повторною спробою...")
+                        Thread.sleep(waitTime)
+                    } else {
+                        println("КРИТИЧНА ПОМИЛКА: Не вдалося обробити батч ${index + 1} після $maxAttempts спроб. Скрипт зупинено.")
+                        return // Зупиняємо виконання, щоб не перезаписати файл неповними даними
+                    }
                 }
             }
-
-            Thread.sleep(5000)
         }
 
         val finalJson = jsonFormat.encodeToString(JsonArray(resultList))
         File(outputFilePath).writeText(finalJson)
-        println("Готово. Збережено у $outputFilePath")
+        println("\nГотово. Збережено у $outputFilePath. Всього перекладено об'єктів: ${resultList.size}")
     }
 
     private fun sendGeminiRequest(payload: String, apiKey: String): String {
@@ -118,8 +149,8 @@ class Translator {
                 val candidates = jsonResponse["candidates"]?.jsonArray
                 return candidates?.get(0)?.jsonObject?.get("content")?.jsonObject?.get("parts")?.jsonArray?.get(0)?.jsonObject?.get("text")?.jsonPrimitive?.content ?: ""
             } else {
-                println("Помилка API: ${connection.responseCode} - ${connection.errorStream.bufferedReader().use { it.readText() }}")
-                return ""
+                val errorMsg = connection.errorStream.bufferedReader().use { it.readText() }
+                throw RuntimeException("HTTP ${connection.responseCode} - $errorMsg")
             }
         } finally {
             connection.disconnect()

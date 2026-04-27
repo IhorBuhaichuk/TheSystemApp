@@ -79,6 +79,7 @@ class QuestRepositoryImpl @Inject constructor(
                 QuestTaskEntity(
                     questId = questId, 
                     name = rec.exerciseName,
+                    nameUk = rec.exerciseNameUk,
                     exerciseId = rec.exerciseId,
                     targetWeight = rec.weight,
                     targetSets = rec.sets,
@@ -93,7 +94,8 @@ class QuestRepositoryImpl @Inject constructor(
         title: String, 
         description: String,
         targetWeight: Double?,
-        targetReps: Int?
+        targetReps: Int?,
+        exerciseNameUk: String?
     ) {
         val questId = questDao.insertQuest(
             QuestEntity(
@@ -109,6 +111,7 @@ class QuestRepositoryImpl @Inject constructor(
             QuestTaskEntity(
                 questId = questId,
                 name = description,
+                nameUk = exerciseNameUk?.let { "ЕКЗАМЕН: ${it.uppercase()}" },
                 exerciseId = exerciseId,
                 isCompleted = false,
                 targetWeight = targetWeight,
@@ -214,6 +217,7 @@ private fun QuestWithTasks.toDomain() = Quest(
             id = it.id, 
             questId = it.questId, 
             name = it.name, 
+            nameUk = it.nameUk,
             isCompleted = it.isCompleted, 
             exerciseId = it.exerciseId,
             recommendedWeight = it.targetWeight,

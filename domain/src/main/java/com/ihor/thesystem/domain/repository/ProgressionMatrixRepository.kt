@@ -42,6 +42,7 @@ data class ProgressionMatrixEntry(
     val id: Int,
     val exerciseId: Int,
     val exerciseName: String,
+    val exerciseNameUk: String? = null,
     val startWeight: Float,
     val targetWeight: Float,
     val currentWeight: Float,

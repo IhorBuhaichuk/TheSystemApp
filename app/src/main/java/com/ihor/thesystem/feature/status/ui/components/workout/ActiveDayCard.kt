@@ -132,7 +132,7 @@ fun ActiveDayCard(
                 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = exercise.name.uppercase(),
+                        text = (exercise.nameUk ?: exercise.name).uppercase(),
                         color = OnBackground,
                         fontSize = 18.sp,
                         fontFamily = RajdhaniFamily,

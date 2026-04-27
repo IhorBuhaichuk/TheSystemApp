@@ -55,6 +55,7 @@ class WorkoutRepositoryImpl @Inject constructor(
     private fun ExerciseEntity.toDomain() = ExerciseDetails(
         id = id,
         name = name,
+        nameUk = nameUk,
         category = category,
         muscleGroups = muscleGroups,
         equipment = equipment,
