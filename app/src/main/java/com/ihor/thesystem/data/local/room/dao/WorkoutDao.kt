@@ -16,6 +16,25 @@ interface WorkoutDao {
     @Query("SELECT * FROM exercises")
     suspend fun getAllExercisesSync(): List<ExerciseEntity>
 
+    @Query("SELECT * FROM exercises WHERE id = :id")
+    suspend fun getExerciseById(id: Int): ExerciseEntity?
+
+    @Query("""
+        SELECT * FROM exercises
+        WHERE (:query IS NULL OR name LIKE '%' || :query || '%')
+        AND (:equipmentCount = 0 OR equipment IN (:equipment))
+        AND (:levelsCount = 0 OR level IN (:levels))
+        AND (:mechanicsCount = 0 OR mechanic IN (:mechanics))
+        AND (:forcesCount = 0 OR force IN (:forces))
+    """)
+    fun searchExercises(
+        query: String?,
+        equipment: List<String>, equipmentCount: Int,
+        levels: List<String>, levelsCount: Int,
+        mechanics: List<String>, mechanicsCount: Int,
+        forces: List<String>, forcesCount: Int
+    ): Flow<List<ExerciseEntity>>
+
     @Query("SELECT name FROM exercises WHERE id = :id")
     suspend fun getExerciseNameById(id: Int): String?
 

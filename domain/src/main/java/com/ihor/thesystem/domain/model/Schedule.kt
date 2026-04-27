@@ -14,7 +14,12 @@ data class ScheduleDay(
 data class ExerciseDetails(
     val id: Int,
     val name: String,
+    val category: ExerciseCategory = ExerciseCategory.UNKNOWN,
     val muscleGroups: List<MuscleGroup> = emptyList(),
+    val equipment: String? = null,
+    val level: String? = null,
+    val mechanic: String? = null,
+    val force: String? = null,
     val gifUrl: String? = null,
     val externalId: String? = null
 )

@@ -13,6 +13,9 @@ data class ExerciseEntity(
     val category: ExerciseCategory = ExerciseCategory.UNKNOWN,
     val muscleGroups: List<MuscleGroup> = emptyList(),
     val equipment: String? = null,
+    val level: String? = null,
+    val mechanic: String? = null,
+    val force: String? = null,
     val instructions: String? = null,
     val gifUrl: String? = null
 )

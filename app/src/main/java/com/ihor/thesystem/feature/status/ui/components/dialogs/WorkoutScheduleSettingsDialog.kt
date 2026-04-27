@@ -13,6 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,6 +36,10 @@ import com.ihor.thesystem.core.theme.Primary
 import com.ihor.thesystem.core.theme.RajdhaniFamily
 import com.ihor.thesystem.feature.status.viewmodel.WorkoutScheduleSettingsUiState
 
+import com.ihor.thesystem.feature.exercise_search.ui.ExerciseSearchScreen
+import com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+
 @Composable
 fun WorkoutScheduleSettingsDialog(
     uiState: WorkoutScheduleSettingsUiState,
@@ -45,7 +51,8 @@ fun WorkoutScheduleSettingsDialog(
     onRemoveExercise: (Int) -> Unit,
     onDeleteAllExercises: () -> Unit,
     onCreateNewExercise: (String) -> Unit,
-    onDeleteExercise: (Int) -> Unit
+    onDeleteExercise: (Int) -> Unit,
+    exerciseSearchViewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
     var showAddExerciseDialog by remember { mutableStateOf(false) }
     var showManageExercises by remember { mutableStateOf(false) }
@@ -225,10 +232,10 @@ fun WorkoutScheduleSettingsDialog(
 
     if (showAddExerciseDialog) {
         AddExerciseSelectionDialog(
-            allExercises = uiState.allExercises,
+            viewModel = exerciseSearchViewModel,
             onDismiss = { showAddExerciseDialog = false },
             onSelect = { 
-                onAddExercise(it.toString())
+                onAddExercise(it.id.toString())
                 showAddExerciseDialog = false
             },
             onCreateNew = {
@@ -241,59 +248,159 @@ fun WorkoutScheduleSettingsDialog(
 
 @Composable
 fun AddExerciseSelectionDialog(
-    allExercises: List<com.ihor.thesystem.domain.model.ExerciseDetails>,
+    viewModel: ExerciseSearchViewModel,
     onDismiss: () -> Unit,
-    onSelect: (Int) -> Unit,
+    onSelect: (com.ihor.thesystem.domain.model.ExerciseDetails) -> Unit,
     onCreateNew: (String) -> Unit
 ) {
+    val state by viewModel.filterState.collectAsState()
+    val exercises by viewModel.exercises.collectAsState()
     var newName by remember { mutableStateOf("") }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.9f)
+                .border(BorderStroke(1.dp, Primary.copy(alpha = 0.2f)), RoundedCornerShape(24.dp)),
             shape = RoundedCornerShape(24.dp),
-            color = Color(0xFF1A1A2E),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+            color = Color(0xFF0A0A12)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("ДОДАТИ ВПРАВУ", color = Primary, fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
-
-                OutlinedTextField(
-                    value = newName,
-                    onValueChange = { newName = it },
-                    placeholder = { Text("Назва нової вправи...") },
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    "ВИБІР ВПРАВИ",
+                    color = Primary,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = RajdhaniFamily,
+                    fontSize = 20.sp
                 )
 
-                Button(
-                    onClick = { if (newName.isNotBlank()) onCreateNew(newName) },
+                // Пошуковий рядок
+                OutlinedTextField(
+                    value = state.query,
+                    onValueChange = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.UpdateQuery(it)) },
+                    placeholder = { Text("Пошук за назвою...", color = OnSurfaceVariant.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = newName.isNotBlank()
-                ) {
-                    Text("СТВОРИТИ ГЛОБАЛЬНО")
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Primary) },
+                    trailingIcon = {
+                        if (state.query.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.UpdateQuery("")) }) {
+                                Icon(Icons.Default.Close, contentDescription = null, tint = OnSurfaceVariant)
+                            }
+                        }
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = OnBackground,
+                        unfocusedTextColor = OnBackground,
+                        focusedBorderColor = Primary,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.1f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                // Панель фільтрів
+                FilterChipsRow("М'язи", listOf("CHEST", "BACK", "SHOULDERS", "QUADS", "ARMS", "ABS", "LEGS"), state.selectedMuscles) {
+                    viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleMuscle(it))
+                }
+                
+                FilterChipsRow("Обладнання", listOf("body only", "dumbbell", "barbell", "cable", "machine"), state.selectedEquipment) {
+                    viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleEquipment(it))
                 }
 
-                Divider(color = Color.White.copy(alpha = 0.1f))
+                Divider(color = Color.White.copy(alpha = 0.05f))
 
-                Text("АБО ОБЕРИ ІЗ СПИСКУ:", fontSize = 12.sp, color = OnSurfaceVariant)
+                // Список результатів
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(exercises) { exercise ->
+                        ExerciseSearchItem(exercise) { onSelect(exercise) }
+                    }
+                }
 
-                Box(modifier = Modifier.heightIn(max = 300.dp)) {
-                    LazyColumn {
-                        items(allExercises) { exercise ->
-                            Text(
-                                text = exercise.name,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onSelect(exercise.id) }
-                                    .padding(vertical = 12.dp),
-                                color = OnBackground
-                            )
-                        }
+                // Створення нової вправи
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        placeholder = { Text("Своя вправа...", fontSize = 12.sp) },
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primary)
+                    )
+                    Button(
+                        onClick = { onCreateNew(newName) },
+                        enabled = newName.isNotBlank(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary, contentColor = Color.Black)
+                    ) {
+                        Text("ДОДАТИ", fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FilterChipsRow(
+    title: String,
+    items: List<String>,
+    selected: Set<String>,
+    onToggle: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(title, style = MaterialTheme.typography.labelSmall, color = Primary.copy(alpha = 0.6f))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(items) { item ->
+                val isSelected = selected.contains(item)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) Primary else Color.White.copy(alpha = 0.05f))
+                        .clickable { onToggle(item) }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        item.lowercase().replaceFirstChar { it.uppercase() },
+                        color = if (isSelected) Color.Black else OnBackground,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ExerciseSearchItem(exercise: com.ihor.thesystem.domain.model.ExerciseDetails, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.03f))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(exercise.name, color = OnBackground, fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
+            Text(
+                "${exercise.muscleGroups.joinToString()} | ${exercise.equipment ?: "Без обладнання"}",
+                color = OnSurfaceVariant,
+                fontSize = 10.sp
+            )
+        }
+        Icon(Icons.Default.Add, contentDescription = null, tint = Primary, modifier = Modifier.size(20.dp))
     }
 }

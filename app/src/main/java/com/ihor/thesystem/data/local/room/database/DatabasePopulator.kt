@@ -62,6 +62,9 @@ object DatabasePopulator {
                             category = mapCategory(dto.category),
                             muscleGroups = mapMuscles(dto.primaryMuscles + dto.secondaryMuscles),
                             equipment = dto.equipment,
+                            level = dto.level,
+                            mechanic = dto.mechanic,
+                            force = dto.force,
                             instructions = dto.instructions.joinToString("\n"),
                             gifUrl = dto.gifUrl
                         )

@@ -1,6 +1,7 @@
 package com.ihor.thesystem.data.repository_impl
 
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
+import com.ihor.thesystem.data.local.room.entity.ExerciseEntity
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.MuscleGroup
 import com.ihor.thesystem.domain.repository.WorkoutRepository
@@ -23,11 +24,46 @@ class WorkoutRepositoryImpl @Inject constructor(
 
     override fun getAllExercises(): Flow<List<ExerciseDetails>> =
         workoutDao.getAllExercises().map { entities ->
-            entities.map { ExerciseDetails(it.id, it.name, it.muscleGroups) }
+            entities.map { it.toDomain() }
         }
 
     override suspend fun getAllExercisesSync(): List<ExerciseDetails> =
-        workoutDao.getAllExercisesSync().map { ExerciseDetails(it.id, it.name, it.muscleGroups) }
+        workoutDao.getAllExercisesSync().map { it.toDomain() }
+
+    override fun searchExercises(
+        query: String?,
+        muscles: List<String>,
+        equipment: List<String>,
+        levels: List<String>,
+        mechanics: List<String>,
+        forces: List<String>
+    ): Flow<List<ExerciseDetails>> =
+        workoutDao.searchExercises(
+            query = query,
+            equipment = equipment, equipmentCount = equipment.size,
+            levels = levels, levelsCount = levels.size,
+            mechanics = mechanics, mechanicsCount = mechanics.size,
+            forces = forces, forcesCount = forces.size
+        ).map { entities ->
+            val domainExercises = entities.map { it.toDomain() }
+            if (muscles.isEmpty()) domainExercises
+            else domainExercises.filter { exercise ->
+                exercise.muscleGroups.any { it.name in muscles }
+            }
+        }
+
+    private fun ExerciseEntity.toDomain() = ExerciseDetails(
+        id = id,
+        name = name,
+        category = category,
+        muscleGroups = muscleGroups,
+        equipment = equipment,
+        level = level,
+        mechanic = mechanic,
+        force = force,
+        gifUrl = gifUrl,
+        externalId = externalId
+    )
 
     fun getAllExercisesExtended(): Flow<List<ExerciseExtendedDetails>> =
         workoutDao.getAllExercises().map { entities ->
