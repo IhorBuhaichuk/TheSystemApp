@@ -38,8 +38,10 @@ import com.ihor.thesystem.feature.status.viewmodel.WorkoutScheduleSettingsUiStat
 
 import com.ihor.thesystem.feature.exercise_search.ui.ExerciseSearchScreen
 import com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchViewModel
+import com.ihor.thesystem.feature.exercise_search.ui.toUiText
 import com.ihor.thesystem.feature.exercise_search.ui.toMuscleUiText
 import com.ihor.thesystem.feature.exercise_search.ui.toEquipmentUiText
+import com.ihor.thesystem.feature.exercise_search.ui.toMechanicUiText
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
@@ -283,6 +285,20 @@ fun AddExerciseSelectionDialog(
                     fontSize = 20.sp
                 )
 
+                // Скинути фільтри
+                TextButton(
+                    onClick = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ClearFilters) },
+                    modifier = Modifier.align(Alignment.End),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text(
+                        text = "Скинути фільтри",
+                        color = Primary.copy(alpha = 0.7f),
+                        fontSize = 12.sp,
+                        fontFamily = RajdhaniFamily
+                    )
+                }
+
                 // Пошуковий рядок
                 OutlinedTextField(
                     value = state.query,
@@ -309,7 +325,7 @@ fun AddExerciseSelectionDialog(
                 // Панель фільтрів
                 FilterChipsRow(
                     title = "М\'язи",
-                    items = listOf("CHEST", "BACK", "SHOULDERS", "QUADS", "ARMS", "ABS", "LEGS"),
+                    items = listOf("CHEST", "BACK", "SHOULDERS", "QUADS", "HAMSTRINGS_GLUTES", "ARMS", "ABS", "LEGS", "CORE"),
                     selected = state.selectedMuscles,
                     onToggle = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleMuscle(it)) },
                     labelMapper = { it.toMuscleUiText().asString() }
@@ -317,21 +333,42 @@ fun AddExerciseSelectionDialog(
                 
                 FilterChipsRow(
                     title = "Обладнання",
-                    items = listOf("body only", "dumbbell", "barbell", "cable", "machine"),
+                    items = listOf("body only", "machine", "dumbbell", "barbell", "cable", "bands", "kettlebell", "medicine ball", "exercise ball", "e-z curl bar", "foam roll", "other"),
                     selected = state.selectedEquipment,
                     onToggle = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleEquipment(it)) },
                     labelMapper = { it.toEquipmentUiText().asString() }
                 )
 
+                FilterChipsRow(
+                    title = "Механіка",
+                    items = listOf("compound", "isolation"),
+                    selected = state.selectedMechanics,
+                    onToggle = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleMechanic(it)) },
+                    labelMapper = { it.toMechanicUiText().asString() }
+                )
+
                 Divider(color = Color.White.copy(alpha = 0.05f))
 
                 // Список результатів
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(exercises) { exercise ->
-                        ExerciseSearchItem(exercise) { onSelect(exercise) }
+                if (exercises.isEmpty()) {
+                    Box(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.text_no_exercises_found),
+                            color = OnSurfaceVariant,
+                            fontFamily = RajdhaniFamily
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(exercises) { exercise ->
+                            ExerciseSearchItem(exercise) { onSelect(exercise) }
+                        }
                     }
                 }
 
@@ -408,10 +445,17 @@ fun ExerciseSearchItem(exercise: com.ihor.thesystem.domain.model.ExerciseDetails
         Column(modifier = Modifier.weight(1f)) {
             Text(exercise.name, color = OnBackground, fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
             Text(
-                text = "${exercise.muscleGroups.joinToString { it.name.toMuscleUiText().asString(context) }} | ${exercise.equipment?.toEquipmentUiText()?.asString(context) ?: "Без обладнання"}",
+                text = "${exercise.muscleGroups.joinToString { it.toUiText().asString(context) }} | ${exercise.equipment?.toEquipmentUiText()?.asString(context) ?: "Без обладнання"}",
                 color = OnSurfaceVariant,
                 fontSize = 10.sp
             )
+            exercise.mechanic?.let { mechanic ->
+                Text(
+                    text = mechanic.toMechanicUiText().asString(context),
+                    color = OnSurfaceVariant.copy(alpha = 0.7f),
+                    fontSize = 9.sp
+                )
+            }
         }
         Icon(Icons.Default.Add, contentDescription = null, tint = Primary, modifier = Modifier.size(20.dp))
     }

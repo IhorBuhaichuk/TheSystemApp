@@ -201,12 +201,17 @@
 
     <!-- Filter Equipment -->
     <string name="filter_equipment_body_only">Bodyweight</string>
+    <string name="filter_equipment_machine">Machine</string>
     <string name="filter_equipment_dumbbell">Dumbbells</string>
     <string name="filter_equipment_barbell">Barbell</string>
     <string name="filter_equipment_cable">Cables</string>
-    <string name="filter_equipment_machine">Machine</string>
-    <string name="filter_equipment_kettlebells">Kettlebells</string>
     <string name="filter_equipment_bands">Bands</string>
+    <string name="filter_equipment_kettlebell">Kettlebell</string>
+    <string name="filter_equipment_medicine_ball">Medicine Ball</string>
+    <string name="filter_equipment_exercise_ball">Exercise Ball</string>
+    <string name="filter_equipment_e_z_curl_bar">E-Z Curl Bar</string>
+    <string name="filter_equipment_foam_roll">Foam Roll</string>
+    <string name="filter_equipment_other">Other</string>
 
     <!-- Filter Levels -->
     <string name="filter_level_beginner">Beginner</string>
@@ -216,9 +221,13 @@
     <!-- Filter Mechanics -->
     <string name="filter_mechanic_compound">Compound</string>
     <string name="filter_mechanic_isolation">Isolation</string>
+    <string name="filter_mechanic_na">N/A</string>
 
     <!-- Filter Forces -->
     <string name="filter_force_pull">Pull</string>
     <string name="filter_force_push">Push</string>
     <string name="filter_force_static">Static</string>
+
+    <!-- Empty States -->
+    <string name="text_no_exercises_found">No exercises found</string>
 </resources>

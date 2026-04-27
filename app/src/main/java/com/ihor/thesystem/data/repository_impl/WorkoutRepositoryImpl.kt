@@ -65,15 +65,6 @@ class WorkoutRepositoryImpl @Inject constructor(
         externalId = externalId
     )
 
-    fun getAllExercisesExtended(): Flow<List<ExerciseExtendedDetails>> =
-        workoutDao.getAllExercises().map { entities ->
-            entities.map { 
-                ExerciseExtendedDetails(
-                    it.id, it.name, it.muscleGroups, it.equipment, it.instructions, it.gifUrl
-                )
-            }
-        }
-
     override suspend fun getExerciseNameById(id: Int): String? =
         workoutDao.getExerciseNameById(id)
 }

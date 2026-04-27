@@ -17,9 +17,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ihor.thesystem.R
 import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseFilterState
@@ -50,16 +52,29 @@ fun ExerciseSearchScreen(
             onEvent = viewModel::onEvent
         )
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(exercises, key = { it.id }) { exercise ->
-                ExerciseItem(
-                    exercise = exercise,
-                    onClick = { onExerciseClick(exercise) }
+        if (exercises.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.text_no_exercises_found),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Gray
                 )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(exercises, key = { it.id }) { exercise ->
+                    ExerciseItem(
+                        exercise = exercise,
+                        onClick = { onExerciseClick(exercise) }
+                    )
+                }
             }
         }
     }
@@ -108,8 +123,9 @@ fun FilterPanel(
 ) {
     val categories = ExerciseCategory.entries.filter { it != ExerciseCategory.UNKNOWN }
     val muscleGroups = listOf("CHEST", "BACK", "SHOULDERS", "QUADS", "HAMSTRINGS_GLUTES", "ARMS", "ABS", "LEGS", "CORE")
-    val equipment = listOf("body only", "dumbbell", "barbell", "cable", "machine", "kettlebells", "bands")
+    val equipment = listOf("body only", "machine", "dumbbell", "barbell", "cable", "bands", "kettlebell", "medicine ball", "exercise ball", "e-z curl bar", "foam roll")
     val levels = listOf("beginner", "intermediate", "expert")
+    val mechanics = listOf("compound", "isolation")
 
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         FilterGroup(
@@ -132,6 +148,13 @@ fun FilterPanel(
             selectedOptions = state.selectedEquipment, 
             onToggle = { onEvent(ExerciseSearchEvent.ToggleEquipment(it)) },
             labelMapper = { it.toEquipmentUiText().asString() }
+        )
+        FilterGroup(
+            title = "Механіка",
+            options = mechanics,
+            selectedOptions = state.selectedMechanics,
+            onToggle = { onEvent(ExerciseSearchEvent.ToggleMechanic(it)) },
+            labelMapper = { it.toMechanicUiText().asString() }
         )
         FilterGroup(
             title = "Складність", 
@@ -223,12 +246,21 @@ fun ExerciseItem(
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
-            if (exercise.level != null) {
-                Text(
-                    text = "Складність: ${exercise.level?.toLevelUiText()?.asString(context)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray.copy(alpha = 0.7f)
-                )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                exercise.mechanic?.let { mechanic ->
+                    Text(
+                        text = mechanic.toMechanicUiText().asString(context),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray.copy(alpha = 0.7f)
+                    )
+                }
+                exercise.level?.let { level ->
+                    Text(
+                        text = "• ${level.toLevelUiText().asString(context)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
     }
