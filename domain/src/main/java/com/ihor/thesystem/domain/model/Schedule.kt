@@ -15,7 +15,8 @@ data class ExerciseDetails(
     val id: Int,
     val name: String,
     val muscleGroups: List<MuscleGroup> = emptyList(),
-    val gifUrl: String? = null
+    val gifUrl: String? = null,
+    val externalId: String? = null
 )
 
 data class ExerciseRecommendation(

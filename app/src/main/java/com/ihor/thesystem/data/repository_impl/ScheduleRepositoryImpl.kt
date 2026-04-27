@@ -80,7 +80,8 @@ class ScheduleRepositoryImpl @Inject constructor(
                     id = it.exercise.id, 
                     name = it.exercise.name, 
                     muscleGroups = it.exercise.muscleGroups,
-                    gifUrl = it.exercise.gifUrl
+                    gifUrl = it.exercise.gifUrl,
+                    externalId = it.exercise.externalId
                 ) 
             }
         )
@@ -93,7 +94,8 @@ class ScheduleRepositoryImpl @Inject constructor(
                     id = it.id, 
                     name = it.name, 
                     muscleGroups = it.muscleGroups,
-                    gifUrl = it.gifUrl
+                    gifUrl = it.gifUrl,
+                    externalId = it.externalId
                 ) 
             }
         }

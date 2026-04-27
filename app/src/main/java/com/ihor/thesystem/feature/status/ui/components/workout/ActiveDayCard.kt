@@ -165,7 +165,17 @@ fun ActiveDayCard(
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (exercise.gifUrl != null) {
+                    if (exercise.externalId != null) {
+                        com.ihor.thesystem.presentation.common.components.ExerciseAnimationPlayer(
+                            exerciseExternalId = exercise.externalId,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    } else if (exercise.gifUrl != null) {
                         com.ihor.thesystem.presentation.common.components.HologramExerciseImage(
                             gifUrl = exercise.gifUrl,
                             modifier = Modifier

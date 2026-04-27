@@ -97,6 +97,7 @@ class WorkoutViewModel @Inject constructor(
                     recommendedSets = rec.sets,
                     recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg",
                     gifUrl = ex.gifUrl,
+                    externalId = ex.externalId,
                     sets = (1..(rec.sets ?: 1)).map { ActiveSetInput() }.toImmutableList()
                 )
             }.toImmutableList()

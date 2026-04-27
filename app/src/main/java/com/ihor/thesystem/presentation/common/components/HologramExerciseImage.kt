@@ -1,5 +1,6 @@
 package com.ihor.thesystem.presentation.common.components
 
+import android.os.Build.VERSION.SDK_INT
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,43 +9,62 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
 
-/**
- * Composable компонент для відображення вправ з ефектом "голограми".
- * Застосовує інверсію, ціанове тонування та напівпрозорість.
- */
+// Винесено за межі функції для уникнення реалокації пам'яті при кожній рекомпозиції
+private val hologramMatrix = ColorMatrix(
+    floatArrayOf(
+        0f,     0f,     0f,     0f,   0f,    // R
+        -0.3f,  -0.59f, -0.11f, 0f,   255f,  // G
+        -0.3f,  -0.59f, -0.11f, 0f,   255f,  // B
+        0f,     0f,     0f,     0.85f, 0f    // A
+    )
+)
+
 @Composable
 fun HologramExerciseImage(
     gifUrl: String?,
     modifier: Modifier = Modifier
 ) {
-    // Колірна матриця для ефекту цифрової проекції:
-    // 1. Коефіцієнти -0.3f, -0.59f, -0.11f виконують інверсію яскравості (Luma).
-    // 2. Червоний канал (перший рядок) повністю занулений (0f), щоб пригнітити червоний колір.
-    // 3. Зелений та Блакитний канали отримують інвертовані дані, створюючи ціановий відтінок.
-    // 4. Останній рядок встановлює alpha на рівні 0.85f.
-    val hologramMatrix = ColorMatrix(
-        floatArrayOf(
-            0f,     0f,     0f,     0f,   0f,    // R: Повне пригнічення червоного
-            -0.3f,  -0.59f, -0.11f, 0f,   255f,  // G: Інверсія + Зелений канал
-            -0.3f,  -0.59f, -0.11f, 0f,   255f,  // B: Інверсія + Блакитний канал
-            0f,     0f,     0f,     0.85f, 0f    // A: Прозорість 85%
-        )
-    )
+    val context = LocalContext.current
+    
+    val imageLoader = remember(context) {
+        ImageLoader.Builder(context)
+            .components {
+                if (SDK_INT >= 28) {
+                    add(ImageDecoderDecoder.Factory())
+                } else {
+                    add(GifDecoder.Factory())
+                }
+            }
+            .build()
+    }
+
+    val imageRequest = remember(gifUrl, context) {
+        ImageRequest.Builder(context)
+            .data(gifUrl)
+            .crossfade(true)
+            .build()
+    }
 
     SubcomposeAsyncImage(
-        model = gifUrl,
-        contentDescription = "Exercise Hologram",
-        modifier = modifier.background(Color.Black),
+        model = imageRequest,
+        imageLoader = imageLoader,
+        contentDescription = "Exercise Animation",
+        modifier = modifier,
         contentScale = ContentScale.Fit,
-        colorFilter = ColorFilter.colorMatrix(hologramMatrix),
         loading = {
             Box(
                 modifier = Modifier.fillMaxSize(),
