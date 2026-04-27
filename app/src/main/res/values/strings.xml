@@ -180,4 +180,45 @@
     <string name="text_current">Поточна</string>
     <string name="text_target">Ціль</string>
     <string name="text_rank_label">Ранг</string>
+
+    <!-- Filter Categories -->
+    <string name="filter_category_strength">Strength</string>
+    <string name="filter_category_endurance">Endurance</string>
+    <string name="filter_category_hypertrophy">Hypertrophy</string>
+    <string name="filter_category_flexibility">Flexibility</string>
+    <string name="filter_category_balance">Balance</string>
+
+    <!-- Filter Muscles -->
+    <string name="filter_muscle_chest">Chest</string>
+    <string name="filter_muscle_back">Back</string>
+    <string name="filter_muscle_shoulders">Shoulders</string>
+    <string name="filter_muscle_quads">Quads</string>
+    <string name="filter_muscle_hamstrings_glutes">Hamstrings/Glutes</string>
+    <string name="filter_muscle_arms">Arms</string>
+    <string name="filter_muscle_abs">Abs</string>
+    <string name="filter_muscle_legs">Legs</string>
+    <string name="filter_muscle_core">Core</string>
+
+    <!-- Filter Equipment -->
+    <string name="filter_equipment_body_only">Bodyweight</string>
+    <string name="filter_equipment_dumbbell">Dumbbells</string>
+    <string name="filter_equipment_barbell">Barbell</string>
+    <string name="filter_equipment_cable">Cables</string>
+    <string name="filter_equipment_machine">Machine</string>
+    <string name="filter_equipment_kettlebells">Kettlebells</string>
+    <string name="filter_equipment_bands">Bands</string>
+
+    <!-- Filter Levels -->
+    <string name="filter_level_beginner">Beginner</string>
+    <string name="filter_level_intermediate">Intermediate</string>
+    <string name="filter_level_expert">Expert</string>
+
+    <!-- Filter Mechanics -->
+    <string name="filter_mechanic_compound">Compound</string>
+    <string name="filter_mechanic_isolation">Isolation</string>
+
+    <!-- Filter Forces -->
+    <string name="filter_force_pull">Pull</string>
+    <string name="filter_force_push">Push</string>
+    <string name="filter_force_static">Static</string>
 </resources>

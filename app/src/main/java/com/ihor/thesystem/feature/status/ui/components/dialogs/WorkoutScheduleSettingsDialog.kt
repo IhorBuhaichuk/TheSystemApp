@@ -38,6 +38,8 @@ import com.ihor.thesystem.feature.status.viewmodel.WorkoutScheduleSettingsUiStat
 
 import com.ihor.thesystem.feature.exercise_search.ui.ExerciseSearchScreen
 import com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchViewModel
+import com.ihor.thesystem.feature.exercise_search.ui.toMuscleUiText
+import com.ihor.thesystem.feature.exercise_search.ui.toEquipmentUiText
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
@@ -305,13 +307,21 @@ fun AddExerciseSelectionDialog(
                 )
 
                 // Панель фільтрів
-                FilterChipsRow("М'язи", listOf("CHEST", "BACK", "SHOULDERS", "QUADS", "ARMS", "ABS", "LEGS"), state.selectedMuscles) {
-                    viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleMuscle(it))
-                }
+                FilterChipsRow(
+                    title = "М\'язи",
+                    items = listOf("CHEST", "BACK", "SHOULDERS", "QUADS", "ARMS", "ABS", "LEGS"),
+                    selected = state.selectedMuscles,
+                    onToggle = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleMuscle(it)) },
+                    labelMapper = { it.toMuscleUiText().asString() }
+                )
                 
-                FilterChipsRow("Обладнання", listOf("body only", "dumbbell", "barbell", "cable", "machine"), state.selectedEquipment) {
-                    viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleEquipment(it))
-                }
+                FilterChipsRow(
+                    title = "Обладнання",
+                    items = listOf("body only", "dumbbell", "barbell", "cable", "machine"),
+                    selected = state.selectedEquipment,
+                    onToggle = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleEquipment(it)) },
+                    labelMapper = { it.toEquipmentUiText().asString() }
+                )
 
                 Divider(color = Color.White.copy(alpha = 0.05f))
 
@@ -356,6 +366,7 @@ fun FilterChipsRow(
     title: String,
     items: List<String>,
     selected: Set<String>,
+    labelMapper: @Composable (String) -> String = { it.lowercase().replaceFirstChar { char -> char.uppercase() } },
     onToggle: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -371,7 +382,7 @@ fun FilterChipsRow(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        item.lowercase().replaceFirstChar { it.uppercase() },
+                        text = labelMapper(item),
                         color = if (isSelected) Color.Black else OnBackground,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -384,6 +395,7 @@ fun FilterChipsRow(
 
 @Composable
 fun ExerciseSearchItem(exercise: com.ihor.thesystem.domain.model.ExerciseDetails, onClick: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -396,7 +408,7 @@ fun ExerciseSearchItem(exercise: com.ihor.thesystem.domain.model.ExerciseDetails
         Column(modifier = Modifier.weight(1f)) {
             Text(exercise.name, color = OnBackground, fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
             Text(
-                "${exercise.muscleGroups.joinToString()} | ${exercise.equipment ?: "Без обладнання"}",
+                text = "${exercise.muscleGroups.joinToString { it.name.toMuscleUiText().asString(context) }} | ${exercise.equipment?.toEquipmentUiText()?.asString(context) ?: "Без обладнання"}",
                 color = OnSurfaceVariant,
                 fontSize = 10.sp
             )

@@ -1,0 +1,42 @@
+<resources>
+    <!-- Filter Categories -->
+    <string name="filter_category_strength">Сила</string>
+    <string name="filter_category_endurance">Витривалість</string>
+    <string name="filter_category_hypertrophy">Гіпертрофія</string>
+    <string name="filter_category_flexibility">Гнучкість</string>
+    <string name="filter_category_balance">Баланс</string>
+
+    <!-- Filter Muscles -->
+    <string name="filter_muscle_chest">Груди</string>
+    <string name="filter_muscle_back">Спина</string>
+    <string name="filter_muscle_shoulders">Плечі</string>
+    <string name="filter_muscle_quads">Квадрицепси</string>
+    <string name="filter_muscle_hamstrings_glutes">Біцепс стегна / Сідниці</string>
+    <string name="filter_muscle_arms">Руки</string>
+    <string name="filter_muscle_abs">Прес</string>
+    <string name="filter_muscle_legs">Ноги</string>
+    <string name="filter_muscle_core">Кор</string>
+
+    <!-- Filter Equipment -->
+    <string name="filter_equipment_body_only">Власна вага</string>
+    <string name="filter_equipment_dumbbell">Гантелі</string>
+    <string name="filter_equipment_barbell">Штанга</string>
+    <string name="filter_equipment_cable">Блоки (Cable)</string>
+    <string name="filter_equipment_machine">Тренажер</string>
+    <string name="filter_equipment_kettlebells">Гірі</string>
+    <string name="filter_equipment_bands">Гумові петлі</string>
+
+    <!-- Filter Levels -->
+    <string name="filter_level_beginner">Початківець</string>
+    <string name="filter_level_intermediate">Середній</string>
+    <string name="filter_level_expert">Експерт</string>
+
+    <!-- Filter Mechanics -->
+    <string name="filter_mechanic_compound">Базова</string>
+    <string name="filter_mechanic_isolation">Ізольована</string>
+
+    <!-- Filter Forces -->
+    <string name="filter_force_pull">Тяга (Pull)</string>
+    <string name="filter_force_push">Жим (Push)</string>
+    <string name="filter_force_static">Статична</string>
+</resources>

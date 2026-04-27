@@ -112,12 +112,34 @@ fun FilterPanel(
     val levels = listOf("beginner", "intermediate", "expert")
 
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        FilterGroup("Категорія", categories.map { it.name }, state.selectedCategories.map { it.name }.toSet()) { 
-            onEvent(ExerciseSearchEvent.ToggleCategory(ExerciseCategory.valueOf(it))) 
-        }
-        FilterGroup("М'язи", muscleGroups, state.selectedMuscles) { onEvent(ExerciseSearchEvent.ToggleMuscle(it)) }
-        FilterGroup("Обладнання", equipment, state.selectedEquipment) { onEvent(ExerciseSearchEvent.ToggleEquipment(it)) }
-        FilterGroup("Складність", levels, state.selectedLevels) { onEvent(ExerciseSearchEvent.ToggleLevel(it)) }
+        FilterGroup(
+            title = "Категорія", 
+            options = categories.map { it.name }, 
+            selectedOptions = state.selectedCategories.map { it.name }.toSet(),
+            onToggle = { onEvent(ExerciseSearchEvent.ToggleCategory(ExerciseCategory.valueOf(it))) },
+            labelMapper = { ExerciseCategory.valueOf(it).toUiText().asString() }
+        )
+        FilterGroup(
+            title = "М'язи", 
+            options = muscleGroups, 
+            selectedOptions = state.selectedMuscles, 
+            onToggle = { onEvent(ExerciseSearchEvent.ToggleMuscle(it)) },
+            labelMapper = { it.toMuscleUiText().asString() }
+        )
+        FilterGroup(
+            title = "Обладнання", 
+            options = equipment, 
+            selectedOptions = state.selectedEquipment, 
+            onToggle = { onEvent(ExerciseSearchEvent.ToggleEquipment(it)) },
+            labelMapper = { it.toEquipmentUiText().asString() }
+        )
+        FilterGroup(
+            title = "Складність", 
+            options = levels, 
+            selectedOptions = state.selectedLevels, 
+            onToggle = { onEvent(ExerciseSearchEvent.ToggleLevel(it)) },
+            labelMapper = { it.toLevelUiText().asString() }
+        )
     }
 }
 
@@ -126,7 +148,8 @@ fun FilterGroup(
     title: String,
     options: List<String>,
     selectedOptions: Set<String>,
-    onToggle: (String) -> Unit
+    onToggle: (String) -> Unit,
+    labelMapper: @Composable (String) -> String = { it.lowercase().replaceFirstChar { char -> char.uppercase() } }
 ) {
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
         Text(
@@ -150,7 +173,7 @@ fun FilterGroup(
                     )
                 ) {
                     Text(
-                        text = option.lowercase().replaceFirstChar { it.uppercase() },
+                        text = labelMapper(option),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         color = if (isSelected) Color.Black else Color.White,
                         fontSize = 12.sp,
@@ -167,6 +190,7 @@ fun ExerciseItem(
     exercise: ExerciseDetails,
     onClick: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -188,20 +212,20 @@ fun ExerciseItem(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = exercise.category.name,
+                    text = exercise.category.toUiText().asString(),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color(0xFF00FFFF).copy(alpha = 0.7f)
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "${exercise.muscleGroups.joinToString { it.name }} | ${exercise.equipment ?: "Без обладнання"}",
+                text = "${exercise.muscleGroups.joinToString { it.name.toMuscleUiText().asString(context) }} | ${exercise.equipment?.toEquipmentUiText()?.asString(context) ?: "Без обладнання"}",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
             if (exercise.level != null) {
                 Text(
-                    text = "Складність: ${exercise.level}",
+                    text = "Складність: ${exercise.level?.toLevelUiText()?.asString(context)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray.copy(alpha = 0.7f)
                 )
