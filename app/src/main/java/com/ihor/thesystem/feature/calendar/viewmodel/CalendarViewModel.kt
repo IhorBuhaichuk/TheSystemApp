@@ -101,6 +101,34 @@ class CalendarViewModel @Inject constructor(
     private val _recommendations = MutableStateFlow<List<ProgressionMatrixEntry>>(emptyList())
     private val _loggedWeight = MutableStateFlow<Double?>(null)
 
+    init {
+        viewModelScope.launch {
+            // Автоматично реагуємо на зміну обраної дати і завантажуємо дані
+            _selectedDate.collectLatest { date ->
+                if (date != null) {
+                    loadWorkoutResults(date)
+                    loadDailyLogs(date)
+                    loadDailyTaskSnapshot(date)
+                    loadRecommendations(date)
+                    loadWeight(date)
+                } else {
+                    _loggedWeight.value = null
+                    _workoutResults.value = emptyList()
+                    _dailyLogs.value = emptyList()
+                    _dailyTaskSnapshot.value = DailyTaskSnapshotUiModel.Empty
+                    _recommendations.value = emptyList()
+                }
+            }
+        }
+
+        // Встановлюємо сьогоднішню дату за замовчуванням при першому відкритті, якщо дата не встановлена
+        viewModelScope.launch {
+            if (_selectedDate.firstOrNull() == null) {
+                viewingDateRepo.setDate(LocalDate.now())
+            }
+        }
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<CalendarUiState> = combine(
         _currentMonth,
@@ -192,20 +220,7 @@ class CalendarViewModel @Inject constructor(
 
     fun onMonthChange(month: YearMonth) { _currentMonth.value = month }
     fun onDateSelected(date: LocalDate?) {
-        if (date != null) {
-            viewingDateRepo.setDate(date)
-            loadWorkoutResults(date)
-            loadDailyLogs(date)
-            loadDailyTaskSnapshot(date)
-            loadRecommendations(date)
-            loadWeight(date)
-        } else {
-            _loggedWeight.value = null
-            _workoutResults.value = emptyList()
-            _dailyLogs.value = emptyList()
-            _dailyTaskSnapshot.value = DailyTaskSnapshotUiModel.Empty
-            _recommendations.value = emptyList()
-        }
+        viewingDateRepo.setDate(date)
     }
 
     private fun loadDailyLogs(date: LocalDate) {

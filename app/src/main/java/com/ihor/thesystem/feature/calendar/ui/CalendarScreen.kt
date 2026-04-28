@@ -90,8 +90,6 @@ fun CalendarScreen(
                     DailyScheduleSection(
                         date = date,
                         dayModel = selectedDayModel,
-                        results = uiState.workoutResults,
-                        dailyLogs = uiState.dailyLogs,
                         taskSnapshot = uiState.dailyTaskSnapshot,
                         recommendations = uiState.nextWorkoutRecommendations,
                         loggedWeight = uiState.loggedWeightForDate,
@@ -359,8 +357,6 @@ private fun LegendItem(label: String, color: Color) {
 fun DailyScheduleSection(
     date: LocalDate,
     dayModel: CalendarDayUiModel,
-    results: List<WorkoutResultUiModel>,
-    dailyLogs: List<CalendarLogItem>,
     taskSnapshot: DailyTaskSnapshotUiModel,
     recommendations: List<ProgressionMatrixEntry>,
     loggedWeight: Double?,
@@ -475,69 +471,6 @@ fun DailyScheduleSection(
                     }
 
                     DailyTasksSnapshotSection(taskSnapshot)
-
-                    HorizontalDivider(
-                        color = OnBackground.copy(alpha = 0.05f),
-                        thickness = 1.dp,
-                        modifier = Modifier.padding(vertical = 20.dp)
-                    )
-
-                    if (results.isNotEmpty() || dailyLogs.isNotEmpty()) {
-                        Text(
-                            text = stringResource(R.string.text_activity_day),
-                            style = MaterialTheme.typography.labelSmall.copy(color = Primary, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        
-                        // Render Unified Logs (Quests + Completed Exercises)
-                        dailyLogs.forEach { log ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(start = 14.dp, bottom = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = log.title.uppercase(),
-                                        color = if (log.type == LogType.WORKOUT) StatusWarning else Primary,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = log.subtitle,
-                                        color = OnBackground,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontFamily = RajdhaniFamily
-                                    )
-                                }
-                                if (log.isCompleted) {
-                                    Icon(Icons.Default.CheckCircle, "Completed", tint = StatusSuccess, modifier = Modifier.size(18.dp))
-                                }
-                            }
-                        }
-
-                        if (results.isNotEmpty()) {
-                            Spacer(Modifier.height(8.dp))
-                            results.forEach { result ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(start = 14.dp, bottom = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(result.exerciseName.uppercase(), color = StatusWarning.copy(0.7f), style = MaterialTheme.typography.labelMedium, fontFamily = RajdhaniFamily)
-                                        val setsText = result.sets.joinToString(" | ") { "${it.weight}кг x ${it.reps}" }
-                                        Text(setsText, color = OnSurfaceVariant, fontSize = 11.sp, fontFamily = RajdhaniFamily)
-                                    }
-                                    MaxOneRepMaxText(
-                                        sets = result.sets.map { it.weight to it.reps },
-                                        modifier = Modifier.padding(start = 8.dp)
-                                    )
-                                }
-                            }
-                        }
-                        HorizontalDivider(color = OnBackground.copy(alpha = 0.05f), thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
-                    }
 
                     if (recommendations.isNotEmpty()) {
                         Text(

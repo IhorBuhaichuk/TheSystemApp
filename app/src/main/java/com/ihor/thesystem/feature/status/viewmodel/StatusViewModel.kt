@@ -254,21 +254,19 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onAddTaskTap(questId: Int) {
-        if (questId == 0) {
-            // Квест ще не ініціалізований — спочатку генеруємо, потім відкриваємо діалог
-            launchCatching {
-                useCases.generateDailyQuests()
-                val freshData = useCases.getStatusData().firstOrNull()
-                val newQuestId = freshData?.dailyQuest?.id ?: return@launchCatching
-                _dialogState.value = StatusDialogState.AddTask(newQuestId)
-            }
-        } else {
-            _dialogState.value = StatusDialogState.AddTask(questId)
-        }
+        _dialogState.value = StatusDialogState.AddTask(questId)
     }
 
     fun onAddTaskConfirmed(questId: Int, taskName: String) = launchCatching {
-        useCases.addTaskToQuest(questId, taskName)
+        val targetQuestId = if (questId == 0) {
+            useCases.getOrCreateDailyTaskContainerId()
+        } else {
+            questId
+        }
+        
+        if (targetQuestId != 0) {
+            useCases.addTaskToQuest(targetQuestId, taskName)
+        }
         onDismissDialog()
     }
 

@@ -23,12 +23,9 @@ class CalculateRecommendedSetUseCase @Inject constructor(
         // 1. Отримуємо останні 3 сети з БД (Оптимізовано)
         val lastSets: List<ExerciseSet> = analyticsRepo.getLastSetsForExercise(exerciseId)
 
-        // 2. Отримуємо дані з еталонної матриці для вправи за ID (fallback на ім'я)
-        val reference = (matrixRepo.getReferenceForExercise(exerciseId)
-            ?: matrixRepo.getReferenceForExercise(exerciseName)) as? ReferenceMatrixEntity
-
-        val startWeight = reference?.milestones?.get("M0") ?: 0.0
-        val progressionStep = reference?.progressionStep ?: 2.5
+        val entry = matrixRepo.getEntrySync(exerciseId)
+        val startWeight = entry?.startWeight?.toDouble() ?: 0.0
+        val progressionStep = 2.5 // Default step
 
         if (lastSets.isEmpty()) {
             // Якщо раніше не робили - стартуємо з M0

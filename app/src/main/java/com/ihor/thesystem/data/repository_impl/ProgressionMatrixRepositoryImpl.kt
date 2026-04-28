@@ -36,17 +36,35 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateCurrentWeight(exerciseId: Int, newWeight: Float) {
-        val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
-        matrixDao.update(existing.copy(currentWeight = newWeight))
+        val existing = matrixDao.getEntryForExerciseSync(exerciseId)
+        if (existing != null) {
+            matrixDao.update(existing.copy(currentWeight = newWeight))
+        } else {
+            matrixDao.insert(ProgressionMatrixEntity(
+                exerciseId = exerciseId,
+                startWeight = 0f,
+                targetWeight = 0f,
+                currentWeight = newWeight
+            ))
+        }
     }
 
     override suspend fun updateMatrixGoals(exerciseId: Int, startWeight: Float, targetWeight: Float) {
-        val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
-        matrixDao.update(existing.copy(
-            startWeight = startWeight,
-            targetWeight = targetWeight,
-            currentWeight = startWeight
-        ))
+        val existing = matrixDao.getEntryForExerciseSync(exerciseId)
+        if (existing != null) {
+            matrixDao.update(existing.copy(
+                startWeight = startWeight,
+                targetWeight = targetWeight,
+                currentWeight = startWeight
+            ))
+        } else {
+            matrixDao.insert(ProgressionMatrixEntity(
+                exerciseId = exerciseId,
+                startWeight = startWeight,
+                targetWeight = targetWeight,
+                currentWeight = startWeight
+            ))
+        }
     }
 
     override suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>) {

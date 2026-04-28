@@ -27,7 +27,7 @@ data class WorkoutUseCases @Inject constructor(
     fun getSchedulesForDays(days: List<Int>): Flow<List<ScheduleDay>> =
         scheduleRepo.getSchedulesForDays(days)
 
-    val selectedDate: StateFlow<LocalDate>
+    val selectedDate: StateFlow<LocalDate?>
         get() = viewingDateRepo.selectedDate
 
     suspend fun getLastSetsForExercise(exerciseId: Int): List<ExerciseSet> =

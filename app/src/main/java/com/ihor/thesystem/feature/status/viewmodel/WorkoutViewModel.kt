@@ -58,7 +58,7 @@ class WorkoutViewModel @Inject constructor(
     private val _saveEvents = MutableSharedFlow<SetSavePayload>(replay = 0)
 
     private val cycleDay: Flow<Int> = combine(
-        useCases.selectedDate,
+        useCases.selectedDate.filterNotNull(),
         getSystemConfig().filterNotNull(),
         useCases.getPlayerFlow()
     ) { date, config, _ ->
@@ -150,12 +150,14 @@ class WorkoutViewModel @Inject constructor(
             
             if (setsToSave.isEmpty()) return
 
-            useCases.saveExerciseSets(
-                exerciseId = payload.exerciseId,
-                sets = setsToSave,
-                date = useCases.selectedDate.value,
-                userFeedback = ""
-            )
+            useCases.selectedDate.value?.let { date ->
+                useCases.saveExerciseSets(
+                    exerciseId = payload.exerciseId,
+                    sets = setsToSave,
+                    date = date,
+                    userFeedback = ""
+                )
+            }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             e.printStackTrace()
@@ -245,12 +247,14 @@ class WorkoutViewModel @Inject constructor(
     fun onLogSetsConfirmed(exerciseId: Int, sets: List<ActiveSetInput>, feedback: String) {
         viewModelScope.launch {
             try {
-                useCases.saveExerciseSets(
-                    exerciseId = exerciseId,
-                    sets = sets,
-                    date = useCases.selectedDate.value,
-                    userFeedback = feedback
-                )
+                useCases.selectedDate.value?.let { date ->
+                    useCases.saveExerciseSets(
+                        exerciseId = exerciseId,
+                        sets = sets,
+                        date = date,
+                        userFeedback = feedback
+                    )
+                }
                 onDismissDialog()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -262,10 +266,14 @@ class WorkoutViewModel @Inject constructor(
     fun onConfirmSetup(exerciseId: Int, start: String, target: String) {
         viewModelScope.launch {
             try {
+                // Замінюємо кому на крапку для безпечного парсингу
+                val startParsed = start.replace(",", ".").toFloatOrNull() ?: 0f
+                val targetParsed = target.replace(",", ".").toFloatOrNull() ?: 0f
+
                 useCases.updateMatrixGoals(
                     exerciseId = exerciseId,
-                    startWeight = start.toFloatOrNull() ?: 0f,
-                    targetWeight = target.toFloatOrNull() ?: 0f
+                    startWeight = startParsed,
+                    targetWeight = targetParsed
                 )
                 onDismissDialog()
             } catch (e: Exception) {

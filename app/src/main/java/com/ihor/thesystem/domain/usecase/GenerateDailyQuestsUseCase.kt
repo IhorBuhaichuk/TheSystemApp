@@ -67,25 +67,10 @@ class GenerateDailyQuestsUseCase @Inject constructor(
              }
         }
 
-        val existingDailyQuest = todayQuests.find { it.type == DomainQuestType.DAILY }
-        if (existingDailyQuest != null && existingDailyQuest.scheduleId != schedule.id) {
-             // Видаляємо рутину, якщо вона від іншого дня циклу
-             questRepo.deleteQuestWithTasks(existingDailyQuest.id)
-        }
-
         val updatedQuests = questRepo.getDailyQuestsForDate(now).first()
-        val hasRoutine = updatedQuests.any { it.type == DomainQuestType.DAILY }
         val hasMain = updatedQuests.any { it.type == DomainQuestType.MAIN }
 
         // 5. ГЕНЕРАЦІЯ
-        if (!hasRoutine) {
-            questRepo.createDailyQuest(
-                title = "РУТИНА | ДЕНЬ $currentDay",
-                tasks = listOf("Прийом вітамінів", "Водний баланс (2л+)", "Звіт"),
-                scheduleId = schedule.id
-            )
-        }
-
         val workoutTemplateName = schedule.workoutTemplateName
         if (!hasMain && workoutTemplateName != null && schedule.exercises.isNotEmpty()) {
             val recommendations = schedule.exercises.map { ex ->

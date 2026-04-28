@@ -28,7 +28,7 @@ class GetStatisticsDataUseCase @Inject constructor(
     @Suppress("UNCHECKED_CAST")
     operator fun invoke(): Flow<StatisticsUiData> {
         val configFlow = configRepo.getConfigFlow().filterNotNull()
-        val selectedDateFlow = viewingDateRepo.selectedDate
+        val selectedDateFlow = viewingDateRepo.selectedDate.filterNotNull()
 
         // Спочатку розраховуємо день циклу, щоб знати, який розклад тягнути
         val cycleDayFlow = combine(configFlow, selectedDateFlow) { config, date ->
@@ -60,12 +60,11 @@ class GetStatisticsDataUseCase @Inject constructor(
                 val historiesMap = allHistories.groupBy { it.exerciseId }
 
                 val updatedEntries = matrix.map { entry ->
-                    val ref = references.find { it.exerciseName.equals(entry.exerciseName, ignoreCase = true) }
                     val isExerciseActive = activeExerciseIds.contains(entry.exerciseId)
                     val orderIndex = if (isExerciseActive) activeExerciseIds.indexOf(entry.exerciseId) else 999
 
-                    val m0 = ref?.milestones?.get("M0")?.let { it.toFloat() } ?: entry.startWeight
-                    val m12 = ref?.milestones?.get("M12")?.let { it.toFloat() } ?: entry.targetWeight
+                    val m0 = entry.startWeight
+                    val m12 = entry.targetWeight
                     
                     val history = historiesMap[entry.exerciseId]?.map { 
                         WeightHistoryEntry(it.weight, it.timestamp) 

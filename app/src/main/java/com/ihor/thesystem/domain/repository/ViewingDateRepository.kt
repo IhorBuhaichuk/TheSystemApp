@@ -8,10 +8,10 @@ import javax.inject.Singleton
 
 @Singleton
 class ViewingDateRepository @Inject constructor() {
-    private val _selectedDate = MutableStateFlow(LocalDate.now())
+    private val _selectedDate = MutableStateFlow<LocalDate?>(LocalDate.now())
     val selectedDate = _selectedDate.asStateFlow()
 
-    fun setDate(date: LocalDate) {
+    fun setDate(date: LocalDate?) {
         _selectedDate.value = date
     }
 }
