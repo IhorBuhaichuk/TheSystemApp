@@ -745,9 +745,9 @@ private fun DailyQuestsSectionPremium(
                 .fillMaxWidth()
                 .height(56.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .clickable { onAddTask(addTaskQuestId) }
                 .background(Color.White.copy(alpha = 0.02f))
-                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp)),
+                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+                .clickable { onAddTask(addTaskQuestId) }, // clickable має бути останнім
             contentAlignment = Alignment.Center
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
