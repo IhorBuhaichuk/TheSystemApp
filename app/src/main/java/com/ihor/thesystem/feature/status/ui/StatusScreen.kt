@@ -754,13 +754,13 @@ private fun DailyQuestsSectionPremium(
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.3f),
+                    tint = Color.White.copy(alpha = 0.6f),
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.text_add_new_goal),
-                    color = Color.White.copy(alpha = 0.3f),
+                    color = Color.White.copy(alpha = 0.6f),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp
                 )

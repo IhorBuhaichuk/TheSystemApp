@@ -50,5 +50,8 @@
     <string name="text_no_exercises_found">Вправ не знайдено</string>
 
     <string name="text_daily_goals">СПИСОК ЗАВДАНЬ</string>
+    <string name="text_daily_tasks_section">ЗАВДАННЯ НА СЬОГОДНІ</string>
+    <string name="text_completed_tasks">Виконані завдання</string>
+    <string name="text_failed_tasks">Не виконані завдання</string>
     <string name="text_add_new_goal">ДОДАТИ ЗАВДАННЯ</string>
 </resources>

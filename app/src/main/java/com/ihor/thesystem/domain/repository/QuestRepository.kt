@@ -37,4 +37,6 @@ interface QuestRepository {
     fun getActivePromotionQuests(): Flow<List<Quest>>
 
     suspend fun logQuestResult(questId: Int, questType: QuestType, wasSuccessful: Boolean)
+
+    suspend fun getDailyTasksWithCompletionForDate(dateMillis: Long): List<Pair<String, Boolean>>
 }

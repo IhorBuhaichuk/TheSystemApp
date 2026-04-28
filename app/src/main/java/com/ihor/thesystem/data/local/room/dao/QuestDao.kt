@@ -105,4 +105,25 @@ interface QuestDao {
     @Transaction
     @Query("SELECT * FROM quest WHERE id = :id")
     suspend fun getQuestWithTasksById(id: Int): QuestWithTasks?
+
+    @Transaction
+    @Query("""
+        SELECT qt.name, qt.isCompleted 
+        FROM quest_task qt
+        INNER JOIN quest q ON qt.questId = q.id
+        WHERE q.date >= :startOfDay 
+          AND q.date <= :endOfDay
+          AND q.type = :questType
+        ORDER BY qt.id ASC
+    """)
+    suspend fun getDailyTasksForDateSync(
+        startOfDay: Long,
+        endOfDay: Long,
+        questType: com.ihor.thesystem.data.local.room.entity.QuestType
+    ): List<TaskCompletionProjection>
 }
+
+data class TaskCompletionProjection(
+    val name: String,
+    val isCompleted: Boolean
+)

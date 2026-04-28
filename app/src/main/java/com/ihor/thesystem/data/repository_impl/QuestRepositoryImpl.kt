@@ -199,6 +199,13 @@ class QuestRepositoryImpl @Inject constructor(
             )
         )
     }
+
+    override suspend fun getDailyTasksWithCompletionForDate(dateMillis: Long): List<Pair<String, Boolean>> {
+        val (start, end) = getDayRange(dateMillis)
+        return questDao.getDailyTasksForDateSync(start, end, EntityQuestType.DAILY).map {
+            it.name to it.isCompleted
+        }
+    }
 }
 
 private typealias EntityQuestType   = com.ihor.thesystem.data.local.room.entity.QuestType

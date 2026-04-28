@@ -35,6 +35,24 @@ data class CalendarDayUiModel(
     val isActive: Boolean = false
 )
 
+data class DailyTaskSnapshotUiModel(
+    val completedTasks: List<String>,   // назви виконаних завдань
+    val failedTasks: List<String>,      // назви НЕ виконаних завдань
+    val completedPercent: Int,          // округлений відсоток виконання
+    val failedPercent: Int              // округлений відсоток невиконання
+) {
+    val hasAnyData: Boolean get() = completedTasks.isNotEmpty() || failedTasks.isNotEmpty()
+
+    companion object {
+        val Empty = DailyTaskSnapshotUiModel(
+            completedTasks = emptyList(),
+            failedTasks = emptyList(),
+            completedPercent = 0,
+            failedPercent = 0
+        )
+    }
+}
+
 data class CalendarUiState(
     val days: List<CalendarDayUiModel> = emptyList(),
     val cycleDays: List<CycleDayUiModel> = emptyList(),
@@ -42,6 +60,7 @@ data class CalendarUiState(
     val selectedDate: LocalDate? = null,
     val workoutResults: List<WorkoutResultUiModel> = emptyList(),
     val dailyLogs: List<CalendarLogItem> = emptyList(),
+    val dailyTaskSnapshot: DailyTaskSnapshotUiModel = DailyTaskSnapshotUiModel.Empty,
     val nextWorkoutRecommendations: List<ProgressionMatrixEntry> = emptyList(),
     val loggedWeightForDate: Double? = null,
     val currentMonth: YearMonth = YearMonth.now(),
@@ -69,6 +88,7 @@ class CalendarViewModel @Inject constructor(
     private val calculateCycleDay: CalculateCycleDayForDateUseCase,
     private val viewingDateRepo: ViewingDateRepository,
     private val playerRepo: PlayerRepository,
+    private val questRepo: QuestRepository,
     private val getDailySummary: GetDailySummaryForDateUseCase,
     private val syncCycleAnchor: SyncCycleAnchorUseCase
 ) : ViewModel() {
@@ -77,6 +97,7 @@ class CalendarViewModel @Inject constructor(
     val _selectedDate = viewingDateRepo.selectedDate
     private val _workoutResults = MutableStateFlow<List<WorkoutResultUiModel>>(emptyList())
     private val _dailyLogs = MutableStateFlow<List<CalendarLogItem>>(emptyList())
+    private val _dailyTaskSnapshot = MutableStateFlow(DailyTaskSnapshotUiModel.Empty)
     private val _recommendations = MutableStateFlow<List<ProgressionMatrixEntry>>(emptyList())
     private val _loggedWeight = MutableStateFlow<Double?>(null)
 
@@ -87,6 +108,7 @@ class CalendarViewModel @Inject constructor(
         _selectedDate,
         _workoutResults,
         _dailyLogs,
+        _dailyTaskSnapshot,
         _recommendations,
         _loggedWeight,
         playerRepo.getPlayer().filterNotNull()
@@ -96,9 +118,10 @@ class CalendarViewModel @Inject constructor(
         val selectedDate = args[2] as LocalDate?
         val results = args[3] as List<WorkoutResultUiModel>
         val logs = args[4] as List<CalendarLogItem>
-        val recs = args[5] as List<ProgressionMatrixEntry>
-        val weight = args[6] as Double?
-        val player = args[7] as com.ihor.thesystem.domain.model.Player
+        val snapshot = args[5] as DailyTaskSnapshotUiModel
+        val recs = args[6] as List<ProgressionMatrixEntry>
+        val weight = args[7] as Double?
+        val player = args[8] as com.ihor.thesystem.domain.model.Player
 
         val daysInMonth = month.lengthOfMonth()
         
@@ -145,6 +168,7 @@ class CalendarViewModel @Inject constructor(
             selectedDate = selectedDate,
             workoutResults = results,
             dailyLogs = logs,
+            dailyTaskSnapshot = snapshot,
             nextWorkoutRecommendations = recs,
             loggedWeightForDate = weight,
             currentMonth = month,
@@ -172,12 +196,14 @@ class CalendarViewModel @Inject constructor(
             viewingDateRepo.setDate(date)
             loadWorkoutResults(date)
             loadDailyLogs(date)
+            loadDailyTaskSnapshot(date)
             loadRecommendations(date)
             loadWeight(date)
         } else {
             _loggedWeight.value = null
             _workoutResults.value = emptyList()
             _dailyLogs.value = emptyList()
+            _dailyTaskSnapshot.value = DailyTaskSnapshotUiModel.Empty
             _recommendations.value = emptyList()
         }
     }
@@ -187,6 +213,26 @@ class CalendarViewModel @Inject constructor(
             getDailySummary(date).collect { logs ->
                 _dailyLogs.value = logs
             }
+        }
+    }
+
+    private fun loadDailyTaskSnapshot(date: LocalDate) {
+        val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        viewModelScope.launch {
+            val tasks = questRepo.getDailyTasksWithCompletionForDate(millis)
+            val completed = tasks.filter { it.second }.map { it.first }
+            val failed = tasks.filter { !it.second }.map { it.first }
+
+            val total = tasks.size
+            val completedPercent = if (total > 0) (completed.size * 100 / total) else 0
+            val failedPercent = if (total > 0) (failed.size * 100 / total) else 0
+
+            _dailyTaskSnapshot.value = DailyTaskSnapshotUiModel(
+                completedTasks = completed,
+                failedTasks = failed,
+                completedPercent = completedPercent,
+                failedPercent = failedPercent
+            )
         }
     }
 

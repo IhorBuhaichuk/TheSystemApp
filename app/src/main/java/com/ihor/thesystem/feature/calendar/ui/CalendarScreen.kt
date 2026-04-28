@@ -30,6 +30,7 @@ import com.ihor.thesystem.core.ui.components.MaxOneRepMaxText
 import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarDayUiModel
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarViewModel
+import com.ihor.thesystem.feature.calendar.viewmodel.DailyTaskSnapshotUiModel
 import com.ihor.thesystem.feature.calendar.viewmodel.WorkoutResultUiModel
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.usecase.CalendarLogItem
@@ -91,6 +92,7 @@ fun CalendarScreen(
                         dayModel = selectedDayModel,
                         results = uiState.workoutResults,
                         dailyLogs = uiState.dailyLogs,
+                        taskSnapshot = uiState.dailyTaskSnapshot,
                         recommendations = uiState.nextWorkoutRecommendations,
                         loggedWeight = uiState.loggedWeightForDate,
                         onDismiss = { viewModel.onDateSelected(null) },
@@ -359,6 +361,7 @@ fun DailyScheduleSection(
     dayModel: CalendarDayUiModel,
     results: List<WorkoutResultUiModel>,
     dailyLogs: List<CalendarLogItem>,
+    taskSnapshot: DailyTaskSnapshotUiModel,
     recommendations: List<ProgressionMatrixEntry>,
     loggedWeight: Double?,
     onDismiss: () -> Unit,
@@ -470,6 +473,8 @@ fun DailyScheduleSection(
                             modifier = Modifier.padding(start = 14.dp, top = 4.dp)
                         )
                     }
+
+                    DailyTasksSnapshotSection(taskSnapshot)
 
                     HorizontalDivider(
                         color = OnBackground.copy(alpha = 0.05f),
@@ -588,6 +593,124 @@ fun DailyScheduleSection(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DailyTasksSnapshotSection(
+    snapshot: DailyTaskSnapshotUiModel
+) {
+    if (!snapshot.hasAnyData) return
+
+    Column {
+        HorizontalDivider(
+            color = OnBackground.copy(alpha = 0.05f),
+            thickness = 1.dp,
+            modifier = Modifier.padding(vertical = 20.dp)
+        )
+
+        Text(
+            text = stringResource(R.string.text_daily_tasks_section).uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = Primary,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+        )
+        Spacer(Modifier.height(16.dp))
+
+        if (snapshot.completedTasks.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.text_completed_tasks).uppercase(),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = StatusSuccess,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Text(
+                    text = "${snapshot.completedPercent}%",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = StatusSuccess,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = RajdhaniFamily
+                    )
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            snapshot.completedTasks.forEach { taskName ->
+                Row(
+                    modifier = Modifier.padding(start = 14.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = StatusSuccess,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = taskName,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = OnBackground.copy(alpha = 0.7f),
+                            fontFamily = RajdhaniFamily
+                        )
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+
+        if (snapshot.failedTasks.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.text_failed_tasks).uppercase(),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = StatusError,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Text(
+                    text = "${snapshot.failedPercent}%",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = StatusError,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = RajdhaniFamily
+                    )
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            snapshot.failedTasks.forEach { taskName ->
+                Row(
+                    modifier = Modifier.padding(start = 14.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Cancel,
+                        contentDescription = null,
+                        tint = StatusError,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = taskName,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = OnBackground.copy(alpha = 0.7f),
+                            fontFamily = RajdhaniFamily
+                        )
+                    )
                 }
             }
         }
