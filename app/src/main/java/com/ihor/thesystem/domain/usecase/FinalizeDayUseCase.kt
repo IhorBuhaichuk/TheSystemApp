@@ -1,13 +1,14 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.util.TransactionRollbackException
 import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
 import javax.inject.Inject
-import java.time.LocalDate
+import java.time.Instant
 
 class FinalizeDayUseCase @Inject constructor(
     private val transactionProvider: TransactionProvider,
@@ -16,7 +17,8 @@ class FinalizeDayUseCase @Inject constructor(
     private val configRepo: SystemConfigRepository,
     private val generateDailyQuests: GenerateDailyQuestsUseCase,
     private val calculateAttributes: CalculateAttributesUseCase,
-    private val advanceCycleDayStatus: AdvanceCycleDayUseCase
+    private val advanceCycleDayStatus: AdvanceCycleDayUseCase,
+    private val clock: AppClock
 ) {
     /**
      * Finalizes the current day, updates player stats, archives quests, and prepares the next day.
@@ -31,11 +33,11 @@ class FinalizeDayUseCase @Inject constructor(
                 ?: return Result.Error(DataError.Local.NOT_FOUND)
             val config = configRepo.getConfigFlow().firstOrNull()
                 ?: SystemConfig()
-            
-            val activeQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
 
             // 2. Atomic updates
             val transactionResult = transactionProvider.runInTransaction {
+                val activeQuests = questRepo.getActiveQuests().firstOrNull().orEmpty()
+
                 // A) Update active quests to COMPLETED/FAILED and log results
                 val statusResult = advanceCycleDayStatus(forceComplete)
                 if (statusResult is Result.Error) {
@@ -55,11 +57,17 @@ class FinalizeDayUseCase @Inject constructor(
                 val finalPlayer = playerAfterXP.advanceTime(config)
 
                 // C) Persist state
-                playerRepo.updatePlayer(finalPlayer)
+                when (val updateResult = playerRepo.updatePlayer(finalPlayer)) {
+                    is Result.Success -> Unit
+                    is Result.Error -> throw TransactionRollbackException(updateResult.error)
+                }
                 questRepo.archiveActiveQuests()
 
                 // D) Update config flags
-                val today = LocalDate.now().toEpochDay()
+                val today = Instant.ofEpochMilli(clock.now())
+                    .atZone(clock.zoneId())
+                    .toLocalDate()
+                    .toEpochDay()
                 configRepo.saveLastInitDate(today)
                 configRepo.setNeedsDailyInit(true)
 

@@ -1,10 +1,8 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.core.util.Result
-import com.ihor.thesystem.data.local.room.entity.QuestType
 import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.DomainQuestStatus
-import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import kotlinx.coroutines.flow.firstOrNull
@@ -15,7 +13,6 @@ import javax.inject.Inject
  * Сама зміна дня та генерація нових квестів тепер у FinalizeDayUseCase.
  */
 class AdvanceCycleDayUseCase @Inject constructor(
-    private val playerRepo:       PlayerRepository,
     private val questRepo:        QuestRepository
 ) {
     suspend operator fun invoke(forceComplete: Boolean = false): Result<Unit, DomainError> {

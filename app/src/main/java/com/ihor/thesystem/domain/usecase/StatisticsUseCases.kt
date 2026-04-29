@@ -47,18 +47,18 @@ class SaveExerciseSetsUseCase @Inject constructor(
     private val clock: AppClock
 ) {
     suspend operator fun invoke(exerciseId: Int, sets: List<ActiveSetInput>, date: LocalDate, userFeedback: String?) {
+        val parsedSets = sets.mapNotNull { it.toParsedSet() }
+        if (parsedSets.isEmpty()) return
+
         val timestamp = date.atStartOfDay(clock.zoneId()).toInstant().toEpochMilli()
 
         // 1. Збереження логу підходів
         matrixRepo.saveExerciseSetsWithDate(exerciseId, sets, timestamp, userFeedback)
 
         // 2. Алгоритм автоматичного підвищення рангу
-        val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
-        if (validSets.isEmpty()) return
-
-        val maxWeight = validSets.mapNotNull { it.weight.toDoubleOrNull() }.maxOrNull() ?: return
-        val maxReps = validSets.filter { it.weight.toDoubleOrNull() == maxWeight }
-            .mapNotNull { it.reps.toIntOrNull() }.maxOrNull() ?: 1
+        val maxWeight = parsedSets.maxOf { it.weight }
+        val maxReps = parsedSets.filter { it.weight == maxWeight }
+            .maxOfOrNull { it.reps } ?: 1
 
         // - Розрахуй 1RM введеного результату
         val current1RM = OneRepMaxCalculator.calculate(maxWeight, maxReps)
@@ -78,5 +78,18 @@ class SaveExerciseSetsUseCase @Inject constructor(
             // - Онови середній арифметичний ранг гравця
             recalculateGlobalRank()
         }
+    }
+
+    private data class ParsedSet(val weight: Double, val reps: Int)
+
+    private fun ActiveSetInput.toParsedSet(): ParsedSet? {
+        val parsedWeight = weight.replace(',', '.').toDoubleOrNull()
+            ?.takeIf { it > 0.0 }
+            ?: return null
+        val parsedReps = reps.toIntOrNull()
+            ?.takeIf { it > 0 }
+            ?: return null
+
+        return ParsedSet(parsedWeight, parsedReps)
     }
 }

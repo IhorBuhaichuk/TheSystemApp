@@ -12,8 +12,8 @@ import com.ihor.thesystem.domain.usecase.LogWeightUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
 import com.ihor.thesystem.domain.usecase.UpdatePlayerHeightUseCase
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.StatisticsData
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -32,7 +32,7 @@ class StatisticsViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<UiState<StatisticsUiData>> = getStatisticsDataUseCase()
-        .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
+        .map<StatisticsData, UiState<StatisticsUiData>> { UiState.Content(it.toStatisticsUiData()) }
         .catch { emit(UiState.Error(UiText.StringResource(R.string.error_generic))) }
         .stateIn(
             scope        = viewModelScope,

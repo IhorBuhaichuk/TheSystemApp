@@ -22,11 +22,11 @@ import com.ihor.thesystem.core.theme.PanelBorder
 import com.ihor.thesystem.core.theme.RajdhaniFamily
 import com.ihor.thesystem.core.theme.TextSecondary
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
-import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
+import com.ihor.thesystem.domain.model.BodyWeightLog
 
 @Composable
 fun WeightProgressChart(
-    history: List<WeightLogEntity>,
+    history: List<BodyWeightLog>,
     modifier: Modifier = Modifier,
     accentColor: Color = NeonCyan
 ) {

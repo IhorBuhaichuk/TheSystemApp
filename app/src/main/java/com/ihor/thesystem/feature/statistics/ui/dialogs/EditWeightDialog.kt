@@ -16,7 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
-import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
+import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import androidx.compose.ui.Alignment
 
@@ -25,7 +25,7 @@ fun EditWeightDialog(
     entry: MatrixEntryUiModel,
     onConfirm: (Float, String) -> Unit,
     onDismiss: () -> Unit,
-    existingLog: ExerciseSetLogEntity? = null
+    existingLog: ExerciseSet? = null
 ) {
     var input    by remember { mutableStateOf(entry.currentWeight.toString()) }
     // Завдання 1: Стан фітбеку згідно вимог

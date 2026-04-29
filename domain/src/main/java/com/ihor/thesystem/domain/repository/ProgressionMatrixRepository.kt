@@ -3,6 +3,7 @@ package com.ihor.thesystem.domain.repository
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.ReferenceMatrix
 import kotlinx.coroutines.flow.Flow
 
 interface ProgressionMatrixRepository {
@@ -14,9 +15,9 @@ interface ProgressionMatrixRepository {
     suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>)
     suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<ActiveSetInput>, timestamp: Long, userFeedback: String? = null)
 
-    suspend fun getReferenceForExercise(id: Int): Any?
-    suspend fun getReferenceForExercise(name: String): Any?
-    fun getAllReferences(): Flow<List<Any>>
+    suspend fun getReferenceForExercise(id: Int): ReferenceMatrix?
+    suspend fun getReferenceForExercise(name: String): ReferenceMatrix?
+    fun getAllReferences(): Flow<List<ReferenceMatrix>>
     
     suspend fun completeCycle(exerciseId: Int)
     suspend fun setPromotionPending(exerciseId: Int, pending: Boolean)

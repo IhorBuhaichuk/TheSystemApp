@@ -1,6 +1,5 @@
 package com.ihor.thesystem.domain.repository
 
-import com.ihor.thesystem.data.local.room.entity.QuestType
 import com.ihor.thesystem.domain.model.*
 import kotlinx.coroutines.flow.Flow
 
@@ -37,6 +36,11 @@ interface QuestRepository {
     fun getActivePromotionQuests(): Flow<List<Quest>>
 
     suspend fun logQuestResult(questId: Int, questType: DomainQuestType, wasSuccessful: Boolean)
+    fun getSuccessfulQuestCount(
+        questType: DomainQuestType,
+        startMillis: Long,
+        endMillis: Long
+    ): Flow<Int>
 
     suspend fun getDailyTasksWithCompletionForDate(dateMillis: Long): List<Pair<String, Boolean>>
 }

@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WeightLogDao {
-    @Query("SELECT * FROM weight_log ORDER BY timestamp DESC LIMIT 100")
-    fun getAllLogs(): Flow<List<WeightLogEntity>>
+    @Query("SELECT * FROM weight_log ORDER BY timestamp DESC LIMIT :limit")
+    fun getAllLogs(limit: Int = 100): Flow<List<WeightLogEntity>>
 
     @Query("SELECT * FROM weight_log ORDER BY timestamp DESC LIMIT 1")
     fun getLatestLog(): Flow<WeightLogEntity?>

@@ -7,6 +7,7 @@ import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.data.local.room.relations.QuestWithTasks
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.QuestRepository
+import com.ihor.thesystem.domain.repository.TransactionProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -14,6 +15,7 @@ import javax.inject.Inject
 class QuestRepositoryImpl @Inject constructor(
     private val questDao: QuestDao,
     private val questLogDao: QuestLogDao,
+    private val transactionProvider: TransactionProvider,
     private val clock: AppClock
 ) : QuestRepository {
 
@@ -32,22 +34,23 @@ class QuestRepositoryImpl @Inject constructor(
     override suspend fun hasActiveQuests(): Boolean =
         questDao.getActiveQuestCount(EntityQuestStatus.ACTIVE) > 0
 
-    override suspend fun toggleTaskCompletion(taskId: Int, questId: Int, isCompleted: Boolean) {
-        questDao.setTaskCompletion(taskId, isCompleted)
-        val allTasks = questDao.getTasksForQuestSync(questId)
-        if (allTasks.isNotEmpty() && allTasks.all { it.isCompleted }) {
-            questDao.updateQuestStatus(questId, EntityQuestStatus.COMPLETED)
-        } else {
-            questDao.updateQuestStatus(questId, EntityQuestStatus.ACTIVE)
+    override suspend fun toggleTaskCompletion(taskId: Int, questId: Int, isCompleted: Boolean) =
+        transactionProvider.runInTransaction {
+            questDao.setTaskCompletion(taskId, isCompleted)
+            val allTasks = questDao.getTasksForQuestSync(questId)
+            if (allTasks.isNotEmpty() && allTasks.all { it.isCompleted }) {
+                questDao.updateQuestStatus(questId, EntityQuestStatus.COMPLETED)
+            } else {
+                questDao.updateQuestStatus(questId, EntityQuestStatus.ACTIVE)
+            }
         }
-    }
 
     override suspend fun updateQuestStatus(questId: Int, status: DomainQuestStatus) =
         questDao.updateQuestStatus(questId, status.toEntity())
 
     override suspend fun createDailyQuest(
         title: String, tasks: List<String>, scheduleId: Int?
-    ) {
+    ) = transactionProvider.runInTransaction {
         val questId = questDao.insertQuest(
             QuestEntity(
                 title = title, 
@@ -64,7 +67,7 @@ class QuestRepositoryImpl @Inject constructor(
 
     override suspend fun createMainQuest(
         title: String, exercises: List<ExerciseRecommendation>, scheduleId: Int?
-    ) {
+    ) = transactionProvider.runInTransaction {
         val questId = questDao.insertQuest(
             QuestEntity(
                 title = title, 
@@ -96,7 +99,7 @@ class QuestRepositoryImpl @Inject constructor(
         targetWeight: Double?,
         targetReps: Int?,
         exerciseNameUk: String?
-    ) {
+    ) = transactionProvider.runInTransaction {
         val questId = questDao.insertQuest(
             QuestEntity(
                 title = title, 
@@ -119,6 +122,7 @@ class QuestRepositoryImpl @Inject constructor(
                 targetSets = 1
             )
         )
+        Unit
     }
 
     override suspend fun addTaskToQuest(questId: Int, taskName: String) {
@@ -129,7 +133,7 @@ class QuestRepositoryImpl @Inject constructor(
         questDao.deleteTask(taskId)
     }
 
-    override suspend fun archiveActiveQuests() {
+    override suspend fun archiveActiveQuests() = transactionProvider.runInTransaction {
         // Успішно виконані квести переносимо в архів (LOCKED)
         questDao.updateStatusForQuests(EntityQuestStatus.COMPLETED, EntityQuestStatus.LOCKED)
         // Провалені квести також архівуємо (вони вже мають статус FAILED)
@@ -191,16 +195,23 @@ class QuestRepositoryImpl @Inject constructor(
         questLogDao.insert(
             QuestLogEntity(
                 questId = questId,
-                questType = when(questType) {
-                    DomainQuestType.DAILY -> EntityQuestType.DAILY
-                    DomainQuestType.MAIN -> EntityQuestType.MAIN
-                    DomainQuestType.PROMOTION -> EntityQuestType.PROMOTION
-                },
+                questType = questType.toEntity(),
                 wasSuccessful = wasSuccessful,
                 completedAt = clock.now()
             )
         )
     }
+
+    override fun getSuccessfulQuestCount(
+        questType: DomainQuestType,
+        startMillis: Long,
+        endMillis: Long
+    ): Flow<Int> =
+        questLogDao.getSuccessfulQuestCount(
+            type = questType.toEntity(),
+            startMillis = startMillis,
+            endMillis = endMillis
+        )
 
     override suspend fun getDailyTasksWithCompletionForDate(dateMillis: Long): List<Pair<String, Boolean>> {
         val (start, end) = getDayRange(dateMillis)
@@ -247,6 +258,12 @@ private fun EntityQuestStatus.toDomain() = when (this) {
     EntityQuestStatus.COMPLETED -> DomainQuestStatus.COMPLETED
     EntityQuestStatus.FAILED    -> DomainQuestStatus.FAILED
     EntityQuestStatus.LOCKED    -> DomainQuestStatus.LOCKED
+}
+
+private fun DomainQuestType.toEntity() = when (this) {
+    DomainQuestType.DAILY -> EntityQuestType.DAILY
+    DomainQuestType.MAIN -> EntityQuestType.MAIN
+    DomainQuestType.PROMOTION -> EntityQuestType.PROMOTION
 }
 
 private fun DomainQuestStatus.toEntity() = when (this) {

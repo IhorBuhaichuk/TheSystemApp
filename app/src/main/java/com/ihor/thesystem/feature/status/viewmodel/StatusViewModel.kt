@@ -6,16 +6,20 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.R
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.ui.StringResourceException
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
+import com.ihor.thesystem.domain.model.DomainQuestStatus
+import com.ihor.thesystem.domain.model.DomainQuestType
 import com.ihor.thesystem.domain.model.Player
+import com.ihor.thesystem.domain.model.Quest
+import com.ihor.thesystem.domain.model.StatusData
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.DatabaseReadinessRepository
 import com.ihor.thesystem.domain.repository.DatabaseStatus
 import com.ihor.thesystem.domain.usecase.*
-import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
@@ -23,15 +27,18 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 import javax.inject.Inject
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class StatusViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val useCases: StatusUseCases,
-    private val databaseReadinessRepo: DatabaseReadinessRepository
+    private val databaseReadinessRepo: DatabaseReadinessRepository,
+    private val clock: AppClock
 ) : ViewModel() {
 
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
@@ -56,7 +63,9 @@ class StatusViewModel @Inject constructor(
                         .filter { it } // чекаємо поки квести готові
                         .flatMapLatest {
                             useCases.getStatusData()
-                                .map { data -> UiState.Content(data) as UiState<StatusUiData> }
+                                .map<StatusData, UiState<StatusUiData>> { data ->
+                                    UiState.Content(data.toUiData())
+                                }
                                 .catch { e ->
                                     Timber.e(e, "Error loading status data")
                                     emit(UiState.Error(UiText.StringResource(R.string.system_loading)))
@@ -128,7 +137,10 @@ class StatusViewModel @Inject constructor(
                 }
                 val hasNoQuests = statusData.dailyQuest == null && statusData.mainQuest == null && statusData.promotionQuests.isEmpty()
 
-                val today = java.time.LocalDate.now().toEpochDay()
+                val today = java.time.Instant.ofEpochMilli(clock.now())
+                    .atZone(clock.zoneId())
+                    .toLocalDate()
+                    .toEpochDay()
                 val lastDate = config?.lastInitEpochDay ?: 0L
                 val dateChanged = lastDate < today
 
@@ -282,4 +294,49 @@ class StatusViewModel @Inject constructor(
         useCases.generateDailyQuests()
         onDismissDialog()
     }
+
+    private fun StatusData.toUiData() = StatusUiData(
+        playerName = playerName,
+        playerClass = playerClass,
+        level = level,
+        xpTotal = xpTotal,
+        xpMax = xpMax,
+        currentMonth = currentMonth,
+        totalMonths = totalMonths,
+        currentWeight = currentWeight,
+        height = height,
+        cycleDay = cycleDay,
+        monthWorkoutsCompleted = monthWorkoutsCompleted,
+        monthWorkoutsTotal = monthWorkoutsTotal,
+        dailyQuest = dailyQuest?.toUiModel(),
+        mainQuest = mainQuest?.toUiModel(),
+        promotionQuests = promotionQuests.map { it.toUiModel() }.toImmutableList(),
+        globalRank = globalRank,
+        characterAttributes = characterAttributes,
+        currentStreak = currentStreak,
+        maxStreak = maxStreak,
+        xpThisWeek = xpThisWeek,
+        avatarUri = avatarUri
+    )
+
+    private fun Quest.toUiModel() = QuestUiModel(
+        id = id,
+        title = title,
+        subtitle = when (type) {
+            DomainQuestType.DAILY ->
+                UiText.StringResource(R.string.quest_progress, listOf(tasks.count { it.isCompleted }, tasks.size))
+            DomainQuestType.MAIN ->
+                if (status == DomainQuestStatus.COMPLETED) {
+                    UiText.StringResource(R.string.quest_completed_capital)
+                } else {
+                    UiText.StringResource(R.string.quest_reward_week)
+                }
+            DomainQuestType.PROMOTION ->
+                UiText.StringResource(R.string.quest_reward_promotion)
+        },
+        tasks = tasks.map { task ->
+            TaskUiModel(task.id, task.name, task.nameUk, task.isCompleted)
+        }.toImmutableList(),
+        isCompleted = status == DomainQuestStatus.COMPLETED
+    )
 }

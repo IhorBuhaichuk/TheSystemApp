@@ -14,6 +14,7 @@ import com.ihor.thesystem.domain.usecase.WorkoutUseCases
 import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
+import com.ihor.thesystem.feature.statistics.viewmodel.toMatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -34,6 +35,7 @@ data class SetSavePayload(
     val allSets: List<ActiveSetInput>
 )
 
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class WorkoutViewModel @Inject constructor(
     private val useCases: WorkoutUseCases,
@@ -54,7 +56,6 @@ class WorkoutViewModel @Inject constructor(
     private val _currentLogSets = MutableStateFlow<List<ActiveSetInput>>(emptyList())
     private val _userEdits = MutableStateFlow<Map<Int, List<ActiveSetInput>>>(emptyMap())
 
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     private val _saveEvents = MutableSharedFlow<SetSavePayload>(replay = 0)
 
     private val cycleDay: Flow<Int> = combine(
@@ -129,7 +130,7 @@ class WorkoutViewModel @Inject constructor(
                     ex.copy(sets = editedSets.toImmutableList())
                 } ?: ex
             }.toImmutableList(),
-            matrixEntries = stats.matrixEntries
+            matrixEntries = stats.matrixEntries.map { it.toMatrixEntryUiModel() }.toImmutableList()
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
@@ -451,4 +452,5 @@ class WorkoutViewModel @Inject constructor(
     fun onDismissDialog() {
         _dialogState.value = StatusDialogState.None
     }
+
 }

@@ -2,11 +2,14 @@ package com.ihor.thesystem.data.repository_impl
 
 import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
-import com.ihor.thesystem.domain.model.Rank
-import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.ExerciseCategory
+import com.ihor.thesystem.domain.model.ExerciseWeightType
+import com.ihor.thesystem.domain.model.Rank
+import com.ihor.thesystem.domain.model.ReferenceMatrix
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
+import com.ihor.thesystem.domain.repository.TransactionProvider
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.R
 import android.content.Context
@@ -14,12 +17,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-import java.time.LocalDate
 import java.time.ZoneId
 
 class ProgressionMatrixRepositoryImpl @Inject constructor(
     private val matrixDao:    ProgressionMatrixDao,
     private val analyticsDao: WorkoutAnalyticsDao,
+    private val transactionProvider: TransactionProvider,
     @ApplicationContext private val context: Context
 ) : ProgressionMatrixRepository {
 
@@ -71,85 +74,96 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         saveExerciseSetsWithDate(exerciseId, sets, System.currentTimeMillis())
     }
 
-    override suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<ActiveSetInput>, timestamp: Long, userFeedback: String?) {
-        val validSets = sets.filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
-        if (validSets.isEmpty()) return
+    override suspend fun saveExerciseSetsWithDate(
+        exerciseId: Int,
+        sets: List<ActiveSetInput>,
+        timestamp: Long,
+        userFeedback: String?
+    ) {
+        val parsedSets = sets.mapNotNull { it.toValidLoggedSet() }
+        if (parsedSets.isEmpty()) return
 
         val zoneId = ZoneId.systemDefault()
         val date = java.time.Instant.ofEpochMilli(timestamp).atZone(zoneId).toLocalDate()
         val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
         val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
 
-        val totalTonnage = validSets.sumOf { 
-            (it.weight.toDoubleOrNull() ?: 0.0) * (it.reps.toIntOrNull() ?: 0)
-        }
+        val totalTonnage = parsedSets.sumOf { it.weight * it.reps }
 
-        val existingLogs = analyticsDao.getLogsForExerciseOnDate(exerciseId, startOfDay, endOfDay)
+        transactionProvider.runInTransaction {
+            val existingLogs = analyticsDao.getLogsForExerciseOnDate(exerciseId, startOfDay, endOfDay)
 
-        if (existingLogs.isNotEmpty()) {
-            val sessionId = existingLogs.first().sessionId
-            
-            analyticsDao.insertSessionLog(
-                WorkoutSessionLogEntity(
-                    sessionId = sessionId,
+            if (existingLogs.isNotEmpty()) {
+                val sessionId = existingLogs.first().sessionId
+
+                analyticsDao.insertSessionLog(
+                    WorkoutSessionLogEntity(
+                        sessionId = sessionId,
+                        questId = 0,
+                        timestamp = timestamp,
+                        totalTonnage = totalTonnage,
+                        cycleDay = 0,
+                        durationMinutes = 0
+                    )
+                )
+
+                analyticsDao.deleteSetsBySession(sessionId)
+                analyticsDao.insertSetLogs(
+                    parsedSets.map { input ->
+                        input.toEntity(
+                            sessionId = sessionId,
+                            exerciseId = exerciseId,
+                            userFeedback = userFeedback
+                        )
+                    }
+                )
+            } else {
+                val sessionLog = WorkoutSessionLogEntity(
                     questId = 0,
                     timestamp = timestamp,
                     totalTonnage = totalTonnage,
                     cycleDay = 0,
                     durationMinutes = 0
                 )
-            )
 
-            analyticsDao.deleteSetsBySession(sessionId)
-            val entities = validSets.map { input ->
-                ExerciseSetLogEntity(
-                    sessionId = sessionId,
-                    exerciseId = exerciseId,
-                    weight = input.weight.toDoubleOrNull() ?: 0.0,
-                    reps = input.reps.toIntOrNull() ?: 0,
-                    isCompleted = true,
-                    userFeedback = userFeedback
+                analyticsDao.saveFullSessionLog(
+                    sessionLog,
+                    parsedSets.map { input ->
+                        input.toEntity(
+                            sessionId = 0,
+                            exerciseId = exerciseId,
+                            userFeedback = userFeedback
+                        )
+                    }
                 )
             }
-            analyticsDao.insertSetLogs(entities)
-        } else {
-            val sessionLog = WorkoutSessionLogEntity(
-                questId = 0,
-                timestamp = timestamp,
-                totalTonnage = totalTonnage,
-                cycleDay = 0,
-                durationMinutes = 0
-            )
 
-            val entities = validSets.map { input ->
-                ExerciseSetLogEntity(
-                    sessionId = 0,
+            matrixDao.getEntryForExerciseSync(exerciseId)?.let { existing ->
+                val maxWeight = parsedSets.maxOf { it.weight }.toFloat()
+                matrixDao.update(existing.copy(currentWeight = maxWeight))
+            } ?: matrixDao.insert(
+                ProgressionMatrixEntity(
                     exerciseId = exerciseId,
-                    weight = input.weight.toDoubleOrNull() ?: 0.0,
-                    reps = input.reps.toIntOrNull() ?: 0,
-                    isCompleted = true,
-                    userFeedback = userFeedback
+                    startWeight = 0f,
+                    targetWeight = 0f,
+                    currentWeight = parsedSets.maxOf { it.weight }.toFloat()
                 )
-            }
-            analyticsDao.saveFullSessionLog(sessionLog, entities)
-        }
-        
-        val maxWeight = validSets.mapNotNull { it.weight.toFloatOrNull() }.maxOrNull()
-        if (maxWeight != null) {
-            updateCurrentWeight(exerciseId, maxWeight)
+            )
         }
     }
 
-    override suspend fun getReferenceForExercise(id: Int): ReferenceMatrixEntity? {
-        return matrixDao.getReferenceById(id)
+    override suspend fun getReferenceForExercise(id: Int): ReferenceMatrix? {
+        return matrixDao.getReferenceById(id)?.toDomain()
     }
 
-    override suspend fun getReferenceForExercise(name: String): ReferenceMatrixEntity? {
-        return matrixDao.getReferenceByName(name)
+    override suspend fun getReferenceForExercise(name: String): ReferenceMatrix? {
+        return matrixDao.getReferenceByName(name)?.toDomain()
     }
 
-    override fun getAllReferences(): Flow<List<ReferenceMatrixEntity>> {
-        return matrixDao.getAllReferences()
+    override fun getAllReferences(): Flow<List<ReferenceMatrix>> {
+        return matrixDao.getAllReferences().map { references ->
+            references.map { it.toDomain() }
+        }
     }
 
     override suspend fun completeCycle(exerciseId: Int) {
@@ -247,4 +261,51 @@ private fun ProgressionMatrixEntity.toDomain(
         lastAiFeedback = lastAiFeedback,
         lastAnalyzedTimestamp = lastAnalyzedTimestamp
     )
+}
+
+private data class LoggedSetInput(
+    val weight: Double,
+    val reps: Int
+)
+
+private fun ActiveSetInput.toValidLoggedSet(): LoggedSetInput? {
+    val parsedWeight = weight.replace(',', '.').toDoubleOrNull()
+        ?.takeIf { it > 0.0 }
+        ?: return null
+    val parsedReps = reps.toIntOrNull()
+        ?.takeIf { it > 0 }
+        ?: return null
+
+    return LoggedSetInput(
+        weight = parsedWeight,
+        reps = parsedReps
+    )
+}
+
+private fun LoggedSetInput.toEntity(
+    sessionId: Long,
+    exerciseId: Int,
+    userFeedback: String?
+) = ExerciseSetLogEntity(
+    sessionId = sessionId,
+    exerciseId = exerciseId,
+    weight = weight,
+    reps = reps,
+    isCompleted = true,
+    userFeedback = userFeedback
+)
+
+private fun ReferenceMatrixEntity.toDomain() = ReferenceMatrix(
+    exerciseId = exerciseId,
+    exerciseName = exerciseName,
+    weightType = weightType.toDomain(),
+    progressionStep = progressionStep,
+    milestones = milestones,
+    repsMilestones = repsMilestones
+)
+
+private fun WeightType.toDomain() = when (this) {
+    WeightType.ABSOLUTE -> ExerciseWeightType.ABSOLUTE
+    WeightType.BODY_WEIGHT -> ExerciseWeightType.BODY_WEIGHT
+    WeightType.ADDED_WEIGHT -> ExerciseWeightType.ADDED_WEIGHT
 }

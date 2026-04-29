@@ -2,29 +2,23 @@ package com.ihor.thesystem.feature.calendar.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ihor.thesystem.data.local.room.dao.WeightLogDao
-import com.ihor.thesystem.data.local.room.dao.WorkoutDao
-import com.ihor.thesystem.data.local.room.entity.ProgressionMatrixEntity
+import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 import com.ihor.thesystem.domain.usecase.GetDailySummaryForDateUseCase
 import com.ihor.thesystem.domain.usecase.CalendarLogItem
-import com.ihor.thesystem.domain.usecase.LogType
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.ihor.thesystem.core.util.Result
-import com.ihor.thesystem.domain.model.DataError
 import com.ihor.thesystem.domain.usecase.SyncCycleAnchorUseCase
 import com.ihor.thesystem.feature.status.viewmodel.CycleDayUiModel
 import com.ihor.thesystem.feature.status.viewmodel.DayType
+import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.ZoneId
 import javax.inject.Inject
 
 data class CalendarDayUiModel(
@@ -77,20 +71,28 @@ data class SetResultUiModel(
     val reps: Int
 )
 
+private data class CalendarSelectionData(
+    val workoutResults: List<WorkoutResultUiModel>,
+    val dailyLogs: List<CalendarLogItem>,
+    val dailyTaskSnapshot: DailyTaskSnapshotUiModel,
+    val recommendations: List<ProgressionMatrixEntry>,
+    val loggedWeight: Double?
+)
+
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val configRepo: SystemConfigRepository,
     private val scheduleRepo: ScheduleRepository,
     private val analyticsRepo: WorkoutAnalyticsRepository,
     private val matrixRepo: ProgressionMatrixRepository,
-    private val weightLogDao: WeightLogDao,
-    private val workoutDao: WorkoutDao,
+    private val workoutRepo: WorkoutRepository,
     private val calculateCycleDay: CalculateCycleDayForDateUseCase,
     private val viewingDateRepo: ViewingDateRepository,
     private val playerRepo: PlayerRepository,
     private val questRepo: QuestRepository,
     private val getDailySummary: GetDailySummaryForDateUseCase,
-    private val syncCycleAnchor: SyncCycleAnchorUseCase
+    private val syncCycleAnchor: SyncCycleAnchorUseCase,
+    private val clock: AppClock
 ) : ViewModel() {
 
     private val _currentMonth = MutableStateFlow(YearMonth.now())
@@ -124,34 +126,36 @@ class CalendarViewModel @Inject constructor(
         // Встановлюємо сьогоднішню дату за замовчуванням при першому відкритті, якщо дата не встановлена
         viewModelScope.launch {
             if (_selectedDate.firstOrNull() == null) {
-                viewingDateRepo.setDate(LocalDate.now())
+                viewingDateRepo.setDate(today())
             }
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<CalendarUiState> = combine(
-        _currentMonth,
-        configRepo.getConfigFlow().filterNotNull(),
-        _selectedDate,
+    private val selectionData: Flow<CalendarSelectionData> = combine(
         _workoutResults,
         _dailyLogs,
         _dailyTaskSnapshot,
         _recommendations,
-        _loggedWeight,
-        playerRepo.getPlayer().filterNotNull()
-    ) { args: Array<Any?> ->
-        val month = args[0] as YearMonth
-        val config = args[1] as SystemConfig
-        val selectedDate = args[2] as LocalDate?
-        val results = args[3] as List<WorkoutResultUiModel>
-        val logs = args[4] as List<CalendarLogItem>
-        val snapshot = args[5] as DailyTaskSnapshotUiModel
-        val recs = args[6] as List<ProgressionMatrixEntry>
-        val weight = args[7] as Double?
-        val player = args[8] as com.ihor.thesystem.domain.model.Player
+        _loggedWeight
+    ) { results, logs, snapshot, recs, weight ->
+        CalendarSelectionData(
+            workoutResults = results,
+            dailyLogs = logs,
+            dailyTaskSnapshot = snapshot,
+            recommendations = recs,
+            loggedWeight = weight
+        )
+    }
 
+    val uiState: StateFlow<CalendarUiState> = combine(
+        _currentMonth,
+        configRepo.getConfigFlow().filterNotNull(),
+        _selectedDate,
+        selectionData,
+        playerRepo.getPlayer().filterNotNull()
+    ) { month, config, selectedDate, data, player ->
         val daysInMonth = month.lengthOfMonth()
+        val todayDate = today()
         
         val calendarDays = (1..daysInMonth).map { dayNum ->
             val date = month.atDay(dayNum)
@@ -165,12 +169,11 @@ class CalendarViewModel @Inject constructor(
                 date = date,
                 cycleDay = cycleDay,
                 label = getLabelForCycleDay(cycleDay),
-                isToday = date == LocalDate.now(),
-                isActive = date == LocalDate.now()
+                isToday = date == todayDate,
+                isActive = date == todayDate
             )
         }
 
-        val todayDate = LocalDate.now()
         val todayCycleDay = calculateCycleDay(
             targetDate = todayDate,
             anchorEpochDay = config.cycleAnchorDateTimestamp,
@@ -194,11 +197,11 @@ class CalendarViewModel @Inject constructor(
             cycleDays = cycleDays,
             todayInfo = CalendarDayUiModel(todayDate, todayCycleDay, getLabelForCycleDay(todayCycleDay), true),
             selectedDate = selectedDate,
-            workoutResults = results,
-            dailyLogs = logs,
-            dailyTaskSnapshot = snapshot,
-            nextWorkoutRecommendations = recs,
-            loggedWeightForDate = weight,
+            workoutResults = data.workoutResults,
+            dailyLogs = data.dailyLogs,
+            dailyTaskSnapshot = data.dailyTaskSnapshot,
+            nextWorkoutRecommendations = data.recommendations,
+            loggedWeightForDate = data.loggedWeight,
             currentMonth = month,
             isLoading = false
         )
@@ -232,7 +235,7 @@ class CalendarViewModel @Inject constructor(
     }
 
     private fun loadDailyTaskSnapshot(date: LocalDate) {
-        val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val millis = date.toStartOfDayMillis()
         viewModelScope.launch {
             val tasks = questRepo.getDailyTasksWithCompletionForDate(millis)
             val completed = tasks.filter { it.second }.map { it.first }
@@ -252,13 +255,13 @@ class CalendarViewModel @Inject constructor(
     }
 
     private fun loadWorkoutResults(date: LocalDate) {
-        val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val millis = date.toStartOfDayMillis()
         viewModelScope.launch {
             analyticsRepo.getSessionsByDate(millis).collect { sessions ->
                 val results = sessions.flatMap { session ->
                     session.sets.groupBy { it.exerciseId }.map { (id, sets) ->
                         WorkoutResultUiModel(
-                            workoutDao.getExerciseNameById(id) ?: "Вправа",
+                            workoutRepo.getExerciseNameById(id) ?: "Вправа",
                             sets.map { SetResultUiModel(it.weight, it.reps) }
                         )
                     }
@@ -296,10 +299,12 @@ class CalendarViewModel @Inject constructor(
     }
 
     private fun loadWeight(date: LocalDate) {
-        val millis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val millis = date.toStartOfDayMillis()
         viewModelScope.launch {
-            val weight = weightLogDao.getWeightByDate(millis)
-            _loggedWeight.value = weight?.toDouble()
+            _loggedWeight.value = when (val result = playerRepo.getWeightByDate(millis)) {
+                is Result.Success -> result.data?.toDouble()
+                is Result.Error -> null
+            }
         }
     }
 
@@ -310,4 +315,14 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun getScheduleForDay(day: Int) = scheduleRepo.getScheduleForDay(day)
+
+    private fun today(): LocalDate =
+        Instant.ofEpochMilli(clock.now())
+            .atZone(clock.zoneId())
+            .toLocalDate()
+
+    private fun LocalDate.toStartOfDayMillis(): Long =
+        atStartOfDay(clock.zoneId())
+            .toInstant()
+            .toEpochMilli()
 }

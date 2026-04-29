@@ -1,6 +1,5 @@
 package com.ihor.thesystem.feature.statistics.viewmodel
 
-import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
 import kotlinx.collections.immutable.ImmutableList
@@ -21,7 +20,7 @@ data class StatisticsUiData(
     val currentHeight: Float                    = 0f,
     val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf(),
     val tonnageStats: ImmutableList<DailyTonnageStats>   = persistentListOf(),
-    val weightHistory: ImmutableList<WeightLogEntity>    = persistentListOf(),
+    val weightHistory: ImmutableList<BodyWeightLog>      = persistentListOf(),
     val characterAttributes: Map<MuscleGroup, Float>    = emptyMap(),
     val avatarUri: String? = null
 )
