@@ -130,12 +130,10 @@ class QuestRepositoryImpl @Inject constructor(
     }
 
     override suspend fun archiveActiveQuests() {
-        // Архівуємо всі квести, які не є активними для нового дня.
-        // ACTIVE стають FAILED (не встиг виконати), COMPLETED стають LOCKED (успішно виконано і збережено в лог).
-        questDao.archiveQuestsByStatuses(
-            sourceStatuses = listOf(EntityQuestStatus.ACTIVE, EntityQuestStatus.COMPLETED),
-            targetStatus = EntityQuestStatus.LOCKED
-        )
+        // Успішно виконані квести переносимо в архів (LOCKED)
+        questDao.updateStatusForQuests(EntityQuestStatus.COMPLETED, EntityQuestStatus.LOCKED)
+        // Провалені квести також архівуємо (вони вже мають статус FAILED)
+        questDao.updateStatusForQuests(EntityQuestStatus.FAILED, EntityQuestStatus.LOCKED)
     }
 
     override suspend fun getLastTwoMainQuestsStatus(): List<DomainQuestStatus> =
@@ -187,13 +185,17 @@ class QuestRepositoryImpl @Inject constructor(
 
     override suspend fun logQuestResult(
         questId: Int,
-        questType: EntityQuestType,
+        questType: DomainQuestType,
         wasSuccessful: Boolean
     ) {
         questLogDao.insert(
             QuestLogEntity(
                 questId = questId,
-                questType = questType,
+                questType = when(questType) {
+                    DomainQuestType.DAILY -> EntityQuestType.DAILY
+                    DomainQuestType.MAIN -> EntityQuestType.MAIN
+                    DomainQuestType.PROMOTION -> EntityQuestType.PROMOTION
+                },
                 wasSuccessful = wasSuccessful,
                 completedAt = clock.now()
             )

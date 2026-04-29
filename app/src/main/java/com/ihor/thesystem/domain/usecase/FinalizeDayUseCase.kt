@@ -7,6 +7,7 @@ import com.ihor.thesystem.domain.util.TransactionRollbackException
 import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
 import javax.inject.Inject
+import java.time.LocalDate
 
 class FinalizeDayUseCase @Inject constructor(
     private val transactionProvider: TransactionProvider,
@@ -15,60 +16,68 @@ class FinalizeDayUseCase @Inject constructor(
     private val configRepo: SystemConfigRepository,
     private val generateDailyQuests: GenerateDailyQuestsUseCase,
     private val calculateAttributes: CalculateAttributesUseCase,
-    private val advanceCycleDayStatus: AdvanceCycleDayUseCase,
-    private val saveLastInitDate: SaveLastInitDateUseCase
+    private val advanceCycleDayStatus: AdvanceCycleDayUseCase
 ) {
     /**
-     * Фіналізація дня з оптимізованим обсягом транзакції для запобігання ANR та Deadlocks.
-     * Reads виконуються ДО транзакції, heavy logic — ПІСЛЯ.
+     * Finalizes the current day, updates player stats, archives quests, and prepares the next day.
+     * This is the single source of truth for day transitions.
      */
     suspend operator fun invoke(forceComplete: Boolean = false): Result<DayFinalizationResult, DomainError> {
         return try {
-            // 1. Зчитуємо всі необхідні дані ДО початку транзакції для уникнення дедлоків
+            Timber.d("Starting day finalization (forceComplete=$forceComplete)")
+
+            // 1. Pre-fetch data
             val player = playerRepo.getPlayer().firstOrNull()
                 ?: return Result.Error(DataError.Local.NOT_FOUND)
             val config = configRepo.getConfigFlow().firstOrNull()
                 ?: SystemConfig()
+            
             val activeQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
 
-            // 2. Виконуємо транзакцію лише для швидких записів
+            // 2. Atomic updates
             val transactionResult = transactionProvider.runInTransaction {
-                // Оновлюємо статуси (успіх/провал)
+                // A) Update active quests to COMPLETED/FAILED and log results
                 val statusResult = advanceCycleDayStatus(forceComplete)
                 if (statusResult is Result.Error) {
                     throw TransactionRollbackException(statusResult.error)
                 }
 
-                val mainQuests = activeQuests.filter { it.type == DomainQuestType.MAIN }
+                // B) Evaluate player progress based on MAIN quests
+                val processedMainQuests = activeQuests.filter { it.type == DomainQuestType.MAIN }.map { q ->
+                    val hasTasks = q.tasks.isNotEmpty()
+                    val allDone = hasTasks && q.tasks.all { it.isCompleted }
+                    val isSuccess = if (!hasTasks) true else (allDone || forceComplete)
+                    q.copy(status = if (isSuccess) DomainQuestStatus.COMPLETED else DomainQuestStatus.FAILED)
+                }
+
                 val wasPenaltyActive = player.isPenaltyActive
-                
-                // Розрахунки в пам'яті на основі зчитаних даних
-                val (playerAfterXP, levelUpTriggered) = player.evaluateQuests(mainQuests).checkLevelUp()
+                val (playerAfterXP, levelUpTriggered) = player.evaluateQuests(processedMainQuests).checkLevelUp()
                 val finalPlayer = playerAfterXP.advanceTime(config)
 
-                // Атомарні записи стану
-                configRepo.setNeedsDailyInit(true)
+                // C) Persist state
                 playerRepo.updatePlayer(finalPlayer)
                 questRepo.archiveActiveQuests()
 
-                // Формуємо результат для повернення з транзакції
-                val result = when {
+                // D) Update config flags
+                val today = LocalDate.now().toEpochDay()
+                configRepo.saveLastInitDate(today)
+                configRepo.setNeedsDailyInit(true)
+
+                when {
                     levelUpTriggered -> DayFinalizationResult.LevelUp
                     !wasPenaltyActive && finalPlayer.isPenaltyActive -> DayFinalizationResult.PenaltyZoneEntered
                     else -> DayFinalizationResult.Success
                 }
-                result
             }
 
-            // 3. Важкі операції генерації та розрахунку атрибутів ПІСЛЯ транзакції
+            // 3. Post-transaction initialization (Heavy work)
             generateDailyQuests.invoke()
             calculateAttributes.invoke()
             
-            // Скидаємо прапорець ініціалізації після успішного виконання важких задач
+            // 4. Mark initialization as complete
             configRepo.setNeedsDailyInit(false)
-            saveLastInitDate(java.time.LocalDate.now().toEpochDay())
 
-            Timber.d("Day Finalization completed successfully")
+            Timber.d("Day finalization completed successfully: $transactionResult")
             Result.Success(transactionResult)
 
         } catch (e: TransactionRollbackException) {

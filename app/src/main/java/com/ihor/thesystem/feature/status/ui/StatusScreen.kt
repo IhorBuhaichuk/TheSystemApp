@@ -91,7 +91,8 @@ fun StatusScreen(
                     HeaderSection(
                         data = data,
                         onAvatarSelected = { statusViewModel.updateAvatarUri(it) },
-                        onEditNameTap = { statusViewModel.onEditNameTap() }
+                        onEditNameTap = { statusViewModel.onEditNameTap() },
+                        onForceEndDay = { statusViewModel.onForceEndDay() }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -228,7 +229,8 @@ fun StatusScreen(
 private fun HeaderSection(
     data: StatusUiData,
     onAvatarSelected: (android.net.Uri) -> Unit,
-    onEditNameTap: () -> Unit
+    onEditNameTap: () -> Unit,
+    onForceEndDay: () -> Unit
 ) {
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -245,6 +247,10 @@ private fun HeaderSection(
             .fillMaxWidth()
             .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
     ) {
+        com.ihor.thesystem.feature.status.ui.components.SystemHeader(onLongPress = onForceEndDay)
+        
+        Spacer(modifier = Modifier.height(16.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

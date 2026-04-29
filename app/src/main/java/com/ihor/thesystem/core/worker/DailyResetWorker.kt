@@ -5,10 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import com.ihor.thesystem.domain.repository.QuestRepository
-import com.ihor.thesystem.domain.repository.SystemConfigRepository
-import com.ihor.thesystem.domain.usecase.GenerateDailyQuestsUseCase
-import com.ihor.thesystem.domain.usecase.CalculateAttributesUseCase
+import com.ihor.thesystem.domain.usecase.FinalizeDayUseCase
 import timber.log.Timber
 import java.time.Duration
 import java.time.LocalDateTime
@@ -18,37 +15,24 @@ import java.util.concurrent.TimeUnit
 class DailyResetWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted params: WorkerParameters,
-    private val questRepo: QuestRepository,
-    private val configRepo: SystemConfigRepository,
-    private val generateDailyQuests: GenerateDailyQuestsUseCase,
-    private val calculateAttributes: CalculateAttributesUseCase
+    private val finalizeDay: FinalizeDayUseCase
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
         return try {
-            Timber.d("DailyResetWorker: starting midnight reset")
+            Timber.d("DailyResetWorker: starting midnight reset via FinalizeDayUseCase")
 
-            // 1. Архівуємо поточні квести (виконані + активні → LOCKED)
-            questRepo.archiveActiveQuests()
-
-            // 2. Встановлюємо прапорець ініціалізації
-            configRepo.setNeedsDailyInit(false)
-
-            // 3. Генеруємо нові завдання на новий день
-            generateDailyQuests()
-
-            // 4. Перераховуємо атрибути
-            calculateAttributes()
+            // Використовуємо єдиний UseCase для фіналізації дня
+            finalizeDay(forceComplete = false)
 
             Timber.d("DailyResetWorker: completed successfully")
 
-            // 5. Плануємо наступний запуск на наступну північ
+            // Плануємо наступний запуск на наступну північ
             scheduleNext()
 
             Result.success()
         } catch (e: Exception) {
             Timber.e(e, "DailyResetWorker: failed, will retry")
-            // При помилці — retry через 15 хвилин, але не більше 3 разів
             if (runAttemptCount < 3) Result.retry() else Result.failure()
         }
     }

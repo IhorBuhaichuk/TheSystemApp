@@ -18,5 +18,6 @@ data class StatusUseCases @Inject constructor(
     val getOrCreateDailyTaskContainerId: GetOrCreateDailyTaskContainerIdUseCase,
     val calculateAttributes: CalculateAttributesUseCase,
     val setNeedsDailyInit: SetNeedsDailyInitUseCase,
-    val saveLastInitDate: SaveLastInitDateUseCase
+    val saveLastInitDate: SaveLastInitDateUseCase,
+    val finalizeDay: FinalizeDayUseCase
 )

@@ -133,10 +133,7 @@ class StatusViewModel @Inject constructor(
                 val dateChanged = lastDate < today
 
                 if (config?.needsDailyInit == true || hasNoQuests || dateChanged) {
-                    useCases.generateDailyQuests()
-                    useCases.calculateAttributes()
-                    useCases.setNeedsDailyInit(false)
-                    useCases.saveLastInitDate(today)
+                    useCases.finalizeDay(forceComplete = false)
                 }
                 
                 _questsReady.value = true   // ← ТІЛЬКИ тут відкриваємо доступ до UI Flow
@@ -272,6 +269,12 @@ class StatusViewModel @Inject constructor(
 
     fun onRemoveTask(taskId: Int) = launchCatching {
         useCases.removeQuestTask(taskId)
+    }
+
+    fun onForceEndDay() = launchCatching {
+        _questsReady.value = false
+        useCases.finalizeDay(forceComplete = true)
+        _questsReady.value = true
     }
 
     fun onSystemConfigConfirmed(config: SystemConfig) = launchCatching {
