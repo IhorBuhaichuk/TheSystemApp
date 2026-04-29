@@ -72,54 +72,29 @@ fun StatusScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF020408))) {
-        AnimatedPremiumBackground()
+        RpgStatusBackdrop()
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            when (val state = uiState) {
-                is UiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = NeonCyan)
-                    }
+        when (val state = uiState) {
+            is UiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = NeonCyan)
                 }
-                is UiState.Content<*> -> {
-                    val data = state.data as StatusUiData
-                    
-                    HeaderSection(
-                        data = data,
-                        onAvatarSelected = { statusViewModel.updateAvatarUri(it) },
-                        onEditNameTap = { statusViewModel.onEditNameTap() },
-                        onForceEndDay = { statusViewModel.onForceEndDay() }
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    if (data.mainQuest != null && data.mainQuest.tasks.isNotEmpty()) {
-                        MainWorkoutCardPremium(
-                            data = data,
-                            onStartWorkout = { workoutViewModel.onOpenMainWorkout() },
-                            onOpenWorkoutSettings = { workoutViewModel.onOpenWorkoutSettings() }
-                        )
-                    } else {
-                        ActiveRecoveryCard(
-                            onOpenWorkoutSettings = { workoutViewModel.onOpenWorkoutSettings() }
-                        )
-                    }
-
-                    DailyQuestsSectionPremium(
-                        data = data,
-                        onTaskToggled = { task, qId -> statusViewModel.onTaskToggled(task, qId) },
-                        onAddTask = { qId -> statusViewModel.onAddTaskTap(qId) },
-                        onRemoveTask = { id -> statusViewModel.onRemoveTask(id) }
-                    )
-
-                    Spacer(modifier = Modifier.height(88.dp))
-                }
-                is UiState.Error -> DatabaseErrorScreen(state.message)
             }
+            is UiState.Content<*> -> {
+                val data = state.data as StatusUiData
+
+                RpgStatusDashboard(
+                    data = data,
+                    onAvatarSelected = { statusViewModel.updateAvatarUri(it) },
+                    onEditNameTap = { statusViewModel.onEditNameTap() },
+                    onStartWorkout = { workoutViewModel.onOpenMainWorkout() },
+                    onOpenWorkoutSettings = { workoutViewModel.onOpenWorkoutSettings() },
+                    onTaskToggled = { task, qId -> statusViewModel.onTaskToggled(task, qId) },
+                    onAddTask = { qId -> statusViewModel.onAddTaskTap(qId) },
+                    onRemoveTask = { id -> statusViewModel.onRemoveTask(id) }
+                )
+            }
+            is UiState.Error -> DatabaseErrorScreen(state.message)
         }
 
         // Overlay Dialogs
@@ -247,10 +222,6 @@ private fun HeaderSection(
             .fillMaxWidth()
             .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
     ) {
-        com.ihor.thesystem.feature.status.ui.components.SystemHeader(onLongPress = onForceEndDay)
-        
-        Spacer(modifier = Modifier.height(16.dp))
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

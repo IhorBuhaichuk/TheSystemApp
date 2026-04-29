@@ -10,6 +10,7 @@ import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
 import com.ihor.thesystem.domain.usecase.LogWeightUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
+import com.ihor.thesystem.domain.usecase.UpdatePlayerAgeUseCase
 import com.ihor.thesystem.domain.usecase.UpdatePlayerHeightUseCase
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.StatisticsData
@@ -27,7 +28,8 @@ class StatisticsViewModel @Inject constructor(
     private val getStatisticsDataUseCase: GetStatisticsDataUseCase,
     private val recalculateGlobalRankUseCase: RecalculateGlobalRankUseCase,
     private val logWeightUseCase: LogWeightUseCase,
-    private val updatePlayerHeightUseCase: UpdatePlayerHeightUseCase
+    private val updatePlayerHeightUseCase: UpdatePlayerHeightUseCase,
+    private val updatePlayerAgeUseCase: UpdatePlayerAgeUseCase
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -135,6 +137,10 @@ class StatisticsViewModel @Inject constructor(
         _dialogState.value = StatisticsDialogState.EditHeight
     }
 
+    fun onOpenEditAge() {
+        _dialogState.value = StatisticsDialogState.EditAge
+    }
+
     fun onWeightConfirmed(weight: Float) {
         viewModelScope.launch {
             logWeightUseCase(weight).onSuccess {
@@ -151,6 +157,16 @@ class StatisticsViewModel @Inject constructor(
                 onDismissDialog()
             }.onFailure {
                 _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_height_update)))
+            }
+        }
+    }
+
+    fun onAgeConfirmed(age: Int) {
+        viewModelScope.launch {
+            updatePlayerAgeUseCase(age).onSuccess {
+                onDismissDialog()
+            }.onFailure {
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_age_update)))
             }
         }
     }

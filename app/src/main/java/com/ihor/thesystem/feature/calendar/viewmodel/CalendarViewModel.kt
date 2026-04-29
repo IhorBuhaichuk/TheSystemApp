@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.model.PlayerRank
+import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
@@ -26,7 +28,9 @@ data class CalendarDayUiModel(
     val cycleDay: Int,
     val label: String,
     val isToday: Boolean,
-    val isActive: Boolean = false
+    val isActive: Boolean = false,
+    val completedTasks: Int = 0,
+    val totalTasks: Int = 0
 )
 
 data class DailyTaskSnapshotUiModel(
@@ -58,10 +62,17 @@ data class CalendarUiState(
     val nextWorkoutRecommendations: List<ProgressionMatrixEntry> = emptyList(),
     val loggedWeightForDate: Double? = null,
     val currentMonth: YearMonth = YearMonth.now(),
+    val playerName: String = "TheSystem",
+    val playerRank: PlayerRank = PlayerRank.NOVICE,
+    val globalRank: Rank = Rank.E,
+    val currentStreak: Int = 0,
+    val xpThisWeek: Int = 0,
+    val avatarUri: String? = null,
     val isLoading: Boolean = false
 )
 
 data class WorkoutResultUiModel(
+    val exerciseId: Int,
     val exerciseName: String,
     val sets: List<SetResultUiModel>
 )
@@ -102,6 +113,7 @@ class CalendarViewModel @Inject constructor(
     private val _dailyTaskSnapshot = MutableStateFlow(DailyTaskSnapshotUiModel.Empty)
     private val _recommendations = MutableStateFlow<List<ProgressionMatrixEntry>>(emptyList())
     private val _loggedWeight = MutableStateFlow<Double?>(null)
+    private val _monthTaskStats = MutableStateFlow<Map<LocalDate, Pair<Int, Int>>>(emptyMap())
 
     init {
         viewModelScope.launch {
@@ -120,6 +132,12 @@ class CalendarViewModel @Inject constructor(
                     _dailyTaskSnapshot.value = DailyTaskSnapshotUiModel.Empty
                     _recommendations.value = emptyList()
                 }
+            }
+        }
+
+        viewModelScope.launch {
+            _currentMonth.collectLatest { month ->
+                loadMonthTaskStats(month)
             }
         }
 
@@ -147,13 +165,21 @@ class CalendarViewModel @Inject constructor(
         )
     }
 
-    val uiState: StateFlow<CalendarUiState> = combine(
+    private val monthWithStats: Flow<Pair<YearMonth, Map<LocalDate, Pair<Int, Int>>>> = combine(
         _currentMonth,
+        _monthTaskStats
+    ) { month, stats ->
+        month to stats
+    }
+
+    val uiState: StateFlow<CalendarUiState> = combine(
+        monthWithStats,
         configRepo.getConfigFlow().filterNotNull(),
         _selectedDate,
         selectionData,
         playerRepo.getPlayer().filterNotNull()
-    ) { month, config, selectedDate, data, player ->
+    ) { monthData, config, selectedDate, data, player ->
+        val (month, monthTaskStats) = monthData
         val daysInMonth = month.lengthOfMonth()
         val todayDate = today()
         
@@ -170,7 +196,9 @@ class CalendarViewModel @Inject constructor(
                 cycleDay = cycleDay,
                 label = getLabelForCycleDay(cycleDay),
                 isToday = date == todayDate,
-                isActive = date == todayDate
+                isActive = date == todayDate,
+                completedTasks = monthTaskStats[date]?.first ?: 0,
+                totalTasks = monthTaskStats[date]?.second ?: 0
             )
         }
 
@@ -203,6 +231,12 @@ class CalendarViewModel @Inject constructor(
             nextWorkoutRecommendations = data.recommendations,
             loggedWeightForDate = data.loggedWeight,
             currentMonth = month,
+            playerName = player.name,
+            playerRank = player.playerClass,
+            globalRank = player.globalRank,
+            currentStreak = player.currentStreak,
+            xpThisWeek = player.xpThisWeek,
+            avatarUri = player.avatarUri,
             isLoading = false
         )
     }.stateIn(
@@ -259,8 +293,9 @@ class CalendarViewModel @Inject constructor(
         viewModelScope.launch {
             analyticsRepo.getSessionsByDate(millis).collect { sessions ->
                 val results = sessions.flatMap { session ->
-                    session.sets.groupBy { it.exerciseId }.map { (id, sets) ->
+                    session.sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (id, sets) ->
                         WorkoutResultUiModel(
+                            id,
                             workoutRepo.getExerciseNameById(id) ?: "Вправа",
                             sets.map { SetResultUiModel(it.weight, it.reps) }
                         )
@@ -312,6 +347,18 @@ class CalendarViewModel @Inject constructor(
         viewModelScope.launch {
             syncCycleAnchor(day)
         }
+    }
+
+    private suspend fun loadMonthTaskStats(month: YearMonth) {
+        val stats = mutableMapOf<LocalDate, Pair<Int, Int>>()
+        for (day in 1..month.lengthOfMonth()) {
+            val date = month.atDay(day)
+            val tasks = questRepo.getDailyTasksWithCompletionForDate(date.toStartOfDayMillis())
+            if (tasks.isNotEmpty()) {
+                stats[date] = tasks.count { it.second } to tasks.size
+            }
+        }
+        _monthTaskStats.value = stats
     }
 
     fun getScheduleForDay(day: Int) = scheduleRepo.getScheduleForDay(day)

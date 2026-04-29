@@ -17,7 +17,7 @@
     <string name="text_weight">ПОТОЧНА ВАГА</string>
     <string name="text_height">ЗРІСТ</string>
     <string name="text_matrix_empty">МАТРИЦЯ ПОРОЖНЯ</string>
-    <string name="text_system_version">СИСТЕМА v1.0</string>
+
     <string name="text_loading">ЗАВАНТАЖЕННЯ СИСТЕМИ...</string>
     <string name="text_error">ПОМИЛКА</string>
     <string name="text_annual_matrix">РІЧНА МАТРИЦЯ ПРОГРЕСІЇ</string>
@@ -90,12 +90,14 @@
     <string name="error_invalid_name">Некоректне значення: ім\'я має бути від 1 до 50 символів</string>
     <string name="error_invalid_weight">Некоректне значення: допустима вага від 20 до 500 кг</string>
     <string name="error_invalid_height">Некоректне значення: допустимий зріст від 50 до 300 см</string>
+    <string name="error_invalid_age">Некоректне значення: допустимий вік від 1 до 120 років</string>
     <string name="error_unknown">Невідома помилка</string>
     <string name="error_disk_full">Пам’ять пристрою заповнена</string>
     <string name="error_saving">Помилка збереження</string>
     <string name="error_rank_update">Помилка оновлення рангу</string>
     <string name="error_weight_update">Помилка оновлення ваги</string>
     <string name="error_height_update">Помилка оновлення зросту</string>
+    <string name="error_age_update">Помилка оновлення віку</string>
     <string name="error_ai_parsing">Помилка генерації AI, спробуйте ще раз</string>
     <string name="error_generic">Помилка</string>
     <string name="error_operation_failed">Помилка операції</string>

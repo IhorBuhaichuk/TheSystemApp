@@ -21,6 +21,9 @@ interface PlayerDao {
     @Query("UPDATE player SET height = :height WHERE id = 1")
     suspend fun updateHeight(height: Float)
 
+    @Query("UPDATE player SET age = :age WHERE id = 1")
+    suspend fun updateAge(age: Int)
+
     @Query("UPDATE player SET currentCycleDay = :day WHERE id = 1")
     suspend fun updateCurrentCycleDay(day: Int)
 }

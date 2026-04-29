@@ -12,6 +12,7 @@ data class PlayerEntity(
     val level: Int          = 1,
     val playerClass: PlayerRank = PlayerRank.NOVICE,
     val height: Float       = 0f,
+    val age: Int            = 0,
     val currentMonth: Int   = 1,
     val currentWeek: Int    = 1,
     val currentCycleDay: Int = 1,

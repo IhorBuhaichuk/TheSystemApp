@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,7 +22,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -38,65 +42,84 @@ fun SystemBottomNavBar(navController: NavHostController) {
             .fillMaxWidth()
             .background(Color.Transparent)
             .navigationBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 20.dp)
+            .padding(horizontal = 18.dp, vertical = 16.dp)
     ) {
         Surface(
-            color = BackgroundDeep.copy(alpha = 0.85f),
-            shape = RoundedCornerShape(24.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+            color = Color(0xFF050A13).copy(alpha = 0.94f),
+            shape = RoundedCornerShape(26.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.13f)),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp)
+                .height(78.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                NavIconButton(
-                    icon = Icons.Filled.Dashboard,
-                    isSelected = destination?.hasRoute<Routes.Status>() == true,
-                    activeColor = Primary,
-                    onClick = {
-                        navController.navigate(Routes.Status) {
-                            popUpTo<Routes.Status> { inclusive = false }
-                            launchSingleTop = true
-                        }
-                    }
+            Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth(0.66f)
+                        .height(26.dp)
+                        .blur(18.dp)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color.Transparent, Primary.copy(alpha = 0.22f), Color.Transparent)
+                            )
+                        )
                 )
-                NavIconButton(
-                    icon = Icons.Filled.CalendarToday,
-                    isSelected = destination?.hasRoute<Routes.Calendar>() == true,
-                    activeColor = Primary,
-                    onClick = {
-                        navController.navigate(Routes.Calendar) {
-                            popUpTo<Routes.Status> { inclusive = false }
-                            launchSingleTop = true
+
+                Row(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 7.dp),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    NavIconButton(
+                        icon = Icons.Filled.Dashboard,
+                        label = "Дім",
+                        isSelected = destination?.hasRoute<Routes.Status>() == true,
+                        activeColor = Primary,
+                        onClick = {
+                            navController.navigate(Routes.Status) {
+                                popUpTo<Routes.Status> { inclusive = false }
+                                launchSingleTop = true
+                            }
                         }
-                    }
-                )
-                NavIconButton(
-                    icon = Icons.Filled.BarChart,
-                    isSelected = destination?.hasRoute<Routes.Statistics>() == true,
-                    activeColor = Primary,
-                    onClick = {
-                        navController.navigate(Routes.Statistics) {
-                            popUpTo<Routes.Status> { inclusive = false }
-                            launchSingleTop = true
+                    )
+                    NavIconButton(
+                        icon = Icons.Filled.CalendarToday,
+                        label = "Календар",
+                        isSelected = destination?.hasRoute<Routes.Calendar>() == true,
+                        activeColor = Primary,
+                        onClick = {
+                            navController.navigate(Routes.Calendar) {
+                                popUpTo<Routes.Status> { inclusive = false }
+                                launchSingleTop = true
+                            }
                         }
-                    }
-                )
-                NavIconButton(
-                    icon = Icons.Filled.AutoAwesome,
-                    isSelected = destination?.hasRoute<Routes.Architect>() == true,
-                    activeColor = Primary,
-                    onClick = {
-                        navController.navigate(Routes.Architect) {
-                            popUpTo<Routes.Status> { inclusive = false }
-                            launchSingleTop = true
+                    )
+                    NavIconButton(
+                        icon = Icons.Filled.BarChart,
+                        label = "Стати",
+                        isSelected = destination?.hasRoute<Routes.Statistics>() == true,
+                        activeColor = Primary,
+                        onClick = {
+                            navController.navigate(Routes.Statistics) {
+                                popUpTo<Routes.Status> { inclusive = false }
+                                launchSingleTop = true
+                            }
                         }
-                    }
-                )
+                    )
+                    NavIconButton(
+                        icon = Icons.Filled.AutoAwesome,
+                        label = "AI",
+                        isSelected = destination?.hasRoute<Routes.Architect>() == true,
+                        activeColor = Primary,
+                        onClick = {
+                            navController.navigate(Routes.Architect) {
+                                popUpTo<Routes.Status> { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
             }
         }
     }
@@ -105,42 +128,65 @@ fun SystemBottomNavBar(navController: NavHostController) {
 @Composable
 private fun NavIconButton(
     icon: ImageVector,
+    label: String,
     isSelected: Boolean,
     activeColor: Color,
     onClick: () -> Unit
 ) {
     val scale by animateFloatAsState(if (isSelected) 1.2f else 1f, label = "scale")
 
-    Box(
+    Column(
         modifier = Modifier
-            .size(56.dp)
-            .clip(CircleShape)
+            .width(70.dp)
+            .height(64.dp)
+            .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        if (isSelected) {
-            Box(
+        Box(
+            modifier = Modifier.size(38.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(activeColor.copy(alpha = 0.18f), CircleShape)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .blur(12.dp)
+                        .background(activeColor.copy(alpha = 0.22f), CircleShape)
+                )
+            }
+
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isSelected) activeColor else OnSurfaceVariant.copy(alpha = 0.76f),
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(activeColor.copy(alpha = 0.15f), CircleShape)
+                    .size(23.dp)
+                    .graphicsLayer(scaleX = scale, scaleY = scale)
             )
         }
-        
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (isSelected) activeColor else OnSurfaceVariant,
-            modifier = Modifier
-                .size(24.dp)
-                .graphicsLayer(scaleX = scale, scaleY = scale)
+
+        Text(
+            text = label,
+            color = if (isSelected) activeColor else OnSurfaceVariant.copy(alpha = 0.72f),
+            fontSize = 10.sp,
+            lineHeight = 11.sp,
+            fontWeight = if (isSelected) FontWeight.Black else FontWeight.SemiBold,
+            maxLines = 1,
+            textAlign = TextAlign.Center
         )
-        
+
         if (isSelected) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .offset(y = (-8).dp)
-                    .size(4.dp, 4.dp)
+                    .padding(top = 3.dp)
+                    .size(4.dp)
                     .background(activeColor, CircleShape)
             )
         }

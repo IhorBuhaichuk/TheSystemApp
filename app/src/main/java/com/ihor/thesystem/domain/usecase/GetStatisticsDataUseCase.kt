@@ -73,9 +73,16 @@ class GetStatisticsDataUseCase @Inject constructor(
                     MuscleGroup.CORE             to player.coreAttr.toFloat()
                 )
 
+                val xpPerLevel = 1000
+                val xpForCurrentLevel = player.level * xpPerLevel
+                val xpProgress = (player.xpTotal - xpForCurrentLevel).coerceIn(0, xpPerLevel)
+
                 StatisticsData(
                     playerName      = player.name,
                     playerClass     = player.playerClass,
+                    level           = player.level,
+                    xpTotal         = xpProgress,
+                    xpMax           = xpPerLevel,
                     currentMonth    = player.currentMonth,
                     totalMonths     = 12,
                     currentWeek     = player.currentWeek,
@@ -84,9 +91,13 @@ class GetStatisticsDataUseCase @Inject constructor(
                     globalRank      = player.globalRank,
                     currentWeight   = weightHistory.maxByOrNull { it.timestamp }?.weight ?: 0f,
                     currentHeight   = player.height,
+                    age             = player.age,
                     matrixEntries   = updatedEntries,
                     weightHistory   = weightHistory.sortedBy { it.timestamp },
                     characterAttributes = characterAttributes,
+                    currentStreak   = player.currentStreak,
+                    maxStreak       = player.maxStreak,
+                    xpThisWeek      = player.xpThisWeek,
                     avatarUri = player.avatarUri
                 )
             }

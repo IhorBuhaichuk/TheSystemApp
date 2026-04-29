@@ -3,6 +3,7 @@ package com.ihor.thesystem.feature.status.viewmodel
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.R
@@ -31,6 +32,11 @@ import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -103,7 +109,7 @@ class StatusViewModel @Inject constructor(
                 flowOf(null)
             }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {
         // Initialization Group 1: Database Readiness and Initial Calculations
@@ -234,17 +240,36 @@ class StatusViewModel @Inject constructor(
 
     fun updateAvatarUri(uri: Uri) = launchCatching {
         val player = currentPlayer.value ?: return@launchCatching
-        
-        try {
-            context.contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-        } catch (e: SecurityException) {
-            Timber.e(e, "Security error when updating avatar URI")
+
+        val localUri = withContext(Dispatchers.IO) {
+            try {
+                val avatarDir = File(context.filesDir, "avatars")
+                if (!avatarDir.exists()) avatarDir.mkdirs()
+
+                // Delete existing files to avoid accumulation
+                avatarDir.listFiles()?.forEach { it.delete() }
+
+                val fileName = "avatar_${System.currentTimeMillis()}.jpg"
+                val destFile = File(avatarDir, fileName)
+
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(destFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                destFile.toUri().toString()
+            } catch (e: IOException) {
+                Timber.e(e, "Failed to copy avatar to internal storage")
+                null
+            }
         }
 
-        useCases.updatePlayerAvatar(player, uri.toString()).onFailure { e ->
+        if (localUri == null) {
+            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+            return@launchCatching
+        }
+
+        useCases.updatePlayerAvatar(player, localUri).onFailure { e ->
             handleError(e)
         }
     }

@@ -10,6 +10,9 @@ import com.ihor.thesystem.domain.model.PlayerRank
 data class StatisticsUiData(
     val playerName: String                      = "",
     val playerClass: PlayerRank                  = PlayerRank.NOVICE,
+    val level: Int                              = 1,
+    val xpTotal: Int                            = 0,
+    val xpMax: Int                              = 1000,
     val currentMonth: Int                       = 1,
     val totalMonths: Int                        = 12,
     val currentWeek: Int                        = 1,
@@ -18,10 +21,14 @@ data class StatisticsUiData(
     val globalRank: Rank                        = Rank.E,
     val currentWeight: Float                    = 0f,
     val currentHeight: Float                    = 0f,
+    val age: Int                                = 0,
     val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf(),
     val tonnageStats: ImmutableList<DailyTonnageStats>   = persistentListOf(),
     val weightHistory: ImmutableList<BodyWeightLog>      = persistentListOf(),
     val characterAttributes: Map<MuscleGroup, Float>    = emptyMap(),
+    val currentStreak: Int                      = 0,
+    val maxStreak: Int                          = 0,
+    val xpThisWeek: Int                         = 0,
     val avatarUri: String? = null
 )
 
@@ -71,4 +78,5 @@ sealed class StatisticsDialogState {
 
     data object LogWeight : StatisticsDialogState()
     data object EditHeight : StatisticsDialogState()
+    data object EditAge : StatisticsDialogState()
 }

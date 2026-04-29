@@ -58,3 +58,19 @@ class LogWeightUseCase @Inject constructor(
         }
     }
 }
+
+class UpdatePlayerAgeUseCase @Inject constructor(
+    private val repo: PlayerRepository
+) {
+    suspend operator fun invoke(age: Int): Result<Unit> {
+        if (age !in 1..120) {
+            return Result.failure(StringResourceException(UiText.StringResource(R.string.error_invalid_age)))
+        }
+        return try {
+            repo.updateAge(age)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}

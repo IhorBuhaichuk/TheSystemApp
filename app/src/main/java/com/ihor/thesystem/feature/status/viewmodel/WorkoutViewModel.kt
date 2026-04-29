@@ -132,7 +132,7 @@ class WorkoutViewModel @Inject constructor(
             }.toImmutableList(),
             matrixEntries = stats.matrixEntries.map { it.toMatrixEntryUiModel() }.toImmutableList()
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {
         viewModelScope.launch {

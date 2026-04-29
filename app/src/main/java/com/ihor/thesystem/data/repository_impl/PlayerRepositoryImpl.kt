@@ -44,6 +44,10 @@ class PlayerRepositoryImpl @Inject constructor(
         playerDao.updateHeight(height)
     }
 
+    override suspend fun updateAge(age: Int): Result<Unit, DataError.Local> = runDbCatching {
+        playerDao.updateAge(age)
+    }
+
     override suspend fun updateCurrentCycleDay(day: Int): Result<Unit, DataError.Local> = runDbCatching {
         playerDao.updateCurrentCycleDay(day)
     }
@@ -80,6 +84,7 @@ private fun PlayerEntity.toDomain() = Player(
     level = level, 
     playerClass = playerClass, 
     height = height,
+    age = age,
     currentMonth = currentMonth, 
     currentWeek = currentWeek, 
     currentCycleDay = currentCycleDay,
@@ -108,6 +113,7 @@ private fun Player.toEntity() = PlayerEntity(
     level = level, 
     playerClass = playerClass, 
     height = height,
+    age = age,
     currentMonth = currentMonth, 
     currentWeek = currentWeek, 
     currentCycleDay = currentCycleDay,

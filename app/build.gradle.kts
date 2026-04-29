@@ -57,6 +57,18 @@ tasks.withType<KotlinCompile>().configureEach {
     }
 }
 
+tasks.register("unitTestClasses") {
+    group = "build"
+    description = "Compatibility alias for IDE builds that request unit test classes."
+    dependsOn("assembleUnitTest")
+}
+
+tasks.register("androidTestClasses") {
+    group = "build"
+    description = "Compatibility alias for IDE builds that request Android test classes."
+    dependsOn("assembleAndroidTest")
+}
+
 dependencies {
     implementation(project(":domain"))
 

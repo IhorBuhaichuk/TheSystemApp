@@ -6,6 +6,7 @@ data class Player(
     val level: Int,
     val playerClass: PlayerRank,
     val height: Float,
+    val age: Int = 0,
     val currentMonth: Int,
     val currentWeek: Int,
     val currentCycleDay: Int,
