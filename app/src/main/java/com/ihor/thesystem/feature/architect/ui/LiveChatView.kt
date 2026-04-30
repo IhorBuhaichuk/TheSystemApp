@@ -1,10 +1,18 @@
 package com.ihor.thesystem.feature.architect.ui
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -12,28 +20,33 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import com.ihor.thesystem.core.theme.*
-import com.ihor.thesystem.core.ui.UiText
+import com.ihor.thesystem.core.theme.AccentAi
+import com.ihor.thesystem.core.theme.AccentPrimary
+import com.ihor.thesystem.core.theme.BorderSubtle
+import com.ihor.thesystem.core.theme.TextMuted
+import com.ihor.thesystem.core.theme.TextPrimary
+import com.ihor.thesystem.core.theme.TextSecondary
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
-import kotlinx.coroutines.launch
 
-/**
- * Екран Живого Чату з ШІ-тренером.
- * Оптимізовано для UX: підтримка клавіатури, автоматичний скрол та збереження стану.
- */
 @Composable
 fun LiveChatView(
     history: List<ChatMessage>,
@@ -53,139 +66,152 @@ fun LiveChatView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .imePadding() 
+            .imePadding()
     ) {
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(12.dp)
         ) {
-            items(history, key = { it.id }) { msg ->
-                ChatBubble(msg)
-            }
-        }
-
-        // Рядок вводу повідомлення
-        Surface(
-            color = Color.Transparent,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = messageText,
-                    onValueChange = { messageText = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { 
-                        Text("ВВЕДІТЬ ЗАПИТ...", color = Color.White.copy(alpha = 0.2f), fontSize = 13.sp, letterSpacing = 1.sp) 
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = NeonCyan.copy(alpha = 0.5f),
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = NeonCyan,
-                        focusedContainerColor = Color.White.copy(alpha = 0.03f),
-                        unfocusedContainerColor = Color.White.copy(alpha = 0.03f)
-                    ),
-                    shape = RoundedCornerShape(20.dp),
-                    maxLines = 4,
-                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = RajdhaniFamily, fontSize = 15.sp)
-                )
-                
-                IconButton(
-                    onClick = {
-                        if (messageText.isNotBlank()) {
-                            onSendMessage(sessionId, messageText)
-                            messageText = ""
-                        }
-                    },
-                    enabled = messageText.isNotBlank(),
-                    modifier = Modifier
-                        .size(52.dp)
-                        .background(
-                            color = if (messageText.isNotBlank()) NeonCyan.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.05f),
-                            shape = CircleShape
-                        )
-                        .border(1.dp, if (messageText.isNotBlank()) NeonCyan.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.1f), CircleShape)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send, 
-                        contentDescription = "Send", 
-                        tint = if (messageText.isNotBlank()) NeonCyan else Color.White.copy(alpha = 0.2f),
-                        modifier = Modifier.size(22.dp)
-                    )
+            if (history.isEmpty()) {
+                item {
+                    EmptyChatMessage()
+                }
+            } else {
+                items(history, key = { it.id }) { message ->
+                    LiveChatBubble(message = message)
                 }
             }
         }
-    }
-}
 
-@Composable
-private fun ChatBubble(msg: ChatMessage) {
-    val isUser = msg.role == ChatRole.USER
-    val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
-    
-    val bgColor = if (isUser) Color.White.copy(alpha = 0.05f) else StatusError.copy(alpha = 0.03f)
-    val borderColor = if (isUser) Color.White.copy(alpha = 0.15f) else StatusError.copy(alpha = 0.2f)
-    
-    val shape = if (isUser) {
-        RoundedCornerShape(topStart = 20.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
-    } else {
-        RoundedCornerShape(topStart = 4.dp, topEnd = 20.dp, bottomStart = 20.dp, bottomEnd = 20.dp)
-    }
-
-    Box(
-        modifier = Modifier.fillMaxWidth(), 
-        contentAlignment = alignment
-    ) {
-        Column(horizontalAlignment = if (isUser) Alignment.End else Alignment.Start) {
-            Text(
-                text = if (isUser) "ВИ" else "ТРЕНЕР",
-                fontFamily = TekoFamily,
-                fontSize = 10.sp,
-                color = if (isUser) OnSurfaceVariant else StatusError,
-                letterSpacing = 2.sp,
-                modifier = Modifier.padding(bottom = 4.dp, start = 8.dp, end = 8.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            OutlinedTextField(
+                value = messageText,
+                onValueChange = { messageText = it },
+                modifier = Modifier.weight(1f),
+                placeholder = {
+                    Text(
+                        text = "Запит до тренера",
+                        style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
+                    )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AccentPrimary.copy(alpha = 0.45f),
+                    unfocusedBorderColor = BorderSubtle,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    cursorColor = AccentPrimary,
+                    focusedContainerColor = Color.White.copy(alpha = 0.025f),
+                    unfocusedContainerColor = Color.White.copy(alpha = 0.02f)
+                ),
+                shape = RoundedCornerShape(16.dp),
+                maxLines = 3,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary)
             )
-            Surface(
-                color = bgColor,
-                shape = shape,
-                border = BorderStroke(1.dp, borderColor),
-                modifier = Modifier.widthIn(max = 280.dp)
+
+            IconButton(
+                onClick = {
+                    if (messageText.isNotBlank()) {
+                        onSendMessage(sessionId, messageText.trim())
+                        messageText = ""
+                    }
+                },
+                enabled = messageText.isNotBlank(),
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (messageText.isNotBlank()) AccentPrimary.copy(alpha = 0.11f) else Color.White.copy(alpha = 0.035f)
+                    )
+                    .border(
+                        1.dp,
+                        if (messageText.isNotBlank()) AccentPrimary.copy(alpha = 0.32f) else BorderSubtle,
+                        CircleShape
+                    )
             ) {
-                ChatMessageItem(text = msg.text.asString())
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = null,
+                    tint = if (messageText.isNotBlank()) AccentPrimary else TextMuted,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ChatMessageItem(text: String) {
-    val paragraphs = remember(text) { text.split("\n\n") }
-    Column(
-        modifier = Modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+private fun LiveChatBubble(message: ChatMessage) {
+    val isUser = message.role == ChatRole.USER
+    val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
+    val accent = if (message.role == ChatRole.AI) AccentAi else AccentPrimary
+    val shape = if (isUser) {
+        RoundedCornerShape(topStart = 16.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
+    } else {
+        RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
+    }
+
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = alignment
     ) {
-        paragraphs.forEach { paragraph ->
-            val isHeader = paragraph.trimEnd().endsWith(":")
+        Column(
+            horizontalAlignment = if (isUser) Alignment.End else Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
             Text(
-                text = paragraph,
-                color = Color.White,
-                fontFamily = RajdhaniFamily,
-                fontSize = 15.sp,
-                lineHeight = 24.sp,
-                modifier = if (isHeader) Modifier.padding(bottom = 6.dp) else Modifier
+                text = when (message.role) {
+                    ChatRole.USER -> "Ти"
+                    ChatRole.AI -> "Тренер"
+                    ChatRole.SYSTEM -> "Система"
+                },
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = if (isUser) TextMuted else accent,
+                    fontWeight = FontWeight.Bold
+                )
             )
+            Box(
+                modifier = Modifier
+                    .widthIn(max = 290.dp)
+                    .clip(shape)
+                    .background(if (isUser) Color.White.copy(alpha = 0.045f) else accent.copy(alpha = 0.07f))
+                    .border(1.dp, if (isUser) BorderSubtle else accent.copy(alpha = 0.2f), shape)
+                    .padding(13.dp)
+            ) {
+                Text(
+                    text = message.text.asString(),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun EmptyChatMessage() {
+    Text(
+        text = "Чат порожній",
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(13.dp))
+            .background(Color.White.copy(alpha = 0.026f))
+            .border(1.dp, BorderSubtle, RoundedCornerShape(13.dp))
+            .padding(14.dp),
+        style = MaterialTheme.typography.bodySmall.copy(
+            color = TextSecondary,
+            fontWeight = FontWeight.Medium
+        )
+    )
 }

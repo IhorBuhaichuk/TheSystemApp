@@ -25,7 +25,8 @@ import com.ihor.thesystem.domain.model.AiArchitectReport
 @Composable
 fun WorkoutReportDialog(
     report: AiArchitectReport,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onOpenAnalysis: () -> Unit = {}
 ) {
     val context = LocalContext.current
     
@@ -102,6 +103,26 @@ fun WorkoutReportDialog(
                         )
                     }
                 }
+
+                OutlinedButton(
+                    onClick = onOpenAnalysis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = NeonCyan
+                    )
+                ) {
+                    Text(
+                        text = "ВІДКРИТИ АНАЛІЗ",
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.2.sp,
+                        fontFamily = RajdhaniFamily
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Button(
                     onClick = onDismiss,

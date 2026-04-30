@@ -1,11 +1,18 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import java.time.DayOfWeek
+import java.time.Instant
+import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
+import java.util.Locale
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 class GetStatisticsDataUseCase @Inject constructor(
     private val playerRepo: PlayerRepository,
@@ -14,7 +21,8 @@ class GetStatisticsDataUseCase @Inject constructor(
     private val viewingDateRepo: ViewingDateRepository,
     private val configRepo: SystemConfigRepository,
     private val scheduleRepo: ScheduleRepository,
-    private val calculateCycleDay: CalculateCycleDayForDateUseCase
+    private val calculateCycleDay: CalculateCycleDayForDateUseCase,
+    private val clock: AppClock
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(): Flow<StatisticsData> {
@@ -32,13 +40,21 @@ class GetStatisticsDataUseCase @Inject constructor(
         }.distinctUntilChanged()
 
         return cycleDayFlow.flatMapLatest { cycleDay ->
+            val bodyWeightAndWorkoutLogs = combine(
+                playerRepo.getWeightHistory(),
+                analyticsRepo.getAllLogs()
+            ) { weightHistory, workoutLogs ->
+                weightHistory to workoutLogs
+            }
+
             combine(
                 playerRepo.getPlayer().filterNotNull(),
                 matrixRepo.getAllEntries(),
                 analyticsRepo.getAllWeightHistories(),
                 scheduleRepo.getScheduleForDay(cycleDay),
-                playerRepo.getWeightHistory()
-            ) { player, matrix, allHistories, schedule, weightHistory ->
+                bodyWeightAndWorkoutLogs
+            ) { player, matrix, allHistories, schedule, weightAndLogs ->
+                val (weightHistory, workoutLogs) = weightAndLogs
                 val activeExerciseIds = schedule?.exercises?.map { it.id }.orEmpty()
                 val activeExerciseOrder = activeExerciseIds.withIndex()
                     .associate { (index, exerciseId) -> exerciseId to index }
@@ -76,6 +92,7 @@ class GetStatisticsDataUseCase @Inject constructor(
                 val xpPerLevel = 1000
                 val xpForCurrentLevel = player.level * xpPerLevel
                 val xpProgress = (player.xpTotal - xpForCurrentLevel).coerceIn(0, xpPerLevel)
+                val weeklySummary = buildWeeklySummary(workoutLogs)
 
                 StatisticsData(
                     playerName      = player.name,
@@ -98,6 +115,13 @@ class GetStatisticsDataUseCase @Inject constructor(
                     currentStreak   = player.currentStreak,
                     maxStreak       = player.maxStreak,
                     xpThisWeek      = player.xpThisWeek,
+                    weeklySummary   = weeklySummary,
+                    systemInsight   = buildSystemInsight(
+                        matrixEntries = updatedEntries,
+                        weeklySummary = weeklySummary,
+                        currentStreak = player.currentStreak,
+                        xpThisWeek = player.xpThisWeek
+                    ),
                     avatarUri = player.avatarUri
                 )
             }
@@ -106,4 +130,82 @@ class GetStatisticsDataUseCase @Inject constructor(
             emit(StatisticsData())
         }.flowOn(Dispatchers.Default)
     }
+
+    private fun buildWeeklySummary(logs: List<WorkoutLog>): WeeklyTrainingSummary {
+        val today = Instant.ofEpochMilli(clock.now()).atZone(clock.zoneId()).toLocalDate()
+        val weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val weekDays = (0..6).map { weekStart.plusDays(it.toLong()) }
+        val logsByDate = logs.groupBy { it.session.timestamp.toLocalDate() }
+
+        val daySummaries = weekDays.map { date ->
+            val dayLogs = logsByDate[date].orEmpty()
+            WeeklyTrainingDaySummary(
+                date = date,
+                workoutCount = dayLogs.size,
+                totalTonnage = dayLogs.sumOf { it.session.totalTonnage }
+            )
+        }
+
+        return WeeklyTrainingSummary(
+            days = daySummaries,
+            workoutCount = daySummaries.sumOf { it.workoutCount },
+            totalTonnage = daySummaries.sumOf { it.totalTonnage }
+        )
+    }
+
+    private fun buildSystemInsight(
+        matrixEntries: List<MatrixEntryData>,
+        weeklySummary: WeeklyTrainingSummary,
+        currentStreak: Int,
+        xpThisWeek: Int
+    ): SystemInsight {
+        val improvedEntry = matrixEntries
+            .filter { it.entry.currentWeight > it.entry.startWeight }
+            .maxByOrNull { it.entry.currentWeight - it.entry.startWeight }
+
+        val weakestEntry = matrixEntries
+            .filter { it.entry.targetWeight > 0f }
+            .minByOrNull { it.entry.progressPercent }
+
+        val improved = improvedEntry?.let { entry ->
+            val delta = entry.entry.currentWeight - entry.entry.startWeight
+            "${entry.entry.exerciseName}: +${delta.formatWeight()} кг від старту."
+        } ?: "Система накопичує базу прогресу."
+
+        val weakPoint = when {
+            weeklySummary.workoutCount == 0 -> "Цього тижня ще немає зафіксованих тренувань."
+            weakestEntry != null && weakestEntry.entry.progressPercent < 0.75f -> {
+                val percent = (weakestEntry.entry.progressPercent.coerceIn(0f, 1f) * 100f).roundToInt()
+                "${weakestEntry.entry.exerciseName}: нижче плану ($percent%)."
+            }
+            else -> "Критичних просідань по плану не видно."
+        }
+
+        val recommendation = when {
+            weeklySummary.workoutCount == 0 ->
+                "Зафіксуй хоча б одне тренування, щоб система бачила ритм."
+            weakestEntry != null && weakestEntry.entry.progressPercent < 0.9f ->
+                "Тримай фокус на ${weakestEntry.entry.exerciseName} і не підвищуй план різко."
+            currentStreak > 0 && xpThisWeek > 0 ->
+                "Підтримуй поточний ритм і закрий тиждень без різких стрибків навантаження."
+            else ->
+                "Почни з короткого стабільного тижня і зафіксуй факт після кожного тренування."
+        }
+
+        return SystemInsight(
+            improved = improved,
+            weakPoint = weakPoint,
+            recommendation = recommendation
+        )
+    }
+
+    private fun Long.toLocalDate(): LocalDate =
+        Instant.ofEpochMilli(this).atZone(clock.zoneId()).toLocalDate()
+
+    private fun Float.formatWeight(): String =
+        if (this % 1f == 0f) {
+            this.toInt().toString()
+        } else {
+            String.format(Locale.US, "%.1f", this)
+        }
 }

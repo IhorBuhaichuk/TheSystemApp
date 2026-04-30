@@ -70,6 +70,35 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun saveAnnualProgressionPlan(
+        exerciseId: Int,
+        startWeight: Float,
+        targetWeight: Float,
+        targetWeightNote: String?
+    ) {
+        val existing = matrixDao.getEntryForExerciseSync(exerciseId)
+        if (existing != null) {
+            matrixDao.update(
+                existing.copy(
+                    startWeight = startWeight,
+                    targetWeight = targetWeight,
+                    currentWeight = startWeight,
+                    targetWeightNote = targetWeightNote
+                )
+            )
+        } else {
+            matrixDao.insert(
+                ProgressionMatrixEntity(
+                    exerciseId = exerciseId,
+                    startWeight = startWeight,
+                    targetWeight = targetWeight,
+                    currentWeight = startWeight,
+                    targetWeightNote = targetWeightNote
+                )
+            )
+        }
+    }
+
     override suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>) {
         saveExerciseSetsWithDate(exerciseId, sets, System.currentTimeMillis())
     }

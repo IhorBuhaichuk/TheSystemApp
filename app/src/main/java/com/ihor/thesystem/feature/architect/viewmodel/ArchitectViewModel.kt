@@ -8,8 +8,10 @@ import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
+import com.ihor.thesystem.domain.model.AiDashboardData
 import com.ihor.thesystem.domain.repository.ChatRepository
 import com.ihor.thesystem.domain.usecase.ApplyAiRecommendationsUseCase
+import com.ihor.thesystem.domain.usecase.GetAiDashboardDataUseCase
 import com.ihor.thesystem.domain.usecase.GetLastWorkoutContextUseCase
 import com.ihor.thesystem.domain.usecase.SendArchitectAnalysisUseCase
 import com.ihor.thesystem.domain.usecase.SendLiveCoachMessageUseCase
@@ -23,6 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ArchitectViewModel @Inject constructor(
     private val getLastWorkoutContext: GetLastWorkoutContextUseCase,
+    private val getAiDashboardData: GetAiDashboardDataUseCase,
     private val applyAiRecommendations: ApplyAiRecommendationsUseCase,
     private val sendArchitectAnalysis: SendArchitectAnalysisUseCase,
     private val sendLiveCoachMessage: SendLiveCoachMessageUseCase,
@@ -35,11 +38,26 @@ class ArchitectViewModel @Inject constructor(
     private val _chatHistory = MutableStateFlow<List<ChatMessage>>(emptyList())
     val chatHistory: StateFlow<List<ChatMessage>> = _chatHistory.asStateFlow()
 
+    private val _dashboardState = MutableStateFlow(AiDashboardUiState())
+    val dashboardState: StateFlow<AiDashboardUiState> = _dashboardState.asStateFlow()
+
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
 
     init {
         loadInitialContext()
+        observeDashboardData()
+    }
+
+    private fun observeDashboardData() {
+        viewModelScope.launch {
+            getAiDashboardData()
+                .map { it.toUiState() }
+                .catch { emit(AiDashboardUiState(isLoading = false)) }
+                .collect { state ->
+                    _dashboardState.value = state
+                }
+        }
     }
 
     private fun loadInitialContext() {
@@ -214,4 +232,20 @@ class ArchitectViewModel @Inject constructor(
             }
         }
     }
+}
+
+private fun AiDashboardData.toUiState(): AiDashboardUiState {
+    return AiDashboardUiState(
+        isLoading = false,
+        shortConclusion = shortConclusion,
+        lastRecommendation = lastRecommendation?.let { recommendation ->
+            AiRecommendationUiModel(
+                exerciseName = recommendation.exerciseName,
+                recommendedWeight = recommendation.recommendedWeight,
+                recommendedSets = recommendation.recommendedSets,
+                recommendedReps = recommendation.recommendedReps,
+                feedback = recommendation.feedback
+            )
+        }
+    )
 }

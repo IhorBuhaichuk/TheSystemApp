@@ -3,6 +3,12 @@ package com.ihor.thesystem.core.navigation
 import kotlinx.serialization.Serializable
 
 sealed interface Routes {
+    companion object {
+        const val PICKER_SOURCE_CYCLE = "cycle"
+        const val PICKER_SOURCE_ANNUAL = "annual"
+        const val PICKER_RESULT_EXERCISE_ID = "picker_result_exercise_id"
+    }
+
     @Serializable
     data object Status : Routes
 
@@ -23,4 +29,16 @@ sealed interface Routes {
      
     @Serializable
     data object AnnualMatrix : Routes
+
+    @Serializable
+    data object AnnualProgressionPlan : Routes
+
+    @Serializable
+    data object WorkoutAnalysis : Routes
+
+    @Serializable
+    data class ExercisePicker(
+        val source: String,
+        val cycleDay: Int = -1
+    ) : Routes
 }

@@ -40,19 +40,14 @@ import com.ihor.thesystem.feature.status.viewmodel.StatusDialogState
 import com.ihor.thesystem.feature.status.viewmodel.StatusOneOffEvent
 import com.ihor.thesystem.feature.status.viewmodel.StatusUiData
 import com.ihor.thesystem.feature.status.viewmodel.StatusViewModel
-import com.ihor.thesystem.feature.status.viewmodel.WorkoutViewModel
 
 @Composable
 fun StatusScreen(
     navController: NavHostController,
-    statusViewModel: StatusViewModel = hiltViewModel(),
-    workoutViewModel: WorkoutViewModel = hiltViewModel()
+    statusViewModel: StatusViewModel = hiltViewModel()
 ) {
     val uiState by statusViewModel.uiState.collectAsStateWithLifecycle()
     val statusDialogState by statusViewModel.dialogState.collectAsStateWithLifecycle()
-    val workoutDialogState by workoutViewModel.dialogState.collectAsStateWithLifecycle()
-    val activeDayWorkout by workoutViewModel.activeWorkoutState.collectAsStateWithLifecycle()
-    val settingsUiState by workoutViewModel.settingsUiState.collectAsStateWithLifecycle()
 
     var levelUpEvent by remember { mutableStateOf<StatusOneOffEvent.ShowLevelUp?>(null) }
 
@@ -79,13 +74,13 @@ fun StatusScreen(
                     data = data,
                     onAvatarSelected = { statusViewModel.updateAvatarUri(it) },
                     onEditNameTap = { statusViewModel.onEditNameTap() },
-                    onStartWorkout = { workoutViewModel.onOpenMainWorkout() },
+                    onStartWorkout = { navController.navigate(Routes.Cycle) },
                     onOpenCalendar = { navController.navigate(Routes.Calendar) },
                     onSelectWeekDay = { date ->
                         statusViewModel.onWeekDaySelected(date)
                         navController.navigate(Routes.Calendar)
                     },
-                    onOpenWorkoutSettings = { workoutViewModel.onOpenWorkoutSettings() },
+                    onOpenWorkoutSettings = { navController.navigate(Routes.Cycle) },
                     onTaskToggled = { task, questId -> statusViewModel.onTaskToggled(task, questId) },
                     onAddTask = { questId -> statusViewModel.onAddTaskTap(questId) },
                     onRemoveTask = { taskId -> statusViewModel.onRemoveTask(taskId) }
@@ -106,13 +101,6 @@ fun StatusScreen(
             dialogState = statusDialogState,
             uiState = uiState,
             statusViewModel = statusViewModel
-        )
-
-        WorkoutDialogHost(
-            dialogState = workoutDialogState,
-            activeDayWorkout = activeDayWorkout,
-            settingsUiState = settingsUiState,
-            workoutViewModel = workoutViewModel
         )
     }
 }

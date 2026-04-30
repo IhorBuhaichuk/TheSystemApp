@@ -29,7 +29,27 @@ data class StatisticsUiData(
     val currentStreak: Int                      = 0,
     val maxStreak: Int                          = 0,
     val xpThisWeek: Int                         = 0,
+    val weeklySummary: WeeklyTrainingSummaryUiModel = WeeklyTrainingSummaryUiModel(),
+    val systemInsight: SystemInsightUiModel = SystemInsightUiModel(),
     val avatarUri: String? = null
+)
+
+data class WeeklyTrainingSummaryUiModel(
+    val days: ImmutableList<WeeklyTrainingDayUiModel> = persistentListOf(),
+    val workoutCount: Int = 0,
+    val totalTonnage: Double = 0.0
+)
+
+data class WeeklyTrainingDayUiModel(
+    val label: String,
+    val workoutCount: Int,
+    val totalTonnage: Double
+)
+
+data class SystemInsightUiModel(
+    val improved: String = "",
+    val weakPoint: String = "",
+    val recommendation: String = ""
 )
 
 data class MatrixEntryUiModel(

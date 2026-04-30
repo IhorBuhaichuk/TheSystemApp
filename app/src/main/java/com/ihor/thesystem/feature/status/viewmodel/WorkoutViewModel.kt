@@ -55,6 +55,7 @@ class WorkoutViewModel @Inject constructor(
 
     private val _currentLogSets = MutableStateFlow<List<ActiveSetInput>>(emptyList())
     private val _userEdits = MutableStateFlow<Map<Int, List<ActiveSetInput>>>(emptyMap())
+    private val _selectedCycleDayOverride = MutableStateFlow<Int?>(null)
 
     private val _saveEvents = MutableSharedFlow<SetSavePayload>(replay = 0)
 
@@ -74,9 +75,44 @@ class WorkoutViewModel @Inject constructor(
             1
         }
     }.distinctUntilChanged()
-    .onEach { _userEdits.value = emptyMap() }
 
-    private val activeWorkoutFlow: Flow<ActiveDayUiModel?> = cycleDay
+    private val displayedCycleDay: Flow<Int> = combine(
+        cycleDay,
+        _selectedCycleDayOverride
+    ) { activeDay, selectedDay ->
+        selectedDay ?: activeDay
+    }
+        .distinctUntilChanged()
+        .onEach { selectedDay ->
+            _userEdits.value = emptyMap()
+            _settingsUiState.update { it.copy(selectedDay = selectedDay) }
+        }
+
+    val cycleDaysState: StateFlow<List<CycleDayUiModel>> = combine(
+        getSystemConfig().filterNotNull(),
+        cycleDay,
+        displayedCycleDay
+    ) { config, activeDay, selectedDay ->
+        Triple(config.cycleDaysPerMicrocycle.coerceAtLeast(1), activeDay, selectedDay)
+    }.flatMapLatest { (totalDays, activeDay, selectedDay) ->
+        useCases.getSchedulesForDays((1..totalDays).toList()).map { schedules ->
+            val schedulesByDay = schedules.associateBy { it.cycleDay }
+            (1..totalDays).map { day ->
+                val schedule = schedulesByDay[day]
+                val isWorkoutDay = schedule?.isWorkoutDay == true &&
+                    (schedule.workoutTemplateName != null || schedule.exercises.isNotEmpty())
+                CycleDayUiModel(
+                    dayNumber = day,
+                    type = if (isWorkoutDay) DayType.WORKOUT else DayType.REST,
+                    isActive = day == activeDay,
+                    isSelected = day == selectedDay,
+                    workoutName = schedule?.workoutTemplateName
+                )
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    private val displayedWorkoutFlow: Flow<ActiveDayUiModel?> = displayedCycleDay
         .flatMapLatest { day ->
             useCases.getSchedulesForDays(listOf(day))
         }
@@ -120,7 +156,7 @@ class WorkoutViewModel @Inject constructor(
     private val statsFlow = useCases.getStatisticsData()
 
     val activeWorkoutState: StateFlow<ActiveDayUiModel?> = combine(
-        activeWorkoutFlow,
+        displayedWorkoutFlow,
         statsFlow,
         _userEdits
     ) { workout, stats, edits ->
@@ -288,18 +324,23 @@ class WorkoutViewModel @Inject constructor(
         _dialogState.value = StatusDialogState.MainQuestWorkout
     }
 
+    fun onCycleDaySelected(day: Int) {
+        _selectedCycleDayOverride.value = day
+        _settingsUiState.update { it.copy(selectedDay = day) }
+    }
+
     fun onOpenWorkoutSettings() {
         viewModelScope.launch {
-            val today = cycleDay.first()
+            val selectedDay = displayedCycleDay.first()
             val config = getSystemConfig().filterNotNull().first()
             _settingsUiState.update {
                 it.copy(
                     totalCycleDays = config.cycleDaysPerMicrocycle,
-                    selectedDay = today
+                    selectedDay = selectedDay
                 )
             }
             _dialogState.value = StatusDialogState.WorkoutScheduleSettings
-            loadSettingsForDay(today)
+            loadSettingsForDay(selectedDay)
         }
     }
 
@@ -325,12 +366,39 @@ class WorkoutViewModel @Inject constructor(
     fun onAddExerciseToDay(exerciseId: Int) {
         val state = _settingsUiState.value
         viewModelScope.launch(Dispatchers.IO) {
-            val currentIds = state.exercisesForSelectedDay.map { it.id }.toMutableList()
+            val schedule = useCases.getSchedulesForDays(listOf(state.selectedDay)).first().firstOrNull()
+            val currentIds = schedule?.exercises?.map { it.id }?.toMutableList()
+                ?: state.exercisesForSelectedDay.map { it.id }.toMutableList()
             if (!currentIds.contains(exerciseId)) {
                 currentIds.add(exerciseId)
                 useCases.saveWorkoutForDay(
                     cycleDay = state.selectedDay,
-                    workoutName = state.workoutNameDraft.ifBlank { "День ${state.selectedDay}" },
+                    workoutName = state.workoutNameDraft.ifBlank {
+                        schedule?.workoutTemplateName ?: "День ${state.selectedDay}"
+                    },
+                    exerciseIds = currentIds
+                )
+            }
+        }
+    }
+
+    fun onAddExerciseToDay(exerciseId: Int, cycleDay: Int) {
+        val state = _settingsUiState.value
+        viewModelScope.launch(Dispatchers.IO) {
+            val schedule = useCases.getSchedulesForDays(listOf(cycleDay)).first().firstOrNull()
+            val currentIds = schedule?.exercises?.map { it.id }?.toMutableList()
+                ?: if (state.selectedDay == cycleDay) {
+                    state.exercisesForSelectedDay.map { it.id }.toMutableList()
+                } else {
+                    mutableListOf()
+                }
+            if (!currentIds.contains(exerciseId)) {
+                currentIds.add(exerciseId)
+                useCases.saveWorkoutForDay(
+                    cycleDay = cycleDay,
+                    workoutName = state.workoutNameDraft.ifBlank {
+                        schedule?.workoutTemplateName ?: "День $cycleDay"
+                    },
                     exerciseIds = currentIds
                 )
             }
@@ -349,12 +417,15 @@ class WorkoutViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val newExerciseId = useCases.createExercise(name)
             refreshAllExercises()
-            // Одразу додати нову вправу до поточного дня
-            val currentIds = state.exercisesForSelectedDay.map { it.id }.toMutableList()
+            val schedule = useCases.getSchedulesForDays(listOf(state.selectedDay)).first().firstOrNull()
+            val currentIds = schedule?.exercises?.map { it.id }?.toMutableList()
+                ?: state.exercisesForSelectedDay.map { it.id }.toMutableList()
             currentIds.add(newExerciseId)
             useCases.saveWorkoutForDay(
                 cycleDay = state.selectedDay,
-                workoutName = state.workoutNameDraft.ifBlank { "День ${state.selectedDay}" },
+                workoutName = state.workoutNameDraft.ifBlank {
+                    schedule?.workoutTemplateName ?: "День ${state.selectedDay}"
+                },
                 exerciseIds = currentIds
             )
         }

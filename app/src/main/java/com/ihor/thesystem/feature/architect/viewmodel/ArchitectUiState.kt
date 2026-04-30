@@ -11,3 +11,17 @@ data class ArchitectUiState(
     val lastWorkoutContext: String? = null,
     val analysisAlreadySent: Boolean = false
 )
+
+data class AiDashboardUiState(
+    val isLoading: Boolean = true,
+    val shortConclusion: String = "",
+    val lastRecommendation: AiRecommendationUiModel? = null
+)
+
+data class AiRecommendationUiModel(
+    val exerciseName: String,
+    val recommendedWeight: Double?,
+    val recommendedSets: Int?,
+    val recommendedReps: String?,
+    val feedback: String?
+)

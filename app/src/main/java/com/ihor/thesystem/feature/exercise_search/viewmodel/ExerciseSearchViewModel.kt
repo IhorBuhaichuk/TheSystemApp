@@ -3,11 +3,12 @@ package com.ihor.thesystem.feature.exercise_search.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.domain.model.ExerciseDetails
+import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.usecase.SearchExercisesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 data class ExerciseFilterState(
@@ -20,9 +21,15 @@ data class ExerciseFilterState(
     val selectedCategories: Set<com.ihor.thesystem.domain.model.ExerciseCategory> = emptySet()
 )
 
+data class ExercisePickerItemUiModel(
+    val exercise: ExerciseDetails,
+    val lastResultText: String?
+)
+
 sealed interface ExerciseSearchEvent {
     data class UpdateQuery(val query: String) : ExerciseSearchEvent
     data class ToggleMuscle(val muscle: String) : ExerciseSearchEvent
+    data class ToggleMuscleGroup(val muscles: Set<String>) : ExerciseSearchEvent
     data class ToggleEquipment(val equipment: String) : ExerciseSearchEvent
     data class ToggleLevel(val level: String) : ExerciseSearchEvent
     data class ToggleMechanic(val mechanic: String) : ExerciseSearchEvent
@@ -33,7 +40,8 @@ sealed interface ExerciseSearchEvent {
 
 @HiltViewModel
 class ExerciseSearchViewModel @Inject constructor(
-    private val searchExercisesUseCase: SearchExercisesUseCase
+    private val searchExercisesUseCase: SearchExercisesUseCase,
+    private val progressionMatrixRepository: ProgressionMatrixRepository
 ) : ViewModel() {
 
     private val _filterState = MutableStateFlow(ExerciseFilterState())
@@ -56,6 +64,24 @@ class ExerciseSearchViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val pickerItems: StateFlow<List<ExercisePickerItemUiModel>> = combine(
+        exercises,
+        progressionMatrixRepository.getAllEntries()
+    ) { exerciseList, matrixEntries ->
+        val currentWeightsByExerciseId = matrixEntries.associate { entry ->
+            entry.exerciseId to entry.currentWeight
+        }
+        exerciseList.map { exercise ->
+            ExercisePickerItemUiModel(
+                exercise = exercise,
+                lastResultText = currentWeightsByExerciseId[exercise.id]
+                    ?.takeIf { it > 0f }
+                    ?.formatWeight()
+                    ?.let { "$it кг" }
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     fun onEvent(event: ExerciseSearchEvent) {
         when (event) {
             is ExerciseSearchEvent.UpdateQuery -> {
@@ -69,6 +95,18 @@ class ExerciseSearchViewModel @Inject constructor(
                         state.selectedMuscles + event.muscle
                     }
                     state.copy(selectedMuscles = newSet)
+                }
+            }
+            is ExerciseSearchEvent.ToggleMuscleGroup -> {
+                _filterState.update { state ->
+                    val isSelected = event.muscles.all { it in state.selectedMuscles }
+                    state.copy(
+                        selectedMuscles = if (isSelected) {
+                            state.selectedMuscles - event.muscles
+                        } else {
+                            state.selectedMuscles + event.muscles
+                        }
+                    )
                 }
             }
             is ExerciseSearchEvent.ToggleEquipment -> {
@@ -127,3 +165,10 @@ class ExerciseSearchViewModel @Inject constructor(
         }
     }
 }
+
+private fun Float.formatWeight(): String =
+    if (this % 1f == 0f) {
+        toInt().toString()
+    } else {
+        String.format(Locale.US, "%.1f", this)
+    }

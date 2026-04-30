@@ -11,6 +11,12 @@ interface ProgressionMatrixRepository {
     suspend fun getEntrySync(exerciseId: Int): ProgressionMatrixEntry?
     suspend fun updateCurrentWeight(exerciseId: Int, newWeight: Float)
     suspend fun updateMatrixGoals(exerciseId: Int, startWeight: Float, targetWeight: Float)
+    suspend fun saveAnnualProgressionPlan(
+        exerciseId: Int,
+        startWeight: Float,
+        targetWeight: Float,
+        targetWeightNote: String?
+    )
     
     suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>)
     suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<ActiveSetInput>, timestamp: Long, userFeedback: String? = null)
