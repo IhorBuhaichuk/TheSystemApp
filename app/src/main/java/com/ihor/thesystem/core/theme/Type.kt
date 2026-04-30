@@ -37,13 +37,13 @@ val TheSystemTypography = Typography(
         fontFamily = TekoFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
-        color = NeonCyan
+        color = TextPrimary
     ),
     titleLarge = TextStyle(
         fontFamily = RajdhaniFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 20.sp,
-        color = NeonCyan
+        color = TextPrimary
     ),
     titleMedium = TextStyle(
         fontFamily = RajdhaniFamily,
@@ -61,6 +61,24 @@ val TheSystemTypography = Typography(
         fontFamily = RajdhaniFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
+        color = TextSecondary
+    ),
+    bodySmall = TextStyle(
+        fontFamily = RajdhaniFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 11.sp,
+        color = TextMuted
+    ),
+    labelLarge = TextStyle(
+        fontFamily = RajdhaniFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 13.sp,
+        color = TextSecondary
+    ),
+    labelMedium = TextStyle(
+        fontFamily = RajdhaniFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
         color = TextSecondary
     ),
     labelSmall = TextStyle(

@@ -14,6 +14,8 @@ import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.DomainQuestStatus
 import com.ihor.thesystem.domain.model.DomainQuestType
+import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus
+import com.ihor.thesystem.domain.model.CalendarWeekDay
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.model.StatusData
@@ -37,6 +39,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -68,9 +73,14 @@ class StatusViewModel @Inject constructor(
                     _questsReady
                         .filter { it } // чекаємо поки квести готові
                         .flatMapLatest {
-                            useCases.getStatusData()
-                                .map<StatusData, UiState<StatusUiData>> { data ->
-                                    UiState.Content(data.toUiData())
+                            combine(
+                                useCases.getStatusData(),
+                                useCases.getCalendarWeekPreview()
+                            ) { data, weekPreview ->
+                                data to weekPreview
+                            }
+                                .map<Pair<StatusData, List<CalendarWeekDay>>, UiState<StatusUiData>> { (data, weekPreview) ->
+                                    UiState.Content(data.toUiData(weekPreview))
                                 }
                                 .catch { e ->
                                     Timber.e(e, "Error loading status data")
@@ -320,7 +330,11 @@ class StatusViewModel @Inject constructor(
         onDismissDialog()
     }
 
-    private fun StatusData.toUiData() = StatusUiData(
+    fun onWeekDaySelected(date: LocalDate) {
+        useCases.selectViewingDate(date)
+    }
+
+    private fun StatusData.toUiData(weekPreview: List<CalendarWeekDay> = emptyList()) = StatusUiData(
         playerName = playerName,
         playerClass = playerClass,
         level = level,
@@ -341,7 +355,8 @@ class StatusViewModel @Inject constructor(
         currentStreak = currentStreak,
         maxStreak = maxStreak,
         xpThisWeek = xpThisWeek,
-        avatarUri = avatarUri
+        avatarUri = avatarUri,
+        weekPreview = weekPreview.map { it.toUiModel() }.toImmutableList()
     )
 
     private fun Quest.toUiModel() = QuestUiModel(
@@ -364,4 +379,31 @@ class StatusViewModel @Inject constructor(
         }.toImmutableList(),
         isCompleted = status == DomainQuestStatus.COMPLETED
     )
+
+    private fun CalendarWeekDay.toUiModel(): StatusWeekDayUiModel {
+        val visualType = when {
+            calendarDay.type.isWorkDay && hasTraining -> StatusWeekDayVisualType.MIXED
+            hasTraining -> StatusWeekDayVisualType.TRAINING
+            calendarDay.type.isWorkDay -> StatusWeekDayVisualType.WORK
+            else -> StatusWeekDayVisualType.REST
+        }
+        val locale = Locale("uk")
+        return StatusWeekDayUiModel(
+            date = date,
+            weekDayLabel = date.dayOfWeek.getDisplayName(TextStyle.SHORT_STANDALONE, locale)
+                .replace(".", "")
+                .take(2)
+                .uppercase(locale),
+            dayNumber = date.dayOfMonth.toString(),
+            visualType = visualType,
+            status = when (completionStatus) {
+                CalendarDayCompletionStatus.COMPLETED -> StatusWeekDayStatus.COMPLETED
+                CalendarDayCompletionStatus.PARTIAL -> StatusWeekDayStatus.PARTIAL
+                CalendarDayCompletionStatus.MISSED -> StatusWeekDayStatus.MISSED
+                CalendarDayCompletionStatus.PLANNED -> StatusWeekDayStatus.PLANNED
+                CalendarDayCompletionStatus.NO_DATA -> StatusWeekDayStatus.NO_DATA
+            },
+            isToday = isToday
+        )
+    }
 }

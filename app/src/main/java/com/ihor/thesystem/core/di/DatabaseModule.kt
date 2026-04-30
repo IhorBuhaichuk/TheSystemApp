@@ -70,5 +70,6 @@ abstract class DatabaseModule {
         @Provides fun provideWorkoutAnalyticsDao(db: AppDatabase)  = db.workoutAnalyticsDao()
         @Provides fun provideProtocolTemplateDao(db: AppDatabase)  = db.protocolTemplateDao()
         @Provides fun provideChatDao(db: AppDatabase)              = db.chatDao()
+        @Provides fun provideCalendarCycleDao(db: AppDatabase)     = db.calendarCycleDao()
     }
 }

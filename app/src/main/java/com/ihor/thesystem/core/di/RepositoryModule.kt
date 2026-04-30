@@ -22,6 +22,9 @@ abstract class RepositoryModule {
     abstract fun bindSystemConfigRepository(impl: SystemConfigRepositoryImpl): SystemConfigRepository
 
     @Binds @Singleton
+    abstract fun bindCalendarCycleRepository(impl: CalendarCycleRepositoryImpl): CalendarCycleRepository
+
+    @Binds @Singleton
     abstract fun bindScheduleRepository(impl: ScheduleRepositoryImpl): ScheduleRepository
 
     @Binds @Singleton

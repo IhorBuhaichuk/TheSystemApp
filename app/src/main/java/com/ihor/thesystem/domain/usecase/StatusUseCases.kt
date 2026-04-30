@@ -19,5 +19,7 @@ data class StatusUseCases @Inject constructor(
     val calculateAttributes: CalculateAttributesUseCase,
     val setNeedsDailyInit: SetNeedsDailyInitUseCase,
     val saveLastInitDate: SaveLastInitDateUseCase,
-    val finalizeDay: FinalizeDayUseCase
+    val finalizeDay: FinalizeDayUseCase,
+    val getCalendarWeekPreview: GetCalendarWeekPreviewUseCase,
+    val selectViewingDate: SelectViewingDateUseCase
 )

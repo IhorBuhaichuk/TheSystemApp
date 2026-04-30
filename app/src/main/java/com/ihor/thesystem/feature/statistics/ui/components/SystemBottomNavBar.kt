@@ -73,7 +73,7 @@ fun SystemBottomNavBar(navController: NavHostController) {
                 ) {
                     NavIconButton(
                         icon = Icons.Filled.Dashboard,
-                        label = "Дім",
+                        label = "Статус",
                         isSelected = destination?.hasRoute<Routes.Status>() == true,
                         activeColor = Primary,
                         onClick = {
@@ -84,12 +84,12 @@ fun SystemBottomNavBar(navController: NavHostController) {
                         }
                     )
                     NavIconButton(
-                        icon = Icons.Filled.CalendarToday,
-                        label = "Календар",
-                        isSelected = destination?.hasRoute<Routes.Calendar>() == true,
+                        icon = Icons.Filled.FitnessCenter,
+                        label = "Цикл",
+                        isSelected = destination?.hasRoute<Routes.Cycle>() == true,
                         activeColor = Primary,
                         onClick = {
-                            navController.navigate(Routes.Calendar) {
+                            navController.navigate(Routes.Cycle) {
                                 popUpTo<Routes.Status> { inclusive = false }
                                 launchSingleTop = true
                             }
@@ -97,7 +97,7 @@ fun SystemBottomNavBar(navController: NavHostController) {
                     )
                     NavIconButton(
                         icon = Icons.Filled.BarChart,
-                        label = "Стати",
+                        label = "Аналітика",
                         isSelected = destination?.hasRoute<Routes.Statistics>() == true,
                         activeColor = Primary,
                         onClick = {
@@ -109,9 +109,9 @@ fun SystemBottomNavBar(navController: NavHostController) {
                     )
                     NavIconButton(
                         icon = Icons.Filled.AutoAwesome,
-                        label = "AI",
+                        label = "ШІ",
                         isSelected = destination?.hasRoute<Routes.Architect>() == true,
-                        activeColor = Primary,
+                        activeColor = AccentAi,
                         onClick = {
                             navController.navigate(Routes.Architect) {
                                 popUpTo<Routes.Status> { inclusive = false }
@@ -137,7 +137,7 @@ private fun NavIconButton(
 
     Column(
         modifier = Modifier
-            .width(70.dp)
+            .width(78.dp)
             .height(64.dp)
             .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onClick),
@@ -175,7 +175,7 @@ private fun NavIconButton(
         Text(
             text = label,
             color = if (isSelected) activeColor else OnSurfaceVariant.copy(alpha = 0.72f),
-            fontSize = 10.sp,
+            fontSize = 9.sp,
             lineHeight = 11.sp,
             fontWeight = if (isSelected) FontWeight.Black else FontWeight.SemiBold,
             maxLines = 1,

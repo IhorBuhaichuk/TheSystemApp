@@ -4,6 +4,7 @@ import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.Rank
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import java.time.LocalDate
 
 import com.ihor.thesystem.domain.model.PlayerRank
 
@@ -28,7 +29,32 @@ data class StatusUiData(
     val currentStreak: Int = 0,
     val maxStreak: Int = 0,
     val xpThisWeek: Int = 0,
-    val avatarUri: String? = null
+    val avatarUri: String? = null,
+    val weekPreview: ImmutableList<StatusWeekDayUiModel> = persistentListOf()
+)
+
+enum class StatusWeekDayVisualType {
+    WORK,
+    TRAINING,
+    MIXED,
+    REST
+}
+
+enum class StatusWeekDayStatus {
+    COMPLETED,
+    PARTIAL,
+    MISSED,
+    PLANNED,
+    NO_DATA
+}
+
+data class StatusWeekDayUiModel(
+    val date: LocalDate,
+    val weekDayLabel: String,
+    val dayNumber: String,
+    val visualType: StatusWeekDayVisualType,
+    val status: StatusWeekDayStatus,
+    val isToday: Boolean
 )
 
 data class QuestUiModel(

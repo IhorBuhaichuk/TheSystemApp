@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 sealed interface Routes {
     @Serializable
     data object Status : Routes
+
+    @Serializable
+    data object Cycle : Routes
     
     @Serializable
     data object Statistics : Routes
@@ -14,7 +17,10 @@ sealed interface Routes {
     
     @Serializable
     data object Calendar : Routes
-    
+
+    @Serializable
+    data object CalendarSettings : Routes
+     
     @Serializable
     data object AnnualMatrix : Routes
 }

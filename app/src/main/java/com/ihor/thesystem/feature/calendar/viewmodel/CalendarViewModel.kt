@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.model.CalendarCycleDayType
+import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus
+import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.SystemConfig
@@ -28,9 +31,15 @@ data class CalendarDayUiModel(
     val cycleDay: Int,
     val label: String,
     val isToday: Boolean,
+    val calendarDayType: CalendarCycleDayType = CalendarCycleDayType.OFF,
     val isActive: Boolean = false,
     val completedTasks: Int = 0,
-    val totalTasks: Int = 0
+    val totalTasks: Int = 0,
+    val hasTrainingPlan: Boolean = false,
+    val plannedWorkoutName: String? = null,
+    val plannedExerciseCount: Int = 0,
+    val hasCompletedWorkout: Boolean = false,
+    val completionStatus: CalendarDayCompletionStatus = CalendarDayCompletionStatus.NO_DATA
 )
 
 data class DailyTaskSnapshotUiModel(
@@ -90,6 +99,14 @@ private data class CalendarSelectionData(
     val loggedWeight: Double?
 )
 
+private data class CalendarBaseData(
+    val monthData: Triple<YearMonth, Map<LocalDate, Pair<Int, Int>>, Set<LocalDate>>,
+    val config: SystemConfig,
+    val selectedDate: LocalDate?,
+    val selectionData: CalendarSelectionData,
+    val player: Player
+)
+
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val configRepo: SystemConfigRepository,
@@ -101,6 +118,7 @@ class CalendarViewModel @Inject constructor(
     private val viewingDateRepo: ViewingDateRepository,
     private val playerRepo: PlayerRepository,
     private val questRepo: QuestRepository,
+    private val calendarCycleRepository: CalendarCycleRepository,
     private val getDailySummary: GetDailySummaryForDateUseCase,
     private val syncCycleAnchor: SyncCycleAnchorUseCase,
     private val clock: AppClock
@@ -114,6 +132,8 @@ class CalendarViewModel @Inject constructor(
     private val _recommendations = MutableStateFlow<List<ProgressionMatrixEntry>>(emptyList())
     private val _loggedWeight = MutableStateFlow<Double?>(null)
     private val _monthTaskStats = MutableStateFlow<Map<LocalDate, Pair<Int, Int>>>(emptyMap())
+    private val _monthWorkoutDates = MutableStateFlow<Set<LocalDate>>(emptySet())
+    private var monthWorkoutJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -138,6 +158,7 @@ class CalendarViewModel @Inject constructor(
         viewModelScope.launch {
             _currentMonth.collectLatest { month ->
                 loadMonthTaskStats(month)
+                observeMonthWorkoutDates(month)
             }
         }
 
@@ -172,33 +193,88 @@ class CalendarViewModel @Inject constructor(
         month to stats
     }
 
-    val uiState: StateFlow<CalendarUiState> = combine(
+    private val monthCalendarData: Flow<Triple<YearMonth, Map<LocalDate, Pair<Int, Int>>, Set<LocalDate>>> = combine(
         monthWithStats,
+        _monthWorkoutDates
+    ) { monthData, workoutDates ->
+        Triple(monthData.first, monthData.second, workoutDates)
+    }
+
+    private val baseData: Flow<CalendarBaseData> = combine(
+        monthCalendarData,
         configRepo.getConfigFlow().filterNotNull(),
         _selectedDate,
         selectionData,
         playerRepo.getPlayer().filterNotNull()
     ) { monthData, config, selectedDate, data, player ->
-        val (month, monthTaskStats) = monthData
+        CalendarBaseData(
+            monthData = monthData,
+            config = config,
+            selectedDate = selectedDate,
+            selectionData = data,
+            player = player
+        )
+    }
+
+    val uiState: StateFlow<CalendarUiState> = combine(
+        baseData,
+        calendarCycleRepository.getCalendarCycle()
+    ) { baseData, calendarCycle ->
+        val month = baseData.monthData.first
+        val monthTaskStats = baseData.monthData.second
+        val monthWorkoutDates = baseData.monthData.third
+        val config = baseData.config
+        val selectedDate = baseData.selectedDate
+        val data = baseData.selectionData
+        val player = baseData.player
         val daysInMonth = month.lengthOfMonth()
         val todayDate = today()
-        
-        val calendarDays = (1..daysInMonth).map { dayNum ->
-            val date = month.atDay(dayNum)
-            val cycleDay = calculateCycleDay(
+
+        val datesInMonth = (1..daysInMonth).map { month.atDay(it) }
+        val cycleDayByDate = datesInMonth.associateWith { date ->
+            calculateCycleDay(
                 targetDate = date,
                 anchorEpochDay = config.cycleAnchorDateTimestamp,
                 anchorCycleDay = config.cycleAnchorDay,
                 cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
             )
+        }
+        val schedulesByCycleDay = scheduleRepo
+            .getSchedulesForDays(cycleDayByDate.values.distinct())
+            .firstOrNull()
+            .orEmpty()
+            .associateBy { it.cycleDay }
+        
+        val calendarDays = datesInMonth.map { date ->
+            val cycleDay = cycleDayByDate.getValue(date)
+            val calendarDay = calendarCycle.dayFor(date)
+            val schedule = schedulesByCycleDay[cycleDay]
+            val hasTraining = schedule?.isWorkoutDay == true &&
+                (schedule.workoutTemplateName != null || schedule.exercises.isNotEmpty())
+            val completedTasks = monthTaskStats[date]?.first ?: 0
+            val totalTasks = monthTaskStats[date]?.second ?: 0
+            val hasCompletedWorkout = date in monthWorkoutDates
             CalendarDayUiModel(
                 date = date,
                 cycleDay = cycleDay,
-                label = getLabelForCycleDay(cycleDay),
+                label = calendarDay.name,
                 isToday = date == todayDate,
+                calendarDayType = calendarDay.type,
                 isActive = date == todayDate,
-                completedTasks = monthTaskStats[date]?.first ?: 0,
-                totalTasks = monthTaskStats[date]?.second ?: 0
+                completedTasks = completedTasks,
+                totalTasks = totalTasks,
+                hasTrainingPlan = hasTraining,
+                plannedWorkoutName = schedule?.workoutTemplateName,
+                plannedExerciseCount = schedule?.exercises.orEmpty().size,
+                hasCompletedWorkout = hasCompletedWorkout,
+                completionStatus = resolveCompletionStatus(
+                    date = date,
+                    today = todayDate,
+                    hasTraining = hasTraining,
+                    hasCompletedWorkout = hasCompletedWorkout,
+                    completedTasks = completedTasks,
+                    totalTasks = totalTasks
+                )
             )
         }
 
@@ -208,6 +284,7 @@ class CalendarViewModel @Inject constructor(
             anchorCycleDay = config.cycleAnchorDay,
             cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
         )
+        val todayCalendarDay = calendarCycle.dayFor(todayDate)
 
         val cycleDays = config.cycleDaysPerMicrocycle.let { total ->
             (1..total).map { d ->
@@ -223,7 +300,13 @@ class CalendarViewModel @Inject constructor(
         CalendarUiState(
             days = calendarDays,
             cycleDays = cycleDays,
-            todayInfo = CalendarDayUiModel(todayDate, todayCycleDay, getLabelForCycleDay(todayCycleDay), true),
+            todayInfo = CalendarDayUiModel(
+                date = todayDate,
+                cycleDay = todayCycleDay,
+                label = todayCalendarDay.name,
+                isToday = true,
+                calendarDayType = todayCalendarDay.type
+            ),
             selectedDate = selectedDate,
             workoutResults = data.workoutResults,
             dailyLogs = data.dailyLogs,
@@ -244,16 +327,6 @@ class CalendarViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = CalendarUiState(isLoading = true)
     )
-
-    private fun getLabelForCycleDay(day: Int): String {
-        return when(day) {
-            1 -> "ДЕННА ЗМІНА"
-            2 -> "НІЧНА ЗМІНА"
-            3 -> "ВІДСИПНИЙ"
-            4 -> "ВИХІДНИЙ"
-            else -> ""
-        }
-    }
 
     fun onMonthChange(month: YearMonth) { _currentMonth.value = month }
     fun onDateSelected(date: LocalDate?) {
@@ -361,7 +434,42 @@ class CalendarViewModel @Inject constructor(
         _monthTaskStats.value = stats
     }
 
+    private fun observeMonthWorkoutDates(month: YearMonth) {
+        monthWorkoutJob?.cancel()
+        monthWorkoutJob = viewModelScope.launch {
+            val start = month.atDay(1).toStartOfDayMillis()
+            val end = month.atEndOfMonth().plusDays(1).toStartOfDayMillis() - 1
+            analyticsRepo.getDailyTonnageStatsForMonth(start, end).collectLatest { stats ->
+                _monthWorkoutDates.value = stats.map { entry ->
+                    Instant.ofEpochMilli(entry.dateUnixTimestamp)
+                        .atZone(clock.zoneId())
+                        .toLocalDate()
+                }.toSet()
+            }
+        }
+    }
+
     fun getScheduleForDay(day: Int) = scheduleRepo.getScheduleForDay(day)
+
+    private fun resolveCompletionStatus(
+        date: LocalDate,
+        today: LocalDate,
+        hasTraining: Boolean,
+        hasCompletedWorkout: Boolean,
+        completedTasks: Int,
+        totalTasks: Int
+    ): CalendarDayCompletionStatus {
+        val hasTasks = totalTasks > 0
+        val allTasksCompleted = hasTasks && completedTasks >= totalTasks
+        return when {
+            !hasTasks && !hasTraining && !hasCompletedWorkout -> CalendarDayCompletionStatus.NO_DATA
+            hasCompletedWorkout && (!hasTasks || allTasksCompleted) -> CalendarDayCompletionStatus.COMPLETED
+            allTasksCompleted && !hasTraining -> CalendarDayCompletionStatus.COMPLETED
+            completedTasks > 0 || hasCompletedWorkout -> CalendarDayCompletionStatus.PARTIAL
+            date.isBefore(today) && (hasTasks || hasTraining) -> CalendarDayCompletionStatus.MISSED
+            else -> CalendarDayCompletionStatus.PLANNED
+        }
+    }
 
     private fun today(): LocalDate =
         Instant.ofEpochMilli(clock.now())
