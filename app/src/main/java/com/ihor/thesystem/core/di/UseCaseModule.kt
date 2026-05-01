@@ -17,7 +17,8 @@ object UseCaseModule {
     fun provideWorkoutUseCases(
         saveExerciseSets: SaveExerciseSetsUseCase,
         calculateRecommendation: CalculateRecommendedSetUseCase,
-        calculateCycleDay: CalculateCycleDayForDateUseCase,
+        resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
+        getActiveWorkoutQuest: GetActiveWorkoutQuestUseCase,
         getWorkoutDetails: GetWorkoutDetailsUseCase,
         updateMatrixGoals: UpdateMatrixGoalsUseCase,
         getPlayerFlow: GetPlayerFlowUseCase,
@@ -29,7 +30,8 @@ object UseCaseModule {
     ): WorkoutUseCases = WorkoutUseCases(
         saveExerciseSets,
         calculateRecommendation,
-        calculateCycleDay,
+        resolveTrainingCycleDay,
+        getActiveWorkoutQuest,
         getWorkoutDetails,
         updateMatrixGoals,
         getPlayerFlow,

@@ -9,15 +9,15 @@ import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import kotlin.math.round
 import java.time.Instant
-import java.time.ZoneId
 
 class GenerateDailyQuestsUseCase @Inject constructor(
     private val questRepo: QuestRepository,
     private val scheduleRepo: ScheduleRepository,
     private val configRepo: SystemConfigRepository,
+    private val playerRepo: PlayerRepository,
     private val matrixRepo: ProgressionMatrixRepository,
     private val calculateRecommendation: CalculateRecommendedSetUseCase,
-    private val calculateCycleDay: CalculateCycleDayForDateUseCase,
+    private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val clock: AppClock
 ) {
     suspend operator fun invoke() {
@@ -26,19 +26,14 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         // 1. РОЗРАХУНОК ПОТОЧНОГО ДНЯ ЦИКЛУ
         val now = clock.now()
         val todayDate = Instant.ofEpochMilli(now)
-            .atZone(ZoneId.systemDefault())
+            .atZone(clock.zoneId())
             .toLocalDate()
 
-        val currentDay = if (config.cycleAnchorDateTimestamp > 0) {
-            calculateCycleDay(
-                targetDate = todayDate,
-                anchorEpochDay = config.cycleAnchorDateTimestamp,
-                anchorCycleDay = config.cycleAnchorDay,
-                cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
-            )
-        } else {
-            1
-        }
+        val currentDay = resolveTrainingCycleDay(
+            targetDate = todayDate,
+            config = config,
+            fallbackCurrentCycleDay = playerRepo.getPlayer().firstOrNull()?.currentCycleDay
+        )
 
         // 2. Отримуємо розклад
         val schedule = scheduleRepo.getScheduleForDay(currentDay)

@@ -54,17 +54,12 @@ class WorkoutViewModel @Inject constructor(
         useCases.selectedDate.filterNotNull(),
         getSystemConfig().filterNotNull(),
         useCases.getPlayerFlow()
-    ) { date, config, _ ->
-        if (config.cycleAnchorDateTimestamp > 0) {
-            useCases.calculateCycleDay(
-                targetDate = date,
-                anchorEpochDay = config.cycleAnchorDateTimestamp,
-                anchorCycleDay = config.cycleAnchorDay,
-                cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
-            )
-        } else {
-            1
-        }
+    ) { date, config, player ->
+        useCases.resolveTrainingCycleDay(
+            targetDate = date,
+            config = config,
+            fallbackCurrentCycleDay = player?.currentCycleDay
+        )
     }.distinctUntilChanged()
 
     private val displayedCycleDay: Flow<Int> = combine(
@@ -106,38 +101,40 @@ class WorkoutViewModel @Inject constructor(
     private val displayedWorkoutFlow: Flow<ActiveDayUiModel?> = displayedCycleDay
         .flatMapLatest { day ->
             useCases.getSchedulesForDays(listOf(day))
-        }
-        .map { schedules ->
-            val schedule = schedules.firstOrNull() ?: return@map null
+                .flatMapLatest { schedules ->
+                    val schedule = schedules.firstOrNull() ?: return@flatMapLatest flowOf(null)
+                    useCases.getActiveWorkoutQuest(schedule.id).map { activeWorkoutQuest ->
             
-            val exercisesWithRecs = schedule.exercises.map { ex ->
-                val rec = try {
-                    useCases.calculateRecommendation(ex.id, ex.name)
-                } catch (e: Exception) {
-                    if (e is CancellationException) throw e
-                    com.ihor.thesystem.domain.usecase.SetRecommendation(weight = 0.0, reps = 12, sets = 3, isProgression = false)
-                }
-                ExerciseWorkoutUiModel(
-                    exerciseId = ex.id,
-                    name = ex.name,
-                    nameUk = ex.nameUk,
-                    recommendedWeight = rec.weight,
-                    recommendedReps = rec.reps,
-                    recommendedSets = rec.sets,
-                    recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg",
-                    gifUrl = ex.gifUrl,
-                    externalId = ex.externalId,
-                    sets = (1..(rec.sets ?: 1)).map { ActiveSetInput() }.toImmutableList()
-                )
-            }.toImmutableList()
+                        val exercisesWithRecs = schedule.exercises.map { ex ->
+                            val rec = try {
+                                useCases.calculateRecommendation(ex.id, ex.name)
+                            } catch (e: Exception) {
+                                if (e is CancellationException) throw e
+                                com.ihor.thesystem.domain.usecase.SetRecommendation(weight = 0.0, reps = 12, sets = 3, isProgression = false)
+                            }
+                            ExerciseWorkoutUiModel(
+                                exerciseId = ex.id,
+                                name = ex.name,
+                                nameUk = ex.nameUk,
+                                recommendedWeight = rec.weight,
+                                recommendedReps = rec.reps,
+                                recommendedSets = rec.sets,
+                                recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg",
+                                gifUrl = ex.gifUrl,
+                                externalId = ex.externalId,
+                                sets = (1..(rec.sets ?: 1)).map { ActiveSetInput() }.toImmutableList()
+                            )
+                        }.toImmutableList()
 
-            ActiveDayUiModel(
-                dayNumber = schedule.cycleDay,
-                dailyTasks = persistentListOf(),
-                workoutName = schedule.workoutTemplateName,
-                exercises = exercisesWithRecs,
-                matrixEntries = persistentListOf()
-            )
+                        ActiveDayUiModel(
+                            dayNumber = schedule.cycleDay,
+                            dailyTasks = listOfNotNull(activeWorkoutQuest).toImmutableList(),
+                            workoutName = schedule.workoutTemplateName,
+                            exercises = exercisesWithRecs,
+                            matrixEntries = persistentListOf()
+                        )
+                    }
+                }
         }
         .catch { e ->
             e.printStackTrace()

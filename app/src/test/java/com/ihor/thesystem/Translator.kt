@@ -2,29 +2,26 @@ package com.ihor.thesystem
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
+import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Properties
 
 class Translator {
 
     private val jsonFormat = Json { prettyPrint = true; ignoreUnknownKeys = true }
 
+    @Ignore("Manual localization utility. Requires GEMINI_API_KEY and rewrites asset files.")
     @Test
     fun generateLocalization() {
-        val inputFilePath = "C:\\Users\\gesha\\AndroidStudioProjects\\TheSystem-master\\app\\src\\main\\assets\\exercises_ua.json"
-        val outputFilePath = "C:\\Users\\gesha\\AndroidStudioProjects\\TheSystem-master\\app\\src\\main\\assets\\exercises_uk.json"
-        val apiKey = "AIzaSyBkePsWf7e1KdfylgxryYbiIjIH3ukoQyE" // ВСТАВ ВАЛІДНИЙ КЛЮЧ
+        val inputFile = projectFile("app/src/main/assets/exercises_ua.json", "src/main/assets/exercises_ua.json")
+        val outputFile = projectFile("app/src/main/assets/exercises_uk.json", "src/main/assets/exercises_uk.json")
+        val apiKey = readApiKey()
 
-        val file = File(inputFilePath)
-        if (!file.exists()) {
-            println("Помилка: Файл не знайдено: $inputFilePath")
-            return
-        }
-
-        val originalText = file.readText()
+        val originalText = inputFile.readText()
         val jsonArray = Json.parseToJsonElement(originalText).jsonArray
 
         val simplifiedList = jsonArray.map { element ->
@@ -128,8 +125,8 @@ class Translator {
         }
 
         val finalJson = jsonFormat.encodeToString(JsonArray(resultList))
-        File(outputFilePath).writeText(finalJson)
-        println("\nГотово. Збережено у $outputFilePath. Всього перекладено об'єктів: ${resultList.size}")
+        outputFile.writeText(finalJson)
+        println("\nГотово. Збережено у ${outputFile.path}. Всього перекладено об'єктів: ${resultList.size}")
     }
 
     private fun sendGeminiRequest(payload: String, apiKey: String): String {
@@ -155,5 +152,38 @@ class Translator {
         } finally {
             connection.disconnect()
         }
+    }
+
+    private fun projectFile(vararg candidates: String): File {
+        val userDir = requireNotNull(System.getProperty("user.dir"))
+        val roots = sequenceOf(
+            File(userDir),
+            File(userDir).parentFile
+        ).filterNotNull()
+
+        return roots
+            .flatMap { root -> candidates.asSequence().map { root.resolve(it) } }
+            .firstOrNull { it.exists() }
+            ?: error("Не знайдено файл. Перевірені шляхи: ${candidates.joinToString()}")
+    }
+
+    private fun readApiKey(): String {
+        val userDir = requireNotNull(System.getProperty("user.dir"))
+        System.getenv("GEMINI_API_KEY")
+            ?.takeIf { it.isNotBlank() }
+            ?.let { return it }
+
+        val localProperties = sequenceOf(
+            File(userDir).resolve("local.properties"),
+            File(userDir).resolve("../local.properties")
+        ).firstOrNull { it.exists() }
+
+        val keyFromLocalProperties = localProperties?.inputStream()?.use { stream ->
+            Properties().apply { load(stream) }.getProperty("GEMINI_API_KEY")
+        }
+
+        return keyFromLocalProperties
+            ?.takeIf { it.isNotBlank() }
+            ?: error("GEMINI_API_KEY is required for this manual utility.")
     }
 }

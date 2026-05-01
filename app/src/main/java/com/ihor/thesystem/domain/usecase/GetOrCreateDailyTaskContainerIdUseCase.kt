@@ -2,20 +2,21 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.domain.model.DomainQuestType
+import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import java.time.Instant
-import java.time.ZoneId
 import javax.inject.Inject
 
 class GetOrCreateDailyTaskContainerIdUseCase @Inject constructor(
     private val questRepo: QuestRepository,
     private val scheduleRepo: ScheduleRepository,
     private val configRepo: SystemConfigRepository,
-    private val calculateCycleDay: CalculateCycleDayForDateUseCase,
+    private val playerRepo: PlayerRepository,
+    private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val clock: AppClock
 ) {
     suspend operator fun invoke(): Int {
@@ -31,19 +32,14 @@ class GetOrCreateDailyTaskContainerIdUseCase @Inject constructor(
         // 2. Якщо немає — створюємо порожній контейнер
         val config = configRepo.getConfigFlow().firstOrNull() ?: return 0
         val todayDate = Instant.ofEpochMilli(now)
-            .atZone(ZoneId.systemDefault())
+            .atZone(clock.zoneId())
             .toLocalDate()
 
-        val currentDay = if (config.cycleAnchorDateTimestamp > 0) {
-            calculateCycleDay(
-                targetDate = todayDate,
-                anchorEpochDay = config.cycleAnchorDateTimestamp,
-                anchorCycleDay = config.cycleAnchorDay,
-                cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
-            )
-        } else {
-            1
-        }
+        val currentDay = resolveTrainingCycleDay(
+            targetDate = todayDate,
+            config = config,
+            fallbackCurrentCycleDay = playerRepo.getPlayer().firstOrNull()?.currentCycleDay
+        )
 
         val schedule = scheduleRepo.getScheduleForDay(currentDay).firstOrNull()
         

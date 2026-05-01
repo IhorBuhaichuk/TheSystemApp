@@ -17,6 +17,11 @@ if (localPropertiesFile.exists()) {
     properties.load(localPropertiesFile.inputStream())
 }
 
+fun String.toBuildConfigString(): String =
+    "\"${replace("\\", "\\\\").replace("\"", "\\\"")}\""
+
+val debugGeminiApiKey = properties.getProperty("GEMINI_API_KEY").orEmpty()
+
 android {
     namespace = "com.ihor.thesystem"
     compileSdk = 35
@@ -29,13 +34,16 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        val geminiKey = properties.getProperty("GEMINI_API_KEY") ?: "null"
-        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"\"")
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "GEMINI_API_KEY", debugGeminiApiKey.toBuildConfigString())
+        }
+
         release {
+            buildConfigField("String", "GEMINI_API_KEY", "\"\"")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

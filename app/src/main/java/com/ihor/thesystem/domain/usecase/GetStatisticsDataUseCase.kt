@@ -21,7 +21,7 @@ class GetStatisticsDataUseCase @Inject constructor(
     private val viewingDateRepo: ViewingDateRepository,
     private val configRepo: SystemConfigRepository,
     private val scheduleRepo: ScheduleRepository,
-    private val calculateCycleDay: CalculateCycleDayForDateUseCase,
+    private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val clock: AppClock
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -30,12 +30,15 @@ class GetStatisticsDataUseCase @Inject constructor(
         val selectedDateFlow = viewingDateRepo.selectedDate.filterNotNull()
 
         // Спочатку розраховуємо день циклу, щоб знати, який розклад тягнути
-        val cycleDayFlow = combine(configFlow, selectedDateFlow) { config, date ->
-            calculateCycleDay(
+        val cycleDayFlow = combine(
+            configFlow,
+            selectedDateFlow,
+            playerRepo.getPlayer().filterNotNull()
+        ) { config, date, player ->
+            resolveTrainingCycleDay(
                 targetDate = date,
-                anchorEpochDay = config.cycleAnchorDateTimestamp,
-                anchorCycleDay = config.cycleAnchorDay,
-                cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
+                config = config,
+                fallbackCurrentCycleDay = player.currentCycleDay
             )
         }.distinctUntilChanged()
 

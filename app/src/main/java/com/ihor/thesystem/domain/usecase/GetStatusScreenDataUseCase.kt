@@ -13,7 +13,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
     private val scheduleRepo: ScheduleRepository,
     private val configRepo: SystemConfigRepository,
     private val todoRepository: TodoRepository,
-    private val calculateCycleDay: CalculateCycleDayForDateUseCase,
+    private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val clock: AppClock
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -32,20 +32,14 @@ class GetStatusScreenDataUseCase @Inject constructor(
             if (player == null) return@flatMapLatest flowOf(StatusData())
 
             val cycleDays = config.cycleDaysPerMicrocycle.coerceAtLeast(1)
-            val currentCycleDay = if (config.cycleAnchorDateTimestamp > 0) {
-                val todayDate = java.time.Instant.ofEpochMilli(clock.now())
-                    .atZone(clock.zoneId())
-                    .toLocalDate()
-                
-                calculateCycleDay(
-                    targetDate = todayDate,
-                    anchorEpochDay = config.cycleAnchorDateTimestamp,
-                    anchorCycleDay = config.cycleAnchorDay,
-                    cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
-                )
-            } else {
-                player.currentCycleDay
-            }
+            val todayDate = java.time.Instant.ofEpochMilli(clock.now())
+                .atZone(clock.zoneId())
+                .toLocalDate()
+            val currentCycleDay = resolveTrainingCycleDay(
+                targetDate = todayDate,
+                config = config,
+                fallbackCurrentCycleDay = player.currentCycleDay
+            )
             
             val muscleMap = mapOf(
                 MuscleGroup.CHEST             to player.chestAttr.toFloat(),

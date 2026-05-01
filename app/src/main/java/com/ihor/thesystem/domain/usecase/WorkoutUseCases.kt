@@ -14,7 +14,8 @@ import javax.inject.Inject
 data class WorkoutUseCases @Inject constructor(
     val saveExerciseSets: SaveExerciseSetsUseCase,
     val calculateRecommendation: CalculateRecommendedSetUseCase,
-    val calculateCycleDay: CalculateCycleDayForDateUseCase,
+    val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
+    val getActiveWorkoutQuest: GetActiveWorkoutQuestUseCase,
     val getWorkoutDetails: GetWorkoutDetailsUseCase,
     val updateMatrixGoals: UpdateMatrixGoalsUseCase,
     val getPlayerFlow: GetPlayerFlowUseCase,

@@ -12,11 +12,11 @@ import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.*
-import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 import com.ihor.thesystem.domain.usecase.GetDailySummaryForDateUseCase
 import com.ihor.thesystem.domain.usecase.GetTodosForDateUseCase
 import com.ihor.thesystem.domain.usecase.GetTodoStatsForMonthUseCase
 import com.ihor.thesystem.domain.usecase.CalendarLogItem
+import com.ihor.thesystem.domain.usecase.ResolveTrainingCycleDayUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -118,7 +118,7 @@ class CalendarViewModel @Inject constructor(
     private val analyticsRepo: WorkoutAnalyticsRepository,
     private val matrixRepo: ProgressionMatrixRepository,
     private val workoutRepo: WorkoutRepository,
-    private val calculateCycleDay: CalculateCycleDayForDateUseCase,
+    private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val viewingDateRepo: ViewingDateRepository,
     private val playerRepo: PlayerRepository,
     private val getTodosForDate: GetTodosForDateUseCase,
@@ -241,11 +241,10 @@ class CalendarViewModel @Inject constructor(
 
         val datesInMonth = (1..daysInMonth).map { month.atDay(it) }
         val cycleDayByDate = datesInMonth.associateWith { date ->
-            calculateCycleDay(
+            resolveTrainingCycleDay(
                 targetDate = date,
-                anchorEpochDay = config.cycleAnchorDateTimestamp,
-                anchorCycleDay = config.cycleAnchorDay,
-                cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
+                config = config,
+                fallbackCurrentCycleDay = player.currentCycleDay
             )
         }
         val schedulesByCycleDay = scheduleRepo
@@ -294,11 +293,10 @@ class CalendarViewModel @Inject constructor(
             )
         }
 
-        val todayCycleDay = calculateCycleDay(
+        val todayCycleDay = resolveTrainingCycleDay(
             targetDate = todayDate,
-            anchorEpochDay = config.cycleAnchorDateTimestamp,
-            anchorCycleDay = config.cycleAnchorDay,
-            cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
+            config = config,
+            fallbackCurrentCycleDay = player.currentCycleDay
         )
         val todayCalendarDay = calendarCycle.dayForOrNull(todayDate)
 
@@ -307,7 +305,7 @@ class CalendarViewModel @Inject constructor(
                 CycleDayUiModel(
                     dayNumber = d,
                     type = DayType.WORKOUT, // Default to WORKOUT, but logic below handles it
-                    isActive = d == player.currentCycleDay,
+                    isActive = d == todayCycleDay,
                     isSelected = false
                 )
             }
@@ -405,11 +403,10 @@ class CalendarViewModel @Inject constructor(
         recommendationsJob?.cancel()
         recommendationsJob = viewModelScope.launch {
             val config = configRepo.getConfigFlow().firstOrNull() ?: return@launch
-            val cycleDay = calculateCycleDay(
+            val cycleDay = resolveTrainingCycleDay(
                 targetDate = date,
-                anchorEpochDay = config.cycleAnchorDateTimestamp,
-                anchorCycleDay = config.cycleAnchorDay,
-                cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
+                config = config,
+                fallbackCurrentCycleDay = playerRepo.getPlayer().firstOrNull()?.currentCycleDay
             )
             
             val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()

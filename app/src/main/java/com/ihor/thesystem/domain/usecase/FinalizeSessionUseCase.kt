@@ -63,7 +63,7 @@ class FinalizeSessionUseCase @Inject constructor(
             return Result.Error(DataError.Local.SQLITE_EXCEPTION)
         }
 
-        completeActiveWorkoutQuestIfPossible(sets)
+        completeWorkoutQuestIfPossible(session.questId, sets)
 
         // 2. Асинхронний запит до AiArchitectRepository та оновлення матриці
         val exerciseContexts = generateAiPrompt(sets, localData.matrix, localData.playerWeight, localData.weight6MonthsAgo)
@@ -173,17 +173,16 @@ class FinalizeSessionUseCase @Inject constructor(
         }
     }
 
-    private suspend fun completeActiveWorkoutQuestIfPossible(sets: List<ExerciseSet>) {
+    private suspend fun completeWorkoutQuestIfPossible(questId: Long, sets: List<ExerciseSet>) {
         val completedExerciseIds = sets
             .filter { it.isCompleted }
             .map { it.exerciseId }
             .toSet()
         if (completedExerciseIds.isEmpty()) return
+        if (questId <= 0 || questId > Int.MAX_VALUE) return
 
-        val activeMainQuest = questRepository.getActiveQuests()
-            .firstOrNull()
-            .orEmpty()
-            .firstOrNull { it.type == DomainQuestType.MAIN }
+        val activeMainQuest = questRepository.getQuestById(questId.toInt())
+            ?.takeIf { it.type == DomainQuestType.MAIN && it.status == DomainQuestStatus.ACTIVE }
             ?: return
 
         questRepository.completeQuestTasksForExercises(activeMainQuest.id, completedExerciseIds)
