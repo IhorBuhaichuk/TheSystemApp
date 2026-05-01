@@ -19,6 +19,7 @@ import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import androidx.compose.ui.Alignment
+import java.util.Locale
 
 @Composable
 fun EditWeightDialog(
@@ -65,7 +66,7 @@ fun EditWeightDialog(
                 ) {
                     InfoChip("СТАРТ",  entry.displayStart)
                     InfoChip("ЦІЛЬ",   entry.displayTarget)
-                    InfoChip("+/тиж", "+${String.format("%.2f", entry.weeklyStep)}кг")
+                    InfoChip("+/тиж", "+${String.format(Locale.US, "%.2f", entry.weeklyStep)}кг")
                 }
                 
                 OutlinedTextField(

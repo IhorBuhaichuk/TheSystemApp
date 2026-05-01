@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 class GetLastWorkoutContextUseCase @Inject constructor(
     private val analyticsRepo: WorkoutAnalyticsRepository,
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     suspend operator fun invoke(): String? {
         // 1. Отримуємо список останніх сесій (за замовчуванням Room повертає Flow)

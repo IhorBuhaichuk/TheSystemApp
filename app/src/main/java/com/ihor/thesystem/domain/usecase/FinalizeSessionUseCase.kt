@@ -70,6 +70,9 @@ class FinalizeSessionUseCase @Inject constructor(
         
         val report = try {
             val chatMsg = sendArchitectAnalysis(exerciseContexts)
+            if (chatMsg.recommendations.isEmpty()) {
+                throw IllegalStateException("AI architect returned no actionable workout directives.")
+            }
             
             // Оновлення цілей у матриці на основі AI-аналізу
             chatMsg.recommendations.forEach { rec ->

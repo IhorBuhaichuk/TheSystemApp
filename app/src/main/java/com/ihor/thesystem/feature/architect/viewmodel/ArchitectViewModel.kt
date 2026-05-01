@@ -20,6 +20,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -53,7 +54,11 @@ class ArchitectViewModel @Inject constructor(
         viewModelScope.launch {
             getAiDashboardData()
                 .map { it.toUiState() }
-                .catch { emit(AiDashboardUiState(isLoading = false)) }
+                .catch { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to observe AI dashboard data")
+                    emit(AiDashboardUiState(isLoading = false))
+                }
                 .collect { state ->
                     _dashboardState.value = state
                 }
@@ -132,7 +137,7 @@ class ArchitectViewModel @Inject constructor(
                 sendLiveCoachMessage(sessionId, text)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
+                Timber.e(e, "Failed to send LiveCoach message")
                 _uiEvents.emit(UiEvent.ShowError(
                     UiText.StringResource(R.string.error_operation_failed)
                 ))
@@ -177,7 +182,7 @@ class ArchitectViewModel @Inject constructor(
                 ) }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
+                Timber.e(e, "Failed to send workout context for architect analysis")
                 _uiEvents.emit(UiEvent.ShowError(
                     UiText.StringResource(R.string.error_operation_failed)
                 ))
@@ -224,7 +229,7 @@ class ArchitectViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
+                Timber.e(e, "Failed to apply AI recommendations")
                 _uiEvents.emit(UiEvent.ShowError(
                     UiText.StringResource(R.string.error_apply_recommendations_failed)
                 ))

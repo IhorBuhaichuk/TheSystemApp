@@ -4,33 +4,31 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.ihor.thesystem.BuildConfig
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiText
-import com.ihor.thesystem.data.remote.dto.GeminiWorkoutResponseDto
-import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
+import com.ihor.thesystem.data.remote.ai.AiArchitectResponseParser
+import com.ihor.thesystem.data.remote.ai.AiErrorClassifier
+import com.ihor.thesystem.data.remote.ai.AiFailureType
+import com.ihor.thesystem.data.remote.ai.AiMalformedResponseException
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
-import timber.log.Timber
+import javax.inject.Inject
+import javax.inject.Named
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import kotlinx.serialization.json.Json
-import javax.inject.Inject
-import javax.inject.Named
+import timber.log.Timber
 
 class AiArchitectRepositoryImpl @Inject constructor(
-    @Named("ArchitectModel") private val generativeModel: GenerativeModel
+    @param:Named("ArchitectModel") private val generativeModel: GenerativeModel
 ) : AiArchitectRepository {
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        coerceInputValues = true
-    }
+    private val parser = AiArchitectResponseParser()
 
     override suspend fun getChatResponse(prompt: String): ChatMessage = withContext(Dispatchers.IO) {
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        if (apiKey.isNullOrBlank() || apiKey == "null") {
-            Timber.e("Critical Error: Gemini API Key not found. Check local.properties.")
+        if (!isApiKeyConfigured()) {
+            Timber.e("Gemini API key is not configured.")
             return@withContext ChatMessage(
                 role = ChatRole.AI,
                 text = UiText.StringResource(R.string.error_ai_generic),
@@ -39,118 +37,89 @@ class AiArchitectRepositoryImpl @Inject constructor(
         }
 
         try {
-            retry(times = 3, initialDelay = 1000L) {
+            retry(times = 3, initialDelay = 1_000L) {
                 withTimeout(30_000L) {
                     val response = generativeModel.generateContent(prompt)
                     val responseText = response.text ?: throw IllegalStateException("Empty AI response")
 
-                    val cleanJson = extractJson(responseText)
-                    val dto = try {
-                        json.decodeFromString<GeminiWorkoutResponseDto>(cleanJson)
-                    } catch (e: Exception) {
-                        Timber.e(e, "JSON parsing error in AI response")
-                        // Якщо JSON не розпарсився, повертаємо текст як є без ретраю
+                    val parsedResponse = try {
+                        parser.parse(responseText)
+                    } catch (error: AiMalformedResponseException) {
+                        Timber.e(error, "Malformed AI architect response")
                         return@withTimeout ChatMessage(
                             role = ChatRole.AI,
-                            text = UiText.DynamicString(responseText),
+                            text = UiText.StringResource(R.string.error_ai_parsing),
                             isActionable = false
-                        )
-                    }
-
-                    val targets = dto.nextWorkoutTargets.map { target ->
-                        AiWorkoutRecommendation(
-                            exerciseId = target.exerciseId,
-                            weight = target.weight,
-                            sets = target.recommendedSets,
-                            reps = target.recommendedReps,
-                            aiFeedback = target.aiFeedback
                         )
                     }
 
                     ChatMessage(
                         role = ChatRole.AI,
-                        text = if (dto.feedbackText.isBlank()) {
+                        text = if (parsedResponse.feedbackText.isBlank()) {
                             UiText.StringResource(R.string.ai_analysis_complete)
                         } else {
-                            UiText.DynamicString(dto.feedbackText)
+                            UiText.DynamicString(parsedResponse.feedbackText)
                         },
-                        recommendations = targets,
-                        isActionable = targets.isNotEmpty(),
-                        aiFeedback = dto.aiFeedback ?: targets.firstOrNull()?.aiFeedback
+                        recommendations = parsedResponse.recommendations,
+                        isActionable = parsedResponse.recommendations.isNotEmpty(),
+                        aiFeedback = parsedResponse.aiFeedback
                     )
                 }
             }
-        } catch (e: Exception) {
-            Timber.e(e, "Request failed after all retries")
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            
-            val errorText = when {
-                e is kotlinx.serialization.SerializationException || 
-                e.message?.contains("GrpcError") == true ||
-                e.message?.contains("503") == true -> 
-                    UiText.StringResource(R.string.error_ai_overloaded)
-                    
-                e.message?.contains("429") == true -> 
-                    UiText.StringResource(R.string.error_ai_rate_limit)
+        } catch (error: Exception) {
+            if (error is CancellationException) throw error
 
-                else -> UiText.StringResource(R.string.error_ai_generic)
-            }
+            Timber.e(error, "AI architect request failed after retries")
             ChatMessage(
                 role = ChatRole.AI,
-                text = errorText,
+                text = error.toUiText(),
                 isActionable = false
             )
         }
     }
 
-    private fun extractJson(input: String): String {
-        // Використовуємо регулярний вираз для пошуку JSON-об'єкта. 
-        // Шукаємо першу фігурну дужку '{' та останню '}', включаючи все між ними.
-        val jsonRegex = Regex("""\{.*\}""", RegexOption.DOT_MATCHES_ALL)
-        return jsonRegex.find(input)?.value ?: input
+    private fun isApiKeyConfigured(): Boolean {
+        val apiKey = BuildConfig.GEMINI_API_KEY
+        return apiKey.isNotBlank() && apiKey != "null"
     }
+
+    private fun Throwable.toUiText(): UiText =
+        when (AiErrorClassifier.classify(this)) {
+            AiFailureType.RateLimit -> UiText.StringResource(R.string.error_ai_rate_limit)
+            AiFailureType.Overloaded -> UiText.StringResource(R.string.error_ai_overloaded)
+            AiFailureType.Timeout,
+            AiFailureType.MalformedResponse,
+            AiFailureType.Unknown -> UiText.StringResource(R.string.error_ai_generic)
+        }
 
     private suspend fun <T> retry(
         times: Int,
-        initialDelay: Long = 100L,
-        maxDelay: Long = 2000L,
+        initialDelay: Long,
+        maxDelay: Long = 2_000L,
         factor: Double = 2.0,
         block: suspend () -> T
     ): T {
-        return performRetry(times, 1, initialDelay, maxDelay, factor, block)
-    }
+        var currentDelay = initialDelay
+        var lastError: Throwable? = null
 
-    private suspend fun <T> performRetry(
-        maxAttempts: Int,
-        currentAttempt: Int,
-        delayMillis: Long,
-        maxDelay: Long,
-        factor: Double,
-        block: suspend () -> T
-    ): T {
-        return try {
-            block()
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            
-            val isRetryable = e is kotlinx.coroutines.TimeoutCancellationException || 
-                             e.message?.contains("429") == true ||
-                             e.message?.contains("503") == true
+        repeat(times) { attempt ->
+            try {
+                return block()
+            } catch (error: Exception) {
+                if (error is CancellationException) throw error
+                lastError = error
 
-            if (!isRetryable || currentAttempt >= maxAttempts) {
-                throw e
+                val hasAttemptsLeft = attempt < times - 1
+                if (!hasAttemptsLeft || !AiErrorClassifier.isRetryable(error)) {
+                    throw error
+                }
+
+                Timber.w(error, "AI architect retry ${attempt + 1} failed. Retrying in ${currentDelay}ms.")
+                delay(currentDelay)
+                currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
             }
-
-            Timber.w(e, "Retry attempt $currentAttempt failed. Retrying in ${delayMillis}ms...")
-            delay(delayMillis)
-            performRetry(
-                maxAttempts = maxAttempts,
-                currentAttempt = currentAttempt + 1,
-                delayMillis = (delayMillis * factor).toLong().coerceAtMost(maxDelay),
-                maxDelay = maxDelay,
-                factor = factor,
-                block = block
-            )
         }
+
+        throw lastError ?: IllegalStateException("AI architect retry failed without an error.")
     }
 }

@@ -49,7 +49,7 @@ fun PenaltyActivatedDialog(onDismiss: () -> Unit) {
                     fontSize   = 12.sp,
                     textAlign  = TextAlign.Center
                 )
-                Divider(color = NeonRed.copy(0.3f))
+                HorizontalDivider(color = NeonRed.copy(0.3f))
                 Text(
                     text       = "Всі цільові ваги знижені на 20%.",
                     color      = NeonRed,

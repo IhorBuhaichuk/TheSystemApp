@@ -2,8 +2,8 @@ package com.ihor.thesystem.core.ui
 
 import com.ihor.thesystem.R
 import com.ihor.thesystem.domain.model.DomainError
-import com.ihor.thesystem.domain.model.AppErrorType // Corrected import
-import com.ihor.thesystem.domain.model.DataError // Corrected import
+import com.ihor.thesystem.domain.model.AppErrorType
+import com.ihor.thesystem.domain.model.DataError
 
 fun DomainError.asUiText(): UiText {
     return when (this) {
@@ -22,7 +22,5 @@ fun DomainError.asUiText(): UiText {
         AppErrorType.Unknown -> UiText.StringResource(R.string.error_unknown)
         AppErrorType.AiParsingError -> UiText.StringResource(R.string.error_ai_parsing)
         is AppErrorType.Message -> UiText.DynamicString(this.message ?: "")
-        
-        else -> UiText.StringResource(R.string.error_unknown)
     }
 }

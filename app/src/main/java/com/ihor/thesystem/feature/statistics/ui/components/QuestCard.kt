@@ -6,7 +6,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -108,7 +108,7 @@ fun QuestCard(
                 )
             }
             Icon(
-                imageVector = if (isPromotion) Icons.Filled.Star else Icons.Filled.Assignment,
+                imageVector = if (isPromotion) Icons.Filled.Star else Icons.AutoMirrored.Filled.Assignment,
                 contentDescription = null,
                 tint = if (quest.isCompleted) Color.Gray.copy(alpha = 0.5f) else accentColor.copy(alpha = 0.8f),
                 modifier = Modifier

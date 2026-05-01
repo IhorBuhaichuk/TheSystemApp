@@ -19,6 +19,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,7 +36,11 @@ class StatisticsViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<UiState<StatisticsUiData>> = getStatisticsDataUseCase()
         .map<StatisticsData, UiState<StatisticsUiData>> { UiState.Content(it.toStatisticsUiData()) }
-        .catch { emit(UiState.Error(UiText.StringResource(R.string.error_generic))) }
+        .catch { e ->
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to load statistics screen data")
+            emit(UiState.Error(UiText.StringResource(R.string.error_generic)))
+        }
         .stateIn(
             scope        = viewModelScope,
             started      = SharingStarted.WhileSubscribed(5_000L),
@@ -96,7 +101,7 @@ class StatisticsViewModel @Inject constructor(
                 onDismissDialog()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
+                Timber.e(e, "Failed to log exercise sets from statistics")
                 _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_saving)))
             }
         }
@@ -110,7 +115,7 @@ class StatisticsViewModel @Inject constructor(
                 onDismissDialog()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
+                Timber.e(e, "Failed to update matrix setup from statistics")
                 _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
             }
         }
@@ -122,7 +127,7 @@ class StatisticsViewModel @Inject constructor(
                 recalculateGlobalRankUseCase()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                e.printStackTrace()
+                Timber.e(e, "Failed to recalculate global rank from statistics")
                 _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_rank_update)))
             }
         }

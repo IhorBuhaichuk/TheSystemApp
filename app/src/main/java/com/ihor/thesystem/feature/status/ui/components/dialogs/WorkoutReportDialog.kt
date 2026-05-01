@@ -84,7 +84,7 @@ fun WorkoutReportDialog(
                         )
                     )
 
-                    Divider(color = Color.White.copy(alpha = 0.1f))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
 
                     Text(
                         text = "ВІКНО ВІДНОВЛЕННЯ: ${report.recoveryWindowHours.toInt()} ГОДИН",

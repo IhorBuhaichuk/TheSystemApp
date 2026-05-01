@@ -110,11 +110,11 @@ object DatabaseMigrations {
     }
 
     val MIGRATION_15_16 = object : Migration(15, 16) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL("DROP INDEX IF EXISTS `index_exercise_sets_sessionId`")
-            database.execSQL("DROP TABLE IF EXISTS `exercise_sets_old`")
-            database.execSQL("ALTER TABLE `exercise_sets` RENAME TO `exercise_sets_old`")
-            database.execSQL("""
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP INDEX IF EXISTS `index_exercise_sets_sessionId`")
+            db.execSQL("DROP TABLE IF EXISTS `exercise_sets_old`")
+            db.execSQL("ALTER TABLE `exercise_sets` RENAME TO `exercise_sets_old`")
+            db.execSQL("""
                 CREATE TABLE `exercise_sets` (
                     `setId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
                     `sessionId` INTEGER NOT NULL, 
@@ -125,13 +125,13 @@ object DatabaseMigrations {
                     FOREIGN KEY(`sessionId`) REFERENCES `workout_sessions`(`sessionId`) ON UPDATE NO ACTION ON DELETE CASCADE
                 )
             """.trimIndent())
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_sets_sessionId` ON `exercise_sets` (`sessionId`)")
-            database.execSQL("""
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_sets_sessionId` ON `exercise_sets` (`sessionId`)")
+            db.execSQL("""
                 INSERT INTO `exercise_sets` (`setId`, `sessionId`, `exerciseId`, `weight`, `reps`, `isCompleted`) 
                 SELECT `setId`, `sessionId`, CAST(`exerciseId` AS INTEGER), `weight`, `reps`, `isCompleted` 
                 FROM `exercise_sets_old`
             """.trimIndent())
-            database.execSQL("DROP TABLE `exercise_sets_old`")
+            db.execSQL("DROP TABLE `exercise_sets_old`")
         }
     }
 

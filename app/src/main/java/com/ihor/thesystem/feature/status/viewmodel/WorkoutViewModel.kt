@@ -24,6 +24,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
@@ -137,7 +138,8 @@ class WorkoutViewModel @Inject constructor(
                 }
         }
         .catch { e ->
-            e.printStackTrace()
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to build active workout state")
             emit(null)
         }
 

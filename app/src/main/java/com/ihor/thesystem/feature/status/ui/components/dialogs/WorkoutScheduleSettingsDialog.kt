@@ -206,7 +206,7 @@ fun WorkoutScheduleSettingsDialog(
 
                 // 5. Global Exercises Management Section
                 if (showManageExercises) {
-                    Divider(color = Color.White.copy(alpha = 0.1f))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
                     Text(
                         text = "Всі вправи системи",
                         style = MaterialTheme.typography.labelLarge,
@@ -347,7 +347,7 @@ fun AddExerciseSelectionDialog(
                     labelMapper = { it.toMechanicUiText().asString() }
                 )
 
-                Divider(color = Color.White.copy(alpha = 0.05f))
+                HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
 
                 // Список результатів
                 if (exercises.isEmpty()) {

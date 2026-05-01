@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">The System</string>
 
     <!-- UI Labels -->
@@ -18,11 +18,11 @@
     <string name="text_height">ЗРІСТ</string>
     <string name="text_matrix_empty">МАТРИЦЯ ПОРОЖНЯ</string>
 
-    <string name="text_loading">ЗАВАНТАЖЕННЯ СИСТЕМИ...</string>
+    <string name="text_loading">ЗАВАНТАЖЕННЯ СИСТЕМИ&#8230;</string>
     <string name="text_error">ПОМИЛКА</string>
     <string name="text_annual_matrix">РІЧНА МАТРИЦЯ ПРОГРЕСІЇ</string>
     <string name="text_tap_log_flag_setup">TAP = LOG | FLAG = SETUP</string>
-    <string name="system_loading">Завантаження системи...</string>
+    <string name="system_loading">Завантаження системи&#8230;</string>
     <string name="text_critical_error_capital">КРИТИЧНА ПОМИЛКА СИСТЕМИ</string>
     <string name="text_terminate_system">TERMINATE SYSTEM</string>
     <string name="text_db_init_failed">Ініціалізація бази даних не вдалася:</string>
@@ -150,10 +150,10 @@
         <item>@array/com_google_android_gms_fonts_certs_dev</item>
         <item>@array/com_google_android_gms_fonts_certs_prod</item>
     </array>
-    <string-array name="com_google_android_gms_fonts_certs_dev">
+    <string-array name="com_google_android_gms_fonts_certs_dev" translatable="false" tools:ignore="Typos">
         <item>MIIEqDCCA5CgAwIBAgIJANrd9k9SRE90MA0GCSqGSIb3DQEBBQUAMIGUMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UEChMHR29vZ2xlMRAwDgYDVQQLEwdBbmRyb2lkMRAwDgYDVQQDEwdBbmRyb2lkMSEwHwYJKoZIhvcNAQkBFhJhbmRyb2lkQGdvb2dsZS5jb20wIBcNMTMwNDI0MjI1MDU2WhcNNDAwNDEwMjI1MDU2WjCBlDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxEDAOBgNVBAoTB0dvb2dsZTEQMA4GA1UECxMHQW5kcm9pZDEQMA4GA1UEAxMHQW5kcm9pZDEhMB8GCSqGSIb3DQEJARYSYW5kcm9pZEBnb29nbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvYvOfvS98pSgd0asv8SAbS+SqcOPDr6C3A9TdVWQXZQN8pxf91Z6G1Ec4gWjyS2nW6G3Asui8BthCAJE87j6dfBCdA2ALyuH/7S8uNoGvXEA06AlS1Rpk7uErVof9Lqy8hBsuyW7OnUMNoNRRARE62UvU6Sdc1CofP/986SxoC8fLOf6lTh9V28u9Zqx+f8Wqn5vS9smhV69JyTHK6GfCoGfGPRUf9kvZyPhS3ujV5ZtSOP9mS6PJcWIrSNoSBYWvtWvrlB2XC7+Qd7n3SgukSna0lkedidP2QZND8Nf4fszFpLsd5LHqCZ6ytfW6unVr5S3OcS6pDe3fNdt8Lu9SwIDAQABo4GnMIGkMB0GA1UdDgQWBBQS8v8vS2X6LeZg0X93S2X6LeZg0TAfBgNVHSMEGDAWgBQS8v8vS2X6LeZg0TASBgNVHRMBAf8ECDAGAQH/AgEAMAsGA1UdDwQEAwIChDAzBgNVHR8ELDAqMCigJqAkhiJodHRwOi8vY3JsLmdvb2dsZS5jb20vYW5kcm9pZC5jcmwwDQYJKoZIhvcNAQEFBQADggEBAEogv699Zf9Z6G1Ec4gWjyS2nW6G3Asui8BthCAJE87j6dfBCdA2ALyuH/7S8uNoGvXEA06AlS1Rpk7uErVof9Lqy8hBsuyW7OnUMNoNRRARE62UvU6Sdc1CofP/986SxoC8fLOf6lTh9V28u9Zqx+f8Wqn5vS9smhV69JyTHK6GfCoGfGPRUf9kvZyPhS3ujV5ZtSOP9mS6PJcWIrSNoSBYWvtWvrlB2XC7+Qd7n3SgukSna0lkedidP2QZND8Nf4fszFpLsd5LHqCZ6ytfW6unVr5S3OcS6pDe3fNdt8Lu9Sw=</item>
     </string-array>
-    <string-array name="com_google_android_gms_fonts_certs_prod">
+    <string-array name="com_google_android_gms_fonts_certs_prod" translatable="false" tools:ignore="Typos">
         <item>MIIEqDCCA5CgAwIBAgIJANrd9k9SRE90MA0GCSqGSIb3DQEBBQUAMIGUMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UEChMHR29vZ2xlMRAwDgYDVQQLEwdBbmRyb2lkMRAwDgYDVQQDEwdBbmRyb2lkMSEwHwYJKoZIhvcNAQkBFhJhbmRyb2lkQGdvb2dsZS5jb20wIBcNMTMwNDI0MjI1MDU2WhcNNDAwNDEwMjI1MDU2WjCBlDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxEDAOBgNVBAoTB0dvb2dsZTEQMA4GA1UECxMHQW5kcm9pZDEQMA4GA1UEAxMHQW5kcm9pZDEhMB8GCSqGSIb3DQEJARYSYW5kcm9pZEBnb29nbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvYvOfvS98pSgd0asv8SAbS+SqcOPDr6C3A9TdVWQXZQN8pxf91Z6G1Ec4gWjyS2nW6G3Asui8BthCAJE87j6dfBCdA2ALyuH/7S8uNoGvXEA06AlS1Rpk7uErVof9Lqy8hBsuyW7OnUMNoNRRARE62UvU6Sdc1CofP/986SxoC8fLOf6lTh9V28u9Zqx+f8Wqn5vS9smhV69JyTHK6GfCoGfGPRUf9kvZyPhS3ujV5ZtSOP9mS6PJcWIrSNoSBYWvtWvrlB2XC7+Qd7n3SgukSna0lkedidP2QZND8Nf4fszFpLsd5LHqCZ6ytfW6unVr5S3OcS6pDe3fNdt8Lu9Sw=</item>
     </string-array>
     <string name="text_workout_recommendation_format">%1$d x %2$d @ %3$.1f кг</string>
@@ -187,52 +187,52 @@
     <string name="text_rank_label">Ранг</string>
 
     <!-- Filter Categories -->
-    <string name="filter_category_strength">Strength</string>
-    <string name="filter_category_endurance">Endurance</string>
-    <string name="filter_category_hypertrophy">Hypertrophy</string>
-    <string name="filter_category_flexibility">Flexibility</string>
-    <string name="filter_category_balance">Balance</string>
+    <string name="filter_category_strength">Сила</string>
+    <string name="filter_category_endurance">Витривалість</string>
+    <string name="filter_category_hypertrophy">Гіпертрофія</string>
+    <string name="filter_category_flexibility">Гнучкість</string>
+    <string name="filter_category_balance">Баланс</string>
 
     <!-- Filter Muscles -->
-    <string name="filter_muscle_chest">Chest</string>
-    <string name="filter_muscle_back">Back</string>
-    <string name="filter_muscle_shoulders">Shoulders</string>
-    <string name="filter_muscle_quads">Quads</string>
-    <string name="filter_muscle_hamstrings_glutes">Hamstrings/Glutes</string>
-    <string name="filter_muscle_arms">Arms</string>
-    <string name="filter_muscle_abs">Abs</string>
-    <string name="filter_muscle_legs">Legs</string>
-    <string name="filter_muscle_core">Core</string>
+    <string name="filter_muscle_chest">Груди</string>
+    <string name="filter_muscle_back">Спина</string>
+    <string name="filter_muscle_shoulders">Плечі</string>
+    <string name="filter_muscle_quads">Квадрицепси</string>
+    <string name="filter_muscle_hamstrings_glutes">Біцепс стегна / Сідниці</string>
+    <string name="filter_muscle_arms">Руки</string>
+    <string name="filter_muscle_abs">Прес</string>
+    <string name="filter_muscle_legs">Ноги</string>
+    <string name="filter_muscle_core">Кор</string>
 
     <!-- Filter Equipment -->
-    <string name="filter_equipment_body_only">Bodyweight</string>
-    <string name="filter_equipment_machine">Machine</string>
-    <string name="filter_equipment_dumbbell">Dumbbells</string>
-    <string name="filter_equipment_barbell">Barbell</string>
-    <string name="filter_equipment_cable">Cables</string>
-    <string name="filter_equipment_bands">Bands</string>
-    <string name="filter_equipment_kettlebell">Kettlebell</string>
-    <string name="filter_equipment_medicine_ball">Medicine Ball</string>
-    <string name="filter_equipment_exercise_ball">Exercise Ball</string>
-    <string name="filter_equipment_e_z_curl_bar">E-Z Curl Bar</string>
-    <string name="filter_equipment_foam_roll">Foam Roll</string>
-    <string name="filter_equipment_other">Other</string>
+    <string name="filter_equipment_body_only">Власна вага</string>
+    <string name="filter_equipment_machine">Тренажер</string>
+    <string name="filter_equipment_dumbbell">Гантелі</string>
+    <string name="filter_equipment_barbell">Штанга</string>
+    <string name="filter_equipment_cable">Кабель / Кросовер</string>
+    <string name="filter_equipment_bands">Еспандер</string>
+    <string name="filter_equipment_kettlebell">Гиря</string>
+    <string name="filter_equipment_medicine_ball">Медбол</string>
+    <string name="filter_equipment_exercise_ball">Фітбол</string>
+    <string name="filter_equipment_e_z_curl_bar">EZ-штанга</string>
+    <string name="filter_equipment_foam_roll">Масажний рол</string>
+    <string name="filter_equipment_other">Інше</string>
 
     <!-- Filter Levels -->
-    <string name="filter_level_beginner">Beginner</string>
-    <string name="filter_level_intermediate">Intermediate</string>
-    <string name="filter_level_expert">Expert</string>
+    <string name="filter_level_beginner">Початківець</string>
+    <string name="filter_level_intermediate">Середній</string>
+    <string name="filter_level_expert">Експерт</string>
 
     <!-- Filter Mechanics -->
-    <string name="filter_mechanic_compound">Compound</string>
-    <string name="filter_mechanic_isolation">Isolation</string>
-    <string name="filter_mechanic_na">N/A</string>
+    <string name="filter_mechanic_compound">Базова (Багатосуглобова)</string>
+    <string name="filter_mechanic_isolation">Ізолююча (Односуглобова)</string>
+    <string name="filter_mechanic_na">Не вказано</string>
 
     <!-- Filter Forces -->
-    <string name="filter_force_pull">Pull</string>
-    <string name="filter_force_push">Push</string>
-    <string name="filter_force_static">Static</string>
+    <string name="filter_force_pull">Тяга (Pull)</string>
+    <string name="filter_force_push">Жим (Push)</string>
+    <string name="filter_force_static">Статична</string>
 
     <!-- Empty States -->
-    <string name="text_no_exercises_found">No exercises found</string>
+    <string name="text_no_exercises_found">Вправ не знайдено</string>
 </resources>

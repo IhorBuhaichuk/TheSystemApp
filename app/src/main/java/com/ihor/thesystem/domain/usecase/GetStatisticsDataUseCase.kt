@@ -3,9 +3,11 @@ package com.ihor.thesystem.domain.usecase
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import timber.log.Timber
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -129,7 +131,8 @@ class GetStatisticsDataUseCase @Inject constructor(
                 )
             }
         }.catch { e ->
-            e.printStackTrace()
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to build statistics data")
             emit(StatisticsData())
         }.flowOn(Dispatchers.Default)
     }

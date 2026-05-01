@@ -7,6 +7,8 @@ import com.ihor.thesystem.data.local.room.converters.Converters
 import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
 
+const val APP_DATABASE_VERSION = 42
+
 @Database(
     entities = [
         PlayerEntity::class,
@@ -35,7 +37,7 @@ import com.ihor.thesystem.data.local.room.entity.*
         CalendarCycleDayEntity::class,
         TodoEntity::class
     ],
-    version = 42,
+    version = APP_DATABASE_VERSION,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

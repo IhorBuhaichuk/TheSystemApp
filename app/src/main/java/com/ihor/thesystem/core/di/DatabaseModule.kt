@@ -16,9 +16,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Singleton
 
 @Module
@@ -50,7 +52,8 @@ abstract class DatabaseModule {
                     DatabasePopulator.populate(context, database)
                     readinessRepo.markAsReady()
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Database population failed")
                     readinessRepo.markAsFailed(e.message ?: "Unknown error")
                 }
             }
