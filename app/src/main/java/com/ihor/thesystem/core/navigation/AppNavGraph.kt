@@ -22,7 +22,7 @@ import com.ihor.thesystem.feature.calendar.ui.CalendarSettingsScreen
 import com.ihor.thesystem.feature.calendar.ui.CalendarScreen
 import com.ihor.thesystem.feature.cycle.ui.CycleScreen
 import com.ihor.thesystem.feature.exercise_search.ui.ExercisePickerScreen
-import com.ihor.thesystem.feature.statistics.ui.AnnualProgressionScreen
+import com.ihor.thesystem.feature.statistics.ui.AnnualProgressionDetailsScreen
 import com.ihor.thesystem.feature.statistics.ui.StatisticsScreen
 import com.ihor.thesystem.feature.status.ui.StatusScreen
 import com.ihor.thesystem.feature.status.viewmodel.WorkoutViewModel
@@ -80,8 +80,13 @@ fun AppNavGraph(navController: NavHostController) {
                     }
                 )
             }
-            composable<Routes.AnnualMatrix> {
-                AnnualProgressionScreen(navController = navController)
+            composable<Routes.AnnualProgressionDetails> {
+                AnnualProgressionDetailsScreen(
+                    onBack = { navController.popBackStack() },
+                    onCreateInAi = {
+                        navController.navigate(Routes.AnnualProgressionPlan)
+                    }
+                )
             }
             composable<Routes.AnnualProgressionPlan> { backStackEntry ->
                 val selectedExerciseIdFlow = backStackEntry.savedStateHandle

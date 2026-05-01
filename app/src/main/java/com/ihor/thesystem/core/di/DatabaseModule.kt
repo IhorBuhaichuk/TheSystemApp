@@ -43,7 +43,6 @@ abstract class DatabaseModule {
                 "the_system_db"
             )
                 .addMigrations(*DatabaseMigrations.ALL_MIGRATIONS)
-                .fallbackToDestructiveMigration()
                 .build()
 
             appScope.launch(Dispatchers.IO) {
@@ -71,5 +70,6 @@ abstract class DatabaseModule {
         @Provides fun provideProtocolTemplateDao(db: AppDatabase)  = db.protocolTemplateDao()
         @Provides fun provideChatDao(db: AppDatabase)              = db.chatDao()
         @Provides fun provideCalendarCycleDao(db: AppDatabase)     = db.calendarCycleDao()
+        @Provides fun provideTodoDao(db: AppDatabase)              = db.todoDao()
     }
 }

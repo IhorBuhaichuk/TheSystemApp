@@ -21,7 +21,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -29,13 +28,7 @@ import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
 
-data class SetSavePayload(
-    val exerciseId: Int,
-    val triggerSetId: Long,
-    val allSets: List<ActiveSetInput>
-)
-
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class WorkoutViewModel @Inject constructor(
     private val useCases: WorkoutUseCases,
@@ -56,8 +49,6 @@ class WorkoutViewModel @Inject constructor(
     private val _currentLogSets = MutableStateFlow<List<ActiveSetInput>>(emptyList())
     private val _userEdits = MutableStateFlow<Map<Int, List<ActiveSetInput>>>(emptyMap())
     private val _selectedCycleDayOverride = MutableStateFlow<Int?>(null)
-
-    private val _saveEvents = MutableSharedFlow<SetSavePayload>(replay = 0)
 
     private val cycleDay: Flow<Int> = combine(
         useCases.selectedDate.filterNotNull(),
@@ -170,37 +161,6 @@ class WorkoutViewModel @Inject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    init {
-        viewModelScope.launch {
-            _saveEvents
-                .debounce(1500L)
-                .collectLatest { payload ->
-                    performAutoSave(payload)
-                }
-        }
-    }
-
-    private suspend fun performAutoSave(payload: SetSavePayload) {
-        try {
-            val setsToSave = payload.allSets
-                .filter { it.weight.isNotEmpty() && it.reps.isNotEmpty() }
-            
-            if (setsToSave.isEmpty()) return
-
-            useCases.selectedDate.value?.let { date ->
-                useCases.saveExerciseSets(
-                    exerciseId = payload.exerciseId,
-                    sets = setsToSave,
-                    date = date,
-                    userFeedback = ""
-                )
-            }
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            e.printStackTrace()
-        }
-    }
-
     fun onSetWeightChanged(exerciseId: Int, setId: Long, weight: String) {
         updateSetEdit(exerciseId, setId) { it.copy(weight = weight) }
     }
@@ -221,22 +181,12 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onSetFocusLost(exerciseId: Int, setId: Long) {
-        viewModelScope.launch {
-            val currentSets = _userEdits.value[exerciseId]
-                ?: activeWorkoutState.value?.exercises?.find { it.exerciseId == exerciseId }?.sets
-                ?: return@launch
-            _saveEvents.emit(SetSavePayload(exerciseId, setId, currentSets.toList()))
-        }
+        // Sets are persisted when the workout is finished. This keeps workout completion
+        // as the single source of truth for logs, XP, statistics, and analysis.
     }
 
     fun onSetCompleted(exerciseId: Int, setId: Long) {
         updateSetEdit(exerciseId, setId) { it.copy(isCompleted = !it.isCompleted) }
-        viewModelScope.launch {
-            val currentSets = _userEdits.value[exerciseId]
-                ?: activeWorkoutState.value?.exercises?.find { it.exerciseId == exerciseId }?.sets
-                ?: return@launch
-            _saveEvents.emit(SetSavePayload(exerciseId, setId, currentSets.toList()))
-        }
     }
 
     fun onFinishWorkout() {

@@ -1,12 +1,9 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.core.util.AppClock
-import com.ihor.thesystem.core.util.OneRepMaxCalculator
 import com.ihor.thesystem.domain.model.ExerciseSet
-import com.ihor.thesystem.domain.model.AnnualMatrixProvider
-import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
-import com.ihor.thesystem.domain.repository.PlayerRepository
+import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import kotlinx.coroutines.flow.Flow
@@ -42,8 +39,8 @@ class GetLogForDateUseCase @Inject constructor(
 
 class SaveExerciseSetsUseCase @Inject constructor(
     private val matrixRepo: ProgressionMatrixRepository,
-    private val playerRepo: PlayerRepository,
     private val recalculateGlobalRank: RecalculateGlobalRankUseCase,
+    private val calculateProgressRank: CalculateProgressRankUseCase,
     private val clock: AppClock
 ) {
     suspend operator fun invoke(exerciseId: Int, sets: List<ActiveSetInput>, date: LocalDate, userFeedback: String?) {
@@ -57,18 +54,14 @@ class SaveExerciseSetsUseCase @Inject constructor(
 
         // 2. Алгоритм автоматичного підвищення рангу
         val maxWeight = parsedSets.maxOf { it.weight }
-        val maxReps = parsedSets.filter { it.weight == maxWeight }
-            .maxOfOrNull { it.reps } ?: 1
 
-        // - Розрахуй 1RM введеного результату
-        val current1RM = OneRepMaxCalculator.calculate(maxWeight, maxReps)
-
-        // - Отримай поточну вправу та вагу гравця
         val entry = matrixRepo.getEntrySync(exerciseId) ?: return
-        val playerWeight = playerRepo.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
 
-        // - Визнач newRank за допомогою AnnualMatrixProvider через exerciseId
-        val newRank = AnnualMatrixProvider.getExerciseRankById(exerciseId, current1RM, playerWeight)
+        val newRank = calculateProgressRank(
+            currentWeight = maxWeight,
+            startWeight = entry.startWeight.toDouble(),
+            targetWeight = entry.targetWeight.toDouble()
+        ) ?: return
 
         // - Перевір математичну вагу (weight: E=1..S=6)
         if (newRank.weight > entry.currentRank.weight) {

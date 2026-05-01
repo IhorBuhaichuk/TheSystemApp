@@ -9,8 +9,8 @@ import java.time.ZoneId
 import javax.inject.Inject
 
 data class PlayerWeightContext(
-    val currentWeight: Double,
-    val weightSixMonthsAgo: Float
+    val currentWeight: Double?,
+    val weightSixMonthsAgo: Float?
 )
 
 class GetPlayerWeightContextUseCase @Inject constructor(
@@ -19,7 +19,7 @@ class GetPlayerWeightContextUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(): PlayerWeightContext {
         val now = clock.now()
-        val currentWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble() ?: 80.0
+        val currentWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble()
         
         // Використання java.time для розрахунку дати 6 місяців тому
         val dateSixMonthsAgo = Instant.ofEpochMilli(now)
@@ -31,7 +31,7 @@ class GetPlayerWeightContextUseCase @Inject constructor(
             .toEpochMilli()
 
         val weightSixMonthsAgo = playerRepository.getWeightAtOrBefore(dateSixMonthsAgo).getOrNull() 
-            ?: currentWeight.toFloat()
+            ?: currentWeight?.toFloat()
 
         return PlayerWeightContext(
             currentWeight = currentWeight,

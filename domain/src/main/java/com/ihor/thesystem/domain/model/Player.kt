@@ -28,6 +28,20 @@ data class Player(
     val legsGroupAttr: Int = 0,
     val coreAttr: Int = 0
 ) {
+    fun rewardWorkoutCompletion(
+        config: PlayerProgressionConfig = PlayerProgressionConfig()
+    ): Player {
+        val nextStreak = currentStreak + 1
+        val nextXpTotal = xpTotal + config.workoutCompletionXp
+        return copy(
+            level = (nextXpTotal / config.xpPerLevel) + 1,
+            currentStreak = nextStreak,
+            maxStreak = maxOf(maxStreak, nextStreak),
+            xpTotal = nextXpTotal,
+            xpThisWeek = xpThisWeek + config.workoutCompletionXp
+        )
+    }
+
     /**
      * Оцінює виконання головних квестів, оновлює серії та нараховує досвід.
      */
@@ -38,13 +52,7 @@ data class Player(
         return if (!allCompleted) {
             copy(currentStreak = 0)
         } else {
-            val newStreak = currentStreak + 1
-            copy(
-                currentStreak = newStreak,
-                maxStreak = maxOf(maxStreak, newStreak),
-                xpTotal = xpTotal + 100,
-                xpThisWeek = xpThisWeek + 100
-            )
+            rewardWorkoutCompletion()
         }
     }
 
@@ -98,3 +106,8 @@ data class Player(
         return updatedPlayer to levelUpTriggered
     }
 }
+
+data class PlayerProgressionConfig(
+    val xpPerLevel: Int = 1000,
+    val workoutCompletionXp: Int = 100
+)

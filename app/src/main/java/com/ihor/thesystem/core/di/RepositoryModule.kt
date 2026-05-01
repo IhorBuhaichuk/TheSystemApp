@@ -25,6 +25,9 @@ abstract class RepositoryModule {
     abstract fun bindCalendarCycleRepository(impl: CalendarCycleRepositoryImpl): CalendarCycleRepository
 
     @Binds @Singleton
+    abstract fun bindTodoRepository(impl: TodoRepositoryImpl): TodoRepository
+
+    @Binds @Singleton
     abstract fun bindScheduleRepository(impl: ScheduleRepositoryImpl): ScheduleRepository
 
     @Binds @Singleton
@@ -43,8 +46,5 @@ abstract class RepositoryModule {
     @Binds @Singleton
     abstract fun bindWorkoutRepository(impl: WorkoutRepositoryImpl): WorkoutRepository
 
-    @Binds @Singleton
-    abstract fun bindAnnualMatrixRepository(impl: AnnualMatrixRepositoryImpl): AnnualMatrixRepository
-    
     // ViewingDateRepository не потребує @Binds, оскільки він є Singleton класом
 }

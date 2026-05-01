@@ -21,7 +21,11 @@ interface WorkoutDao {
 
     @Query("""
         SELECT * FROM exercises
-        WHERE (:query IS NULL OR name LIKE '%' || :query || '%')
+        WHERE (
+            :query IS NULL OR
+            name LIKE '%' || :query || '%' OR
+            nameUk LIKE '%' || :query || '%'
+        )
         AND (:equipmentCount = 0 OR equipment IN (:equipment))
         AND (:levelsCount = 0 OR level IN (:levels))
         AND (:mechanicsCount = 0 OR mechanic IN (:mechanics))
@@ -86,5 +90,4 @@ interface WorkoutDao {
     @Query("SELECT * FROM workout_templates WHERE id = :id")
     suspend fun getTemplateById(id: Int): WorkoutTemplateEntity?
 }
-
 

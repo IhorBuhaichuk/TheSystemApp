@@ -16,11 +16,12 @@ data class StatusUiData(
     val xpMax: Int                    = 1000,
     val currentMonth: Int             = 1,
     val totalMonths: Int              = 12,
-    val currentWeight: Float          = 80f,
-    val height: Float                 = 182f,
+    val currentWeight: Float?         = null,
+    val height: Float?                = null,
     val cycleDay: Int                 = 1,
-    val monthWorkoutsCompleted: Int   = 2,
-    val monthWorkoutsTotal: Int       = 13,
+    val monthWorkoutsCompleted: Int   = 0,
+    val monthWorkoutsTotal: Int       = 0,
+    val todos: ImmutableList<TodoUiModel> = persistentListOf(),
     val dailyQuest: QuestUiModel?     = null,
     val mainQuest: QuestUiModel?      = null,
     val promotionQuests: ImmutableList<QuestUiModel> = persistentListOf(),
@@ -69,5 +70,11 @@ data class TaskUiModel(
     val id: Int,
     val name: String,
     val nameUk: String? = null,
+    val isCompleted: Boolean
+)
+
+data class TodoUiModel(
+    val id: Int,
+    val title: String,
     val isCompleted: Boolean
 )

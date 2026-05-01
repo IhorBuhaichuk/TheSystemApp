@@ -32,9 +32,10 @@ import com.ihor.thesystem.data.local.room.entity.*
         ProtocolTemplateEntity::class,
         ChatMessageEntity::class,
         CalendarCycleConfigEntity::class,
-        CalendarCycleDayEntity::class
+        CalendarCycleDayEntity::class,
+        TodoEntity::class
     ],
-    version = 41,
+    version = 42,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -52,4 +53,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun protocolTemplateDao(): ProtocolTemplateDao
     abstract fun chatDao(): ChatDao
     abstract fun calendarCycleDao(): CalendarCycleDao
+    abstract fun todoDao(): TodoDao
 }

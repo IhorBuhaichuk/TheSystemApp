@@ -98,7 +98,7 @@ fun StatisticsScreen(
             is UiState.Content -> {
                 AnalyticsDashboard(
                     data = state.data,
-                    onOpenAnnualProgression = { navController.navigate(Routes.AnnualMatrix) }
+                    onOpenAnnualProgression = { navController.navigate(Routes.AnnualProgressionDetails) }
                 )
             }
 

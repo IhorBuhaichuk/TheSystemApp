@@ -10,10 +10,6 @@ import com.ihor.thesystem.domain.model.ReferenceMatrix
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.TransactionProvider
-import com.ihor.thesystem.core.ui.UiText
-import com.ihor.thesystem.R
-import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -22,8 +18,7 @@ import java.time.ZoneId
 class ProgressionMatrixRepositoryImpl @Inject constructor(
     private val matrixDao:    ProgressionMatrixDao,
     private val analyticsDao: WorkoutAnalyticsDao,
-    private val transactionProvider: TransactionProvider,
-    @ApplicationContext private val context: Context
+    private val transactionProvider: TransactionProvider
 ) : ProgressionMatrixRepository {
 
     override fun getAllEntries(): Flow<List<ProgressionMatrixEntry>> =
@@ -246,14 +241,12 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         timestamp: Long
     ) {
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
-        val note = UiText.StringResource(R.string.text_ai_recommendation_note, listOf(sets, reps)).asString(context)
         matrixDao.update(existing.copy(
             nextRecommendedWeight = weight,
             nextRecommendedSets = sets,
             nextRecommendedReps = reps,
             lastAiFeedback = aiFeedback,
-            lastAnalyzedTimestamp = timestamp,
-            targetWeightNote = note
+            lastAnalyzedTimestamp = timestamp
         ))
     }
 }

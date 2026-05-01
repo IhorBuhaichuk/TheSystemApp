@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.model.CalendarCycleDay
 import com.ihor.thesystem.domain.model.CalendarCycleDayType
 import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus
 import com.ihor.thesystem.domain.model.Player
@@ -13,6 +14,8 @@ import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.CalculateCycleDayForDateUseCase
 import com.ihor.thesystem.domain.usecase.GetDailySummaryForDateUseCase
+import com.ihor.thesystem.domain.usecase.GetTodosForDateUseCase
+import com.ihor.thesystem.domain.usecase.GetTodoStatsForMonthUseCase
 import com.ihor.thesystem.domain.usecase.CalendarLogItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -31,6 +34,7 @@ data class CalendarDayUiModel(
     val cycleDay: Int,
     val label: String,
     val isToday: Boolean,
+    val isCalendarCycleConfigured: Boolean = true,
     val calendarDayType: CalendarCycleDayType = CalendarCycleDayType.OFF,
     val isActive: Boolean = false,
     val completedTasks: Int = 0,
@@ -117,14 +121,15 @@ class CalendarViewModel @Inject constructor(
     private val calculateCycleDay: CalculateCycleDayForDateUseCase,
     private val viewingDateRepo: ViewingDateRepository,
     private val playerRepo: PlayerRepository,
-    private val questRepo: QuestRepository,
+    private val getTodosForDate: GetTodosForDateUseCase,
+    private val getTodoStatsForMonth: GetTodoStatsForMonthUseCase,
     private val calendarCycleRepository: CalendarCycleRepository,
     private val getDailySummary: GetDailySummaryForDateUseCase,
     private val syncCycleAnchor: SyncCycleAnchorUseCase,
     private val clock: AppClock
 ) : ViewModel() {
 
-    private val _currentMonth = MutableStateFlow(YearMonth.now())
+    private val _currentMonth = MutableStateFlow(YearMonth.from(today()))
     val _selectedDate = viewingDateRepo.selectedDate
     private val _workoutResults = MutableStateFlow<List<WorkoutResultUiModel>>(emptyList())
     private val _dailyLogs = MutableStateFlow<List<CalendarLogItem>>(emptyList())
@@ -134,6 +139,10 @@ class CalendarViewModel @Inject constructor(
     private val _monthTaskStats = MutableStateFlow<Map<LocalDate, Pair<Int, Int>>>(emptyMap())
     private val _monthWorkoutDates = MutableStateFlow<Set<LocalDate>>(emptySet())
     private var monthWorkoutJob: Job? = null
+    private var dailyLogsJob: Job? = null
+    private var dailyTaskSnapshotJob: Job? = null
+    private var workoutResultsJob: Job? = null
+    private var weightJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -247,7 +256,13 @@ class CalendarViewModel @Inject constructor(
         
         val calendarDays = datesInMonth.map { date ->
             val cycleDay = cycleDayByDate.getValue(date)
-            val calendarDay = calendarCycle.dayFor(date)
+            val configuredCalendarDay = calendarCycle.dayForOrNull(date)
+            val calendarDay = configuredCalendarDay ?: CalendarCycleDay(
+                index = 0,
+                name = "Налаштуйте цикл",
+                type = CalendarCycleDayType.OFF
+            )
+            val isCalendarCycleConfigured = configuredCalendarDay != null
             val schedule = schedulesByCycleDay[cycleDay]
             val hasTraining = schedule?.isWorkoutDay == true &&
                 (schedule.workoutTemplateName != null || schedule.exercises.isNotEmpty())
@@ -259,21 +274,22 @@ class CalendarViewModel @Inject constructor(
                 cycleDay = cycleDay,
                 label = calendarDay.name,
                 isToday = date == todayDate,
+                isCalendarCycleConfigured = isCalendarCycleConfigured,
                 calendarDayType = calendarDay.type,
                 isActive = date == todayDate,
-                completedTasks = completedTasks,
-                totalTasks = totalTasks,
-                hasTrainingPlan = hasTraining,
+                completedTasks = if (isCalendarCycleConfigured) completedTasks else 0,
+                totalTasks = if (isCalendarCycleConfigured) totalTasks else 0,
+                hasTrainingPlan = isCalendarCycleConfigured && hasTraining,
                 plannedWorkoutName = schedule?.workoutTemplateName,
                 plannedExerciseCount = schedule?.exercises.orEmpty().size,
-                hasCompletedWorkout = hasCompletedWorkout,
+                hasCompletedWorkout = isCalendarCycleConfigured && hasCompletedWorkout,
                 completionStatus = resolveCompletionStatus(
                     date = date,
                     today = todayDate,
-                    hasTraining = hasTraining,
-                    hasCompletedWorkout = hasCompletedWorkout,
-                    completedTasks = completedTasks,
-                    totalTasks = totalTasks
+                    hasTraining = isCalendarCycleConfigured && hasTraining,
+                    hasCompletedWorkout = isCalendarCycleConfigured && hasCompletedWorkout,
+                    completedTasks = if (isCalendarCycleConfigured) completedTasks else 0,
+                    totalTasks = if (isCalendarCycleConfigured) totalTasks else 0
                 )
             )
         }
@@ -284,7 +300,7 @@ class CalendarViewModel @Inject constructor(
             anchorCycleDay = config.cycleAnchorDay,
             cycleDaysPerMicrocycle = config.cycleDaysPerMicrocycle
         )
-        val todayCalendarDay = calendarCycle.dayFor(todayDate)
+        val todayCalendarDay = calendarCycle.dayForOrNull(todayDate)
 
         val cycleDays = config.cycleDaysPerMicrocycle.let { total ->
             (1..total).map { d ->
@@ -303,9 +319,10 @@ class CalendarViewModel @Inject constructor(
             todayInfo = CalendarDayUiModel(
                 date = todayDate,
                 cycleDay = todayCycleDay,
-                label = todayCalendarDay.name,
+                label = todayCalendarDay?.name ?: "Налаштуйте цикл",
                 isToday = true,
-                calendarDayType = todayCalendarDay.type
+                isCalendarCycleConfigured = todayCalendarDay != null,
+                calendarDayType = todayCalendarDay?.type ?: CalendarCycleDayType.OFF
             ),
             selectedDate = selectedDate,
             workoutResults = data.workoutResults,
@@ -334,7 +351,8 @@ class CalendarViewModel @Inject constructor(
     }
 
     private fun loadDailyLogs(date: LocalDate) {
-        viewModelScope.launch {
+        dailyLogsJob?.cancel()
+        dailyLogsJob = viewModelScope.launch {
             getDailySummary(date).collect { logs ->
                 _dailyLogs.value = logs
             }
@@ -342,28 +360,30 @@ class CalendarViewModel @Inject constructor(
     }
 
     private fun loadDailyTaskSnapshot(date: LocalDate) {
-        val millis = date.toStartOfDayMillis()
-        viewModelScope.launch {
-            val tasks = questRepo.getDailyTasksWithCompletionForDate(millis)
-            val completed = tasks.filter { it.second }.map { it.first }
-            val failed = tasks.filter { !it.second }.map { it.first }
+        dailyTaskSnapshotJob?.cancel()
+        dailyTaskSnapshotJob = viewModelScope.launch {
+            getTodosForDate(date).collectLatest { tasks ->
+                val completed = tasks.filter { it.isCompleted }.map { it.title }
+                val failed = tasks.filter { !it.isCompleted }.map { it.title }
 
-            val total = tasks.size
-            val completedPercent = if (total > 0) (completed.size * 100 / total) else 0
-            val failedPercent = if (total > 0) (failed.size * 100 / total) else 0
+                val total = tasks.size
+                val completedPercent = if (total > 0) (completed.size * 100 / total) else 0
+                val failedPercent = if (total > 0) (failed.size * 100 / total) else 0
 
-            _dailyTaskSnapshot.value = DailyTaskSnapshotUiModel(
-                completedTasks = completed,
-                failedTasks = failed,
-                completedPercent = completedPercent,
-                failedPercent = failedPercent
-            )
+                _dailyTaskSnapshot.value = DailyTaskSnapshotUiModel(
+                    completedTasks = completed,
+                    failedTasks = failed,
+                    completedPercent = completedPercent,
+                    failedPercent = failedPercent
+                )
+            }
         }
     }
 
     private fun loadWorkoutResults(date: LocalDate) {
         val millis = date.toStartOfDayMillis()
-        viewModelScope.launch {
+        workoutResultsJob?.cancel()
+        workoutResultsJob = viewModelScope.launch {
             analyticsRepo.getSessionsByDate(millis).collect { sessions ->
                 val results = sessions.flatMap { session ->
                     session.sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (id, sets) ->
@@ -408,7 +428,8 @@ class CalendarViewModel @Inject constructor(
 
     private fun loadWeight(date: LocalDate) {
         val millis = date.toStartOfDayMillis()
-        viewModelScope.launch {
+        weightJob?.cancel()
+        weightJob = viewModelScope.launch {
             _loggedWeight.value = when (val result = playerRepo.getWeightByDate(millis)) {
                 is Result.Success -> result.data?.toDouble()
                 is Result.Error -> null
@@ -423,15 +444,9 @@ class CalendarViewModel @Inject constructor(
     }
 
     private suspend fun loadMonthTaskStats(month: YearMonth) {
-        val stats = mutableMapOf<LocalDate, Pair<Int, Int>>()
-        for (day in 1..month.lengthOfMonth()) {
-            val date = month.atDay(day)
-            val tasks = questRepo.getDailyTasksWithCompletionForDate(date.toStartOfDayMillis())
-            if (tasks.isNotEmpty()) {
-                stats[date] = tasks.count { it.second } to tasks.size
-            }
+        _monthTaskStats.value = getTodoStatsForMonth(month).mapValues { (_, stats) ->
+            stats.completedCount to stats.totalCount
         }
-        _monthTaskStats.value = stats
     }
 
     private fun observeMonthWorkoutDates(month: YearMonth) {

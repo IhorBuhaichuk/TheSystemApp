@@ -45,6 +45,22 @@ class QuestRepositoryImpl @Inject constructor(
             }
         }
 
+    override suspend fun completeQuestTasksForExercises(questId: Int, exerciseIds: Set<Int>) =
+        transactionProvider.runInTransaction {
+            if (exerciseIds.isEmpty()) return@runInTransaction
+            val tasks = questDao.getTasksForQuestSync(questId)
+            tasks
+                .filter { task -> task.exerciseId != null && task.exerciseId in exerciseIds && !task.isCompleted }
+                .forEach { task ->
+                    questDao.setTaskCompletion(task.id, true)
+                }
+
+            val updatedTasks = questDao.getTasksForQuestSync(questId)
+            if (updatedTasks.isNotEmpty() && updatedTasks.all { it.isCompleted }) {
+                questDao.updateQuestStatus(questId, EntityQuestStatus.COMPLETED)
+            }
+        }
+
     override suspend fun updateQuestStatus(questId: Int, status: DomainQuestStatus) =
         questDao.updateQuestStatus(questId, status.toEntity())
 

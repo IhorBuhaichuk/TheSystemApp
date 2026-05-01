@@ -12,6 +12,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
     private val questRepo: QuestRepository,
     private val scheduleRepo: ScheduleRepository,
     private val configRepo: SystemConfigRepository,
+    private val todoRepository: TodoRepository,
     private val calculateCycleDay: CalculateCycleDayForDateUseCase,
     private val clock: AppClock
 ) {
@@ -79,10 +80,11 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 questRepo.getQuestsByDate(
                     dateMillis = clock.now()
                 ),
+                todoRepository.getTodosForDate(currentDate),
                 playerRepo.getLatestWeight(),
                 questRepo.getSuccessfulQuestCount(DomainQuestType.MAIN, monthStart, monthEnd),
                 schedulesFlow
-            ) { dailyQuestsForDate, weight, completedMainThisMonth, schedules ->
+            ) { dailyQuestsForDate, todos, weight, completedMainThisMonth, schedules ->
                 val daily = dailyQuestsForDate.find { it.type == DomainQuestType.DAILY }
                 val main = dailyQuestsForDate.find { it.type == DomainQuestType.MAIN }
                 val promotions = activeQuests.filter { it.type == DomainQuestType.PROMOTION }
@@ -90,23 +92,24 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 val trainingDaysPerCycle = schedules.count { it.workoutTemplateName != null }
                 val monthWorkoutsTotal = trainingDaysPerCycle * config.microCyclesPerMonth
                 
-                val xpPerLevel = 1000
-                val xpForCurrentLevel = player.level * xpPerLevel
-                val xpProgress = (player.xpTotal - xpForCurrentLevel).coerceIn(0, xpPerLevel)
+                val xpPerLevel = PlayerProgressionConfig().xpPerLevel
+                val derivedLevel = (player.xpTotal / xpPerLevel) + 1
+                val xpProgress = (player.xpTotal % xpPerLevel).coerceIn(0, xpPerLevel)
 
                 StatusData(
                     playerName             = player.name,
                     playerClass            = player.playerClass,
-                    level                  = player.level,
+                    level                  = derivedLevel.coerceAtLeast(player.level),
                     xpTotal                = xpProgress,
                     xpMax                  = xpPerLevel,
                     currentMonth           = player.currentMonth,
                     totalMonths            = 12,
-                    currentWeight          = weight ?: 80f,
-                    height                 = player.height.takeIf { it > 0f } ?: 182f,
+                    currentWeight          = weight,
+                    height                 = player.height.takeIf { it > 0f },
                     cycleDay               = currentCycleDay,
                     monthWorkoutsCompleted = completedMainThisMonth,
                     monthWorkoutsTotal     = monthWorkoutsTotal,
+                    todos                  = todos,
                     dailyQuest             = daily,
                     mainQuest              = main,
                     promotionQuests        = promotions,

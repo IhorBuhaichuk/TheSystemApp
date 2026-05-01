@@ -448,6 +448,14 @@ private fun SelectedDayDetailsPanel(
                 }
             )
 
+            if (!day.isCalendarCycleConfigured) {
+                Text(
+                    text = "Налаштуйте календарний цикл, щоб бачити тут свої результати.",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
+                )
+                return@Column
+            }
+
             if (!hasAnyPlan) {
                 Text(
                     text = "На цей день нічого не заплановано",

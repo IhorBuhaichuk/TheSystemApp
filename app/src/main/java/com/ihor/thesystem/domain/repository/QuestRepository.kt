@@ -10,6 +10,7 @@ interface QuestRepository {
     fun getActiveQuests(): Flow<List<Quest>>
     suspend fun hasActiveQuests(): Boolean
     suspend fun toggleTaskCompletion(taskId: Int, questId: Int, isCompleted: Boolean)
+    suspend fun completeQuestTasksForExercises(questId: Int, exerciseIds: Set<Int>)
     suspend fun updateQuestStatus(questId: Int, status: DomainQuestStatus)
     suspend fun createDailyQuest(title: String, tasks: List<String>, scheduleId: Int?)
     suspend fun createMainQuest(title: String, exercises: List<ExerciseRecommendation>, scheduleId: Int?)

@@ -4,6 +4,7 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
+import com.ihor.thesystem.domain.util.AnnualProgressionPlanNoteParser
 import com.ihor.thesystem.domain.util.sanitizeForPrompt
 import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.core.util.*
@@ -23,8 +24,9 @@ class FinalizeSessionUseCase @Inject constructor(
     private val calculateRecovery: CalculateRecoveryWindowUseCase,
     private val validateDirectives: ValidateDirectivesUseCase,
     private val transactionProvider: TransactionProvider,
-    private val annualMatrixRepository: AnnualMatrixRepository,
-    private val getWeightContext: GetPlayerWeightContextUseCase
+    private val getWeightContext: GetPlayerWeightContextUseCase,
+    private val questRepository: QuestRepository,
+    private val calculateProgressRank: CalculateProgressRankUseCase
 ) {
     suspend operator fun invoke(
         session: WorkoutSession,
@@ -41,7 +43,7 @@ class FinalizeSessionUseCase @Inject constructor(
                 val weight6MonthsAgo = weightContext.weightSixMonthsAgo
 
                 val matrix = progressionMatrixRepository.getAllEntries().first()
-                updateExerciseRanks(sets, matrix, playerWeight)
+                updateExerciseRanks(sets, matrix)
 
                 val calculatedTonnage = sets.filter { it.isCompleted }.sumOf { it.weight * it.reps }
                 val finalTonnage = if (calculatedTonnage > 0) calculatedTonnage else session.totalTonnage
@@ -60,6 +62,8 @@ class FinalizeSessionUseCase @Inject constructor(
             Timber.e(e, "Local session saving failed")
             return Result.Error(DataError.Local.SQLITE_EXCEPTION)
         }
+
+        completeActiveWorkoutQuestIfPossible(sets)
 
         // 2. Асинхронний запит до AiArchitectRepository та оновлення матриці
         val exerciseContexts = generateAiPrompt(sets, localData.matrix, localData.playerWeight, localData.weight6MonthsAgo)
@@ -111,8 +115,8 @@ class FinalizeSessionUseCase @Inject constructor(
     }
 
     private data class LocalSessionData(
-        val playerWeight: Double,
-        val weight6MonthsAgo: Float,
+        val playerWeight: Double?,
+        val weight6MonthsAgo: Float?,
         val matrix: List<ProgressionMatrixEntry>,
         val recoveryHours: Double
     )
@@ -120,23 +124,22 @@ class FinalizeSessionUseCase @Inject constructor(
     private suspend fun generateAiPrompt(
         sets: List<ExerciseSet>,
         matrix: List<ProgressionMatrixEntry>,
-        playerWeight: Double,
-        weight6MonthsAgo: Float
+        playerWeight: Double?,
+        weight6MonthsAgo: Float?
     ): String {
         val matrixMap = matrix.associateBy { it.exerciseId }
-        val annualMatrixMap = annualMatrixRepository.getMatrix().associateBy { it.exerciseId }
         
         return sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
             val matrixEntry = matrixMap[exId]
             val recentLogs = analyticsRepository.getRecentLogsForExercise(exId)
-            val annualGoals = annualMatrixMap[exId]?.targets?.joinToString(", ") ?: "немає"
+            val annualGoals = matrixEntry?.annualGoalSummary() ?: "немає"
             
             val sanitizedExerciseName = (matrixEntry?.exerciseName ?: "ID $exId").sanitizeForPrompt()
             val sanitizedFeedback = (exerciseSets.firstOrNull()?.userFeedback ?: "відсутній").sanitizeForPrompt()
 
             """
             Вправа: $sanitizedExerciseName
-            - Поточна вага тіла: $playerWeight кг (6 міс. тому: $weight6MonthsAgo кг)
+            - Поточна вага тіла: ${playerWeight?.let { "$it кг" } ?: "невідомо"} (6 міс. тому: ${weight6MonthsAgo?.let { "$it кг" } ?: "невідомо"})
             - Цілі Річної матриці (M0-M12): $annualGoals
             - Останні 10 тренувань: ${recentLogs.joinToString { "${it.weight}кг x ${it.reps}" }}
             - Сьогодні виконано: ${exerciseSets.joinToString { "${it.weight}кг x ${it.reps}" }}
@@ -147,28 +150,54 @@ class FinalizeSessionUseCase @Inject constructor(
 
     private suspend fun updateExerciseRanks(
         sets: List<ExerciseSet>,
-        matrix: List<ProgressionMatrixEntry>,
-        playerWeight: Double
+        matrix: List<ProgressionMatrixEntry>
     ) {
         val matrixMap = matrix.associateBy { it.exerciseId }
         sets.filter { it.isCompleted }.groupBy { it.exerciseId }.forEach { (exId, exerciseSets) ->
-            val estimated1RM = exerciseSets
+            val bestWorkingWeight = exerciseSets
                 .filter { it.isCompleted && it.reps > 0 }
-                .maxOfOrNull { OneRepMaxCalculator.calculate(it.weight, it.reps) }
+                .maxOfOrNull { it.weight }
                 ?: return@forEach
 
             val matrixEntry = matrixMap[exId] ?: return@forEach
             
-            val newRank = annualMatrixRepository.getExerciseRankById(
-                exerciseId = matrixEntry.exerciseId,
-                current1RM = estimated1RM,
-                playerWeight = playerWeight
-            )
+            val newRank = calculateProgressRank(
+                currentWeight = bestWorkingWeight,
+                startWeight = matrixEntry.startWeight.toDouble(),
+                targetWeight = matrixEntry.targetWeight.toDouble()
+            ) ?: return@forEach
             
             if (newRank.weight > matrixEntry.currentRank.weight) {
                 progressionMatrixRepository.updateRank(matrixEntry.exerciseId, newRank)
             }
         }
+    }
+
+    private suspend fun completeActiveWorkoutQuestIfPossible(sets: List<ExerciseSet>) {
+        val completedExerciseIds = sets
+            .filter { it.isCompleted }
+            .map { it.exerciseId }
+            .toSet()
+        if (completedExerciseIds.isEmpty()) return
+
+        val activeMainQuest = questRepository.getActiveQuests()
+            .firstOrNull()
+            .orEmpty()
+            .firstOrNull { it.type == DomainQuestType.MAIN }
+            ?: return
+
+        questRepository.completeQuestTasksForExercises(activeMainQuest.id, completedExerciseIds)
+        val refreshedQuest = questRepository.getQuestById(activeMainQuest.id) ?: return
+        if (refreshedQuest.status != DomainQuestStatus.COMPLETED) return
+
+        questRepository.logQuestResult(
+            questId = refreshedQuest.id,
+            questType = refreshedQuest.type,
+            wasSuccessful = true
+        )
+
+        val player = playerRepository.getPlayer().firstOrNull() ?: return
+        playerRepository.updatePlayer(player.rewardWorkoutCompletion())
     }
 
     private fun generateFallbackReport(
@@ -202,4 +231,14 @@ class FinalizeSessionUseCase @Inject constructor(
             isFallback = true
         )
     }
+}
+
+private fun ProgressionMatrixEntry.annualGoalSummary(): String? {
+    val parsedPlan = AnnualProgressionPlanNoteParser.parse(targetWeightNote)
+    if (parsedPlan != null) {
+        return parsedPlan.monthlyTargets.joinToString(", ") { target ->
+            "M${target.monthIndex}: ${target.weight}кг"
+        }
+    }
+    return targetWeight.takeIf { it > 0f }?.let { "Ціль: ${it}кг" }
 }

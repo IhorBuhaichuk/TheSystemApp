@@ -20,6 +20,7 @@ import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.model.StatusData
 import com.ihor.thesystem.domain.model.SystemConfig
+import com.ihor.thesystem.domain.model.TodoItem
 import com.ihor.thesystem.domain.repository.DatabaseReadinessRepository
 import com.ihor.thesystem.domain.repository.DatabaseStatus
 import com.ihor.thesystem.domain.usecase.*
@@ -297,25 +298,25 @@ class StatusViewModel @Inject constructor(
         useCases.toggleQuestTask(task.id, questId, task.isCompleted)
     }
 
+    fun onTodoToggled(todo: TodoUiModel) = launchCatching {
+        useCases.toggleTodo(todo.id, todo.isCompleted)
+    }
+
     fun onAddTaskTap(questId: Int) {
         _dialogState.value = StatusDialogState.AddTask(questId)
     }
 
     fun onAddTaskConfirmed(questId: Int, taskName: String) = launchCatching {
-        val targetQuestId = if (questId == 0) {
-            useCases.getOrCreateDailyTaskContainerId()
-        } else {
-            questId
-        }
-        
-        if (targetQuestId != 0) {
-            useCases.addTaskToQuest(targetQuestId, taskName)
-        }
+        useCases.addTodayTodo(taskName)
         onDismissDialog()
     }
 
     fun onRemoveTask(taskId: Int) = launchCatching {
         useCases.removeQuestTask(taskId)
+    }
+
+    fun onRemoveTodo(todoId: Int) = launchCatching {
+        useCases.removeTodo(todoId)
     }
 
     fun onForceEndDay() = launchCatching {
@@ -347,6 +348,7 @@ class StatusViewModel @Inject constructor(
         cycleDay = cycleDay,
         monthWorkoutsCompleted = monthWorkoutsCompleted,
         monthWorkoutsTotal = monthWorkoutsTotal,
+        todos = todos.map { it.toUiModel() }.toImmutableList(),
         dailyQuest = dailyQuest?.toUiModel(),
         mainQuest = mainQuest?.toUiModel(),
         promotionQuests = promotionQuests.map { it.toUiModel() }.toImmutableList(),
@@ -357,6 +359,12 @@ class StatusViewModel @Inject constructor(
         xpThisWeek = xpThisWeek,
         avatarUri = avatarUri,
         weekPreview = weekPreview.map { it.toUiModel() }.toImmutableList()
+    )
+
+    private fun TodoItem.toUiModel() = TodoUiModel(
+        id = id,
+        title = title,
+        isCompleted = isCompleted
     )
 
     private fun Quest.toUiModel() = QuestUiModel(

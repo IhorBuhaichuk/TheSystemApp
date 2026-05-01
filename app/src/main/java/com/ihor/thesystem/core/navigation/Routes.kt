@@ -28,10 +28,10 @@ sealed interface Routes {
     data object CalendarSettings : Routes
      
     @Serializable
-    data object AnnualMatrix : Routes
+    data object AnnualProgressionPlan : Routes
 
     @Serializable
-    data object AnnualProgressionPlan : Routes
+    data object AnnualProgressionDetails : Routes
 
     @Serializable
     data object WorkoutAnalysis : Routes

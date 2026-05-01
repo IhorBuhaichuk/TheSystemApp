@@ -4,6 +4,7 @@ import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
+import com.ihor.thesystem.domain.util.AnnualProgressionPlanNoteParser
 import com.ihor.thesystem.domain.util.sanitizeForPrompt
 import timber.log.Timber
 import kotlinx.coroutines.flow.first
@@ -66,8 +67,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             }
 
             val recentLogs = analyticsRepo.getRecentLogsForExercise(id)
-            val annualGoals = AnnualMatrixProvider.getMatrix()
-                .find { it.exercise.equals(entry.exerciseName, true) }?.targets?.joinToString(", ") ?: "немає"
+            val annualGoals = entry.annualGoalSummary() ?: "немає"
             
             val todayLog = recentLogs.firstOrNull()
             
@@ -87,7 +87,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
 
         val prompt = """
             ПАКЕТНИЙ АНАЛІЗ ТРЕНУВАННЯ.
-            Вага гравця: $playerWeight кг (6 міс. тому: $weight6MonthsAgo кг).
+            Вага гравця: ${playerWeight?.let { "$it кг" } ?: "невідомо"} (6 міс. тому: ${weight6MonthsAgo?.let { "$it кг" } ?: "невідомо"}).
             
             Дані вправ:
             $exercisesJson
@@ -158,4 +158,14 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             )
         }
     }
+}
+
+private fun ProgressionMatrixEntry.annualGoalSummary(): String? {
+    val parsedPlan = AnnualProgressionPlanNoteParser.parse(targetWeightNote)
+    if (parsedPlan != null) {
+        return parsedPlan.monthlyTargets.joinToString(", ") { target ->
+            "M${target.monthIndex}: ${target.weight}кг"
+        }
+    }
+    return targetWeight.takeIf { it > 0f }?.let { "Ціль: ${it}кг" }
 }

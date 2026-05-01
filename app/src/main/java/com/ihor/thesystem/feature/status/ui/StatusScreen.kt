@@ -81,9 +81,9 @@ fun StatusScreen(
                         navController.navigate(Routes.Calendar)
                     },
                     onOpenWorkoutSettings = { navController.navigate(Routes.Cycle) },
-                    onTaskToggled = { task, questId -> statusViewModel.onTaskToggled(task, questId) },
+                    onTaskToggled = { todo -> statusViewModel.onTodoToggled(todo) },
                     onAddTask = { questId -> statusViewModel.onAddTaskTap(questId) },
-                    onRemoveTask = { taskId -> statusViewModel.onRemoveTask(taskId) }
+                    onRemoveTask = { todoId -> statusViewModel.onRemoveTodo(todoId) }
                 )
             }
             is UiState.Error -> DatabaseErrorScreen(state.message)
