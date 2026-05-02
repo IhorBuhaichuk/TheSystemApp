@@ -1,6 +1,7 @@
 package com.ihor.thesystem.feature.statistics.ui.components
 
 import android.graphics.BlurMaskFilter
+import android.graphics.Paint as AndroidPaint
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -99,12 +100,11 @@ fun RadarChartCanvas(
 
             // Stroke with Glow effect using native canvas
             drawContext.canvas.nativeCanvas.apply {
-                val paint = Paint().asFrameworkPaint().apply {
+                val paint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
                     color = Primary.toArgb()
                     strokeWidth = 4f
                     style = android.graphics.Paint.Style.STROKE
                     maskFilter = BlurMaskFilter(15f, BlurMaskFilter.Blur.NORMAL)
-                    isAntiAlias = true
                 }
                 drawPath(progressPath.asAndroidPath(), paint)
             }

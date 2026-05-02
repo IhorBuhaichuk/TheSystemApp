@@ -34,8 +34,8 @@ fun QuestCard(
     quest: QuestUiModel,
     type: DomainQuestType,
     onClick: () -> Unit,
-    onLongClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLongClick: () -> Unit = {}
 ) {
     val isPromotion = type == DomainQuestType.PROMOTION
     val accentColor = when (type) {

@@ -1,4 +1,4 @@
-package com.ihor.thesystem.feature.status.viewmodel
+﻿package com.ihor.thesystem.feature.status.viewmodel
 
 import android.content.Context
 import android.content.Intent
@@ -72,7 +72,7 @@ class StatusViewModel @Inject constructor(
             when (status) {
                 is DatabaseStatus.Ready -> {
                     _questsReady
-                        .filter { it } // чекаємо поки квести готові
+                        .filter { it } // С‡РµРєР°С”РјРѕ РїРѕРєРё РєРІРµСЃС‚Рё РіРѕС‚РѕРІС–
                         .flatMapLatest {
                             combine(
                                 useCases.getStatusData(),
@@ -136,7 +136,7 @@ class StatusViewModel @Inject constructor(
                         return@withTimeout
                     }
                     
-                    // Очікуємо гравця, але обробляємо null як нормальний кейс для нового користувача
+                    // РћС‡С–РєСѓС”РјРѕ РіСЂР°РІС†СЏ, Р°Р»Рµ РѕР±СЂРѕР±Р»СЏС”РјРѕ null СЏРє РЅРѕСЂРјР°Р»СЊРЅРёР№ РєРµР№СЃ РґР»СЏ РЅРѕРІРѕРіРѕ РєРѕСЂРёСЃС‚СѓРІР°С‡Р°
                     try {
                         withTimeout(3000) {
                             useCases.getPlayerFlow().first()
@@ -146,7 +146,7 @@ class StatusViewModel @Inject constructor(
                     }
                 }
                 
-                // Виконуємо розрахунки тільки якщо база готова
+                // Р’РёРєРѕРЅСѓС”РјРѕ СЂРѕР·СЂР°С…СѓРЅРєРё С‚С–Р»СЊРєРё СЏРєС‰Рѕ Р±Р°Р·Р° РіРѕС‚РѕРІР°
                 val config = useCases.getSystemConfig().first()
                 val statusData = useCases.getStatusData().firstOrNull() ?: run {
                     _questsReady.value = true
@@ -165,15 +165,15 @@ class StatusViewModel @Inject constructor(
                     useCases.finalizeDay(forceComplete = false)
                 }
                 
-                _questsReady.value = true   // ← ТІЛЬКИ тут відкриваємо доступ до UI Flow
+                _questsReady.value = true   // в†ђ РўР†Р›Р¬РљР С‚СѓС‚ РІС–РґРєСЂРёРІР°С”РјРѕ РґРѕСЃС‚СѓРї РґРѕ UI Flow
                 
             } catch (e: TimeoutCancellationException) {
                 Timber.w("Database initialization timeout")
-                _questsReady.value = true  // ← знімаємо блок навіть при таймауті, щоб UI не завис
+                _questsReady.value = true  // в†ђ Р·РЅС–РјР°С”РјРѕ Р±Р»РѕРє РЅР°РІС–С‚СЊ РїСЂРё С‚Р°Р№РјР°СѓС‚С–, С‰РѕР± UI РЅРµ Р·Р°РІРёСЃ
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Error during StatusViewModel initialization")
-                _questsReady.value = true  // ← завжди знімаємо блок при будь-якій помилці
+                _questsReady.value = true  // в†ђ Р·Р°РІР¶РґРё Р·РЅС–РјР°С”РјРѕ Р±Р»РѕРє РїСЂРё Р±СѓРґСЊ-СЏРєС–Р№ РїРѕРјРёР»С†С–
             }
         }
 
@@ -395,7 +395,7 @@ class StatusViewModel @Inject constructor(
             calendarDay.type.isWorkDay -> StatusWeekDayVisualType.WORK
             else -> StatusWeekDayVisualType.REST
         }
-        val locale = Locale("uk")
+        val locale = Locale.forLanguageTag("uk")
         return StatusWeekDayUiModel(
             date = date,
             weekDayLabel = date.dayOfWeek.getDisplayName(TextStyle.SHORT_STANDALONE, locale)

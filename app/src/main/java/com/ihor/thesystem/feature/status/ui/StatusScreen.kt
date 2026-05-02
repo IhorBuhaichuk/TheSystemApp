@@ -1,4 +1,4 @@
-package com.ihor.thesystem.feature.status.ui
+﻿package com.ihor.thesystem.feature.status.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.navigation.Routes
@@ -152,7 +152,7 @@ private fun DatabaseErrorScreen(message: UiText) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Критична помилка системи",
+                    text = "РљСЂРёС‚РёС‡РЅР° РїРѕРјРёР»РєР° СЃРёСЃС‚РµРјРё",
                     style = MaterialTheme.typography.titleLarge.copy(color = AccentError),
                     textAlign = TextAlign.Center
                 )
@@ -163,7 +163,7 @@ private fun DatabaseErrorScreen(message: UiText) {
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 SystemButton(
-                    text = "Повторіть запуск",
+                    text = "РџРѕРІС‚РѕСЂС–С‚СЊ Р·Р°РїСѓСЃРє",
                     onClick = { },
                     enabled = false
                 )

@@ -22,7 +22,7 @@ fun GlitchText(
     modifier: Modifier = Modifier,
     primaryColor: Color = NeonCyan
 ) {
-    var offsetX    by remember { mutableStateOf(0) }
+    var offsetX    by remember { mutableIntStateOf(0) }
     var showGlitch by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {

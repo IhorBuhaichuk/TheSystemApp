@@ -1,4 +1,4 @@
-package com.ihor.thesystem.feature.calendar.ui
+﻿package com.ihor.thesystem.feature.calendar.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -47,7 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.navigation.Routes
@@ -172,7 +172,7 @@ private fun CalendarHeader(
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Календар",
+                text = "РљР°Р»РµРЅРґР°СЂ",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Black
@@ -226,7 +226,7 @@ private fun MonthOverviewPanel(
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
                 title = uiState.currentMonth.toUkrainianMonthYear(),
-                subtitle = "Заплановано, виконано, пропущено"
+                subtitle = "Р—Р°РїР»Р°РЅРѕРІР°РЅРѕ, РІРёРєРѕРЅР°РЅРѕ, РїСЂРѕРїСѓС‰РµРЅРѕ"
             )
             CalendarGrid(
                 days = uiState.days,
@@ -246,7 +246,7 @@ private fun CalendarGrid(
     selectedDate: LocalDate?,
     onDateSelected: (LocalDate) -> Unit
 ) {
-    val weekDays = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд")
+    val weekDays = listOf("РџРЅ", "Р’С‚", "РЎСЂ", "Р§С‚", "РџС‚", "РЎР±", "РќРґ")
     val dayModels = remember(days) { days.associateBy { it.date } }
     val startOffset = currentMonth.atDay(1).dayOfWeek.value - 1
     val gridStart = currentMonth.atDay(1).minusDays(startOffset.toLong())
@@ -390,10 +390,10 @@ private fun CalendarLegend() {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        LegendItem(color = WorkDayColor, text = "Робота")
-        LegendItem(color = TrainingDayColor, text = "Тренування")
-        LegendItem(color = AccentSuccess, text = "Виконано")
-        LegendItem(color = AccentWarning, text = "Увага")
+        LegendItem(color = WorkDayColor, text = "Р РѕР±РѕС‚Р°")
+        LegendItem(color = TrainingDayColor, text = "РўСЂРµРЅСѓРІР°РЅРЅСЏ")
+        LegendItem(color = AccentSuccess, text = "Р’РёРєРѕРЅР°РЅРѕ")
+        LegendItem(color = AccentWarning, text = "РЈРІР°РіР°")
     }
 }
 
@@ -429,7 +429,7 @@ private fun SelectedDayDetailsPanel(
     ) {
         if (day == null) {
             Text(
-                text = "Оберіть день у поточному місяці",
+                text = "РћР±РµСЂС–С‚СЊ РґРµРЅСЊ Сѓ РїРѕС‚РѕС‡РЅРѕРјСѓ РјС–СЃСЏС†С–",
                 style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
             )
             return@DarkGlassCard
@@ -439,7 +439,7 @@ private fun SelectedDayDetailsPanel(
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
                 title = day.date.toUkrainianDate(),
-                subtitle = "День ${day.cycleDay} тренувального циклу",
+                subtitle = "Р”РµРЅСЊ ${day.cycleDay} С‚СЂРµРЅСѓРІР°Р»СЊРЅРѕРіРѕ С†РёРєР»Сѓ",
                 trailing = {
                     SystemStatusChip(
                         text = day.completionStatus.toDisplayText(),
@@ -450,7 +450,7 @@ private fun SelectedDayDetailsPanel(
 
             if (!day.isCalendarCycleConfigured) {
                 Text(
-                    text = "Налаштуйте календарний цикл, щоб бачити тут свої результати.",
+                    text = "РќР°Р»Р°С€С‚СѓР№С‚Рµ РєР°Р»РµРЅРґР°СЂРЅРёР№ С†РёРєР», С‰РѕР± Р±Р°С‡РёС‚Рё С‚СѓС‚ СЃРІРѕС— СЂРµР·СѓР»СЊС‚Р°С‚Рё.",
                     style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
                 )
                 return@Column
@@ -458,14 +458,14 @@ private fun SelectedDayDetailsPanel(
 
             if (!hasAnyPlan) {
                 Text(
-                    text = "На цей день нічого не заплановано",
+                    text = "РќР° С†РµР№ РґРµРЅСЊ РЅС–С‡РѕРіРѕ РЅРµ Р·Р°РїР»Р°РЅРѕРІР°РЅРѕ",
                     style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
                 )
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SystemMetricCard(
-                    label = "Тип",
+                    label = "РўРёРї",
                     value = day.label,
                     modifier = Modifier.weight(1f)
                 )
@@ -487,7 +487,7 @@ private fun SelectedDayDetailsPanel(
                         verticalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
                         Text(
-                            text = day.plannedWorkoutName ?: "Тренування не заплановано",
+                            text = day.plannedWorkoutName ?: "РўСЂРµРЅСѓРІР°РЅРЅСЏ РЅРµ Р·Р°РїР»Р°РЅРѕРІР°РЅРѕ",
                             style = MaterialTheme.typography.titleSmall.copy(
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Bold
@@ -497,9 +497,9 @@ private fun SelectedDayDetailsPanel(
                         )
                         Text(
                             text = if (day.hasTrainingPlan) {
-                                "${day.plannedExerciseCount} вправ у плані"
+                                "${day.plannedExerciseCount} РІРїСЂР°РІ Сѓ РїР»Р°РЅС–"
                             } else {
-                                "Календарний день без тренувального блоку"
+                                "РљР°Р»РµРЅРґР°СЂРЅРёР№ РґРµРЅСЊ Р±РµР· С‚СЂРµРЅСѓРІР°Р»СЊРЅРѕРіРѕ Р±Р»РѕРєСѓ"
                             },
                             style = MaterialTheme.typography.bodySmall.copy(color = TextMuted),
                             maxLines = 1,
@@ -518,7 +518,7 @@ private fun SelectedDayDetailsPanel(
             }
 
             SystemButton(
-                text = "Відкрити день",
+                text = "Р’С–РґРєСЂРёС‚Рё РґРµРЅСЊ",
                 icon = if (day.hasTrainingPlan) Icons.Filled.FitnessCenter else Icons.Filled.Today,
                 onClick = onOpenDay,
                 glow = day.hasTrainingPlan,
@@ -607,22 +607,22 @@ private fun CalendarCycleDayType.isWorkLike(): Boolean =
 
 private fun CalendarDayCompletionStatus.toDisplayText(): String =
     when (this) {
-        CalendarDayCompletionStatus.COMPLETED -> "Виконано"
-        CalendarDayCompletionStatus.PARTIAL -> "Частково"
-        CalendarDayCompletionStatus.MISSED -> "Пропущено"
-        CalendarDayCompletionStatus.PLANNED -> "Заплановано"
-        CalendarDayCompletionStatus.NO_DATA -> "Немає даних"
+        CalendarDayCompletionStatus.COMPLETED -> "Р’РёРєРѕРЅР°РЅРѕ"
+        CalendarDayCompletionStatus.PARTIAL -> "Р§Р°СЃС‚РєРѕРІРѕ"
+        CalendarDayCompletionStatus.MISSED -> "РџСЂРѕРїСѓС‰РµРЅРѕ"
+        CalendarDayCompletionStatus.PLANNED -> "Р—Р°РїР»Р°РЅРѕРІР°РЅРѕ"
+        CalendarDayCompletionStatus.NO_DATA -> "РќРµРјР°С” РґР°РЅРёС…"
     }
 
 private fun YearMonth.toUkrainianMonthYear(): String {
-    val locale = Locale("uk")
+    val locale = Locale.forLanguageTag("uk")
     val month = month.getDisplayName(TextStyle.FULL_STANDALONE, locale)
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
     return "$month $year"
 }
 
 private fun LocalDate.toUkrainianDate(): String {
-    val locale = Locale("uk")
+    val locale = Locale.forLanguageTag("uk")
     val formatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", locale)
     return format(formatter).replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 }

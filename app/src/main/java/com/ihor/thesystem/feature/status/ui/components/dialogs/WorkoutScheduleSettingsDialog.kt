@@ -1,4 +1,4 @@
-package com.ihor.thesystem.feature.status.ui.components.dialogs
+﻿package com.ihor.thesystem.feature.status.ui.components.dialogs
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -42,7 +42,7 @@ import com.ihor.thesystem.feature.exercise_search.ui.toUiText
 import com.ihor.thesystem.feature.exercise_search.ui.toMuscleUiText
 import com.ihor.thesystem.feature.exercise_search.ui.toEquipmentUiText
 import com.ihor.thesystem.feature.exercise_search.ui.toMechanicUiText
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 @Composable
 fun WorkoutScheduleSettingsDialog(
@@ -86,7 +86,7 @@ fun WorkoutScheduleSettingsDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "НАЛАШТУВАННЯ РОЗКЛАДУ",
+                    text = "РќРђР›РђРЁРўРЈР’РђРќРќРЇ Р РћР—РљР›РђР”РЈ",
                     style = MaterialTheme.typography.titleLarge,
                     color = Primary,
                     fontFamily = RajdhaniFamily,
@@ -107,7 +107,7 @@ fun WorkoutScheduleSettingsDialog(
                             border = BorderStroke(1.dp, if (isSelected) Primary else Color.White.copy(alpha = 0.1f))
                         ) {
                             Text(
-                                text = "День $day",
+                                text = "Р”РµРЅСЊ $day",
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 color = if (isSelected) Color.Black else OnBackground,
                                 fontFamily = RajdhaniFamily,
@@ -125,7 +125,7 @@ fun WorkoutScheduleSettingsDialog(
                     OutlinedTextField(
                         value = uiState.workoutNameDraft,
                         onValueChange = onWorkoutNameChange,
-                        label = { Text("Назва тренування", color = OnSurfaceVariant) },
+                        label = { Text("РќР°Р·РІР° С‚СЂРµРЅСѓРІР°РЅРЅСЏ", color = OnSurfaceVariant) },
                         modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = OnBackground,
@@ -147,7 +147,7 @@ fun WorkoutScheduleSettingsDialog(
 
                 // 3. Current Exercises List
                 Text(
-                    text = "Вправи дня",
+                    text = "Р’РїСЂР°РІРё РґРЅСЏ",
                     style = MaterialTheme.typography.labelLarge,
                     color = OnSurfaceVariant,
                     fontFamily = RajdhaniFamily
@@ -191,7 +191,7 @@ fun WorkoutScheduleSettingsDialog(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(Modifier.width(4.dp))
-                        Text("Додати вправу", fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
+                        Text("Р”РѕРґР°С‚Рё РІРїСЂР°РІСѓ", fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
                     }
 
                     OutlinedButton(
@@ -200,7 +200,7 @@ fun WorkoutScheduleSettingsDialog(
                         shape = RoundedCornerShape(12.dp),
                         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
                     ) {
-                        Text("Управління", color = OnBackground, fontFamily = RajdhaniFamily)
+                        Text("РЈРїСЂР°РІР»С–РЅРЅСЏ", color = OnBackground, fontFamily = RajdhaniFamily)
                     }
                 }
 
@@ -208,7 +208,7 @@ fun WorkoutScheduleSettingsDialog(
                 if (showManageExercises) {
                     HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
                     Text(
-                        text = "Всі вправи системи",
+                        text = "Р’СЃС– РІРїСЂР°РІРё СЃРёСЃС‚РµРјРё",
                         style = MaterialTheme.typography.labelLarge,
                         color = OnSurfaceVariant,
                         fontFamily = RajdhaniFamily
@@ -278,32 +278,32 @@ fun AddExerciseSelectionDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    "ВИБІР ВПРАВИ",
+                    "Р’РР‘Р†Р  Р’РџР РђР’Р",
                     color = Primary,
                     fontWeight = FontWeight.Bold,
                     fontFamily = RajdhaniFamily,
                     fontSize = 20.sp
                 )
 
-                // Скинути фільтри
+                // РЎРєРёРЅСѓС‚Рё С„С–Р»СЊС‚СЂРё
                 TextButton(
                     onClick = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ClearFilters) },
                     modifier = Modifier.align(Alignment.End),
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
-                        text = "Скинути фільтри",
+                        text = "РЎРєРёРЅСѓС‚Рё С„С–Р»СЊС‚СЂРё",
                         color = Primary.copy(alpha = 0.7f),
                         fontSize = 12.sp,
                         fontFamily = RajdhaniFamily
                     )
                 }
 
-                // Пошуковий рядок
+                // РџРѕС€СѓРєРѕРІРёР№ СЂСЏРґРѕРє
                 OutlinedTextField(
                     value = state.query,
                     onValueChange = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.UpdateQuery(it)) },
-                    placeholder = { Text("Пошук за назвою...", color = OnSurfaceVariant.copy(alpha = 0.5f)) },
+                    placeholder = { Text("РџРѕС€СѓРє Р·Р° РЅР°Р·РІРѕСЋ...", color = OnSurfaceVariant.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Primary) },
                     trailingIcon = {
@@ -322,9 +322,9 @@ fun AddExerciseSelectionDialog(
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                // Панель фільтрів
+                // РџР°РЅРµР»СЊ С„С–Р»СЊС‚СЂС–РІ
                 FilterChipsRow(
-                    title = "М\'язи",
+                    title = "Рњ\'СЏР·Рё",
                     items = listOf("CHEST", "BACK", "SHOULDERS", "QUADS", "HAMSTRINGS_GLUTES", "ARMS", "ABS", "LEGS", "CORE"),
                     selected = state.selectedMuscles,
                     onToggle = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleMuscle(it)) },
@@ -332,7 +332,7 @@ fun AddExerciseSelectionDialog(
                 )
                 
                 FilterChipsRow(
-                    title = "Обладнання",
+                    title = "РћР±Р»Р°РґРЅР°РЅРЅСЏ",
                     items = listOf("body only", "machine", "dumbbell", "barbell", "cable", "bands", "kettlebell", "medicine ball", "exercise ball", "e-z curl bar", "foam roll", "other"),
                     selected = state.selectedEquipment,
                     onToggle = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleEquipment(it)) },
@@ -340,7 +340,7 @@ fun AddExerciseSelectionDialog(
                 )
 
                 FilterChipsRow(
-                    title = "Механіка",
+                    title = "РњРµС…Р°РЅС–РєР°",
                     items = listOf("compound", "isolation"),
                     selected = state.selectedMechanics,
                     onToggle = { viewModel.onEvent(com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchEvent.ToggleMechanic(it)) },
@@ -349,7 +349,7 @@ fun AddExerciseSelectionDialog(
 
                 HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
 
-                // Список результатів
+                // РЎРїРёСЃРѕРє СЂРµР·СѓР»СЊС‚Р°С‚С–РІ
                 if (exercises.isEmpty()) {
                     Box(
                         modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -372,7 +372,7 @@ fun AddExerciseSelectionDialog(
                     }
                 }
 
-                // Створення нової вправи
+                // РЎС‚РІРѕСЂРµРЅРЅСЏ РЅРѕРІРѕС— РІРїСЂР°РІРё
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -381,7 +381,7 @@ fun AddExerciseSelectionDialog(
                     OutlinedTextField(
                         value = newName,
                         onValueChange = { newName = it },
-                        placeholder = { Text("Своя вправа...", fontSize = 12.sp) },
+                        placeholder = { Text("РЎРІРѕСЏ РІРїСЂР°РІР°...", fontSize = 12.sp) },
                         modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primary)
                     )
@@ -390,7 +390,7 @@ fun AddExerciseSelectionDialog(
                         enabled = newName.isNotBlank(),
                         colors = ButtonDefaults.buttonColors(containerColor = Primary, contentColor = Color.Black)
                     ) {
-                        Text("ДОДАТИ", fontWeight = FontWeight.Bold)
+                        Text("Р”РћР”РђРўР", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -445,7 +445,7 @@ fun ExerciseSearchItem(exercise: com.ihor.thesystem.domain.model.ExerciseDetails
         Column(modifier = Modifier.weight(1f)) {
             Text(exercise.nameUk ?: exercise.name, color = OnBackground, fontWeight = FontWeight.Bold, fontFamily = RajdhaniFamily)
             Text(
-                text = "${exercise.muscleGroups.joinToString { it.toUiText().asString(context) }} | ${exercise.equipment?.toEquipmentUiText()?.asString(context) ?: "Без обладнання"}",
+                text = "${exercise.muscleGroups.joinToString { it.toUiText().asString(context) }} | ${exercise.equipment?.toEquipmentUiText()?.asString(context) ?: "Р‘РµР· РѕР±Р»Р°РґРЅР°РЅРЅСЏ"}",
                 color = OnSurfaceVariant,
                 fontSize = 10.sp
             )

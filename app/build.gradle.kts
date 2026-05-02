@@ -24,12 +24,12 @@ val debugGeminiApiKey = properties.getProperty("GEMINI_API_KEY").orEmpty()
 
 android {
     namespace = "com.ihor.thesystem"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.ihor.thesystem"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -93,10 +93,6 @@ dependencies {
     implementation(libs.androidx.ui.text.google.fonts)
     
     implementation(libs.kotlinx.collections.immutable)
-    
-    implementation(libs.vico.compose)
-    implementation(libs.vico.compose.m3)
-    implementation(libs.vico.core)
     
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

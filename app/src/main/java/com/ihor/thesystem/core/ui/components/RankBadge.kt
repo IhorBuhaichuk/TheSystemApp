@@ -1,6 +1,7 @@
 package com.ihor.thesystem.core.ui.components
 
 import android.graphics.BlurMaskFilter
+import android.graphics.Paint as AndroidPaint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -64,9 +65,8 @@ fun RankBadge(
 
             // Ефект світіння (Glow)
             drawIntoCanvas { canvas ->
-                val paint = Paint().asFrameworkPaint().apply {
+                val paint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
                     this.color = rankColor.toArgb()
-                    this.isAntiAlias = true
                     this.maskFilter = BlurMaskFilter(12f, BlurMaskFilter.Blur.NORMAL)
                 }
                 canvas.nativeCanvas.drawPath(path.asAndroidPath(), paint)

@@ -1,4 +1,4 @@
-package com.ihor.thesystem.feature.status.ui.components
+﻿package com.ihor.thesystem.feature.status.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,7 +25,7 @@ fun CurrentDateBlock(modifier: Modifier = Modifier) {
     val today = LocalDate.now()
     
     val day = today.dayOfMonth
-    val monthName = today.month.getDisplayName(TextStyle.FULL, Locale("uk"))
+    val monthName = today.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("uk"))
     
     val dateDisplay = "$day $monthName"
 

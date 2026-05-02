@@ -1,11 +1,11 @@
-package com.ihor.thesystem.core.navigation
+﻿package com.ihor.thesystem.core.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
@@ -122,8 +122,8 @@ fun AppNavGraph(navController: NavHostController) {
                 ExercisePickerScreen(
                     onBack = { navController.popBackStack() },
                     actionLabel = when (route.source) {
-                        Routes.PICKER_SOURCE_CYCLE -> "Додати"
-                        else -> "Вибрати"
+                        Routes.PICKER_SOURCE_CYCLE -> "Р”РѕРґР°С‚Рё"
+                        else -> "Р’РёР±СЂР°С‚Рё"
                     },
                     onSelectExercise = { exercise ->
                         when (route.source) {

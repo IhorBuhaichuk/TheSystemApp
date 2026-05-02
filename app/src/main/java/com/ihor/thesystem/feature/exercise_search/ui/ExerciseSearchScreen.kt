@@ -1,4 +1,4 @@
-package com.ihor.thesystem.feature.exercise_search.ui
+﻿package com.ihor.thesystem.feature.exercise_search.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -43,7 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.AccentPrimary
@@ -75,7 +75,7 @@ fun ExerciseSearchScreen(
         viewModel = viewModel,
         onBack = {},
         onSelectExercise = onExerciseClick,
-        actionLabel = "Вибрати"
+        actionLabel = "Р’РёР±СЂР°С‚Рё"
     )
 }
 
@@ -84,7 +84,7 @@ fun ExercisePickerScreen(
     onBack: () -> Unit,
     onSelectExercise: (ExerciseDetails) -> Unit,
     modifier: Modifier = Modifier,
-    actionLabel: String = "Вибрати",
+    actionLabel: String = "Р’РёР±СЂР°С‚Рё",
     viewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
     val filterState by viewModel.filterState.collectAsStateWithLifecycle()
@@ -135,14 +135,14 @@ private fun ExercisePickerHeader(onBack: () -> Unit) {
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "Вибір вправи",
+                text = "Р’РёР±С–СЂ РІРїСЂР°РІРё",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Black
                 )
             )
             Text(
-                text = "Швидкий пошук у базі вправ",
+                text = "РЁРІРёРґРєРёР№ РїРѕС€СѓРє Сѓ Р±Р°Р·С– РІРїСЂР°РІ",
                 style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
             )
         }
@@ -156,7 +156,7 @@ private fun ExercisePickerHeader(onBack: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Filled.Close,
-                contentDescription = "Закрити",
+                contentDescription = "Р—Р°РєСЂРёС‚Рё",
                 tint = TextSecondary
             )
         }
@@ -175,7 +175,7 @@ private fun ExercisePickerSearchField(
         modifier = Modifier.fillMaxWidth(),
         placeholder = {
             Text(
-                text = "Пошук вправи",
+                text = "РџРѕС€СѓРє РІРїСЂР°РІРё",
                 style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
             )
         },
@@ -191,7 +191,7 @@ private fun ExercisePickerSearchField(
                 IconButton(onClick = onClear) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = "Очистити",
+                        contentDescription = "РћС‡РёСЃС‚РёС‚Рё",
                         tint = TextMuted
                     )
                 }
@@ -218,7 +218,7 @@ private fun ExercisePickerFilters(
 ) {
     DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 14.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            FilterGroupTitle(text = "М'язова група")
+            FilterGroupTitle(text = "Рњ'СЏР·РѕРІР° РіСЂСѓРїР°")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(muscleFilters, key = { it.label }) { filter ->
                     val selected = filter.muscles.any { it in state.selectedMuscles }
@@ -232,7 +232,7 @@ private fun ExercisePickerFilters(
                 }
             }
 
-            FilterGroupTitle(text = "Обладнання")
+            FilterGroupTitle(text = "РћР±Р»Р°РґРЅР°РЅРЅСЏ")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(equipmentFilters, key = { it }) { equipment ->
                     val context = LocalContext.current
@@ -345,11 +345,11 @@ private fun ExercisePickerRow(
     val primaryMuscle = exercise.muscleGroups.firstOrNull()
         ?.toUiText()
         ?.asString(context)
-        ?: "М'язи не вказано"
+        ?: "Рњ'СЏР·Рё РЅРµ РІРєР°Р·Р°РЅРѕ"
     val equipment = exercise.equipment
         ?.toEquipmentUiText()
         ?.asString(context)
-        ?: "Без обладнання"
+        ?: "Р‘РµР· РѕР±Р»Р°РґРЅР°РЅРЅСЏ"
     val shape = RoundedCornerShape(16.dp)
 
     Row(
@@ -400,14 +400,14 @@ private fun ExercisePickerRow(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "$primaryMuscle · $equipment",
+                text = "$primaryMuscle В· $equipment",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             item.lastResultText?.let { lastResult ->
                 Text(
-                    text = "Останній: $lastResult",
+                    text = "РћСЃС‚Р°РЅРЅС–Р№: $lastResult",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = TextMuted,
                         fontWeight = FontWeight.Medium
@@ -432,12 +432,12 @@ private data class PickerMuscleFilter(
 )
 
 private val muscleFilters = listOf(
-    PickerMuscleFilter(label = "Груди", muscles = setOf("CHEST")),
-    PickerMuscleFilter(label = "Спина", muscles = setOf("BACK")),
-    PickerMuscleFilter(label = "Ноги", muscles = setOf("QUADS", "HAMSTRINGS_GLUTES", "LEGS")),
-    PickerMuscleFilter(label = "Плечі", muscles = setOf("SHOULDERS")),
-    PickerMuscleFilter(label = "Руки", muscles = setOf("ARMS")),
-    PickerMuscleFilter(label = "Кор", muscles = setOf("ABS", "CORE"))
+    PickerMuscleFilter(label = "Р“СЂСѓРґРё", muscles = setOf("CHEST")),
+    PickerMuscleFilter(label = "РЎРїРёРЅР°", muscles = setOf("BACK")),
+    PickerMuscleFilter(label = "РќРѕРіРё", muscles = setOf("QUADS", "HAMSTRINGS_GLUTES", "LEGS")),
+    PickerMuscleFilter(label = "РџР»РµС‡С–", muscles = setOf("SHOULDERS")),
+    PickerMuscleFilter(label = "Р СѓРєРё", muscles = setOf("ARMS")),
+    PickerMuscleFilter(label = "РљРѕСЂ", muscles = setOf("ABS", "CORE"))
 )
 
 private val equipmentFilters = listOf(

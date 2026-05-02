@@ -15,8 +15,8 @@ import com.ihor.thesystem.core.theme.*
 @Composable
 fun MatrixProgressBar(
     progress: Float,        // 0f..1f
-    accentColor: Color = NeonGreen,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    accentColor: Color = NeonGreen
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue    = progress.coerceIn(0f, 1f),
