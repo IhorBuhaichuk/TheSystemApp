@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/daily_quest_scroll,@drawable/status_rpg_hero_bg,@drawable/rank_badge_a,@drawable/rank_badge_b,@drawable/rank_badge_c,@drawable/rank_badge_d,@drawable/rank_badge_e,@drawable/rank_badge_s" />
