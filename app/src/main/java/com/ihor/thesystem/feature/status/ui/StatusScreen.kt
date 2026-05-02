@@ -152,7 +152,7 @@ private fun DatabaseErrorScreen(message: UiText) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "РљСЂРёС‚РёС‡РЅР° РїРѕРјРёР»РєР° СЃРёСЃС‚РµРјРё",
+                    text = "Критична помилка системи",
                     style = MaterialTheme.typography.titleLarge.copy(color = AccentError),
                     textAlign = TextAlign.Center
                 )
@@ -163,7 +163,7 @@ private fun DatabaseErrorScreen(message: UiText) {
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 SystemButton(
-                    text = "РџРѕРІС‚РѕСЂС–С‚СЊ Р·Р°РїСѓСЃРє",
+                    text = "Повторіть запуск",
                     onClick = { },
                     enabled = false
                 )

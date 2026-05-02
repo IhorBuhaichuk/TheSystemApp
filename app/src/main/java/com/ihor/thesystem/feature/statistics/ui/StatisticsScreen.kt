@@ -152,14 +152,14 @@ private fun AnalyticsDashboard(
 private fun AnalyticsHeader() {
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(
-            text = "РђРЅР°Р»С–С‚РёРєР°",
+            text = "Аналітика",
             style = MaterialTheme.typography.headlineMedium.copy(
                 color = TextPrimary,
                 fontWeight = FontWeight.Black
             )
         )
         Text(
-            text = "РџС–РґСЃСѓРјРѕРє С– РїСЂРѕРіСЂРµСЃ",
+            text = "Підсумок і прогрес",
             style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
         )
     }
@@ -170,8 +170,8 @@ private fun AnalyticsSummaryBlock(data: StatisticsUiData) {
     DarkGlassCard(active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
-                title = "РџРѕС‚РѕС‡РЅРёР№ РїРµСЂС–РѕРґ",
-                subtitle = "РўРёР¶РґРµРЅСЊ ${data.currentWeek}"
+                title = "Поточний період",
+                subtitle = "Тиждень ${data.currentWeek}"
             )
 
             Row(
@@ -179,23 +179,23 @@ private fun AnalyticsSummaryBlock(data: StatisticsUiData) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 SummaryMetricCell(
-                    label = "РўСЂРµРЅСѓРІР°РЅРЅСЏ",
+                    label = "Тренування",
                     value = data.weeklySummary.workoutCount.toString(),
-                    subtitle = "Р·Р° С‚РёР¶РґРµРЅСЊ",
+                    subtitle = "за тиждень",
                     accent = AccentPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetricCell(
-                    label = "РЎРµСЂС–СЏ",
+                    label = "Серія",
                     value = data.currentStreak.toString(),
-                    subtitle = "РґРЅС–РІ",
+                    subtitle = "днів",
                     accent = AccentSuccess,
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetricCell(
                     label = "XP",
                     value = data.xpThisWeek.toString(),
-                    subtitle = "Р·Р° РїРµСЂС–РѕРґ",
+                    subtitle = "за період",
                     accent = AccentWarning,
                     modifier = Modifier.weight(1f)
                 )
@@ -259,17 +259,17 @@ private fun WeeklySummaryBlock(
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
-                title = "РўРёР¶РЅРµРІРёР№ РїС–РґСЃСѓРјРѕРє",
-                subtitle = if (totalTonnage > 0.0) "${formatTonnage(totalTonnage)} С‚РѕРЅРЅР°Р¶Сѓ" else "Р РёС‚Рј РІРёРєРѕРЅР°РЅРЅСЏ"
+                title = "Тижневий підсумок",
+                subtitle = if (totalTonnage > 0.0) "${formatTonnage(totalTonnage)} тоннажу" else "Ритм виконання"
             )
 
             if (days.isEmpty()) {
-                EmptyAnalyticsMessage(text = "РџРѕРєРё РЅРµРјР°С” РґР°РЅРёС… РґР»СЏ С‚РёР¶РЅРµРІРѕРіРѕ РїС–РґСЃСѓРјРєСѓ")
+                EmptyAnalyticsMessage(text = "Поки немає даних для тижневого підсумку")
             } else {
                 WeeklyRhythmBars(days = days)
                 if (days.sumOf { it.workoutCount } == 0) {
                     Text(
-                        text = "РќРµРјР°С” Р·Р°С„С–РєСЃРѕРІР°РЅРёС… С‚СЂРµРЅСѓРІР°РЅСЊ С†СЊРѕРіРѕ С‚РёР¶РЅСЏ",
+                        text = "Немає зафіксованих тренувань цього тижня",
                         style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
                     )
                 }
@@ -350,15 +350,15 @@ private fun AnnualProgressionBlock(
     DarkGlassCard(active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             SystemSectionHeader(
-                title = "Р С–С‡РЅР° РїСЂРѕРіСЂРµСЃС–СЏ",
-                subtitle = "РџР»Р°РЅ / С„Р°РєС‚ В· РјС–СЃСЏС†СЊ ${data.currentMonth}/${data.totalMonths}",
+                title = "Річна прогресія",
+                subtitle = "План / факт · місяць ${data.currentMonth}/${data.totalMonths}",
                 trailing = {
-                    VioletLabel(text = "${plannedEntries.size} РІРїСЂР°РІ")
+                    VioletLabel(text = "${plannedEntries.size} вправ")
                 }
             )
 
             if (plannedEntries.isEmpty()) {
-                EmptyAnalyticsMessage(text = "Р С–С‡РЅР° РїСЂРѕРіСЂРµСЃС–СЏ С‰Рµ РїРѕСЂРѕР¶РЅСЏ")
+                EmptyAnalyticsMessage(text = "Річна прогресія ще порожня")
             } else {
                 AnnualPlanFactChart(
                     entries = plannedEntries.take(6),
@@ -375,7 +375,7 @@ private fun AnnualProgressionBlock(
             }
 
             SystemButton(
-                text = "Р’С–РґРєСЂРёС‚Рё РіСЂР°С„С–Рє",
+                text = "Відкрити графік",
                 onClick = onOpenAnnualProgression,
                 modifier = Modifier.fillMaxWidth(),
                 icon = Icons.AutoMirrored.Filled.ArrowForward,
@@ -452,8 +452,8 @@ private fun ChartLegend() {
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        LegendItem(label = "РџР»Р°РЅ", color = AccentAi)
-        LegendItem(label = "Р¤Р°РєС‚", color = AccentPrimary)
+        LegendItem(label = "План", color = AccentAi)
+        LegendItem(label = "Факт", color = AccentPrimary)
     }
 }
 
@@ -511,7 +511,7 @@ private fun KeyExerciseRow(entry: MatrixEntryUiModel) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Р¤Р°РєС‚ ${formatKg(entry.currentWeight)} В· РїР»Р°РЅ ${formatKg(entry.targetWeight)}",
+                text = "Факт ${formatKg(entry.currentWeight)} · план ${formatKg(entry.targetWeight)}",
                 style = MaterialTheme.typography.labelSmall.copy(color = TextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -534,23 +534,23 @@ private fun DeterministicSystemInsightBlock(insight: SystemInsightUiModel) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Р’РёСЃРЅРѕРІРѕРє СЃРёСЃС‚РµРјРё",
-                subtitle = "РќР° РѕСЃРЅРѕРІС– С–СЃРЅСѓСЋС‡РёС… РјРµС‚СЂРёРє"
+                title = "Висновок системи",
+                subtitle = "На основі існуючих метрик"
             )
             InsightLine(
-                title = "РџРѕРєСЂР°С‰РёР»РѕСЃСЊ",
+                title = "Покращилось",
                 text = insight.improved,
                 accent = AccentSuccess,
                 icon = Icons.AutoMirrored.Filled.TrendingUp
             )
             InsightLine(
-                title = "РЎР»Р°Р±РєРµ РјС–СЃС†Рµ",
+                title = "Слабке місце",
                 text = insight.weakPoint,
                 accent = AccentWarning,
                 icon = Icons.Filled.LocalFireDepartment
             )
             InsightLine(
-                title = "Р РµРєРѕРјРµРЅРґР°С†С–СЏ",
+                title = "Рекомендація",
                 text = insight.recommendation,
                 accent = AccentAi,
                 icon = Icons.Filled.FitnessCenter
@@ -599,7 +599,7 @@ private fun InsightLine(
                 )
             )
             Text(
-                text = text.ifBlank { "Р”Р°РЅРёС… РїРѕРєРё РЅРµРґРѕСЃС‚Р°С‚РЅСЊРѕ." },
+                text = text.ifBlank { "Даних поки недостатньо." },
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = TextSecondary,
                     fontWeight = FontWeight.Medium
@@ -659,26 +659,26 @@ private fun planStatus(entry: MatrixEntryUiModel): PlanStatus {
     }
 
     return when {
-        ratio > 1.02f -> PlanStatus("Р’РёС‰Рµ РїР»Р°РЅСѓ", AccentPrimary)
-        ratio >= 0.9f -> PlanStatus("Р—Р° РїР»Р°РЅРѕРј", AccentSuccess)
-        else -> PlanStatus("РўСЂРѕС…Рё РЅРёР¶С‡Рµ", AccentWarning)
+        ratio > 1.02f -> PlanStatus("Вище плану", AccentPrimary)
+        ratio >= 0.9f -> PlanStatus("За планом", AccentSuccess)
+        else -> PlanStatus("Трохи нижче", AccentWarning)
     }
 }
 
 private fun formatKg(value: Float): String {
     if (value <= 0f) return "-"
     return if (value % 1f == 0f) {
-        "${value.toInt()} РєРі"
+        "${value.toInt()} кг"
     } else {
-        String.format(Locale.US, "%.1f РєРі", value)
+        String.format(Locale.US, "%.1f кг", value)
     }
 }
 
 private fun formatTonnage(value: Double): String {
-    if (value <= 0.0) return "0 РєРі"
+    if (value <= 0.0) return "0 кг"
     return if (value >= 1000.0) {
-        String.format(Locale.US, "%.1f С‚", value / 1000.0)
+        String.format(Locale.US, "%.1f т", value / 1000.0)
     } else {
-        "${value.roundToInt()} РєРі"
+        "${value.roundToInt()} кг"
     }
 }

@@ -180,7 +180,7 @@ private fun StatusHeader() {
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "РЎС‚Р°С‚СѓСЃ",
+                text = "Статус",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Black
@@ -214,7 +214,7 @@ private fun XpLevelBlock(data: StatusUiData) {
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(
-                        text = "Р С–РІРµРЅСЊ ${data.level}",
+                        text = "Рівень ${data.level}",
                         style = MaterialTheme.typography.titleLarge.copy(
                             color = TextPrimary,
                             fontWeight = FontWeight.Black
@@ -235,7 +235,7 @@ private fun XpLevelBlock(data: StatusUiData) {
             }
             SystemProgressBar(progress = progress)
             Text(
-                text = "Р”Рѕ РЅР°СЃС‚СѓРїРЅРѕРіРѕ СЂС–РІРЅСЏ: $xpRemaining XP",
+                text = "До наступного рівня: $xpRemaining XP",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
             )
         }
@@ -251,8 +251,8 @@ private fun MainFocusBlock(
     DarkGlassCard(modifier = Modifier.fillMaxWidth(), active = true, contentPadding = 18.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             SystemSectionHeader(
-                title = "Р“РѕР»РѕРІРЅРёР№ С„РѕРєСѓСЃ",
-                subtitle = if (mainQuest != null) "РџРѕС‚РѕС‡РЅР° РґС–СЏ РґРЅСЏ" else "РЎСЊРѕРіРѕРґРЅС– Р±РµР· Р°РєС‚РёРІРЅРѕРіРѕ С‚СЂРµРЅСѓРІР°РЅРЅСЏ",
+                title = "Головний фокус",
+                subtitle = if (mainQuest != null) "Поточна дія дня" else "Сьогодні без активного тренування",
                 trailing = {
                     IconButton(onClick = onOpenWorkoutSettings) {
                         Icon(Icons.Filled.Settings, contentDescription = null, tint = TextSecondary)
@@ -271,7 +271,7 @@ private fun MainFocusBlock(
                 )
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = mainQuest?.title ?: "РђРєС‚РёРІРЅРµ РІС–РґРЅРѕРІР»РµРЅРЅСЏ",
+                        text = mainQuest?.title ?: "Активне відновлення",
                         style = MaterialTheme.typography.titleLarge.copy(
                             color = TextPrimary,
                             fontWeight = FontWeight.Black
@@ -280,7 +280,7 @@ private fun MainFocusBlock(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = mainQuest?.subtitle?.asString() ?: "РџС–РґС‚СЂРёРјР°Р№ СЃРµСЂС–СЋ С‚Р° РІС–РґРЅРѕРІРё СЂРµСЃСѓСЂСЃ СЃРёСЃС‚РµРјРё.",
+                        text = mainQuest?.subtitle?.asString() ?: "Підтримай серію та віднови ресурс системи.",
                         style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -297,7 +297,7 @@ private fun MainFocusBlock(
             }
 
             SystemButton(
-                text = if (mainQuest?.isCompleted == true) "РўСЂРµРЅСѓРІР°РЅРЅСЏ Р·Р°РІРµСЂС€РµРЅРѕ" else "РџРѕС‡Р°С‚Рё С‚СЂРµРЅСѓРІР°РЅРЅСЏ",
+                text = if (mainQuest?.isCompleted == true) "Тренування завершено" else "Почати тренування",
                 icon = Icons.Filled.FitnessCenter,
                 onClick = onStartWorkout,
                 enabled = mainQuest != null && !mainQuest.isCompleted,
@@ -317,7 +317,7 @@ private fun WeekPreviewBlock(
     if (days.isEmpty()) {
         DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = "РљР°Р»РµРЅРґР°СЂРЅРёР№ С†РёРєР» СЃРёРЅС…СЂРѕРЅС–Р·СѓС”С‚СЊСЃСЏ.",
+                text = "Календарний цикл синхронізується.",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
             )
         }
@@ -343,10 +343,10 @@ private fun TodoBlock(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "To-do",
-                subtitle = if (todos.isNotEmpty()) "$completed/${todos.size} РІРёРєРѕРЅР°РЅРѕ" else "РЎРїРёСЃРѕРє РЅР° СЃСЊРѕРіРѕРґРЅС– РїРѕСЂРѕР¶РЅС–Р№",
+                subtitle = if (todos.isNotEmpty()) "$completed/${todos.size} виконано" else "Список на сьогодні порожній",
                 trailing = {
                     SystemButton(
-                        text = "Р”РѕРґР°С‚Рё",
+                        text = "Додати",
                         icon = Icons.Filled.Add,
                         onClick = { onAddTask(0) },
                         modifier = Modifier.height(38.dp)
@@ -356,7 +356,7 @@ private fun TodoBlock(
 
             if (todos.isEmpty()) {
                 Text(
-                    text = "Р”РѕРґР°Р№ Р±СѓРґСЊ-СЏРєРµ Р·Р°РІРґР°РЅРЅСЏ, СЏРєРµ РјР°С” Р±СѓС‚Рё Р·СЂРѕР±Р»РµРЅРµ СЃСЊРѕРіРѕРґРЅС–.",
+                    text = "Додай будь-яке завдання, яке має бути зроблене сьогодні.",
                     style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
                 )
             } else {
@@ -385,19 +385,19 @@ private fun SystemInfoBlock(data: StatusUiData) {
 
     DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 14.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SystemSectionHeader(title = "РЎРёСЃС‚РµРјР°", subtitle = "РљРѕСЂРѕС‚РєРёР№ СЃС‚Р°РЅ")
+            SystemSectionHeader(title = "Система", subtitle = "Короткий стан")
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 SystemInfoMetric(
-                    label = "РЎРµСЂС–СЏ",
+                    label = "Серія",
                     value = data.currentStreak.toString(),
-                    subtitle = "РґРЅС–РІ Р±РµР· РїСЂРѕРїСѓСЃРєСѓ",
+                    subtitle = "днів без пропуску",
                     accent = AccentWarning,
                     modifier = Modifier.weight(1f)
                 )
                 SystemInfoMetric(
-                    label = "РњС–СЃСЏС†СЊ",
+                    label = "Місяць",
                     value = "${data.monthWorkoutsCompleted}/${data.monthWorkoutsTotal.coerceAtLeast(0)}",
-                    subtitle = "С‚СЂРµРЅСѓРІР°Р»СЊРЅР° С†С–Р»СЊ",
+                    subtitle = "тренувальна ціль",
                     accent = AccentPrimary,
                     modifier = Modifier.weight(1f)
                 )

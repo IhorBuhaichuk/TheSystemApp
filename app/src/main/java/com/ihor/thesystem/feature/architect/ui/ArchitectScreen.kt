@@ -154,14 +154,14 @@ fun ArchitectScreen(
 private fun AiHeader() {
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(
-            text = "РЁР†",
+            text = "АІ",
             style = MaterialTheme.typography.headlineMedium.copy(
                 color = TextPrimary,
                 fontWeight = FontWeight.Black
             )
         )
         Text(
-            text = "РЎРёСЃС‚РµРјРЅС– РјРѕРґСѓР»С–",
+            text = "Системні модулі",
             style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
         )
     }
@@ -176,34 +176,34 @@ private fun AiModulesBlock(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         AiModuleCard(
-            title = "РџР»Р°РЅ СЂС–С‡РЅРѕС— РїСЂРѕРіСЂРµСЃС–С—",
-            description = "РџСЂРѕРіРЅРѕР· РЅР° 12 РјС–СЃСЏС†С–РІ РїРѕ РІРёР±СЂР°РЅРёС… РІРїСЂР°РІР°С…",
+            title = "План річної прогресії",
+            description = "Прогноз на 12 місяців по вибраних вправах",
             icon = Icons.Filled.BarChart,
-            status = "Р“СЂР°С„С–Рє",
+            status = "Графік",
             enabled = true,
             onClick = onOpenAnnualProgression
         )
         AiModuleCard(
-            title = "РђРЅР°Р»С–Р· С‚СЂРµРЅСѓРІР°РЅРЅСЏ",
-            description = "Р¤С–РґР±РµРє, СЂРµРєРѕРјРµРЅРґР°С†С–С— РІР°РіРё С‚Р° РїРѕРІС‚РѕСЂРµРЅСЊ",
+            title = "Аналіз тренування",
+            description = "Фідбек, рекомендації ваги та повторень",
             icon = Icons.Filled.Psychology,
-            status = if (hasWorkoutContext) "Р“РѕС‚РѕРІРѕ" else "РќРµРјР°С” Р»РѕРіСѓ",
+            status = if (hasWorkoutContext) "Готово" else "Немає логу",
             enabled = hasWorkoutContext && !isLoading,
             onClick = onAnalyzeWorkout
         )
         AiModuleCard(
-            title = "РљРѕСЂРµРєС†С–СЏ С†РёРєР»Сѓ",
-            description = "РџРµСЂРµР±СѓРґРѕРІР° РЅР°РІР°РЅС‚Р°Р¶РµРЅРЅСЏ РїС–СЃР»СЏ РїСЂРѕРїСѓСЃРєС–РІ",
+            title = "Корекція циклу",
+            description = "Перебудова навантаження після пропусків",
             icon = Icons.Filled.Loop,
-            status = "РќРµ РїС–РґРєР»СЋС‡РµРЅРѕ",
+            status = "Не підключено",
             enabled = false,
             onClick = {}
         )
         AiModuleCard(
-            title = "РџР»Р°РЅ РЅР° Р·Р°РІС‚СЂР°",
-            description = "Р РµРєРѕРјРµРЅРґРѕРІР°РЅРёР№ С„РѕРєСѓСЃ РЅР° РЅР°СЃС‚СѓРїРЅРёР№ РґРµРЅСЊ",
+            title = "План на завтра",
+            description = "Рекомендований фокус на наступний день",
             icon = Icons.Filled.CalendarMonth,
-            status = "РќРµ РїС–РґРєР»СЋС‡РµРЅРѕ",
+            status = "Не підключено",
             enabled = false,
             onClick = {}
         )
@@ -290,8 +290,8 @@ private fun ShortConclusionBlock(state: AiDashboardUiState) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "РљРѕСЂРѕС‚РєРёР№ РІРёСЃРЅРѕРІРѕРє",
-                subtitle = "РќР° РѕСЃРЅРѕРІС– СЃРёСЃС‚РµРјРЅРёС… РјРµС‚СЂРёРє"
+                title = "Короткий висновок",
+                subtitle = "На основі системних метрик"
             )
             if (state.isLoading) {
                 Row(
@@ -304,13 +304,13 @@ private fun ShortConclusionBlock(state: AiDashboardUiState) {
                         strokeWidth = 2.dp
                     )
                     Text(
-                        text = "РЎРёСЃС‚РµРјР° С‡РёС‚Р°С” РјРµС‚СЂРёРєРё",
+                        text = "Система читає метрики",
                         style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
                     )
                 }
             } else {
                 SystemInsightText(
-                    text = state.shortConclusion.ifBlank { "Р”Р°РЅРёС… РґР»СЏ РІРёСЃРЅРѕРІРєСѓ РїРѕРєРё РЅРµРґРѕСЃС‚Р°С‚РЅСЊРѕ." },
+                    text = state.shortConclusion.ifBlank { "Даних для висновку поки недостатньо." },
                     icon = Icons.Filled.AutoAwesome
                 )
             }
@@ -323,11 +323,11 @@ private fun LastRecommendationBlock(recommendation: AiRecommendationUiModel?) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "РћСЃС‚Р°РЅРЅСЏ СЂРµРєРѕРјРµРЅРґР°С†С–СЏ",
-                subtitle = "Р—Р±РµСЂРµР¶РµРЅР° РІ РјР°С‚СЂРёС†С– РїСЂРѕРіСЂРµСЃС–С—"
+                title = "Остання рекомендація",
+                subtitle = "Збережена в матриці прогресії"
             )
             if (recommendation == null) {
-                EmptyAiBlock(text = "Р†СЃС‚РѕСЂС–С— AI-СЂРµРєРѕРјРµРЅРґР°С†С–Р№ С‰Рµ РЅРµРјР°С”.")
+                EmptyAiBlock(text = "Історії AI-рекомендацій ще немає.")
             } else {
                 Row(
                     modifier = Modifier
@@ -400,8 +400,8 @@ private fun ChatPanel(
     DarkGlassCard(contentPadding = 14.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Р§Р°С‚",
-                subtitle = "Р”РѕРґР°С‚РєРѕРІРёР№ РєР°РЅР°Р»"
+                title = "Чат",
+                subtitle = "Додатковий канал"
             )
             ChatModeSwitch(
                 selectedMode = selectedMode,
@@ -449,13 +449,13 @@ private fun ChatModeSwitch(
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         ChatModeButton(
-            text = "РђСЂС…С–С‚РµРєС‚РѕСЂ",
+            text = "Архітектор",
             selected = selectedMode == 0,
             onClick = { onModeSelected(0) },
             modifier = Modifier.weight(1f)
         )
         ChatModeButton(
-            text = "РўСЂРµРЅРµСЂ",
+            text = "Тренер",
             selected = selectedMode == 1,
             onClick = { onModeSelected(1) },
             modifier = Modifier.weight(1f)
@@ -539,7 +539,7 @@ private fun ArchitectThreadView(
                         strokeWidth = 2.dp
                     )
                     Text(
-                        text = "РђСЂС…С–С‚РµРєС‚РѕСЂ С„РѕСЂРјСѓС” РІС–РґРїРѕРІС–РґСЊ",
+                        text = "Архітектор формує відповідь",
                         style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
                     )
                 }
@@ -572,9 +572,9 @@ private fun ArchitectChatBubble(
         ) {
             Text(
                 text = when (message.role) {
-                    ChatRole.USER -> "РўРё"
+                    ChatRole.USER -> "Ти"
                     ChatRole.AI -> "AI"
-                    ChatRole.SYSTEM -> "РЎРёСЃС‚РµРјР°"
+                    ChatRole.SYSTEM -> "Система"
                 },
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = if (isUser) TextMuted else accent,
@@ -604,7 +604,7 @@ private fun ArchitectChatBubble(
             if (message.isActionable) {
                 if (message.role == ChatRole.SYSTEM) {
                     SystemButton(
-                        text = "РђРЅР°Р»С–Р·СѓРІР°С‚Рё РґР°РЅС–",
+                        text = "Аналізувати дані",
                         onClick = onAnalyzeClick,
                         icon = Icons.Filled.Psychology,
                         accent = AccentAi,
@@ -612,7 +612,7 @@ private fun ArchitectChatBubble(
                     )
                 } else if (message.role == ChatRole.AI) {
                     SystemButton(
-                        text = "Р†РЅС‚РµРіСЂСѓРІР°С‚Рё РІ СЃРёСЃС‚РµРјСѓ",
+                        text = "Інтегрувати в систему",
                         onClick = { onApplyClick(message.recommendations) },
                         icon = Icons.AutoMirrored.Filled.ArrowForward,
                         accent = AccentPrimary,
@@ -639,7 +639,7 @@ private fun RecommendationList(recommendations: List<AiWorkoutRecommendation>) {
                         .background(AccentPrimary)
                 )
                 Text(
-                    text = "Р’РїСЂР°РІР° #${recommendation.exerciseId}: ${formatWeight(recommendation.weight)} РєРі В· ${recommendation.sets} x ${recommendation.reps}",
+                    text = "Вправа #${recommendation.exerciseId}: ${formatWeight(recommendation.weight)} кг · ${recommendation.sets} x ${recommendation.reps}",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = TextSecondary,
                         fontWeight = FontWeight.SemiBold
@@ -732,16 +732,16 @@ private fun AiSystemBackdrop() {
 }
 
 private fun formatRecommendationTarget(recommendation: AiRecommendationUiModel): String {
-    val weight = recommendation.recommendedWeight?.let { "${formatWeight(it)} РєРі" }
+    val weight = recommendation.recommendedWeight?.let { "${formatWeight(it)} кг" }
     val scheme = when {
         recommendation.recommendedSets != null && !recommendation.recommendedReps.isNullOrBlank() ->
             "${recommendation.recommendedSets} x ${recommendation.recommendedReps}"
-        recommendation.recommendedSets != null -> "${recommendation.recommendedSets} РїС–РґС…."
+        recommendation.recommendedSets != null -> "${recommendation.recommendedSets} підх."
         !recommendation.recommendedReps.isNullOrBlank() -> recommendation.recommendedReps
         else -> null
     }
 
-    return listOfNotNull(weight, scheme).joinToString(" В· ").ifBlank { "Р РµРєРѕРјРµРЅРґР°С†С–СЏ Р±РµР· С‡РёСЃР»РѕРІРѕРіРѕ С‚Р°СЂРіРµС‚Р°" }
+    return listOfNotNull(weight, scheme).joinToString(" · ").ifBlank { "Рекомендація без числового таргета" }
 }
 
 private fun formatWeight(value: Double): String {

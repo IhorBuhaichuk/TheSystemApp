@@ -122,8 +122,8 @@ fun AppNavGraph(navController: NavHostController) {
                 ExercisePickerScreen(
                     onBack = { navController.popBackStack() },
                     actionLabel = when (route.source) {
-                        Routes.PICKER_SOURCE_CYCLE -> "Р”РѕРґР°С‚Рё"
-                        else -> "Р’РёР±СЂР°С‚Рё"
+                        Routes.PICKER_SOURCE_CYCLE -> "Додати"
+                        else -> "Вибрати"
                     },
                     onSelectExercise = { exercise ->
                         when (route.source) {

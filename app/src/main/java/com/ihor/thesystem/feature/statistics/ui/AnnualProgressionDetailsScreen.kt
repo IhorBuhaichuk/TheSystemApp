@@ -155,13 +155,13 @@ private fun AnnualDetailsHeader(onBack: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "РќР°Р·Р°Рґ",
+                contentDescription = "Назад",
                 tint = TextSecondary
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
             Text(
-                text = "Р С–С‡РЅР° РїСЂРѕРіСЂРµСЃС–СЏ",
+                text = "Річна прогресія",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Black
@@ -170,7 +170,7 @@ private fun AnnualDetailsHeader(onBack: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Р¤Р°РєС‚ РїСЂРѕС‚Рё РїР»Р°РЅСѓ",
+                text = "Факт проти плану",
                 style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -382,8 +382,8 @@ private fun ChartLegend() {
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        LegendItem(label = "РџР»Р°РЅ", color = AccentAi)
-        LegendItem(label = "Р¤Р°РєС‚", color = AccentPrimary)
+        LegendItem(label = "План", color = AccentAi)
+        LegendItem(label = "Факт", color = AccentPrimary)
     }
 }
 
@@ -411,8 +411,8 @@ private fun MonthlyTargetsBlock(exercise: AnnualProgressionExerciseDetails) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "РњС–СЃСЏС‡РЅС– С†С–Р»С–",
-                subtitle = "12 РјС–СЃСЏС†С–РІ РїР»Р°РЅСѓ"
+                title = "Місячні цілі",
+                subtitle = "12 місяців плану"
             )
             exercise.monthlyProgress
                 .filter { it.monthIndex in 1..12 }
@@ -454,7 +454,7 @@ private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
-                text = "РџР»Р°РЅ ${month.planWeight.formatWeight()} РєРі",
+                text = "План ${month.planWeight.formatWeight()} кг",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold
@@ -463,7 +463,7 @@ private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Р¤Р°РєС‚ ${month.actualWeight?.let { "${it.formatWeight()} РєРі" } ?: "вЂ”"}",
+                text = "Факт ${month.actualWeight?.let { "${it.formatWeight()} кг" } ?: "—"}",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -483,8 +483,8 @@ private fun CurrentConclusionBlock(exercise: AnnualProgressionExerciseDetails) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "РџРѕС‚РѕС‡РЅРёР№ РІРёСЃРЅРѕРІРѕРє",
-                subtitle = "РћСЃС‚Р°РЅРЅС–Р№ РґРѕСЃС‚СѓРїРЅРёР№ С„Р°РєС‚ РїСЂРѕС‚Рё РїР»Р°РЅСѓ",
+                title = "Поточний висновок",
+                subtitle = "Останній доступний факт проти плану",
                 trailing = {
                     SystemStatusChip(
                         text = AnnualProgressionDetailsUiMapper.statusLabel(exercise.currentStatus),
@@ -568,18 +568,18 @@ private fun AnnualProgressionEmptyState(
                     )
                 }
                 Text(
-                    text = "РџР»Р°РЅ СЂС–С‡РЅРѕС— РїСЂРѕРіСЂРµСЃС–С— С‰Рµ РЅРµ СЃС‚РІРѕСЂРµРЅРѕ",
+                    text = "План річної прогресії ще не створено",
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 )
                 Text(
-                    text = "РЎС‚РІРѕСЂРё РїР»Р°РЅ Сѓ РјРѕРґСѓР»С– РЁР†, РїС–СЃР»СЏ Р·Р±РµСЂРµР¶РµРЅРЅСЏ РІС–РЅ Р°РІС‚РѕРјР°С‚РёС‡РЅРѕ Р·КјСЏРІРёС‚СЊСЃСЏ РІ РђРЅР°Р»С–С‚РёС†С–.",
+                    text = "Створи план у модулі ШІ, після збереження він автоматично з’явиться в Аналітиці.",
                     style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
                 )
                 SystemButton(
-                    text = "РЎС‚РІРѕСЂРёС‚Рё РІ РЁР†",
+                    text = "Створити в ШІ",
                     icon = Icons.Filled.AutoAwesome,
                     onClick = onCreateInAi,
                     accent = AccentAi,

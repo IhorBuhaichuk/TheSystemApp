@@ -154,14 +154,14 @@ fun CycleScreen(
 private fun CycleHeader() {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
-            text = "Р¦РёРєР»",
+            text = "Цикл",
             style = MaterialTheme.typography.headlineMedium.copy(
                 color = TextPrimary,
                 fontWeight = FontWeight.Black
             )
         )
         Text(
-            text = "РџРѕС‚РѕС‡РЅРёР№ С‚СЂРµРЅСѓРІР°Р»СЊРЅРёР№ РґРµРЅСЊ",
+            text = "Поточний тренувальний день",
             style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -221,7 +221,7 @@ private fun CycleDayChip(
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         Text(
-            text = "Р”РµРЅСЊ ${day.dayNumber}",
+            text = "День ${day.dayNumber}",
             style = MaterialTheme.typography.labelLarge.copy(
                 color = if (day.isSelected || day.isActive) AccentPrimary else TextPrimary,
                 fontWeight = FontWeight.Bold
@@ -230,7 +230,7 @@ private fun CycleDayChip(
             overflow = TextOverflow.Ellipsis
         )
         Text(
-            text = day.workoutName ?: if (day.type == DayType.WORKOUT) "РўСЂРµРЅСѓРІР°РЅРЅСЏ" else "Р’С–РґРЅРѕРІР»РµРЅРЅСЏ",
+            text = day.workoutName ?: if (day.type == DayType.WORKOUT) "Тренування" else "Відновлення",
             style = MaterialTheme.typography.labelSmall.copy(color = TextMuted),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -246,8 +246,8 @@ private fun DayOverviewCard(
     DarkGlassCard(modifier = Modifier.fillMaxWidth(), active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
-                title = "Р”РµРЅСЊ ${workout.dayNumber} В· ${workout.workoutName ?: "РўСЂРµРЅСѓРІР°РЅРЅСЏ"}",
-                subtitle = "РћСЃРЅРѕРІРЅР° РєР°СЂС‚РєР° РґРЅСЏ",
+                title = "День ${workout.dayNumber} · ${workout.workoutName ?: "Тренування"}",
+                subtitle = "Основна картка дня",
                 trailing = {
                     CompactActionButton(
                         icon = Icons.Filled.Edit,
@@ -257,12 +257,12 @@ private fun DayOverviewCard(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SummaryMetric(
-                    label = "Р’РїСЂР°РІРё",
+                    label = "Вправи",
                     value = workout.exercises.size.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetric(
-                    label = "РџС–РґС…РѕРґРё",
+                    label = "Підходи",
                     value = workout.totalSetCount().toString(),
                     modifier = Modifier.weight(1f)
                 )
@@ -311,7 +311,7 @@ private fun TrainingStackCard(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Training stack",
-                subtitle = "Р¦С–Р»СЊРѕРІС– РІР°РіРё, РїС–РґС…РѕРґРё С‚Р° РїРѕРІС‚РѕСЂРµРЅРЅСЏ"
+                subtitle = "Цільові ваги, підходи та повторення"
             )
             workout.exercises.forEachIndexed { index, exercise ->
                 ExerciseStackRow(
@@ -372,7 +372,7 @@ private fun ExerciseStackRow(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Р¦С–Р»СЊ: ${exercise.targetWeightText()}",
+                text = "Ціль: ${exercise.targetWeightText()}",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextMuted),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -404,7 +404,7 @@ private fun CycleActions(
     DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SystemButton(
-                text = "РџРѕС‡Р°С‚Рё С‚СЂРµРЅСѓРІР°РЅРЅСЏ",
+                text = "Почати тренування",
                 icon = Icons.Filled.PlayArrow,
                 onClick = onStartWorkout,
                 glow = true,
@@ -412,13 +412,13 @@ private fun CycleActions(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SystemButton(
-                    text = "Р РµРґР°РіСѓРІР°С‚Рё РґРµРЅСЊ",
+                    text = "Редагувати день",
                     icon = Icons.Filled.Edit,
                     onClick = onEditDay,
                     modifier = Modifier.weight(1f)
                 )
                 SystemButton(
-                    text = "Р”РѕРґР°С‚Рё РІРїСЂР°РІСѓ",
+                    text = "Додати вправу",
                     icon = Icons.Filled.Add,
                     onClick = onAddExercise,
                     modifier = Modifier.weight(1f)
@@ -437,15 +437,15 @@ private fun EmptyCycleBlock(
     DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = selectedDay?.let { "Р”РµРЅСЊ $it Р±РµР· РІРїСЂР°РІ" } ?: "РўСЂРµРЅСѓРІР°РЅРЅСЏ РЅРµ Р·Р°РїР»Р°РЅРѕРІР°РЅРѕ",
-                subtitle = "Р”Р»СЏ С†СЊРѕРіРѕ С‚СЂРµРЅСѓРІР°Р»СЊРЅРѕРіРѕ РґРЅСЏ С‰Рµ РЅРµРјР°С” stack"
+                title = selectedDay?.let { "День $it без вправ" } ?: "Тренування не заплановано",
+                subtitle = "Для цього тренувального дня ще немає stack"
             )
             Text(
-                text = "Р”РѕРґР°Р№ РІРїСЂР°РІСѓ Р°Р±Рѕ РІС–РґРєСЂРёР№ СЂРµРґР°РіСѓРІР°РЅРЅСЏ РґРЅСЏ. РљР°Р»РµРЅРґР°СЂРЅРёР№ С†РёРєР» РїСЂРё С†СЊРѕРјСѓ РЅРµ Р·РјС–РЅСЋС”С‚СЊСЃСЏ.",
+                text = "Додай вправу або відкрий редагування дня. Календарний цикл при цьому не змінюється.",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
             )
             SystemButton(
-                text = "РџРѕС‡Р°С‚Рё С‚СЂРµРЅСѓРІР°РЅРЅСЏ",
+                text = "Почати тренування",
                 icon = Icons.Filled.PlayArrow,
                 onClick = {},
                 enabled = false,
@@ -453,13 +453,13 @@ private fun EmptyCycleBlock(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SystemButton(
-                    text = "Р РµРґР°РіСѓРІР°С‚Рё РґРµРЅСЊ",
+                    text = "Редагувати день",
                     icon = Icons.Filled.Settings,
                     onClick = onEditDay,
                     modifier = Modifier.weight(1f)
                 )
                 SystemButton(
-                    text = "Р”РѕРґР°С‚Рё РІРїСЂР°РІСѓ",
+                    text = "Додати вправу",
                     icon = Icons.Filled.Add,
                     onClick = onAddExercise,
                     modifier = Modifier.weight(1f)
@@ -498,13 +498,13 @@ private fun ActiveDayUiModel.totalSetCount(): Int =
 private fun ExerciseWorkoutUiModel.targetWeightText(): String =
     recommendedWeight
         ?.takeIf { it > 0.0 }
-        ?.let { "${it.formatWeight()} РєРі" }
-        ?: "РЅРµ Р·Р°РґР°РЅРѕ"
+        ?.let { "${it.formatWeight()} кг" }
+        ?: "не задано"
 
 private fun ExerciseWorkoutUiModel.setSchemeText(): String {
     val sets = recommendedSets ?: this.sets.size.takeIf { it > 0 } ?: 1
     val reps = recommendedReps ?: 0
-    return if (reps > 0) "$sets x $reps" else "$sets РїС–РґС…."
+    return if (reps > 0) "$sets x $reps" else "$sets підх."
 }
 
 private fun Double.formatWeight(): String =
