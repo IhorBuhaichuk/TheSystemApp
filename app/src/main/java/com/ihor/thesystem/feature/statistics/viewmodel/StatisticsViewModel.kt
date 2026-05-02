@@ -6,6 +6,7 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
 import com.ihor.thesystem.domain.usecase.LogWeightUseCase
@@ -30,7 +31,8 @@ class StatisticsViewModel @Inject constructor(
     private val recalculateGlobalRankUseCase: RecalculateGlobalRankUseCase,
     private val logWeightUseCase: LogWeightUseCase,
     private val updatePlayerHeightUseCase: UpdatePlayerHeightUseCase,
-    private val updatePlayerAgeUseCase: UpdatePlayerAgeUseCase
+    private val updatePlayerAgeUseCase: UpdatePlayerAgeUseCase,
+    private val clock: AppClock
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -95,7 +97,7 @@ class StatisticsViewModel @Inject constructor(
                 matrixRepo.saveExerciseSetsWithDate(
                     exerciseId = exerciseId,
                     sets = sets,
-                    timestamp = System.currentTimeMillis(),
+                    timestamp = clock.now(),
                     userFeedback = feedback
                 )
                 onDismissDialog()

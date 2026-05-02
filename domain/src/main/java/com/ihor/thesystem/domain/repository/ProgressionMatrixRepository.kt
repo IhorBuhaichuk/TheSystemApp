@@ -41,7 +41,7 @@ interface ProgressionMatrixRepository {
         sets: Int,
         reps: String,
         aiFeedback: String? = null,
-        timestamp: Long = System.currentTimeMillis()
+        timestamp: Long
     )
 }
 

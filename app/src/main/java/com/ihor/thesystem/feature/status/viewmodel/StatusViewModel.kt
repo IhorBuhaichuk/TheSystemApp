@@ -261,7 +261,7 @@ class StatusViewModel @Inject constructor(
                 // Delete existing files to avoid accumulation
                 avatarDir.listFiles()?.forEach { it.delete() }
 
-                val fileName = "avatar_${System.currentTimeMillis()}.jpg"
+                val fileName = "avatar_${clock.now()}.jpg"
                 val destFile = File(avatarDir, fileName)
 
                 context.contentResolver.openInputStream(uri)?.use { input ->

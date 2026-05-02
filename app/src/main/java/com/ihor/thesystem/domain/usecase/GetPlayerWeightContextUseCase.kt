@@ -5,7 +5,6 @@ import com.ihor.thesystem.core.util.getOrNull
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import kotlinx.coroutines.flow.firstOrNull
 import java.time.Instant
-import java.time.ZoneId
 import javax.inject.Inject
 
 data class PlayerWeightContext(
@@ -20,13 +19,14 @@ class GetPlayerWeightContextUseCase @Inject constructor(
     suspend operator fun invoke(): PlayerWeightContext {
         val now = clock.now()
         val currentWeight = playerRepository.getLatestWeight().firstOrNull()?.toDouble()
+        val zoneId = clock.zoneId()
         
         // Використання java.time для розрахунку дати 6 місяців тому
         val dateSixMonthsAgo = Instant.ofEpochMilli(now)
-            .atZone(ZoneId.systemDefault())
+            .atZone(zoneId)
             .toLocalDate()
             .minusMonths(6)
-            .atStartOfDay(ZoneId.systemDefault())
+            .atStartOfDay(zoneId)
             .toInstant()
             .toEpochMilli()
 

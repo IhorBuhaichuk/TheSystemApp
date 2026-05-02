@@ -2,6 +2,7 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiText
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.util.AnnualProgressionPlanNoteParser
@@ -26,7 +27,8 @@ class FinalizeSessionUseCase @Inject constructor(
     private val transactionProvider: TransactionProvider,
     private val getWeightContext: GetPlayerWeightContextUseCase,
     private val questRepository: QuestRepository,
-    private val calculateProgressRank: CalculateProgressRankUseCase
+    private val calculateProgressRank: CalculateProgressRankUseCase,
+    private val clock: AppClock
 ) {
     suspend operator fun invoke(
         session: WorkoutSession,
@@ -80,7 +82,8 @@ class FinalizeSessionUseCase @Inject constructor(
                     exerciseId = rec.exerciseId,
                     weight = rec.weight.toDouble(),
                     sets = rec.sets,
-                    reps = rec.reps
+                    reps = rec.reps,
+                    timestamp = clock.now()
                 )
             }
 

@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.domain.model.DomainQuestType
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
@@ -7,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
-import java.time.ZoneId
 import javax.inject.Inject
 
 enum class LogType { WORKOUT, QUEST }
@@ -21,10 +21,11 @@ data class CalendarLogItem(
 
 class GetDailySummaryForDateUseCase @Inject constructor(
     private val questRepo: QuestRepository,
-    private val analyticsRepo: WorkoutAnalyticsRepository
+    private val analyticsRepo: WorkoutAnalyticsRepository,
+    private val clock: AppClock
 ) {
     operator fun invoke(date: LocalDate): Flow<List<CalendarLogItem>> {
-        val startOfDay = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val startOfDay = date.atStartOfDay(clock.zoneId()).toInstant().toEpochMilli()
         
         val workoutsFlow = analyticsRepo.getSessionsByDate(startOfDay).map { sessions ->
             val exerciseNames = analyticsRepo.getAllExercisesMap()

@@ -9,7 +9,6 @@ import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import kotlinx.coroutines.flow.firstOrNull
 import java.time.Instant
-import java.time.ZoneId
 import javax.inject.Inject
 
 class LogWorkoutSetsUseCase @Inject constructor(
@@ -35,7 +34,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
         val currentCycleDay = player?.currentCycleDay ?: 0
 
         // Визначаємо межі дня на основі наданого timestamp та системного ZoneId
-        val zoneId = ZoneId.systemDefault()
+        val zoneId = clock.zoneId()
         val date = Instant.ofEpochMilli(timestamp).atZone(zoneId).toLocalDate()
         val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
         val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
@@ -53,7 +52,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
             val sessionUpdate = WorkoutSession(
                 sessionId = sessionId,
                 questId = 0,
-                timestamp = clock.now(),
+                timestamp = timestamp,
                 totalTonnage = totalTonnage,
                 cycleDay = currentCycleDay,
                 durationMinutes = 0
@@ -75,7 +74,7 @@ class LogWorkoutSetsUseCase @Inject constructor(
         } else {
             val sessionLog = WorkoutSession(
                 questId = 0,
-                timestamp = clock.now(),
+                timestamp = timestamp,
                 totalTonnage = totalTonnage,
                 cycleDay = currentCycleDay,
                 durationMinutes = 0

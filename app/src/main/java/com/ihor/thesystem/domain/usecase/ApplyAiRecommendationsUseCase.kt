@@ -133,7 +133,8 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
                         weight = rec.weight.toDouble(),
                         sets = rec.sets,
                         reps = rec.reps,
-                        aiFeedback = rec.aiFeedback ?: response.aiFeedback
+                        aiFeedback = rec.aiFeedback ?: response.aiFeedback,
+                        timestamp = now
                     )
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to update target for exercise ${rec.exerciseId}")
@@ -154,7 +155,8 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
                 weight = rec.weight.toDouble(),
                 sets = rec.sets,
                 reps = rec.reps,
-                aiFeedback = rec.aiFeedback
+                aiFeedback = rec.aiFeedback,
+                timestamp = clock.now()
             )
         }
     }

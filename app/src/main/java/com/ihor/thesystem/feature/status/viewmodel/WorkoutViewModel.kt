@@ -6,14 +6,13 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.util.DispatcherProvider
-import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.domain.usecase.GetSystemConfigUseCase
 import com.ihor.thesystem.domain.usecase.WorkoutUseCases
 import com.ihor.thesystem.core.util.Result
-import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.toMatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,8 +24,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.time.Instant
-import java.time.ZoneId
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -34,7 +31,8 @@ import javax.inject.Inject
 class WorkoutViewModel @Inject constructor(
     private val useCases: WorkoutUseCases,
     private val getSystemConfig: GetSystemConfigUseCase,
-    private val dispatchers: DispatcherProvider
+    private val dispatchers: DispatcherProvider,
+    private val clock: AppClock
 ) : ViewModel() {
 
     private val _uiEvents = MutableSharedFlow<UiEvent>()
@@ -213,7 +211,7 @@ class WorkoutViewModel @Inject constructor(
 
             val session = WorkoutSession(
                 questId = questId,
-                timestamp = System.currentTimeMillis(),
+                timestamp = clock.now(),
                 totalTonnage = allSessionSets.sumOf { it.weight * it.reps },
                 cycleDay = currentWorkout.dayNumber
             )

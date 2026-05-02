@@ -179,16 +179,17 @@ class QuestRepositoryImpl @Inject constructor(
 
     private fun getDayRange(millis: Long): Pair<Long, Long> {
         val instant = java.time.Instant.ofEpochMilli(millis)
-        val zonedDateTime = instant.atZone(java.time.ZoneId.systemDefault())
+        val zoneId = clock.zoneId()
+        val zonedDateTime = instant.atZone(zoneId)
         
         val logicalDate = zonedDateTime.toLocalDate()
         
-        val start = logicalDate.atStartOfDay(java.time.ZoneId.systemDefault())
+        val start = logicalDate.atStartOfDay(zoneId)
             .toInstant()
             .toEpochMilli()
             
         val end = logicalDate.atTime(java.time.LocalTime.MAX)
-            .atZone(java.time.ZoneId.systemDefault())
+            .atZone(zoneId)
             .toInstant()
             .toEpochMilli()
 

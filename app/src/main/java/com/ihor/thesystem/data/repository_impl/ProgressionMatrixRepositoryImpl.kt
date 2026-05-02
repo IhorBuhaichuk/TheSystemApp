@@ -1,5 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.domain.model.ActiveSetInput
@@ -13,12 +14,12 @@ import com.ihor.thesystem.domain.repository.TransactionProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-import java.time.ZoneId
 
 class ProgressionMatrixRepositoryImpl @Inject constructor(
     private val matrixDao:    ProgressionMatrixDao,
     private val analyticsDao: WorkoutAnalyticsDao,
-    private val transactionProvider: TransactionProvider
+    private val transactionProvider: TransactionProvider,
+    private val clock: AppClock
 ) : ProgressionMatrixRepository {
 
     override fun getAllEntries(): Flow<List<ProgressionMatrixEntry>> =
@@ -95,7 +96,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>) {
-        saveExerciseSetsWithDate(exerciseId, sets, System.currentTimeMillis())
+        saveExerciseSetsWithDate(exerciseId, sets, clock.now())
     }
 
     override suspend fun saveExerciseSetsWithDate(
@@ -107,7 +108,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val parsedSets = sets.mapNotNull { it.toValidLoggedSet() }
         if (parsedSets.isEmpty()) return
 
-        val zoneId = ZoneId.systemDefault()
+        val zoneId = clock.zoneId()
         val date = java.time.Instant.ofEpochMilli(timestamp).atZone(zoneId).toLocalDate()
         val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
         val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
