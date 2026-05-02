@@ -6,6 +6,7 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.WorkoutSession
@@ -19,7 +20,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -33,7 +33,8 @@ import javax.inject.Inject
 @HiltViewModel
 class WorkoutViewModel @Inject constructor(
     private val useCases: WorkoutUseCases,
-    private val getSystemConfig: GetSystemConfigUseCase
+    private val getSystemConfig: GetSystemConfigUseCase,
+    private val dispatchers: DispatcherProvider
 ) : ViewModel() {
 
     private val _uiEvents = MutableSharedFlow<UiEvent>()
@@ -303,7 +304,7 @@ class WorkoutViewModel @Inject constructor(
 
     fun onSaveWorkoutName() {
         val state = _settingsUiState.value
-        viewModelScope.launch(Dispatchers.IO) {
+        launchIoAction {
             useCases.saveWorkoutForDay(
                 cycleDay = state.selectedDay,
                 workoutName = state.workoutNameDraft,
@@ -314,7 +315,7 @@ class WorkoutViewModel @Inject constructor(
 
     fun onAddExerciseToDay(exerciseId: Int) {
         val state = _settingsUiState.value
-        viewModelScope.launch(Dispatchers.IO) {
+        launchIoAction {
             val schedule = useCases.getSchedulesForDays(listOf(state.selectedDay)).first().firstOrNull()
             val currentIds = schedule?.exercises?.map { it.id }?.toMutableList()
                 ?: state.exercisesForSelectedDay.map { it.id }.toMutableList()
@@ -333,7 +334,7 @@ class WorkoutViewModel @Inject constructor(
 
     fun onAddExerciseToDay(exerciseId: Int, cycleDay: Int) {
         val state = _settingsUiState.value
-        viewModelScope.launch(Dispatchers.IO) {
+        launchIoAction {
             val schedule = useCases.getSchedulesForDays(listOf(cycleDay)).first().firstOrNull()
             val currentIds = schedule?.exercises?.map { it.id }?.toMutableList()
                 ?: if (state.selectedDay == cycleDay) {
@@ -356,14 +357,14 @@ class WorkoutViewModel @Inject constructor(
 
     fun onRemoveExerciseFromDay(exerciseId: Int) {
         val state = _settingsUiState.value
-        viewModelScope.launch(Dispatchers.IO) {
+        launchIoAction {
             useCases.removeExerciseFromDay(state.selectedDay, exerciseId)
         }
     }
 
     fun onCreateExercise(name: String) {
         val state = _settingsUiState.value
-        viewModelScope.launch(Dispatchers.IO) {
+        launchIoAction {
             val newExerciseId = useCases.createExercise(name)
             refreshAllExercises()
             val schedule = useCases.getSchedulesForDays(listOf(state.selectedDay)).first().firstOrNull()
@@ -381,7 +382,7 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onDeleteExercise(exerciseId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchIoAction {
             useCases.deleteExercise(exerciseId)
             refreshAllExercises()
         }
@@ -406,6 +407,18 @@ class WorkoutViewModel @Inject constructor(
                         isLoading = false
                     )
                 }
+            }
+        }
+    }
+
+    private fun launchIoAction(block: suspend () -> Unit) {
+        viewModelScope.launch(dispatchers.io) {
+            try {
+                block()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Timber.e(e, "Workout settings action failed")
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
             }
         }
     }

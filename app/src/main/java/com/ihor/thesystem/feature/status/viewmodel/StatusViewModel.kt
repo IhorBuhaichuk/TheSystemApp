@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.core.ui.StringResourceException
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
@@ -35,7 +36,6 @@ import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -50,7 +50,8 @@ class StatusViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val useCases: StatusUseCases,
     private val databaseReadinessRepo: DatabaseReadinessRepository,
-    private val clock: AppClock
+    private val clock: AppClock,
+    private val dispatchers: DispatcherProvider
 ) : ViewModel() {
 
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
@@ -252,7 +253,7 @@ class StatusViewModel @Inject constructor(
     fun updateAvatarUri(uri: Uri) = launchCatching {
         val player = currentPlayer.value ?: return@launchCatching
 
-        val localUri = withContext(Dispatchers.IO) {
+        val localUri = withContext(dispatchers.io) {
             try {
                 val avatarDir = File(context.filesDir, "avatars")
                 if (!avatarDir.exists()) avatarDir.mkdirs()
