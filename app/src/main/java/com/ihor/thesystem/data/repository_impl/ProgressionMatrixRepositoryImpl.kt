@@ -113,7 +113,8 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
         val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
 
-        val totalTonnage = parsedSets.sumOf { it.weight * it.reps }
+        val weightedSets = parsedSets.filter { it.weight > TECHNICAL_BODYWEIGHT_LOAD }
+        val totalTonnage = weightedSets.sumOf { it.weight * it.reps }
 
         transactionProvider.runInTransaction {
             val existingLogs = analyticsDao.getLogsForExerciseOnDate(exerciseId, startOfDay, endOfDay)
@@ -163,15 +164,17 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
                 )
             }
 
+            val maxWeightedLoad = weightedSets.maxOfOrNull { it.weight }?.toFloat()
+                ?: return@runInTransaction
+
             matrixDao.getEntryForExerciseSync(exerciseId)?.let { existing ->
-                val maxWeight = parsedSets.maxOf { it.weight }.toFloat()
-                matrixDao.update(existing.copy(currentWeight = maxWeight))
+                matrixDao.update(existing.copy(currentWeight = maxWeightedLoad))
             } ?: matrixDao.insert(
                 ProgressionMatrixEntity(
                     exerciseId = exerciseId,
                     startWeight = 0f,
                     targetWeight = 0f,
-                    currentWeight = parsedSets.maxOf { it.weight }.toFloat()
+                    currentWeight = maxWeightedLoad
                 )
             )
         }
@@ -290,6 +293,8 @@ private data class LoggedSetInput(
     val weight: Double,
     val reps: Int
 )
+
+private const val TECHNICAL_BODYWEIGHT_LOAD = 1.0
 
 private fun ActiveSetInput.toValidLoggedSet(): LoggedSetInput? {
     val parsedWeight = weight.replace(',', '.').toDoubleOrNull()

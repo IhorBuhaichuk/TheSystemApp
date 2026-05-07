@@ -57,7 +57,7 @@
     <string name="text_daily_tasks_section">ЗАВДАННЯ НА СЬОГОДНІ</string>
     <string name="text_completed_tasks">Виконані завдання</string>
     <string name="text_failed_tasks">Не виконані завдання</string>
-    <string name="text_add_task_title">НОВА ЦІЛЬ</string>
+    <string name="text_add_task_title">СПИСОК ЗАВДАНЬ</string>
     <string name="text_add_task_placeholder">Що потрібно зробити?</string>
     <string name="text_add_task_confirm">ДОДАТИ</string>
     <string name="text_add_new_goal">ДОДАТИ ЗАВДАННЯ</string>
@@ -81,8 +81,8 @@
     <string name="cycle_day_default">ДЕНЬ %1$d</string>
 
     <!-- Architect Messages -->
-    <string name="architect_initial_message">Вітаю. Ось результати вашого останнього тренування:\n%1$s\n\nБажаєте надіслати ці результати на аналіз Архітектору?</string>
-    <string name="architect_no_data">СИСТЕМА: Відсутні дані для аналізу. Завершіть хоча б один тренувальний цикл, щоб Архітектор міг проаналізувати прогрес.</string>
+    <string name="architect_initial_message">Є збережені результати останнього тренування. Надіслати їх Архітектору для короткого аналізу?</string>
+    <string name="architect_no_data">Поки що немає збереженого тренування для аналізу. Завершіть перше тренування, і Архітектор почне збирати базу.</string>
     <string name="architect_btn_send_analysis">Надіслати результати на аналіз</string>
     <string name="architect_directives_applied">Директиви отримано. Матрицю прогресії оновлено. Ваші цілі на наступне тренування скориговано.</string>
 
@@ -104,7 +104,7 @@
     <string name="error_workout_analysis_failed">Не вдалося сформувати аналіз тренування.</string>
     <string name="error_annual_progression_exercise_not_found">Не вдалося знайти вправу в базі.</string>
     <string name="error_annual_progression_snapshot_failed">Не вдалося підготувати дані вправи для річного плану.</string>
-    <string name="annual_progression_adaptation_required">Фінальний план буде доступний після завершення адаптації.</string>
+    <string name="annual_progression_adaptation_required">Річний графік відкриється після перших 2 тижнів збору даних.</string>
     <string name="error_annual_progression_input_required">Для кожної вправи потрібна поточна вага, ціль через 12 місяців і крок інвентарю.</string>
     <string name="annual_progression_plan_saved">План збережено. Аналітика підхопить його з матриці прогресії.</string>
     <string name="error_annual_progression_save_failed">Не вдалося зберегти річний план прогресії.</string>
@@ -115,7 +115,7 @@
     <string name="error_no_completed_exercises">Завершіть хоча б один підхід</string>
     <string name="error_ai_generic">Критична помилка AI. Перевірте конфігурацію.</string>
     <string name="ai_analysis_complete">Аналіз завершено.</string>
-    <string name="ai_fallback_activated">ЗВ\'ЯЗОК З AI ВТРАЧЕНО. Активовано резервний протокол.</string>
+    <string name="ai_fallback_activated">AI зараз недоступний, тому система зберегла тренування і виставила обережні цілі на наступний раз.</string>
 
     <!-- Muscle Groups -->
     <string name="muscle_group_chest">ГРУДИ</string>

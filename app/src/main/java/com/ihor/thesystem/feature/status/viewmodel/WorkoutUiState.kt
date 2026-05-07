@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.status.viewmodel
 
 import androidx.compose.runtime.Immutable
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import kotlinx.collections.immutable.ImmutableList
@@ -37,6 +38,7 @@ data class ExerciseWorkoutUiModel(
     val recommendation: String? = null,
     val gifUrl: String? = null,
     val externalId: String? = null,
+    val trackingMode: ExerciseTrackingMode = ExerciseTrackingMode.WEIGHT_REPS,
     val sets: ImmutableList<ActiveSetInput> = persistentListOf()
 )
 

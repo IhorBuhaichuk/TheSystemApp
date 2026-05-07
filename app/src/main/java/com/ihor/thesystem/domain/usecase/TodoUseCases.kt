@@ -36,8 +36,17 @@ class AddTodayTodoUseCase @Inject constructor(
     private val todoRepository: TodoRepository,
     private val clock: AppClock
 ) {
-    suspend operator fun invoke(title: String) {
-        todoRepository.addTodo(clock.today(), title)
+    suspend operator fun invoke(title: String, parentTodoId: Int? = null) {
+        todoRepository.addTodo(clock.today(), title, parentTodoId)
+    }
+}
+
+class AddTodayMicrotaskUseCase @Inject constructor(
+    private val todoRepository: TodoRepository,
+    private val clock: AppClock
+) {
+    suspend operator fun invoke(parentTodoId: Int, title: String) {
+        todoRepository.addTodo(clock.today(), title, parentTodoId)
     }
 }
 
@@ -54,6 +63,15 @@ class RemoveTodoUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(todoId: Int) {
         todoRepository.removeTodo(todoId)
+    }
+}
+
+class ReorderTodayTodosUseCase @Inject constructor(
+    private val todoRepository: TodoRepository,
+    private val clock: AppClock
+) {
+    suspend operator fun invoke(orderedTodoIds: List<Int>, parentTodoId: Int? = null) {
+        todoRepository.reorderTodos(clock.today(), orderedTodoIds, parentTodoId)
     }
 }
 

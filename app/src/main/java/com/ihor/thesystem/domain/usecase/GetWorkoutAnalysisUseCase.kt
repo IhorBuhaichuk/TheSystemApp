@@ -34,6 +34,7 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
     private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val calculateRecommendation: CalculateRecommendedSetUseCase,
     private val calculateMotivationLevel: CalculateMotivationLevelUseCase,
+    private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
     private val clock: AppClock
 ) {
     suspend operator fun invoke(): WorkoutAnalysisData? {
@@ -48,6 +49,9 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
         val matrixByExercise = matrixEntries.associateBy { it.exerciseId }
         val latestSession = sameDayLogs.maxBy { it.session.timestamp }
         val latestDate = latestSession.session.timestamp.toLocalDate()
+        val trainingPhaseContext = getTrainingPhaseContext(
+            referenceTimestamp = latestSession.session.timestamp
+        )
         val schedule = scheduleRepository.getScheduleForDay(latestSession.session.cycleDay).firstOrNull()
         val config = getSystemConfig().firstOrNull()
 
@@ -172,7 +176,9 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
             motivationLevel = motivationLevel,
             aiFeedback = matrixEntries
                 .mapNotNull { it.lastAiFeedback }
-                .firstOrNull()
+                .firstOrNull(),
+            isInitialDataCollection = trainingPhaseContext.isInitialDataCollection,
+            adaptationRemainingDays = trainingPhaseContext.remainingAdaptationDays
         )
     }
 

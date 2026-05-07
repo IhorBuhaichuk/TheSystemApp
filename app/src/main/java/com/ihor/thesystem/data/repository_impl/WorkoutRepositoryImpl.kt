@@ -63,7 +63,8 @@ class WorkoutRepositoryImpl @Inject constructor(
         mechanic = mechanic,
         force = force,
         gifUrl = gifUrl,
-        externalId = externalId
+        externalId = externalId,
+        trackingMode = trackingMode
     )
 
     override suspend fun getExerciseNameById(id: Int): String? =

@@ -50,6 +50,11 @@ class ArchitectViewModel @Inject constructor(
         observeDashboardData()
     }
 
+    fun refreshForCurrentData() {
+        loadInitialContext()
+        loadChatHistory(0L)
+    }
+
     private fun observeDashboardData() {
         viewModelScope.launch {
             getAiDashboardData()

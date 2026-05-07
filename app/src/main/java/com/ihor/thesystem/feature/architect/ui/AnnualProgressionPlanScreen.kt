@@ -211,7 +211,7 @@ private fun AdaptationStatusBlock(
                 subtitle = "2 тижні перед фінальним планом"
             )
             Text(
-                text = "Бажаєте розпочати ваш челендж сьогодні чи вибрати певну дату початку?",
+                text = "Перші 2 тижні система збирає стартові дані. Після цього можна сформувати річний графік з цілями на кожен місяць.",
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = TextSecondary,
                     fontWeight = FontWeight.Medium
@@ -499,11 +499,11 @@ private fun GenerationBlock(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Генерація",
-                subtitle = "Step-loading · 12 місяців · плато і стрибки"
+                subtitle = "12 місяців · ціль на кожен місяць"
             )
             Text(
                 text = when {
-                    !state.isAdaptationComplete -> "План буде доступний після 2 тижнів адаптації."
+                    !state.isAdaptationComplete -> "План буде доступний після перших 2 тижнів збору даних."
                     state.selectedExercises.isEmpty() -> "Додай хоча б одну вправу."
                     !state.canGenerate -> "Заповни показники для кожної вправи."
                     else -> "Дані готові до формування плану."

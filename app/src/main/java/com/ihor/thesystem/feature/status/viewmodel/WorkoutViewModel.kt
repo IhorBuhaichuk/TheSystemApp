@@ -8,11 +8,18 @@ import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.util.DispatcherProvider
+import com.ihor.thesystem.domain.model.ExerciseCategory
+import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseSet
+import com.ihor.thesystem.domain.model.ExerciseTrackingMode
+import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
 import com.ihor.thesystem.domain.model.WorkoutSession
+import com.ihor.thesystem.domain.model.toActiveSetInput
+import com.ihor.thesystem.domain.model.toExerciseSetOrNull
 import com.ihor.thesystem.domain.usecase.GetSystemConfigUseCase
 import com.ihor.thesystem.domain.usecase.WorkoutUseCases
 import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.toMatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,6 +38,7 @@ import javax.inject.Inject
 class WorkoutViewModel @Inject constructor(
     private val useCases: WorkoutUseCases,
     private val getSystemConfig: GetSystemConfigUseCase,
+    private val progressionMatrixRepository: ProgressionMatrixRepository,
     private val dispatchers: DispatcherProvider,
     private val clock: AppClock
 ) : ViewModel() {
@@ -106,6 +114,7 @@ class WorkoutViewModel @Inject constructor(
                     useCases.getActiveWorkoutQuest(schedule.id).map { activeWorkoutQuest ->
             
                         val exercisesWithRecs = schedule.exercises.map { ex ->
+                            val trackingMode = resolveTrackingMode(ex)
                             val rec = try {
                                 useCases.calculateRecommendation(ex.id, ex.name)
                             } catch (e: Exception) {
@@ -119,9 +128,10 @@ class WorkoutViewModel @Inject constructor(
                                 recommendedWeight = rec.weight,
                                 recommendedReps = rec.reps,
                                 recommendedSets = rec.sets,
-                                recommendation = "${rec.sets}x${rec.reps} @ ${rec.weight}kg",
+                                recommendation = rec.formatRecommendation(trackingMode),
                                 gifUrl = ex.gifUrl,
                                 externalId = ex.externalId,
+                                trackingMode = trackingMode,
                                 sets = (1..(rec.sets ?: 1)).map { ActiveSetInput() }.toImmutableList()
                             )
                         }.toImmutableList()
@@ -193,16 +203,17 @@ class WorkoutViewModel @Inject constructor(
         
         viewModelScope.launch {
             val allSessionSets = currentWorkout.exercises.flatMap { exercise ->
-                exercise.sets.filter { it.isCompleted }.map { setInput ->
-                    ExerciseSet(
-                        sessionId = 0L,
+                exercise.sets.filter { it.isCompleted }.mapNotNull { setInput ->
+                    setInput.toExerciseSetOrNull(
                         exerciseId = exercise.exerciseId,
-                        weight = setInput.weight.toDoubleOrNull() ?: 0.0,
-                        reps = setInput.reps.toIntOrNull() ?: 0,
-                        isCompleted = true
-                    )
+                        trackingMode = exercise.trackingMode
+                    )?.copy(isCompleted = true)
                 }
             }
+            val weightedExerciseIds = currentWorkout.exercises
+                .filter { it.trackingMode.usesWeightInput }
+                .map { it.exerciseId }
+                .toSet()
 
             if (allSessionSets.isEmpty()) {
                 _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_no_completed_exercises)))
@@ -212,7 +223,9 @@ class WorkoutViewModel @Inject constructor(
             val session = WorkoutSession(
                 questId = questId,
                 timestamp = clock.now(),
-                totalTonnage = allSessionSets.sumOf { it.weight * it.reps },
+                totalTonnage = allSessionSets
+                    .filter { it.exerciseId in weightedExerciseIds }
+                    .sumOf { it.weight * it.reps },
                 cycleDay = currentWorkout.dayNumber
             )
 
@@ -229,7 +242,12 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
-    fun onLogSetsConfirmed(exerciseId: Int, sets: List<ActiveSetInput>, feedback: String) {
+    fun onLogSetsConfirmed(
+        exerciseId: Int,
+        sets: List<ActiveSetInput>,
+        feedback: String,
+        trackingMode: ExerciseTrackingMode
+    ) {
         viewModelScope.launch {
             try {
                 useCases.selectedDate.value?.let { date ->
@@ -237,7 +255,8 @@ class WorkoutViewModel @Inject constructor(
                         exerciseId = exerciseId,
                         sets = sets,
                         date = date,
-                        userFeedback = feedback
+                        userFeedback = feedback,
+                        trackingMode = trackingMode
                     )
                 }
                 onDismissDialog()
@@ -275,6 +294,30 @@ class WorkoutViewModel @Inject constructor(
     fun onCycleDaySelected(day: Int) {
         _selectedCycleDayOverride.value = day
         _settingsUiState.update { it.copy(selectedDay = day) }
+    }
+
+    fun refreshForCurrentDay() {
+        useCases.selectToday()
+        _selectedCycleDayOverride.value = null
+        _userEdits.value = emptyMap()
+        if (_dialogState.value is StatusDialogState.WorkoutScheduleSettings) {
+            loadSettingsForDay(_settingsUiState.value.selectedDay)
+        }
+    }
+
+    fun onActivateSelectedCycleDayToday() {
+        viewModelScope.launch(dispatchers.io) {
+            try {
+                val selectedDay = displayedCycleDay.first()
+                useCases.syncCycleAnchor(selectedDay)
+                _selectedCycleDayOverride.value = null
+                _settingsUiState.update { it.copy(selectedDay = selectedDay) }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Timber.e(e, "Failed to sync selected cycle day")
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+            }
+        }
     }
 
     fun onOpenWorkoutSettings() {
@@ -386,6 +429,13 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    fun onExerciseTrackingModeChanged(exerciseId: Int, trackingMode: ExerciseTrackingMode) {
+        launchIoAction {
+            useCases.updateExerciseTrackingMode(exerciseId, trackingMode.name)
+            refreshAllExercises()
+        }
+    }
+
     private fun loadSettingsForDay(day: Int) {
         settingsDayJob?.cancel()
         settingsDayJob = viewModelScope.launch {
@@ -429,6 +479,46 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    private suspend fun resolveTrackingMode(exercise: ExerciseDetails): ExerciseTrackingMode {
+        val reference = runCatching {
+            progressionMatrixRepository.getReferenceForExercise(exercise.id)
+        }.getOrNull()
+        return ExerciseTrackingModeResolver.resolve(exercise, reference)
+    }
+
+    private suspend fun resolveTrackingMode(
+        exerciseId: Int,
+        trackingModeOverride: String?,
+        name: String,
+        nameUk: String?,
+        category: ExerciseCategory,
+        equipment: String?,
+        externalId: String?
+    ): ExerciseTrackingMode {
+        val reference = runCatching {
+            progressionMatrixRepository.getReferenceForExercise(exerciseId)
+        }.getOrNull()
+        return ExerciseTrackingModeResolver.resolve(
+            trackingModeOverride = trackingModeOverride,
+            name = name,
+            nameUk = nameUk,
+            externalId = externalId,
+            category = category,
+            equipment = equipment,
+            referenceWeightType = reference?.weightType
+        )
+    }
+
+    private fun com.ihor.thesystem.domain.usecase.SetRecommendation.formatRecommendation(
+        trackingMode: ExerciseTrackingMode
+    ): String =
+        when (trackingMode) {
+            ExerciseTrackingMode.WEIGHT_REPS -> "${sets}x${reps} @ ${weight}kg"
+            ExerciseTrackingMode.BODYWEIGHT_REPS -> "${sets}x${reps} повт."
+            ExerciseTrackingMode.TIME_SECONDS -> "${sets}x${reps} сек"
+            ExerciseTrackingMode.TIME_MINUTES -> "${sets}x${(reps / 60).coerceAtLeast(1)} хв"
+        }
+
     fun onOpenSetup(entry: MatrixEntryUiModel, fromWorkout: Boolean = false) {
         _dialogState.value = StatusDialogState.SetupMatrix(
             entry = entry,
@@ -441,8 +531,19 @@ class WorkoutViewModel @Inject constructor(
     fun onOpenLogSets(entry: MatrixEntryUiModel, fromWorkout: Boolean = false) {
         viewModelScope.launch {
             val lastSets = useCases.getLastSetsForExercise(entry.exerciseId)
+            val exercise = useCases.getAllExercises().first().firstOrNull { it.id == entry.exerciseId }
+            val trackingMode = exercise?.let { resolveTrackingMode(it) }
+                ?: resolveTrackingMode(
+                    exerciseId = entry.exerciseId,
+                    trackingModeOverride = null,
+                    name = entry.exerciseName,
+                    nameUk = null,
+                    category = ExerciseCategory.UNKNOWN,
+                    equipment = null,
+                    externalId = null
+                )
             val initialSets = if (lastSets.isNotEmpty()) {
-                lastSets.map { ActiveSetInput(weight = it.weight.toString(), reps = it.reps.toString()) }
+                lastSets.map { it.toActiveSetInput(trackingMode) }
             } else {
                 listOf(ActiveSetInput())
             }
@@ -451,6 +552,7 @@ class WorkoutViewModel @Inject constructor(
                 entry = entry,
                 sets = initialSets,
                 existingLogs = lastSets,
+                trackingMode = trackingMode,
                 showWorkoutAfter = fromWorkout
             )
         }

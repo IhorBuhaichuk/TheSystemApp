@@ -41,6 +41,7 @@ data class CalendarSettingsUiState(
     val startDateInput: String = "",
     val repeats: Boolean = true,
     val days: List<CalendarCycleDayDraftUiModel> = emptyList(),
+    val todayCycleDayIndex: Int? = null,
     val isSaving: Boolean = false,
     val isDirty: Boolean = false,
     val errorMessage: UiText? = null
@@ -101,7 +102,7 @@ class CalendarSettingsViewModel @Inject constructor(
                 repeats = true,
                 isDirty = true,
                 errorMessage = null
-            )
+            ).withTodayCycleDayIndex()
         }
     }
 
@@ -114,12 +115,14 @@ class CalendarSettingsViewModel @Inject constructor(
     fun onStartDateChanged(startDate: String) {
         _uiState.update {
             it.copy(startDateInput = startDate, isDirty = true, errorMessage = null)
+                .withTodayCycleDayIndex()
         }
     }
 
     fun onRepeatsChanged(repeats: Boolean) {
         _uiState.update {
             it.copy(repeats = repeats, isDirty = true, errorMessage = null)
+                .withTodayCycleDayIndex()
         }
     }
 
@@ -145,7 +148,7 @@ class CalendarSettingsViewModel @Inject constructor(
                 )).reindex(),
                 isDirty = true,
                 errorMessage = null
-            )
+            ).withTodayCycleDayIndex()
         }
     }
 
@@ -159,7 +162,7 @@ class CalendarSettingsViewModel @Inject constructor(
                     days = state.days.filterNot { it.index == index }.reindex(),
                     isDirty = true,
                     errorMessage = null
-                )
+                ).withTodayCycleDayIndex()
             }
         }
     }
@@ -181,7 +184,7 @@ class CalendarSettingsViewModel @Inject constructor(
                 },
                 isDirty = true,
                 errorMessage = null
-            )
+            ).withTodayCycleDayIndex()
         }
     }
 
@@ -194,7 +197,20 @@ class CalendarSettingsViewModel @Inject constructor(
                 },
                 isDirty = true,
                 errorMessage = null
-            )
+            ).withTodayCycleDayIndex()
+        }
+    }
+
+    fun onTodayCycleDaySelected(index: Int) {
+        _uiState.update { state ->
+            val cycleLength = state.days.size.coerceAtLeast(MIN_CYCLE_LENGTH)
+            val safeIndex = index.coerceIn(1, cycleLength)
+            val startDate = LocalDate.ofEpochDay(todayEpochDay() - (safeIndex - 1).toLong())
+            state.copy(
+                startDateInput = startDate.format(dateFormatter),
+                isDirty = true,
+                errorMessage = null
+            ).withTodayCycleDayIndex()
         }
     }
 
@@ -268,7 +284,7 @@ class CalendarSettingsViewModel @Inject constructor(
                     days = mutableDays.reindex(),
                     isDirty = true,
                     errorMessage = null
-                )
+                ).withTodayCycleDayIndex()
             }
         }
     }
@@ -283,7 +299,24 @@ class CalendarSettingsViewModel @Inject constructor(
             days = days.toDraftDays(),
             isSaving = false,
             isDirty = false
-        )
+        ).withTodayCycleDayIndex()
+
+    private fun CalendarSettingsUiState.withTodayCycleDayIndex(): CalendarSettingsUiState {
+        val startDate = parseStartDate(startDateInput)
+        val cycleLength = days.size
+        if (startDate == null || cycleLength == 0) {
+            return copy(todayCycleDayIndex = null)
+        }
+
+        val today = todayEpochDay()
+        val start = startDate.toEpochDay()
+        val todayIndex = if (!repeats && today !in start until (start + cycleLength)) {
+            null
+        } else {
+            (((today - start).coerceAtLeast(0) % cycleLength) + 1).toInt()
+        }
+        return copy(todayCycleDayIndex = todayIndex)
+    }
 
     private fun List<CalendarCycleDay>.toDraftDays(): List<CalendarCycleDayDraftUiModel> =
         map { day ->

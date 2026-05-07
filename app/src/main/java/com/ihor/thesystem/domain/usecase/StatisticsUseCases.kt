@@ -6,6 +6,9 @@ import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.ExerciseTrackingMode
+import com.ihor.thesystem.domain.model.toExerciseSetOrNull
+import com.ihor.thesystem.domain.model.toStoredActiveSetInputOrNull
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import java.time.LocalDate
@@ -43,14 +46,23 @@ class SaveExerciseSetsUseCase @Inject constructor(
     private val calculateProgressRank: CalculateProgressRankUseCase,
     private val clock: AppClock
 ) {
-    suspend operator fun invoke(exerciseId: Int, sets: List<ActiveSetInput>, date: LocalDate, userFeedback: String?) {
-        val parsedSets = sets.mapNotNull { it.toParsedSet() }
+    suspend operator fun invoke(
+        exerciseId: Int,
+        sets: List<ActiveSetInput>,
+        date: LocalDate,
+        userFeedback: String?,
+        trackingMode: ExerciseTrackingMode = ExerciseTrackingMode.WEIGHT_REPS
+    ) {
+        val parsedSets = sets.mapNotNull { it.toExerciseSetOrNull(exerciseId, trackingMode) }
         if (parsedSets.isEmpty()) return
 
         val timestamp = date.atStartOfDay(clock.zoneId()).toInstant().toEpochMilli()
+        val storedInputs = sets.mapNotNull { it.toStoredActiveSetInputOrNull(trackingMode) }
 
         // 1. Збереження логу підходів
-        matrixRepo.saveExerciseSetsWithDate(exerciseId, sets, timestamp, userFeedback)
+        matrixRepo.saveExerciseSetsWithDate(exerciseId, storedInputs, timestamp, userFeedback)
+
+        if (!trackingMode.usesWeightInput) return
 
         // 2. Алгоритм автоматичного підвищення рангу
         val maxWeight = parsedSets.maxOf { it.weight }
@@ -71,18 +83,5 @@ class SaveExerciseSetsUseCase @Inject constructor(
             // - Онови середній арифметичний ранг гравця
             recalculateGlobalRank()
         }
-    }
-
-    private data class ParsedSet(val weight: Double, val reps: Int)
-
-    private fun ActiveSetInput.toParsedSet(): ParsedSet? {
-        val parsedWeight = weight.replace(',', '.').toDoubleOrNull()
-            ?.takeIf { it > 0.0 }
-            ?: return null
-        val parsedReps = reps.toIntOrNull()
-            ?.takeIf { it > 0 }
-            ?: return null
-
-        return ParsedSet(parsedWeight, parsedReps)
     }
 }

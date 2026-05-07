@@ -8,7 +8,9 @@ import com.ihor.thesystem.domain.model.AnnualProgressionExerciseSnapshot
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.usecase.GenerateAnnualProgressionPlanUseCase
 import com.ihor.thesystem.domain.usecase.GetAnnualProgressionExerciseSnapshotUseCase
+import com.ihor.thesystem.domain.usecase.GetTrainingPhaseContextUseCase
 import com.ihor.thesystem.domain.usecase.SaveAnnualProgressionPlanUseCase
+import com.ihor.thesystem.domain.usecase.TrainingPhaseContext
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineDispatcher
@@ -29,6 +31,7 @@ class AnnualProgressionPlanViewModelTest {
 
     private val getExerciseSnapshot: GetAnnualProgressionExerciseSnapshotUseCase = mockk()
     private val saveAnnualProgressionPlan: SaveAnnualProgressionPlanUseCase = mockk()
+    private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase = mockk()
     private val fixedDate = LocalDate.of(2026, 5, 2)
 
     @Test
@@ -73,14 +76,23 @@ class AnnualProgressionPlanViewModelTest {
         assertEquals(R.string.error_annual_progression_save_failed, message.resId)
     }
 
-    private fun viewModel(): AnnualProgressionPlanViewModel =
-        AnnualProgressionPlanViewModel(
+    private fun viewModel(): AnnualProgressionPlanViewModel {
+        coEvery { getTrainingPhaseContext.invoke(null) } returns TrainingPhaseContext(
+            firstWorkoutDate = fixedDate,
+            referenceDate = fixedDate
+        )
+
+        return AnnualProgressionPlanViewModel(
             getExerciseSnapshot = getExerciseSnapshot,
             generateAnnualProgressionPlan = GenerateAnnualProgressionPlanUseCase(),
             saveAnnualProgressionPlan = saveAnnualProgressionPlan,
+            getTrainingPhaseContext = getTrainingPhaseContext,
             dispatchers = AnnualTestDispatcherProvider(mainDispatcherRule.dispatcher),
             clock = FixedClock(fixedDate)
-        )
+        ).also {
+            mainDispatcherRule.advanceUntilIdle()
+        }
+    }
 
     private fun exerciseSnapshot(): AnnualProgressionExerciseSnapshot =
         AnnualProgressionExerciseSnapshot(

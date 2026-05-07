@@ -7,7 +7,7 @@ import com.ihor.thesystem.data.local.room.converters.Converters
 import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
 
-const val APP_DATABASE_VERSION = 42
+const val APP_DATABASE_VERSION = 44
 
 @Database(
     entities = [

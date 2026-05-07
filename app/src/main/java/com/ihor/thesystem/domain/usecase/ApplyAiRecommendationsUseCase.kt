@@ -20,6 +20,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
     private val analyticsRepo: WorkoutAnalyticsRepository,
     private val aiRepository: AiArchitectRepository,
     private val getWeightContext: GetPlayerWeightContextUseCase,
+    private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
     private val clock: AppClock
 ) {
 
@@ -49,6 +50,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
 
         // 1. Збір загальних даних користувача через спільний UseCase
         val weightContext = getWeightContext()
+        val trainingPhaseContext = getTrainingPhaseContext()
         val playerWeight = weightContext.currentWeight
         val weight6MonthsAgo = weightContext.weightSixMonthsAgo
         
@@ -89,20 +91,26 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             ПАКЕТНИЙ АНАЛІЗ ТРЕНУВАННЯ.
             Вага гравця: ${playerWeight?.let { "$it кг" } ?: "невідомо"} (6 міс. тому: ${weight6MonthsAgo?.let { "$it кг" } ?: "невідомо"}).
             
+            ${trainingPhaseContext.toPromptBlock()}
+            
             Дані вправ:
             $exercisesJson
             
-            Проаналізуй кожну вправу. 
+            Проаналізуй кожну вправу спокійно і природно.
+            Тон відповіді: як уважний тренер, без кіберпанку, пафосу, агресії, сорому і штучних метафор.
+            Якщо триває фаза перших 14 днів, feedback_text та aiFeedback мають тільки хвалити і підтримувати гравця.
+            Якщо річного графіка M0-M12 ще немає, не називай це проблемою і не проси користувача завантажити цілі.
+            
             Відповідь поверни СУВОРО у форматі JSON об'єкта наступної структури:
             {
-              "feedback_text": "текст аналізу прогресу до 3 речень",
+              "feedback_text": "2-3 короткі природні речення без заголовків і нумерації",
               "next_workout_targets": [
                 {
                   "exercise_id": ID,
                   "nextWeight": 50.0,
                   "nextSets": 3,
                   "nextReps": "8-10",
-                  "aiFeedback": "коментар до вправи"
+                  "aiFeedback": "одне коротке природне речення до вправи"
                 }
               ]
             }

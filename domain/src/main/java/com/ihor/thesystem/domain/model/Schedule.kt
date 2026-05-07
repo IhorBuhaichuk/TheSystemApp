@@ -22,7 +22,8 @@ data class ExerciseDetails(
     val mechanic: String? = null,
     val force: String? = null,
     val gifUrl: String? = null,
-    val externalId: String? = null
+    val externalId: String? = null,
+    val trackingMode: String? = null
 )
 
 data class ExerciseRecommendation(

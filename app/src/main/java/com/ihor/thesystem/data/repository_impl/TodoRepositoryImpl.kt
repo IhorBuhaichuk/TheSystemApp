@@ -19,11 +19,11 @@ class TodoRepositoryImpl @Inject constructor(
 
     override fun getTodosForDate(date: LocalDate): Flow<List<TodoItem>> =
         todoDao.observeTodosForDate(date.toEpochDay()).map { todos ->
-            todos.map { it.toDomain() }
+            todos.toTodoTree()
         }
 
     override suspend fun getTodosForDateSnapshot(date: LocalDate): List<TodoItem> =
-        todoDao.getTodosForDate(date.toEpochDay()).map { it.toDomain() }
+        todoDao.getTodosForDate(date.toEpochDay()).toTodoTree()
 
     override suspend fun getTodoStatsForMonth(month: YearMonth): Map<LocalDate, TodoStats> {
         val todos = todoDao.getTodosForRange(
@@ -39,14 +39,18 @@ class TodoRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun addTodo(date: LocalDate, title: String) {
+    override suspend fun addTodo(date: LocalDate, title: String, parentTodoId: Int?) {
         val normalizedTitle = title.trim()
         if (normalizedTitle.isBlank()) return
+        val dateEpochDay = date.toEpochDay()
+        val nextSortOrder = (todoDao.getMaxSortOrder(dateEpochDay, parentTodoId) ?: 0L) + SORT_ORDER_STEP
 
         todoDao.insert(
             TodoEntity(
                 title = normalizedTitle,
-                dateEpochDay = date.toEpochDay(),
+                dateEpochDay = dateEpochDay,
+                parentTodoId = parentTodoId,
+                sortOrder = nextSortOrder,
                 createdAtMillis = clock.now()
             )
         )
@@ -60,17 +64,50 @@ class TodoRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun reorderTodos(date: LocalDate, orderedTodoIds: List<Int>, parentTodoId: Int?) {
+        if (orderedTodoIds.isEmpty()) return
+        todoDao.updateSortOrders(
+            dateEpochDay = date.toEpochDay(),
+            parentTodoId = parentTodoId,
+            orderedIds = orderedTodoIds.distinct()
+        )
+    }
+
     override suspend fun removeTodo(todoId: Int) {
-        todoDao.delete(todoId)
+        todoDao.deleteWithMicrotasks(todoId)
+    }
+
+    private fun List<TodoEntity>.toTodoTree(): List<TodoItem> {
+        val childrenByParent = filter { it.parentTodoId != null }
+            .groupBy { it.parentTodoId }
+
+        return filter { it.parentTodoId == null }
+            .map { parent ->
+                parent.toDomain(
+                    microtasks = childrenByParent[parent.id]
+                        .orEmpty()
+                        .map { it.toDomain() }
+                )
+            }
     }
 
     private fun TodoEntity.toDomain(): TodoItem =
+        toDomain(microtasks = emptyList())
+
+    private fun TodoEntity.toDomain(microtasks: List<TodoItem>): TodoItem =
         TodoItem(
             id = id,
             title = title,
             date = LocalDate.ofEpochDay(dateEpochDay),
+            parentTodoId = parentTodoId,
+            sortOrder = sortOrder,
             isCompleted = isCompleted,
             createdAtMillis = createdAtMillis,
-            completedAtMillis = completedAtMillis
+            completedAtMillis = completedAtMillis,
+            microtasks = microtasks
         )
+
+    private companion object {
+        const val SORT_ORDER_STEP = 1_000L
+    }
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -127,6 +129,11 @@ fun CalendarSettingsScreen(
                     onCycleLengthIncreased = viewModel::onCycleLengthIncreased,
                     onCycleLengthDecreased = viewModel::onCycleLengthDecreased,
                     onRepeatsChanged = viewModel::onRepeatsChanged
+                )
+                TodayCycleAnchorBlock(
+                    days = uiState.days,
+                    todayCycleDayIndex = uiState.todayCycleDayIndex,
+                    onTodayCycleDaySelected = viewModel::onTodayCycleDaySelected
                 )
                 CycleDaysBlock(
                     days = uiState.days,
@@ -274,6 +281,81 @@ private fun CycleParametersBlock(
             RepeatRow(
                 repeats = uiState.repeats,
                 onRepeatsChanged = onRepeatsChanged
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodayCycleAnchorBlock(
+    days: List<CalendarCycleDayDraftUiModel>,
+    todayCycleDayIndex: Int?,
+    onTodayCycleDaySelected: (Int) -> Unit
+) {
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), active = todayCycleDayIndex != null) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SystemSectionHeader(
+                title = "Який день сьогодні?",
+                subtitle = todayCycleDayIndex?.let { "Сьогодні активний День $it" }
+                    ?: "Оберіть день поточного циклу"
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                days.forEach { day ->
+                    TodayCycleDayChip(
+                        day = day,
+                        selected = day.index == todayCycleDayIndex,
+                        onClick = { onTodayCycleDaySelected(day.index) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TodayCycleDayChip(
+    day: CalendarCycleDayDraftUiModel,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(14.dp)
+    Row(
+        modifier = Modifier
+            .width(156.dp)
+            .clip(shape)
+            .background(if (selected) AccentPrimarySoft else Color.White.copy(alpha = 0.026f))
+            .border(1.dp, if (selected) BorderActive else BorderSubtle, shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = if (selected) Icons.Filled.Check else Icons.Filled.Today,
+            contentDescription = null,
+            tint = if (selected) AccentPrimary else TextMuted,
+            modifier = Modifier.size(18.dp)
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "День ${day.index}",
+                style = MaterialTheme.typography.labelMedium.copy(
+                    color = if (selected) AccentPrimary else TextPrimary,
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = day.name.ifBlank { day.type.toDisplayText() },
+                style = MaterialTheme.typography.labelSmall.copy(color = TextMuted),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

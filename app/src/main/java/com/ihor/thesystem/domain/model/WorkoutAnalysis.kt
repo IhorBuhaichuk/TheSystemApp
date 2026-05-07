@@ -8,7 +8,9 @@ data class WorkoutAnalysisData(
     val annualProgress: List<AnnualProgressComparison>,
     val recommendations: List<NextWorkoutRecommendationAnalysis>,
     val motivationLevel: MotivationLevelResult,
-    val aiFeedback: String?
+    val aiFeedback: String?,
+    val isInitialDataCollection: Boolean = false,
+    val adaptationRemainingDays: Long = 0L
 )
 
 data class WorkoutExecutionAnalysis(

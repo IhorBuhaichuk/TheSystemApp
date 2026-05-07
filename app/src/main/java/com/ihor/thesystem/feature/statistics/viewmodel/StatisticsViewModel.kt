@@ -35,8 +35,13 @@ class StatisticsViewModel @Inject constructor(
     private val clock: AppClock
 ) : ViewModel() {
 
+    private val _refreshRequests = MutableStateFlow(0L)
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<UiState<StatisticsUiData>> = getStatisticsDataUseCase()
+    val uiState: StateFlow<UiState<StatisticsUiData>> = _refreshRequests
+        .flatMapLatest {
+            getStatisticsDataUseCase()
+        }
         .map<StatisticsData, UiState<StatisticsUiData>> { UiState.Content(it.toStatisticsUiData()) }
         .catch { e ->
             if (e is CancellationException) throw e
@@ -56,6 +61,11 @@ class StatisticsViewModel @Inject constructor(
 
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
+
+    fun refreshForCurrentDay() {
+        viewingDateRepo.selectToday()
+        _refreshRequests.value = clock.now()
+    }
 
     fun onOpenSetup(entry: MatrixEntryUiModel) {
         _dialogState.value = StatisticsDialogState.SetupMatrix(entry, entry.startWeight.toString(), entry.targetWeight.toString())

@@ -17,6 +17,7 @@ interface ScheduleRepository {
     fun getAllExercises(): Flow<List<ExerciseDetails>>
     suspend fun createExercise(name: String): Int
     suspend fun deleteExercise(exerciseId: Int)
+    suspend fun updateExerciseTrackingMode(exerciseId: Int, trackingMode: String?)
     suspend fun saveWorkoutForDay(cycleDay: Int, workoutName: String, exerciseIds: List<Int>)
     suspend fun removeExerciseFromDay(cycleDay: Int, exerciseId: Int)
 }

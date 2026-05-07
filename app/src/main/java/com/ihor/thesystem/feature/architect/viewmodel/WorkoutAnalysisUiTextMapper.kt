@@ -33,6 +33,6 @@ object WorkoutAnalysisUiTextMapper {
             AnnualProgressStatus.OnPlan -> "За планом"
             AnnualProgressStatus.BelowPlan -> "Нижче плану"
             AnnualProgressStatus.AbovePlan -> "Вище плану"
-            AnnualProgressStatus.NoPlan -> "Немає плану"
+            AnnualProgressStatus.NoPlan -> "Готово до плану"
         }
 }

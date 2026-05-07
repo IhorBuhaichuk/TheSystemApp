@@ -21,6 +21,7 @@ data class WorkoutUseCases @Inject constructor(
     val getPlayerFlow: GetPlayerFlowUseCase,
     val getStatisticsData: GetStatisticsDataUseCase,
     val finalizeSession: FinalizeSessionUseCase,
+    val syncCycleAnchor: SyncCycleAnchorUseCase,
     private val scheduleRepo: ScheduleRepository,
     private val viewingDateRepo: ViewingDateRepository,
     private val analyticsRepo: WorkoutAnalyticsRepository
@@ -30,6 +31,14 @@ data class WorkoutUseCases @Inject constructor(
 
     val selectedDate: StateFlow<LocalDate?>
         get() = viewingDateRepo.selectedDate
+
+    fun selectToday() {
+        viewingDateRepo.selectToday()
+    }
+
+    fun selectDate(date: LocalDate) {
+        viewingDateRepo.setDate(date)
+    }
 
     suspend fun getLastSetsForExercise(exerciseId: Int): List<ExerciseSet> =
         analyticsRepo.getLastSetsForExercise(exerciseId)
@@ -42,6 +51,9 @@ data class WorkoutUseCases @Inject constructor(
 
     suspend fun deleteExercise(exerciseId: Int) =
         scheduleRepo.deleteExercise(exerciseId)
+
+    suspend fun updateExerciseTrackingMode(exerciseId: Int, trackingMode: String?) =
+        scheduleRepo.updateExerciseTrackingMode(exerciseId, trackingMode)
 
     suspend fun saveWorkoutForDay(cycleDay: Int, workoutName: String, exerciseIds: List<Int>) =
         scheduleRepo.saveWorkoutForDay(cycleDay, workoutName, exerciseIds)

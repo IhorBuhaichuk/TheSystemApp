@@ -11,6 +11,7 @@ import com.ihor.thesystem.domain.model.AnnualProgressionPlanInput
 import com.ihor.thesystem.domain.usecase.ANNUAL_PROGRESSION_ADAPTATION_DAYS
 import com.ihor.thesystem.domain.usecase.GenerateAnnualProgressionPlanUseCase
 import com.ihor.thesystem.domain.usecase.GetAnnualProgressionExerciseSnapshotUseCase
+import com.ihor.thesystem.domain.usecase.GetTrainingPhaseContextUseCase
 import com.ihor.thesystem.domain.usecase.SaveAnnualProgressionPlanUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -73,6 +74,7 @@ class AnnualProgressionPlanViewModel @Inject constructor(
     private val getExerciseSnapshot: GetAnnualProgressionExerciseSnapshotUseCase,
     private val generateAnnualProgressionPlan: GenerateAnnualProgressionPlanUseCase,
     private val saveAnnualProgressionPlan: SaveAnnualProgressionPlanUseCase,
+    private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
     private val dispatchers: DispatcherProvider,
     private val clock: AppClock
 ) : ViewModel() {
@@ -84,6 +86,27 @@ class AnnualProgressionPlanViewModel @Inject constructor(
         )
     )
     val uiState: StateFlow<AnnualProgressionPlanUiState> = _uiState.asStateFlow()
+
+    init {
+        loadTrainingPhase()
+    }
+
+    private fun loadTrainingPhase() {
+        viewModelScope.launch(dispatchers.io) {
+            val today = today()
+            runCatching { getTrainingPhaseContext() }
+                .onSuccess { phase ->
+                    _uiState.update {
+                        it.copy(
+                            startDate = phase.firstWorkoutDate ?: today,
+                            currentDate = today,
+                            generatedPlan = null,
+                            message = null
+                        )
+                    }
+                }
+        }
+    }
 
     fun onUseTodayAsStartDate() {
         val today = today()

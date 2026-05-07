@@ -97,8 +97,8 @@ fun WorkoutReportDialog(
 
                     if (report.isFallback) {
                         Text(
-                            text = "УВАГА: АКТИВОВАНО РЕЗЕРВНИЙ ПРОТОКОЛ",
-                            color = Color.Red,
+                            text = "AI тимчасово недоступний. Тренування збережено, цілі виставлено обережно.",
+                            color = Color.White.copy(alpha = 0.72f),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                         )
                     }

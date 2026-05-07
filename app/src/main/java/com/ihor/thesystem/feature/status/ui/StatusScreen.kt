@@ -32,6 +32,7 @@ import com.ihor.thesystem.core.theme.SystemBackground
 import com.ihor.thesystem.core.theme.TextSecondary
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
+import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.feature.status.ui.components.dialogs.AddTaskDialog
@@ -50,6 +51,8 @@ fun StatusScreen(
     val statusDialogState by statusViewModel.dialogState.collectAsStateWithLifecycle()
 
     var levelUpEvent by remember { mutableStateOf<StatusOneOffEvent.ShowLevelUp?>(null) }
+
+    RefreshOnResume(statusViewModel::refreshForCurrentDay)
 
     LaunchedEffect(Unit) {
         statusViewModel.events.collect { event ->
@@ -83,6 +86,8 @@ fun StatusScreen(
                     onOpenWorkoutSettings = { navController.navigate(Routes.Cycle) },
                     onTaskToggled = { todo -> statusViewModel.onTodoToggled(todo) },
                     onAddTask = { questId -> statusViewModel.onAddTaskTap(questId) },
+                    onAddMicrotask = { todo -> statusViewModel.onAddMicrotaskTap(todo) },
+                    onTodosReordered = { orderedIds -> statusViewModel.onTodosReordered(orderedIds) },
                     onRemoveTask = { todoId -> statusViewModel.onRemoveTodo(todoId) }
                 )
             }
@@ -132,6 +137,13 @@ private fun StatusDialogs(
         is StatusDialogState.AddTask -> AddTaskDialog(
             onConfirm = { statusViewModel.onAddTaskConfirmed(dialogState.questId, it) },
             onDismiss = { statusViewModel.onDismissDialog() }
+        )
+        is StatusDialogState.AddMicrotask -> AddTaskDialog(
+            onConfirm = { statusViewModel.onAddMicrotaskConfirmed(dialogState.parentTodoId, it) },
+            onDismiss = { statusViewModel.onDismissDialog() },
+            titleText = "Нова мікрозадача",
+            subtitleText = "До: ${dialogState.parentTitle}",
+            placeholderText = "Що саме треба зробити?"
         )
         else -> Unit
     }

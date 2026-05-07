@@ -8,7 +8,10 @@ data class TodoItem(
     val date: LocalDate,
     val isCompleted: Boolean,
     val createdAtMillis: Long,
-    val completedAtMillis: Long? = null
+    val completedAtMillis: Long? = null,
+    val parentTodoId: Int? = null,
+    val sortOrder: Long = 0L,
+    val microtasks: List<TodoItem> = emptyList()
 )
 
 data class TodoStats(

@@ -60,6 +60,7 @@ import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.TextMuted
 import com.ihor.thesystem.core.theme.TextPrimary
 import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
@@ -80,6 +81,8 @@ fun StatisticsScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    RefreshOnResume(viewModel::refreshForCurrentDay)
 
     Box(
         modifier = Modifier

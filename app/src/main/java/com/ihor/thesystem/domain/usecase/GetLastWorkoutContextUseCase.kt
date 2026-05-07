@@ -9,6 +9,7 @@ import javax.inject.Inject
 
 class GetLastWorkoutContextUseCase @Inject constructor(
     private val analyticsRepo: WorkoutAnalyticsRepository,
+    private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
     @param:ApplicationContext private val context: Context
 ) {
     suspend operator fun invoke(): String? {
@@ -23,10 +24,15 @@ class GetLastWorkoutContextUseCase @Inject constructor(
         
         // 3. Отримуємо всі вправи для мапінгу імен через репозиторій
         val allExercises = analyticsRepo.getAllExercisesMap()
+        val trainingPhaseContext = getTrainingPhaseContext(
+            referenceTimestamp = mostRecent.session.timestamp
+        )
         
         val contextBuilder = StringBuilder()
         val totalDayTonnage = sameDaySessions.sumOf { it.session.totalTonnage }
         
+        contextBuilder.append(trainingPhaseContext.toPromptBlock())
+        contextBuilder.append("\n\n")
         contextBuilder.append(context.getString(R.string.text_workout_results_header, totalDayTonnage.toInt()))
         contextBuilder.append("\n")
         

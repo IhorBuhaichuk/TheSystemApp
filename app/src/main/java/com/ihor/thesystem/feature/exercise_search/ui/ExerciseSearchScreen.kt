@@ -21,7 +21,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Search
@@ -34,6 +37,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +47,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -85,10 +92,13 @@ fun ExercisePickerScreen(
     onSelectExercise: (ExerciseDetails) -> Unit,
     modifier: Modifier = Modifier,
     actionLabel: String = "Вибрати",
+    createExerciseLabel: String? = null,
+    onCreateExercise: ((String) -> Unit)? = null,
     viewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
     val filterState by viewModel.filterState.collectAsStateWithLifecycle()
     val pickerItems by viewModel.pickerItems.collectAsStateWithLifecycle()
+    var newExerciseName by remember { mutableStateOf("") }
 
     Box(
         modifier = modifier
@@ -122,6 +132,20 @@ fun ExercisePickerScreen(
                 onSelectExercise = onSelectExercise,
                 modifier = Modifier.weight(1f)
             )
+            if (onCreateExercise != null && createExerciseLabel != null) {
+                ExercisePickerCreateBar(
+                    value = newExerciseName,
+                    onValueChange = { newExerciseName = it },
+                    placeholder = createExerciseLabel,
+                    onCreate = {
+                        val name = newExerciseName.trim()
+                        if (name.isNotEmpty()) {
+                            onCreateExercise(name)
+                            newExerciseName = ""
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -423,6 +447,56 @@ private fun ExercisePickerRow(
             onClick = { onSelectExercise(exercise) },
             modifier = Modifier.width(104.dp)
         )
+    }
+}
+
+@Composable
+private fun ExercisePickerCreateBar(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    onCreate: () -> Unit
+) {
+    val canCreate = value.trim().isNotEmpty()
+
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 12.dp) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.weight(1f),
+                placeholder = {
+                    Text(
+                        text = placeholder,
+                        style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
+                    )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { if (canCreate) onCreate() }),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BorderActive,
+                    unfocusedBorderColor = BorderSubtle,
+                    focusedContainerColor = SystemSurfaceGlass.copy(alpha = 0.58f),
+                    unfocusedContainerColor = SystemSurfaceGlass.copy(alpha = 0.44f),
+                    cursorColor = AccentPrimary,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                )
+            )
+            SystemButton(
+                text = "Створити",
+                icon = Icons.Filled.Add,
+                onClick = onCreate,
+                enabled = canCreate,
+                modifier = Modifier.width(118.dp)
+            )
+        }
     }
 }
 

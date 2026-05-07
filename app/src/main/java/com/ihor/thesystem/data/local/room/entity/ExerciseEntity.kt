@@ -18,5 +18,6 @@ data class ExerciseEntity(
     val mechanic: String? = null,
     val force: String? = null,
     val instructions: String? = null,
-    val gifUrl: String? = null
+    val gifUrl: String? = null,
+    val trackingMode: String? = null
 )

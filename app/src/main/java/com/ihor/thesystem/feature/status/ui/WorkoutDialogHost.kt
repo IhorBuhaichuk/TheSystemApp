@@ -3,6 +3,7 @@ package com.ihor.thesystem.feature.status.ui
 import androidx.compose.runtime.Composable
 import com.ihor.thesystem.feature.status.ui.components.dialogs.MainQuestWorkoutDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.WorkoutReportDialog
+import com.ihor.thesystem.feature.status.ui.components.dialogs.WorkoutScheduleSettingsScreen
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
 import com.ihor.thesystem.feature.status.viewmodel.StatusDialogState
 import com.ihor.thesystem.feature.status.viewmodel.WorkoutScheduleSettingsUiState
@@ -52,13 +53,19 @@ fun WorkoutDialogHost(
             com.ihor.thesystem.feature.statistics.ui.dialogs.LogWorkoutSetsDialog(
                 exerciseName = dialogState.entry.exerciseName,
                 sets = dialogState.sets,
+                trackingMode = dialogState.trackingMode,
                 onUpdate = { id, weight, reps ->
                     workoutViewModel.updateLogSetInput(id, weight, reps)
                 },
                 onAdd = { workoutViewModel.addLogSet() },
                 onRemove = { workoutViewModel.removeLogSet() },
                 onSave = { feedback ->
-                    workoutViewModel.onLogSetsConfirmed(dialogState.entry.exerciseId, dialogState.sets, feedback)
+                    workoutViewModel.onLogSetsConfirmed(
+                        exerciseId = dialogState.entry.exerciseId,
+                        sets = dialogState.sets,
+                        feedback = feedback,
+                        trackingMode = dialogState.trackingMode
+                    )
                 },
                 onDismiss = {
                     if (dialogState.showWorkoutAfter) {
@@ -71,7 +78,7 @@ fun WorkoutDialogHost(
             )
         }
         is StatusDialogState.WorkoutScheduleSettings -> {
-            com.ihor.thesystem.feature.status.ui.components.dialogs.WorkoutScheduleSettingsDialog(
+            WorkoutScheduleSettingsScreen(
                 uiState = settingsUiState,
                 onDismiss = { workoutViewModel.onDismissDialog() },
                 onSelectDay = { workoutViewModel.onSettingsSelectDay(it) },
@@ -81,7 +88,10 @@ fun WorkoutDialogHost(
                 onRemoveExercise = { workoutViewModel.onRemoveExerciseFromDay(it) },
                 onDeleteAllExercises = { },
                 onCreateNewExercise = { workoutViewModel.onCreateExercise(it) },
-                onDeleteExercise = { workoutViewModel.onDeleteExercise(it) }
+                onDeleteExercise = { workoutViewModel.onDeleteExercise(it) },
+                onTrackingModeChanged = { exerciseId, trackingMode ->
+                    workoutViewModel.onExerciseTrackingModeChanged(exerciseId, trackingMode)
+                }
             )
         }
         is StatusDialogState.WorkoutReport -> WorkoutReportDialog(

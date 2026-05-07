@@ -42,6 +42,9 @@ interface WorkoutDao {
     @Query("SELECT name FROM exercises WHERE id = :id")
     suspend fun getExerciseNameById(id: Int): String?
 
+    @Query("UPDATE exercises SET trackingMode = :trackingMode WHERE id = :id")
+    suspend fun updateExerciseTrackingMode(id: Int, trackingMode: String?)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExercise(exercise: ExerciseEntity): Long
 
@@ -90,4 +93,3 @@ interface WorkoutDao {
     @Query("SELECT * FROM workout_templates WHERE id = :id")
     suspend fun getTemplateById(id: Int): WorkoutTemplateEntity?
 }
-

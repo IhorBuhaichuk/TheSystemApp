@@ -11,6 +11,7 @@ import com.ihor.thesystem.data.local.room.relations.ScheduleWithDetails
 import com.ihor.thesystem.data.local.room.relations.ScheduleWithOrderedExercises
 import com.ihor.thesystem.data.local.room.entity.WorkoutExerciseCrossRef
 import com.ihor.thesystem.domain.model.ExerciseDetails
+import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.model.ScheduleDay
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -80,9 +81,15 @@ class ScheduleRepositoryImpl @Inject constructor(
                     id = it.exercise.id, 
                     name = it.exercise.name, 
                     nameUk = it.exercise.nameUk,
+                    category = it.exercise.category,
                     muscleGroups = it.exercise.muscleGroups,
+                    equipment = it.exercise.equipment,
+                    level = it.exercise.level,
+                    mechanic = it.exercise.mechanic,
+                    force = it.exercise.force,
                     gifUrl = it.exercise.gifUrl,
-                    externalId = it.exercise.externalId
+                    externalId = it.exercise.externalId,
+                    trackingMode = it.exercise.trackingMode
                 ) 
             }
         )
@@ -95,20 +102,35 @@ class ScheduleRepositoryImpl @Inject constructor(
                     id = it.id, 
                     name = it.name, 
                     nameUk = it.nameUk,
+                    category = it.category,
                     muscleGroups = it.muscleGroups,
+                    equipment = it.equipment,
+                    level = it.level,
+                    mechanic = it.mechanic,
+                    force = it.force,
                     gifUrl = it.gifUrl,
-                    externalId = it.externalId
+                    externalId = it.externalId,
+                    trackingMode = it.trackingMode
                 ) 
             }
         }
 
     override suspend fun createExercise(name: String): Int {
-        return workoutDao.insertExercise(ExerciseEntity(name = name)).toInt()
+        return workoutDao.insertExercise(
+            ExerciseEntity(
+                name = name,
+                trackingMode = ExerciseTrackingMode.WEIGHT_REPS.name
+            )
+        ).toInt()
     }
 
     override suspend fun deleteExercise(exerciseId: Int) {
         val exercise = ExerciseEntity(id = exerciseId, name = "")
         workoutDao.deleteExercise(exercise)
+    }
+
+    override suspend fun updateExerciseTrackingMode(exerciseId: Int, trackingMode: String?) {
+        workoutDao.updateExerciseTrackingMode(exerciseId, trackingMode)
     }
 
     override suspend fun saveWorkoutForDay(cycleDay: Int, workoutName: String, exerciseIds: List<Int>) {

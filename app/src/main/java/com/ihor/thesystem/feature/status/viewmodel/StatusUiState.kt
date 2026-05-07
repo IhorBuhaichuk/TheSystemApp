@@ -76,5 +76,7 @@ data class TaskUiModel(
 data class TodoUiModel(
     val id: Int,
     val title: String,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
+    val parentTodoId: Int? = null,
+    val microtasks: ImmutableList<TodoUiModel> = persistentListOf()
 )

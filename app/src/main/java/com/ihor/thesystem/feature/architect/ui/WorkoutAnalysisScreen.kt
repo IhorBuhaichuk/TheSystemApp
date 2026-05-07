@@ -145,8 +145,15 @@ private fun WorkoutAnalysisContent(
             result = analysis.motivationLevel,
             onInfoClick = { showMotivationInfo = true }
         )
-        ExerciseProgressBlock(progress = analysis.exerciseProgress)
-        AnnualProgressBlock(progress = analysis.annualProgress)
+        ExerciseProgressBlock(
+            progress = analysis.exerciseProgress,
+            isInitialDataCollection = analysis.isInitialDataCollection
+        )
+        AnnualProgressBlock(
+            progress = analysis.annualProgress,
+            isInitialDataCollection = analysis.isInitialDataCollection,
+            adaptationRemainingDays = analysis.adaptationRemainingDays
+        )
         RecommendationsBlock(recommendations = analysis.recommendations)
         analysis.aiFeedback?.takeIf { it.isNotBlank() }?.let { feedback ->
             SystemInsightBlock(text = feedback)
@@ -362,22 +369,39 @@ private fun BreakdownRow(label: String, score: Int) {
 }
 
 @Composable
-private fun ExerciseProgressBlock(progress: List<ExerciseProgressAnalysis>) {
+private fun ExerciseProgressBlock(
+    progress: List<ExerciseProgressAnalysis>,
+    isInitialDataCollection: Boolean
+) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Прогрес",
-                subtitle = "Поточний результат проти попереднього"
+                subtitle = if (isInitialDataCollection) {
+                    "Стартова база без критики"
+                } else {
+                    "Поточний результат проти попереднього"
+                }
             )
             progress.forEach { item ->
+                val hideCriticism = isInitialDataCollection && item.status == ExerciseProgressStatus.Decreased
                 AnalysisRow(
                     title = item.exerciseName,
                     primary = "Поточний 1RM: ${item.currentEstimatedOneRepMax.formatWeight()} кг",
-                    secondary = item.previousEstimatedOneRepMax?.let {
-                        "Попередній: ${it.formatWeight()} кг · Δ ${item.difference.formatSignedWeight()}"
-                    } ?: "Попереднього результату ще немає",
-                    status = WorkoutAnalysisUiTextMapper.exerciseStatusLabel(item.status),
-                    accent = item.status.statusAccent()
+                    secondary = when {
+                        hideCriticism ->
+                            "Це корисна стартова точка для майбутнього графіка."
+                        item.previousEstimatedOneRepMax != null ->
+                            "Попередній: ${item.previousEstimatedOneRepMax.formatWeight()} кг · Δ ${item.difference.formatSignedWeight()}"
+                        else ->
+                            "Попереднього результату ще немає"
+                    },
+                    status = if (hideCriticism) {
+                        "Збір бази"
+                    } else {
+                        WorkoutAnalysisUiTextMapper.exerciseStatusLabel(item.status)
+                    },
+                    accent = if (hideCriticism) AccentAi else item.status.statusAccent()
                 )
             }
         }
@@ -385,22 +409,40 @@ private fun ExerciseProgressBlock(progress: List<ExerciseProgressAnalysis>) {
 }
 
 @Composable
-private fun AnnualProgressBlock(progress: List<AnnualProgressComparison>) {
+private fun AnnualProgressBlock(
+    progress: List<AnnualProgressComparison>,
+    isInitialDataCollection: Boolean,
+    adaptationRemainingDays: Long
+) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Відносно річної прогресії",
-                subtitle = "Факт проти збереженого плану"
+                subtitle = if (isInitialDataCollection) {
+                    "Збір бази, ще ${adaptationRemainingDays} дн."
+                } else {
+                    "Факт проти збереженого плану"
+                }
             )
             progress.forEach { item ->
+                val isCollectingBase = isInitialDataCollection && item.status == AnnualProgressStatus.NoPlan
                 AnalysisRow(
                     title = item.exerciseName,
                     primary = "Факт: ${item.factWeight.formatWeight()} кг",
-                    secondary = item.plannedWeight?.let {
-                        "План: ${it.formatWeight()} кг · Δ ${item.difference.formatSignedWeight()}"
-                    } ?: "Для вправи ще немає збереженого річного плану",
-                    status = WorkoutAnalysisUiTextMapper.annualStatusLabel(item.status),
-                    accent = item.status.statusAccent()
+                    secondary = when {
+                        item.plannedWeight != null ->
+                            "План: ${item.plannedWeight.formatWeight()} кг · Δ ${item.difference.formatSignedWeight()}"
+                        isCollectingBase ->
+                            "Перші 2 тижні система збирає стартові дані. Графік ще не оцінюється."
+                        else ->
+                            "Річний план ще можна сформувати на основі зібраної бази."
+                    },
+                    status = if (isCollectingBase) {
+                        "Збір бази"
+                    } else {
+                        WorkoutAnalysisUiTextMapper.annualStatusLabel(item.status)
+                    },
+                    accent = if (isCollectingBase) AccentAi else item.status.statusAccent()
                 )
             }
         }

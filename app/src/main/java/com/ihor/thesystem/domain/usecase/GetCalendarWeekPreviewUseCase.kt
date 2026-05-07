@@ -6,6 +6,7 @@ import com.ihor.thesystem.domain.model.CalendarCycleDayType
 import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus
 import com.ihor.thesystem.domain.model.CalendarWeekDay
 import com.ihor.thesystem.domain.model.SystemConfig
+import com.ihor.thesystem.domain.model.TodoItem
 import com.ihor.thesystem.domain.repository.CalendarCycleRepository
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
@@ -62,8 +63,9 @@ class GetCalendarWeekPreviewUseCase @Inject constructor(
                     val isCalendarCycleConfigured = configuredCalendarDay != null
                     val hasTraining = schedule?.isWorkoutDay == true &&
                         (schedule.workoutTemplateName != null || schedule.exercises.isNotEmpty())
-                    val completedTasks = todos.count { it.isCompleted }
-                    val totalTasks = todos.size
+                    val allTodos = todos.flatMapWithMicrotasks()
+                    val completedTasks = allTodos.count { it.isCompleted }
+                    val totalTasks = allTodos.size
                     val hasCompletedWorkout = sessions.any { log ->
                         log.sets.any { it.isCompleted }
                     }
@@ -131,4 +133,7 @@ class GetCalendarWeekPreviewUseCase @Inject constructor(
         atStartOfDay(clock.zoneId())
             .toInstant()
             .toEpochMilli()
+
+    private fun List<TodoItem>.flatMapWithMicrotasks(): List<TodoItem> =
+        flatMap { todo -> listOf(todo) + todo.microtasks }
 }

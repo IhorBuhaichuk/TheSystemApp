@@ -57,6 +57,7 @@ class StatusViewModel @Inject constructor(
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
 
     private val _questsReady = MutableStateFlow(false)
+    private val _refreshRequests = MutableStateFlow(0L)
 
     val systemConfig: StateFlow<SystemConfig?> = databaseStatus
         .flatMapLatest { status ->
@@ -75,19 +76,21 @@ class StatusViewModel @Inject constructor(
                     _questsReady
                         .filter { it } // чекаємо поки квести готові
                         .flatMapLatest {
-                            combine(
-                                useCases.getStatusData(),
-                                useCases.getCalendarWeekPreview()
-                            ) { data, weekPreview ->
-                                data to weekPreview
+                            _refreshRequests.flatMapLatest {
+                                combine(
+                                    useCases.getStatusData(),
+                                    useCases.getCalendarWeekPreview()
+                                ) { data, weekPreview ->
+                                    data to weekPreview
+                                }
+                                    .map<Pair<StatusData, List<CalendarWeekDay>>, UiState<StatusUiData>> { (data, weekPreview) ->
+                                        UiState.Content(data.toUiData(weekPreview))
+                                    }
+                                    .catch { e ->
+                                        Timber.e(e, "Error loading status data")
+                                        emit(UiState.Error(UiText.StringResource(R.string.system_loading)))
+                                    }
                             }
-                                .map<Pair<StatusData, List<CalendarWeekDay>>, UiState<StatusUiData>> { (data, weekPreview) ->
-                                    UiState.Content(data.toUiData(weekPreview))
-                                }
-                                .catch { e ->
-                                    Timber.e(e, "Error loading status data")
-                                    emit(UiState.Error(UiText.StringResource(R.string.system_loading)))
-                                }
                         }
                 }
                 is DatabaseStatus.Failed -> {
@@ -147,24 +150,7 @@ class StatusViewModel @Inject constructor(
                     }
                 }
                 
-                // Виконуємо розрахунки тільки якщо база готова
-                val config = useCases.getSystemConfig().first()
-                val statusData = useCases.getStatusData().firstOrNull() ?: run {
-                    _questsReady.value = true
-                    return@launch
-                }
-                val hasNoQuests = statusData.dailyQuest == null && statusData.mainQuest == null && statusData.promotionQuests.isEmpty()
-
-                val today = java.time.Instant.ofEpochMilli(clock.now())
-                    .atZone(clock.zoneId())
-                    .toLocalDate()
-                    .toEpochDay()
-                val lastDate = config?.lastInitEpochDay ?: 0L
-                val dateChanged = lastDate < today
-
-                if (config?.needsDailyInit == true || hasNoQuests || dateChanged) {
-                    useCases.finalizeDay(forceComplete = false)
-                }
+                refreshDailyState()
                 
                 _questsReady.value = true   // ← ТІЛЬКИ тут відкриваємо доступ до UI Flow
                 
@@ -197,6 +183,33 @@ class StatusViewModel @Inject constructor(
                 }
         }
     }
+
+    fun refreshForCurrentDay() = launchCatching {
+        if (databaseStatus.value !is DatabaseStatus.Ready) return@launchCatching
+        useCases.selectViewingDate(todayDate())
+        refreshDailyState()
+        _refreshRequests.value = clock.now()
+    }
+
+    private suspend fun refreshDailyState() {
+        val config = useCases.getSystemConfig().first()
+        val statusData = useCases.getStatusData().firstOrNull() ?: return
+        val hasNoQuests = statusData.dailyQuest == null &&
+            statusData.mainQuest == null &&
+            statusData.promotionQuests.isEmpty()
+        val todayEpochDay = todayDate().toEpochDay()
+        val lastDate = config?.lastInitEpochDay ?: 0L
+        val dateChanged = lastDate < todayEpochDay
+
+        if (config?.needsDailyInit == true || hasNoQuests || dateChanged) {
+            useCases.finalizeDay(forceComplete = false)
+        }
+    }
+
+    private fun todayDate(): LocalDate =
+        java.time.Instant.ofEpochMilli(clock.now())
+            .atZone(clock.zoneId())
+            .toLocalDate()
 
     private fun launchCatching(block: suspend () -> Unit) {
         viewModelScope.launch {
@@ -312,6 +325,19 @@ class StatusViewModel @Inject constructor(
         onDismissDialog()
     }
 
+    fun onAddMicrotaskTap(parentTodo: TodoUiModel) {
+        _dialogState.value = StatusDialogState.AddMicrotask(parentTodo.id, parentTodo.title)
+    }
+
+    fun onAddMicrotaskConfirmed(parentTodoId: Int, taskName: String) = launchCatching {
+        useCases.addTodayMicrotask(parentTodoId, taskName)
+        onDismissDialog()
+    }
+
+    fun onTodosReordered(orderedTodoIds: List<Int>) = launchCatching {
+        useCases.reorderTodayTodos(orderedTodoIds)
+    }
+
     fun onRemoveTask(taskId: Int) = launchCatching {
         useCases.removeQuestTask(taskId)
     }
@@ -362,10 +388,12 @@ class StatusViewModel @Inject constructor(
         weekPreview = weekPreview.map { it.toUiModel() }.toImmutableList()
     )
 
-    private fun TodoItem.toUiModel() = TodoUiModel(
+    private fun TodoItem.toUiModel(): TodoUiModel = TodoUiModel(
         id = id,
         title = title,
-        isCompleted = isCompleted
+        isCompleted = isCompleted,
+        parentTodoId = parentTodoId,
+        microtasks = microtasks.map { it.toUiModel() }.toImmutableList()
     )
 
     private fun Quest.toUiModel() = QuestUiModel(

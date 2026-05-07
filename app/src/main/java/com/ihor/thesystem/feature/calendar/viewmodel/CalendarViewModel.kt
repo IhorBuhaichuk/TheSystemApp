@@ -11,6 +11,7 @@ import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.SystemConfig
+import com.ihor.thesystem.domain.model.TodoItem
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.usecase.GetDailySummaryForDateUseCase
 import com.ihor.thesystem.domain.usecase.GetTodosForDateUseCase
@@ -138,6 +139,7 @@ class CalendarViewModel @Inject constructor(
     private val _loggedWeight = MutableStateFlow<Double?>(null)
     private val _monthTaskStats = MutableStateFlow<Map<LocalDate, Pair<Int, Int>>>(emptyMap())
     private val _monthWorkoutDates = MutableStateFlow<Set<LocalDate>>(emptySet())
+    private val _refreshRequests = MutableStateFlow(0L)
     private var monthWorkoutJob: Job? = null
     private var dailyLogsJob: Job? = null
     private var dailyTaskSnapshotJob: Job? = null
@@ -227,8 +229,9 @@ class CalendarViewModel @Inject constructor(
 
     val uiState: StateFlow<CalendarUiState> = combine(
         baseData,
-        calendarCycleRepository.getCalendarCycle()
-    ) { baseData, calendarCycle ->
+        calendarCycleRepository.getCalendarCycle(),
+        _refreshRequests
+    ) { baseData, calendarCycle, _ ->
         val month = baseData.monthData.first
         val monthTaskStats = baseData.monthData.second
         val monthWorkoutDates = baseData.monthData.third
@@ -348,6 +351,20 @@ class CalendarViewModel @Inject constructor(
         viewingDateRepo.setDate(date)
     }
 
+    fun refreshVisibleData() {
+        viewModelScope.launch {
+            val selectedDate = _selectedDate.value ?: today().also { viewingDateRepo.setDate(it) }
+            loadWorkoutResults(selectedDate)
+            loadDailyLogs(selectedDate)
+            loadDailyTaskSnapshot(selectedDate)
+            loadRecommendations(selectedDate)
+            loadWeight(selectedDate)
+            loadMonthTaskStats(_currentMonth.value)
+            observeMonthWorkoutDates(_currentMonth.value)
+            _refreshRequests.value = clock.now()
+        }
+    }
+
     private fun loadDailyLogs(date: LocalDate) {
         dailyLogsJob?.cancel()
         dailyLogsJob = viewModelScope.launch {
@@ -361,10 +378,11 @@ class CalendarViewModel @Inject constructor(
         dailyTaskSnapshotJob?.cancel()
         dailyTaskSnapshotJob = viewModelScope.launch {
             getTodosForDate(date).collectLatest { tasks ->
-                val completed = tasks.filter { it.isCompleted }.map { it.title }
-                val failed = tasks.filter { !it.isCompleted }.map { it.title }
+                val allTasks = tasks.flatMapWithMicrotasks()
+                val completed = allTasks.filter { it.isCompleted }.map { it.title }
+                val failed = allTasks.filter { !it.isCompleted }.map { it.title }
 
-                val total = tasks.size
+                val total = allTasks.size
                 val completedPercent = if (total > 0) (completed.size * 100 / total) else 0
                 val failedPercent = if (total > 0) (failed.size * 100 / total) else 0
 
@@ -492,4 +510,7 @@ class CalendarViewModel @Inject constructor(
         atStartOfDay(clock.zoneId())
             .toInstant()
             .toEpochMilli()
+
+    private fun List<TodoItem>.flatMapWithMicrotasks(): List<TodoItem> =
+        flatMap { task -> listOf(task) + task.microtasks }
 }

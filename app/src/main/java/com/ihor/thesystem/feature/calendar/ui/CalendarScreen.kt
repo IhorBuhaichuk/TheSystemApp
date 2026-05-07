@@ -51,6 +51,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.navigation.Routes
+import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.theme.AccentPrimary
 import com.ihor.thesystem.core.theme.AccentPrimarySoft
 import com.ihor.thesystem.core.theme.AccentSuccess
@@ -102,6 +103,8 @@ fun CalendarScreen(
             uiState.days.firstOrNull { it.date == selectedDate }
         } ?: uiState.days.firstOrNull { it.isToday }
     }
+
+    RefreshOnResume(viewModel::refreshVisibleData)
 
     Box(
         modifier = Modifier

@@ -30,6 +30,7 @@ import androidx.compose.ui.window.Dialog
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 
 @Composable
 fun SetupMatrixDialog(
@@ -44,8 +45,8 @@ fun SetupMatrixDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         PremiumDialogContainer(
-            title = "НАЛАШТУВАННЯ МАТРИЦІ",
-            accentColor = NeonGold,
+            title = "Налаштування матриці",
+            accentColor = AccentPrimary,
             onDismiss = onDismiss
         ) {
             Column(
@@ -53,22 +54,22 @@ fun SetupMatrixDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = exerciseName.uppercase(),
+                    text = exerciseName,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    )
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 2
                 )
                 
-                PremiumInputField(label = "Стартова вага (кг)", value = start, accentColor = NeonGold) { start = it }
-                PremiumInputField(label = "Цільова вага (кг)", value = target, accentColor = NeonGold) { target = it }
+                PremiumInputField(label = "Стартова вага (кг)", value = start, accentColor = AccentPrimary) { start = it }
+                PremiumInputField(label = "Цільова вага (кг)", value = target, accentColor = AccentPrimary) { target = it }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 PremiumDialogButton(
-                    text = "ПІДТВЕРДИТИ",
-                    color = NeonGold,
+                    text = "Підтвердити",
+                    color = AccentPrimary,
                     onClick = { onConfirm(start, target) }
                 )
             }
@@ -80,6 +81,7 @@ fun SetupMatrixDialog(
 fun LogWorkoutSetsDialog(
     exerciseName: String,
     sets: List<ActiveSetInput>,
+    trackingMode: ExerciseTrackingMode = ExerciseTrackingMode.WEIGHT_REPS,
     onUpdate: (Long, String, String) -> Unit,
     onAdd: () -> Unit,
     onRemove: () -> Unit,
@@ -125,17 +127,21 @@ fun LogWorkoutSetsDialog(
                                 modifier = Modifier.width(40.dp)
                             )
                             
-                            SmallPremiumInputField(
-                                hint = "Вага",
-                                value = set.weight,
-                                accentColor = NeonCyan,
-                                modifier = Modifier.weight(1f)
-                            ) { onUpdate(set.id, it, set.reps) }
+                            if (trackingMode.usesWeightInput) {
+                                SmallPremiumInputField(
+                                    hint = "Вага",
+                                    value = set.weight,
+                                    accentColor = NeonCyan,
+                                    keyboardType = KeyboardType.Decimal,
+                                    modifier = Modifier.weight(1f)
+                                ) { onUpdate(set.id, it, set.reps) }
+                            }
                             
                             SmallPremiumInputField(
-                                hint = "Повт",
+                                hint = trackingMode.valueLabel,
                                 value = set.reps,
                                 accentColor = NeonCyan,
+                                keyboardType = if (trackingMode.usesTimeInput) KeyboardType.Text else KeyboardType.Number,
                                 modifier = Modifier.weight(1f)
                             ) { onUpdate(set.id, set.weight, it) }
                         }
@@ -201,27 +207,37 @@ fun PremiumDialogContainer(
     onDismiss: () -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val shape = RoundedCornerShape(22.dp)
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(32.dp))
-            .background(Color(0xFF020408))
-            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(32.dp))
+            .fillMaxWidth(0.9f)
+            .clip(shape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        SystemSurfaceGlassStrong,
+                        SystemSurfaceGlass,
+                        SystemSurfaceGlass.copy(alpha = 0.64f)
+                    )
+                )
+            )
+            .border(
+                1.dp,
+                Brush.linearGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.14f),
+                        accentColor.copy(alpha = 0.24f),
+                        BorderSubtle
+                    )
+                ),
+                shape
+            )
     ) {
-        // Decorative glow
-        Box(
-            modifier = Modifier
-                .size(150.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = 40.dp, y = (-40).dp)
-                .background(accentColor.copy(alpha = 0.1f), CircleShape)
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp)
+                .padding(18.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -230,18 +246,25 @@ fun PremiumDialogContainer(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = accentColor,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 2.sp
-                    )
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1
                 )
-                IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Close, null, tint = Color.White.copy(alpha = 0.3f))
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.035f))
+                        .border(1.dp, BorderSubtle, RoundedCornerShape(12.dp))
+                ) {
+                    Icon(Icons.Default.Close, null, tint = TextSecondary, modifier = Modifier.size(18.dp))
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(18.dp))
             
             content()
         }
@@ -257,23 +280,32 @@ private fun PremiumInputField(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = label.uppercase(),
-            style = MaterialTheme.typography.labelSmall.copy(color = Color.White.copy(alpha = 0.3f))
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = TextSecondary,
+                fontWeight = FontWeight.SemiBold
+            )
         )
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(14.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = accentColor,
-                unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
+                unfocusedBorderColor = BorderSubtle,
+                focusedContainerColor = Color.White.copy(alpha = 0.04f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.02f),
                 cursorColor = accentColor,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary
             ),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold
+            ),
+            singleLine = true
         )
     }
 }
@@ -283,6 +315,7 @@ private fun SmallPremiumInputField(
     hint: String,
     value: String,
     accentColor: Color,
+    keyboardType: KeyboardType = KeyboardType.Decimal,
     modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit
 ) {
@@ -291,7 +324,7 @@ private fun SmallPremiumInputField(
         onValueChange = onValueChange,
         placeholder = { Text(hint, fontSize = 12.sp, color = Color.White.copy(alpha = 0.2f)) },
         modifier = modifier,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = accentColor,
@@ -311,18 +344,31 @@ private fun PremiumDialogButton(
     color: Color,
     onClick: () -> Unit
 ) {
-    Button(
-        onClick = onClick,
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = color,
-            contentColor = Color.Black
-        )
+            .height(50.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        color.copy(alpha = 0.18f),
+                        Color.White.copy(alpha = 0.045f)
+                    )
+                )
+            )
+            .border(1.dp, color.copy(alpha = 0.52f), RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black, letterSpacing = 1.sp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge.copy(
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold
+            ),
+            maxLines = 1
+        )
     }
 }
 

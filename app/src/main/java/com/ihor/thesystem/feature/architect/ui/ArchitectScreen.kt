@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.theme.AccentAi
 import com.ihor.thesystem.core.theme.AccentAiSoft
 import com.ihor.thesystem.core.theme.AccentPrimary
@@ -96,6 +97,8 @@ fun ArchitectScreen(
     val dashboardState by viewModel.dashboardState.collectAsStateWithLifecycle()
     val chatHistory by viewModel.chatHistory.collectAsStateWithLifecycle()
     var selectedChatMode by remember { mutableIntStateOf(0) }
+
+    RefreshOnResume(viewModel::refreshForCurrentData)
 
     LaunchedEffect(Unit) {
         viewModel.loadChatHistory(0L)
@@ -410,7 +413,7 @@ private fun ChatPanel(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(430.dp)
+                    .height(360.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color.Black.copy(alpha = 0.18f))
                     .border(1.dp, BorderSubtle, RoundedCornerShape(16.dp))
@@ -557,35 +560,52 @@ private fun ArchitectChatBubble(
 ) {
     val isUser = message.role == ChatRole.USER
     val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
+    val isSystem = message.role == ChatRole.SYSTEM
     val accent = if (message.role == ChatRole.AI) AccentAi else AccentPrimary
     val shape = if (isUser) {
         RoundedCornerShape(topStart = 16.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
+    } else if (isSystem) {
+        RoundedCornerShape(14.dp)
     } else {
         RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
     }
 
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = alignment) {
         Column(
-            modifier = Modifier.fillMaxWidth(0.9f),
+            modifier = Modifier.fillMaxWidth(if (isSystem) 1f else 0.9f),
             horizontalAlignment = if (isUser) Alignment.End else Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = when (message.role) {
                     ChatRole.USER -> "Ти"
-                    ChatRole.AI -> "AI"
+                    ChatRole.AI -> "Архітектор"
                     ChatRole.SYSTEM -> "Система"
                 },
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = if (isUser) TextMuted else accent,
+                    color = if (isSystem) TextSecondary else if (isUser) TextMuted else accent,
                     fontWeight = FontWeight.Bold
                 )
             )
             Column(
                 modifier = Modifier
                     .clip(shape)
-                    .background(if (isUser) Color.White.copy(alpha = 0.045f) else accent.copy(alpha = 0.07f))
-                    .border(1.dp, if (isUser) BorderSubtle else accent.copy(alpha = 0.2f), shape)
+                    .background(
+                        when {
+                            isSystem -> Color.White.copy(alpha = 0.035f)
+                            isUser -> Color.White.copy(alpha = 0.045f)
+                            else -> accent.copy(alpha = 0.07f)
+                        }
+                    )
+                    .border(
+                        1.dp,
+                        when {
+                            isSystem -> BorderSubtle
+                            isUser -> BorderSubtle
+                            else -> accent.copy(alpha = 0.2f)
+                        },
+                        shape
+                    )
                     .padding(13.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {

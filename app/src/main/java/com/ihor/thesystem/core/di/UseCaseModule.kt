@@ -24,6 +24,7 @@ object UseCaseModule {
         getPlayerFlow: GetPlayerFlowUseCase,
         getStatisticsData: GetStatisticsDataUseCase,
         finalizeSession: FinalizeSessionUseCase,
+        syncCycleAnchor: SyncCycleAnchorUseCase,
         scheduleRepo: ScheduleRepository,
         viewingDateRepo: ViewingDateRepository,
         analyticsRepo: WorkoutAnalyticsRepository
@@ -37,6 +38,7 @@ object UseCaseModule {
         getPlayerFlow,
         getStatisticsData,
         finalizeSession,
+        syncCycleAnchor,
         scheduleRepo,
         viewingDateRepo,
         analyticsRepo

@@ -10,7 +10,8 @@ interface TodoRepository {
     fun getTodosForDate(date: LocalDate): Flow<List<TodoItem>>
     suspend fun getTodosForDateSnapshot(date: LocalDate): List<TodoItem>
     suspend fun getTodoStatsForMonth(month: YearMonth): Map<LocalDate, TodoStats>
-    suspend fun addTodo(date: LocalDate, title: String)
+    suspend fun addTodo(date: LocalDate, title: String, parentTodoId: Int? = null)
     suspend fun setTodoCompleted(todoId: Int, isCompleted: Boolean)
+    suspend fun reorderTodos(date: LocalDate, orderedTodoIds: List<Int>, parentTodoId: Int? = null)
     suspend fun removeTodo(todoId: Int)
 }

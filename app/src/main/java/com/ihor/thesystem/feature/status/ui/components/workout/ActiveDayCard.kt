@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.focus.onFocusChanged
 import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.res.stringResource
 import com.ihor.thesystem.R
@@ -193,6 +194,7 @@ fun ActiveDayCard(
                             SetInputRow(
                                 index = index + 1,
                                 set = set,
+                                trackingMode = exercise.trackingMode,
                                 onWeightChange = { onSetWeightChanged(set.id, it) },
                                 onRepsChange = { onSetRepsChanged(set.id, it) },
                                 onFocusLost = { onSetFocusLost(set.id) },
@@ -278,6 +280,7 @@ fun ActiveDayCard(
 private fun SetInputRow(
     index: Int,
     set: ActiveSetInput,
+    trackingMode: ExerciseTrackingMode,
     onWeightChange: (String) -> Unit,
     onRepsChange: (String) -> Unit,
     onFocusLost: () -> Unit,
@@ -304,33 +307,35 @@ private fun SetInputRow(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        OutlinedTextField(
-            value = weightText,
-            onValueChange = { 
-                weightText = it
-                onWeightChange(it) 
-            },
-            modifier = Modifier
-                .weight(1f)
-                .height(48.dp)
-                .onFocusChanged { focusState ->
-                    if (!focusState.isFocused) {
-                        onFocusLost()
-                    }
+        if (trackingMode.usesWeightInput) {
+            OutlinedTextField(
+                value = weightText,
+                onValueChange = { 
+                    weightText = it
+                    onWeightChange(it) 
                 },
-            placeholder = { Text("кг", fontSize = 12.sp, color = OnSurfaceVariant) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = OnBackground.copy(alpha = 0.1f),
-                focusedBorderColor = Primary,
-                unfocusedTextColor = OnBackground,
-                focusedTextColor = OnBackground
-            ),
-            shape = RoundedCornerShape(8.dp),
-            singleLine = true
-        )
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp)
+                    .onFocusChanged { focusState ->
+                        if (!focusState.isFocused) {
+                            onFocusLost()
+                        }
+                    },
+                placeholder = { Text("кг", fontSize = 12.sp, color = OnSurfaceVariant) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = OnBackground.copy(alpha = 0.1f),
+                    focusedBorderColor = Primary,
+                    unfocusedTextColor = OnBackground,
+                    focusedTextColor = OnBackground
+                ),
+                shape = RoundedCornerShape(8.dp),
+                singleLine = true
+            )
 
-        Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+        }
 
         OutlinedTextField(
             value = repsText,
@@ -346,8 +351,10 @@ private fun SetInputRow(
                         onFocusLost()
                     }
                 },
-            placeholder = { Text("reps", fontSize = 12.sp, color = OnSurfaceVariant) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            placeholder = { Text(trackingMode.valueHint, fontSize = 12.sp, color = OnSurfaceVariant) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (trackingMode.usesTimeInput) KeyboardType.Text else KeyboardType.Number
+            ),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = OnBackground.copy(alpha = 0.1f),
                 focusedBorderColor = Primary,

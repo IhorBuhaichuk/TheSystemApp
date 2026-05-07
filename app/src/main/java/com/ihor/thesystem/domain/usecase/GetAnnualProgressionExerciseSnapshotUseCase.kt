@@ -3,6 +3,7 @@ package com.ihor.thesystem.domain.usecase
 import com.ihor.thesystem.core.util.OneRepMaxCalculator
 import com.ihor.thesystem.domain.model.AnnualProgressionExerciseSnapshot
 import com.ihor.thesystem.domain.model.ExerciseSet
+import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.domain.repository.WorkoutRepository
@@ -20,6 +21,7 @@ class GetAnnualProgressionExerciseSnapshotUseCase @Inject constructor(
             ?: return null
         val matrixEntry = progressionMatrixRepository.getEntrySync(exerciseId)
         val reference = progressionMatrixRepository.getReferenceForExercise(exerciseId)
+        val trackingMode = ExerciseTrackingModeResolver.resolve(exercise, reference)
         val logs = analyticsRepository.getAllLogs().first()
         val latestExerciseLog = logs.firstOrNull { log ->
             log.sets.any { it.exerciseId == exerciseId }
@@ -28,14 +30,23 @@ class GetAnnualProgressionExerciseSnapshotUseCase @Inject constructor(
             ?.sets
             ?.filter { it.exerciseId == exerciseId && it.isCompleted && it.weight > 0.0 && it.reps > 0 }
             .orEmpty()
-        val topSet = latestCompletedSets.maxWithOrNull(
+        val weightedCompletedSets = if (trackingMode.usesWeightInput) {
+            latestCompletedSets.filter { it.weight > TECHNICAL_BODYWEIGHT_LOAD }
+        } else {
+            emptyList()
+        }
+        val topSet = weightedCompletedSets.maxWithOrNull(
             compareBy<ExerciseSet> { it.weight }.thenBy { it.reps }
         )
-        val estimatedOneRepMax = latestCompletedSets
+        val estimatedOneRepMax = weightedCompletedSets
             .maxOfOrNull { OneRepMaxCalculator.calculate(it.weight, it.reps) }
 
-        val currentWorkingWeight = topSet?.weight
-            ?: matrixEntry?.currentWeight?.toDouble()?.takeIf { it > 0.0 }
+        val currentWorkingWeight = if (trackingMode.usesWeightInput) {
+            topSet?.weight
+                ?: matrixEntry?.currentWeight?.toDouble()?.takeIf { it > TECHNICAL_BODYWEIGHT_LOAD }
+        } else {
+            null
+        }
         val existingTarget = matrixEntry?.targetWeight
             ?.toDouble()
             ?.takeIf { target -> currentWorkingWeight == null || target > currentWorkingWeight }
@@ -53,3 +64,4 @@ class GetAnnualProgressionExerciseSnapshotUseCase @Inject constructor(
 }
 
 private const val DEFAULT_INVENTORY_STEP = 2.5
+private const val TECHNICAL_BODYWEIGHT_LOAD = 1.0

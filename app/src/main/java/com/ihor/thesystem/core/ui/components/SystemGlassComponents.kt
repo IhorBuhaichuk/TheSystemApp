@@ -21,12 +21,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Icon
@@ -336,22 +338,62 @@ fun SystemTodoItem(
     isCompleted: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    numberLabel: String? = null,
+    onAddMicrotask: (() -> Unit)? = null,
+    compact: Boolean = false,
+    isDragging: Boolean = false,
     onRemove: (() -> Unit)? = null
 ) {
+    val shape = RoundedCornerShape(if (compact) 12.dp else 13.dp)
+    val borderColor = when {
+        isDragging -> AccentPrimary.copy(alpha = 0.72f)
+        isCompleted -> Color.White.copy(alpha = 0.045f)
+        else -> Color.White.copy(alpha = 0.075f)
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = if (isCompleted) 0.026f else 0.04f))
-            .border(1.dp, Color.White.copy(alpha = if (isCompleted) 0.045f else 0.075f), RoundedCornerShape(13.dp))
+            .clip(shape)
+            .background(
+                if (isDragging) {
+                    AccentPrimary.copy(alpha = 0.1f)
+                } else {
+                    Color.White.copy(alpha = if (isCompleted) 0.026f else 0.04f)
+                }
+            )
+            .border(1.dp, borderColor, shape)
             .clickable(onClick = onToggle)
-            .padding(horizontal = 12.dp, vertical = 11.dp),
+            .padding(horizontal = if (compact) 10.dp else 12.dp, vertical = if (compact) 8.dp else 11.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 9.dp else 10.dp)
     ) {
+        if (numberLabel != null) {
+            Box(
+                modifier = Modifier
+                    .height(24.dp)
+                    .widthIn(min = if (compact) 34.dp else 32.dp)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(AccentPrimary.copy(alpha = if (compact) 0.06f else 0.09f))
+                    .border(1.dp, AccentPrimary.copy(alpha = if (compact) 0.16f else 0.24f), RoundedCornerShape(9.dp))
+                    .padding(horizontal = 7.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = numberLabel,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = if (isCompleted) TextMuted else AccentPrimary,
+                        fontWeight = FontWeight.Black
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .size(if (compact) 22.dp else 24.dp)
                 .clip(CircleShape)
                 .background(if (isCompleted) AccentSuccess.copy(alpha = 0.14f) else Color.Transparent)
                 .border(1.dp, if (isCompleted) AccentSuccess.copy(alpha = 0.52f) else BorderSubtle, CircleShape),
@@ -361,13 +403,13 @@ fun SystemTodoItem(
                 imageVector = if (isCompleted) Icons.Filled.Check else Icons.Filled.RadioButtonUnchecked,
                 contentDescription = null,
                 tint = if (isCompleted) AccentSuccess else TextMuted,
-                modifier = Modifier.size(15.dp)
+                modifier = Modifier.size(if (compact) 14.dp else 15.dp)
             )
         }
         Text(
             text = title,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium.copy(
+            style = (if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium).copy(
                 color = if (isCompleted) TextSecondary.copy(alpha = 0.58f) else TextPrimary,
                 fontWeight = FontWeight.SemiBold,
                 textDecoration = if (isCompleted) TextDecoration.LineThrough else null
@@ -375,16 +417,48 @@ fun SystemTodoItem(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        if (onRemove != null) {
-            Text(
-                text = "x",
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .clickable(onClick = onRemove)
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                style = MaterialTheme.typography.labelMedium.copy(color = TextMuted, fontWeight = FontWeight.Bold)
+        if (onAddMicrotask != null) {
+            TodoActionIcon(
+                icon = Icons.Filled.Add,
+                tint = AccentPrimary,
+                onClick = onAddMicrotask,
+                compact = compact
             )
         }
+        if (onRemove != null) {
+            TodoActionIcon(
+                icon = Icons.Filled.Close,
+                tint = TextMuted,
+                onClick = onRemove,
+                compact = compact
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodoActionIcon(
+    icon: ImageVector,
+    tint: Color,
+    onClick: () -> Unit,
+    compact: Boolean
+) {
+    val size = if (compact) 28.dp else 30.dp
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(RoundedCornerShape(10.dp))
+            .background(tint.copy(alpha = if (compact) 0.055f else 0.075f))
+            .border(1.dp, tint.copy(alpha = if (compact) 0.12f else 0.2f), RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(if (compact) 15.dp else 16.dp)
+        )
     }
 }
 

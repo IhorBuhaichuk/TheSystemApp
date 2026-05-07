@@ -3,7 +3,6 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,6 +25,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -55,6 +54,7 @@ import com.ihor.thesystem.core.theme.SystemSurfaceGlass
 import com.ihor.thesystem.core.theme.TextMuted
 import com.ihor.thesystem.core.theme.TextPrimary
 import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
@@ -77,7 +77,9 @@ fun CycleScreen(
     val cycleDays by workoutViewModel.cycleDaysState.collectAsStateWithLifecycle()
     val dialogState by workoutViewModel.dialogState.collectAsStateWithLifecycle()
     val settingsUiState by workoutViewModel.settingsUiState.collectAsStateWithLifecycle()
-    val selectedCycleDay = cycleDays.firstOrNull { it.isSelected }?.dayNumber
+    val selectedCycleDayModel = cycleDays.firstOrNull { it.isSelected }
+    val activeCycleDay = cycleDays.firstOrNull { it.isActive }?.dayNumber
+    val selectedCycleDay = selectedCycleDayModel?.dayNumber
         ?: activeWorkout?.dayNumber
         ?: settingsUiState.selectedDay
     val openExercisePicker = {
@@ -88,6 +90,8 @@ fun CycleScreen(
             )
         )
     }
+
+    RefreshOnResume(workoutViewModel::refreshForCurrentDay)
 
     Box(
         modifier = Modifier
@@ -111,6 +115,13 @@ fun CycleScreen(
                 days = cycleDays,
                 onSelectDay = workoutViewModel::onCycleDaySelected
             )
+            if (activeCycleDay != null && selectedCycleDay != activeCycleDay) {
+                TodayCycleActivationCard(
+                    selectedDay = selectedCycleDay,
+                    activeDay = activeCycleDay,
+                    onActivateToday = workoutViewModel::onActivateSelectedCycleDayToday
+                )
+            }
 
             if (activeWorkout == null || activeWorkout?.exercises.isNullOrEmpty()) {
                 EmptyCycleBlock(
@@ -175,17 +186,26 @@ private fun TrainingDaySwitcher(
     onSelectDay: (Int) -> Unit
 ) {
     DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 12.dp) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            days.forEach { day ->
-                CycleDayChip(
-                    day = day,
-                    onClick = { onSelectDay(day.dayNumber) }
-                )
+            days.chunked(CYCLE_DAY_COLUMNS).forEach { rowDays ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    rowDays.forEach { day ->
+                        CycleDayChip(
+                            day = day,
+                            onClick = { onSelectDay(day.dayNumber) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    repeat(CYCLE_DAY_COLUMNS - rowDays.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
@@ -194,12 +214,18 @@ private fun TrainingDaySwitcher(
 @Composable
 private fun CycleDayChip(
     day: CycleDayUiModel,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val shape = RoundedCornerShape(16.dp)
+    val subtitle = when {
+        day.isActive -> "Сьогодні"
+        day.workoutName != null -> day.workoutName
+        day.type == DayType.WORKOUT -> "Тренування"
+        else -> "Відновлення"
+    }
     Column(
-        modifier = Modifier
-            .width(92.dp)
+        modifier = modifier
             .clip(shape)
             .background(
                 when {
@@ -230,11 +256,34 @@ private fun CycleDayChip(
             overflow = TextOverflow.Ellipsis
         )
         Text(
-            text = day.workoutName ?: if (day.type == DayType.WORKOUT) "Тренування" else "Відновлення",
+            text = subtitle,
             style = MaterialTheme.typography.labelSmall.copy(color = TextMuted),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
+    }
+}
+
+@Composable
+private fun TodayCycleActivationCard(
+    selectedDay: Int,
+    activeDay: Int,
+    onActivateToday: () -> Unit
+) {
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), active = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SystemSectionHeader(
+                title = "Зробити День $selectedDay поточним?",
+                subtitle = "Зараз сьогодні позначено як День $activeDay"
+            )
+            SystemButton(
+                text = "Зробити сьогодні Днем $selectedDay",
+                icon = Icons.Filled.Today,
+                onClick = onActivateToday,
+                glow = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -523,3 +572,5 @@ private fun ExerciseWorkoutUiModel.toMatrixEntry(workout: ActiveDayUiModel): Mat
             progressPercent = 0f,
             currentRank = Rank.E
         )
+
+private const val CYCLE_DAY_COLUMNS = 4
