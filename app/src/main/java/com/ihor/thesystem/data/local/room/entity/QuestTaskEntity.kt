@@ -1,9 +1,16 @@
 package com.ihor.thesystem.data.local.room.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "quest_task")
+@Entity(
+    tableName = "quest_task",
+    indices = [
+        Index("questId"),
+        Index("exerciseId")
+    ]
+)
 data class QuestTaskEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val questId: Int,

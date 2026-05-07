@@ -1,16 +1,13 @@
 package com.ihor.thesystem.domain.usecase
 
-import android.content.Context
-import com.ihor.thesystem.R
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 
 class GetLastWorkoutContextUseCase @Inject constructor(
     private val analyticsRepo: WorkoutAnalyticsRepository,
     private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
-    @param:ApplicationContext private val context: Context
+    private val textProvider: WorkoutContextTextProvider
 ) {
     suspend operator fun invoke(): String? {
         // 1. Отримуємо список останніх сесій (за замовчуванням Room повертає Flow)
@@ -33,15 +30,17 @@ class GetLastWorkoutContextUseCase @Inject constructor(
         
         contextBuilder.append(trainingPhaseContext.toPromptBlock())
         contextBuilder.append("\n\n")
-        contextBuilder.append(context.getString(R.string.text_workout_results_header, totalDayTonnage.toInt()))
+        contextBuilder.append(textProvider.workoutResultsHeader(totalDayTonnage.toInt()))
         contextBuilder.append("\n")
         
         // 4. Збираємо дані про всі вправи та їх підходи, виконані протягом дня
         // Сортуємо за часом виконання, щоб зберегти послідовність
         sameDaySessions.sortedBy { it.session.timestamp }.forEach { sessionWithSets ->
             sessionWithSets.sets.forEach { set ->
-                val name = allExercises[set.exerciseId] ?: context.getString(R.string.text_exercise_label, set.exerciseId)
-                contextBuilder.append(context.getString(R.string.text_workout_results_item, set.exerciseId, name, set.weight, set.reps))
+                val name = allExercises[set.exerciseId] ?: textProvider.exerciseLabel(set.exerciseId)
+                contextBuilder.append(
+                    textProvider.workoutResultsItem(set.exerciseId, name, set.weight, set.reps)
+                )
                 contextBuilder.append("\n")
             }
         }

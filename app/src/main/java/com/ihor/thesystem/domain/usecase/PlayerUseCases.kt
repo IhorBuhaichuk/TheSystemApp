@@ -4,6 +4,7 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.StringResourceException
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.Player
+import com.ihor.thesystem.domain.repository.AvatarRepository
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -35,6 +36,12 @@ class UpdatePlayerAvatarUseCase @Inject constructor(
             Result.failure(e)
         }
     }
+}
+
+class SaveAvatarUseCase @Inject constructor(
+    private val avatarRepository: AvatarRepository
+) {
+    suspend operator fun invoke(sourceUri: String) = avatarRepository.saveAvatar(sourceUri)
 }
 
 class GetPlayerFlowUseCase @Inject constructor(

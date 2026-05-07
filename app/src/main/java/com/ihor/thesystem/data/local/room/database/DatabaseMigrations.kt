@@ -569,6 +569,43 @@ object DatabaseMigrations {
         }
     }
 
+    val MIGRATION_44_45 = object : Migration(44, 45) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_chat_message_table_sessionId_timestamp` ON `chat_message_table` (`sessionId`, `timestamp`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_chat_message_table_sessionId_role` ON `chat_message_table` (`sessionId`, `role`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercises_category` ON `exercises` (`category`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercises_equipment` ON `exercises` (`equipment`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercises_level` ON `exercises` (`level`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercises_mechanic` ON `exercises` (`mechanic`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercises_force` ON `exercises` (`force`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_milestones_exerciseId` ON `exercise_milestones` (`exerciseId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_milestones_achievedAt` ON `exercise_milestones` (`achievedAt`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_sets_exerciseId` ON `exercise_sets` (`exerciseId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_set_logs_exerciseId` ON `exercise_set_logs` (`exerciseId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_exercise_set_logs_exerciseId_sessionId` ON `exercise_set_logs` (`exerciseId`, `sessionId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_protocol_template_cycleDay` ON `protocol_template` (`cycleDay`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_quest_date` ON `quest` (`date`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_quest_status_date` ON `quest` (`status`, `date`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_quest_type_status_date` ON `quest` (`type`, `status`, `date`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_quest_targetExerciseId` ON `quest` (`targetExerciseId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_quest_log_completedAt` ON `quest_log` (`completedAt`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_quest_log_questType_wasSuccessful_completedAt` ON `quest_log` (`questType`, `wasSuccessful`, `completedAt`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_quest_task_questId` ON `quest_task` (`questId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_quest_task_exerciseId` ON `quest_task` (`exerciseId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_reference_matrix_exerciseName` ON `reference_matrix` (`exerciseName`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_schedule_cycleDay` ON `schedule` (`cycleDay`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_schedule_workoutTemplateId` ON `schedule` (`workoutTemplateId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_todo_dateEpochDay_parentTodoId_sortOrder` ON `todo` (`dateEpochDay`, `parentTodoId`, `sortOrder`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_weight_log_timestamp` ON `weight_log` (`timestamp`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_exercise_cross_ref_exerciseId` ON `workout_exercise_cross_ref` (`exerciseId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_exercise_cross_ref_workoutTemplateId_orderIndex` ON `workout_exercise_cross_ref` (`workoutTemplateId`, `orderIndex`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_sessions_questId` ON `workout_sessions` (`questId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_sessions_timestamp` ON `workout_sessions` (`timestamp`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_session_logs_questId` ON `workout_session_logs` (`questId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_session_logs_timestamp` ON `workout_session_logs` (`timestamp`)")
+        }
+    }
+
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7,
         MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12,
@@ -578,6 +615,6 @@ object DatabaseMigrations {
         MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32,
         MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36, MIGRATION_36_37,
         MIGRATION_37_38, MIGRATION_38_39, MIGRATION_39_40, MIGRATION_40_41, MIGRATION_41_42,
-        MIGRATION_42_43, MIGRATION_43_44
+        MIGRATION_42_43, MIGRATION_43_44, MIGRATION_44_45
     )
 }

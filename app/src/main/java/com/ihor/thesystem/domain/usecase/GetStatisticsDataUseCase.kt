@@ -26,6 +26,8 @@ class GetStatisticsDataUseCase @Inject constructor(
     private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val clock: AppClock
 ) {
+    private val progressionConfig = PlayerProgressionConfig()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(): Flow<StatisticsData> {
         val configFlow = configRepo.getConfigFlow().filterNotNull()
@@ -94,15 +96,15 @@ class GetStatisticsDataUseCase @Inject constructor(
                     MuscleGroup.CORE             to player.coreAttr.toFloat()
                 )
 
-                val xpPerLevel = 1000
-                val xpForCurrentLevel = player.level * xpPerLevel
-                val xpProgress = (player.xpTotal - xpForCurrentLevel).coerceIn(0, xpPerLevel)
+                val xpPerLevel = progressionConfig.xpPerLevel
+                val derivedLevel = progressionConfig.levelForXp(player.xpTotal)
+                val xpProgress = (player.xpTotal % xpPerLevel).coerceIn(0, xpPerLevel)
                 val weeklySummary = buildWeeklySummary(workoutLogs)
 
                 StatisticsData(
                     playerName      = player.name,
                     playerClass     = player.playerClass,
-                    level           = player.level,
+                    level           = derivedLevel.coerceAtLeast(player.level),
                     xpTotal         = xpProgress,
                     xpMax           = xpPerLevel,
                     currentMonth    = player.currentMonth,

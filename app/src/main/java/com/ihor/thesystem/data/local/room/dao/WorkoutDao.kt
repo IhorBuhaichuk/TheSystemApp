@@ -5,6 +5,7 @@ import com.ihor.thesystem.data.local.room.entity.ExerciseEntity
 import com.ihor.thesystem.data.local.room.entity.WorkoutExerciseCrossRef
 import com.ihor.thesystem.data.local.room.entity.WorkoutTemplateEntity
 import com.ihor.thesystem.data.local.room.relations.OrderedExerciseRecord
+import androidx.sqlite.db.SupportSQLiteQuery
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -38,6 +39,9 @@ interface WorkoutDao {
         mechanics: List<String>, mechanicsCount: Int,
         forces: List<String>, forcesCount: Int
     ): Flow<List<ExerciseEntity>>
+
+    @RawQuery(observedEntities = [ExerciseEntity::class])
+    fun searchExercises(query: SupportSQLiteQuery): Flow<List<ExerciseEntity>>
 
     @Query("SELECT name FROM exercises WHERE id = :id")
     suspend fun getExerciseNameById(id: Int): String?

@@ -8,7 +8,8 @@ import androidx.room.PrimaryKey
     tableName = "todo",
     indices = [
         Index("dateEpochDay"),
-        Index("parentTodoId")
+        Index("parentTodoId"),
+        Index(value = ["dateEpochDay", "parentTodoId", "sortOrder"])
     ]
 )
 data class TodoEntity(

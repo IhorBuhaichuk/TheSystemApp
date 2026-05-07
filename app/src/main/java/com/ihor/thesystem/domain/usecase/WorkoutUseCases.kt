@@ -1,15 +1,8 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.domain.model.ExerciseDetails
-import com.ihor.thesystem.domain.model.ExerciseSet
-import com.ihor.thesystem.domain.model.ScheduleDay
-import com.ihor.thesystem.domain.repository.ScheduleRepository
-import com.ihor.thesystem.domain.repository.ViewingDateRepository
-import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.flow.StateFlow
 
 data class WorkoutUseCases @Inject constructor(
     val saveExerciseSets: SaveExerciseSetsUseCase,
@@ -22,42 +15,18 @@ data class WorkoutUseCases @Inject constructor(
     val getStatisticsData: GetStatisticsDataUseCase,
     val finalizeSession: FinalizeSessionUseCase,
     val syncCycleAnchor: SyncCycleAnchorUseCase,
-    private val scheduleRepo: ScheduleRepository,
-    private val viewingDateRepo: ViewingDateRepository,
-    private val analyticsRepo: WorkoutAnalyticsRepository
+    val getSchedulesForDays: GetSchedulesForDaysUseCase,
+    val getAllExercises: GetAllExercisesUseCase,
+    val createExercise: CreateExerciseUseCase,
+    val deleteExercise: DeleteExerciseUseCase,
+    val updateExerciseTrackingMode: UpdateExerciseTrackingModeUseCase,
+    val saveWorkoutForDay: SaveWorkoutForDayUseCase,
+    val removeExerciseFromDay: RemoveExerciseFromDayUseCase,
+    val getLastSetsForExercise: GetLastSetsForExerciseUseCase,
+    private val getSelectedViewingDate: GetSelectedViewingDateUseCase,
+    val selectToday: SelectTodayUseCase,
+    val selectDate: SelectViewingDateUseCase
 ) {
-    fun getSchedulesForDays(days: List<Int>): Flow<List<ScheduleDay>> =
-        scheduleRepo.getSchedulesForDays(days)
-
     val selectedDate: StateFlow<LocalDate?>
-        get() = viewingDateRepo.selectedDate
-
-    fun selectToday() {
-        viewingDateRepo.selectToday()
-    }
-
-    fun selectDate(date: LocalDate) {
-        viewingDateRepo.setDate(date)
-    }
-
-    suspend fun getLastSetsForExercise(exerciseId: Int): List<ExerciseSet> =
-        analyticsRepo.getLastSetsForExercise(exerciseId)
-
-    fun getAllExercises(): Flow<List<ExerciseDetails>> =
-        scheduleRepo.getAllExercises()
-
-    suspend fun createExercise(name: String): Int =
-        scheduleRepo.createExercise(name)
-
-    suspend fun deleteExercise(exerciseId: Int) =
-        scheduleRepo.deleteExercise(exerciseId)
-
-    suspend fun updateExerciseTrackingMode(exerciseId: Int, trackingMode: String?) =
-        scheduleRepo.updateExerciseTrackingMode(exerciseId, trackingMode)
-
-    suspend fun saveWorkoutForDay(cycleDay: Int, workoutName: String, exerciseIds: List<Int>) =
-        scheduleRepo.saveWorkoutForDay(cycleDay, workoutName, exerciseIds)
-
-    suspend fun removeExerciseFromDay(cycleDay: Int, exerciseId: Int) =
-        scheduleRepo.removeExerciseFromDay(cycleDay, exerciseId)
+        get() = getSelectedViewingDate()
 }

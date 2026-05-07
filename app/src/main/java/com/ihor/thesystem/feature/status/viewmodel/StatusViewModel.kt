@@ -3,12 +3,12 @@
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.util.AppClock
-import com.ihor.thesystem.core.util.DispatcherProvider
+import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.core.ui.asUiText
 import com.ihor.thesystem.core.ui.StringResourceException
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
@@ -26,7 +26,6 @@ import com.ihor.thesystem.domain.repository.DatabaseReadinessRepository
 import com.ihor.thesystem.domain.repository.DatabaseStatus
 import com.ihor.thesystem.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.*
@@ -36,10 +35,6 @@ import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
@@ -47,11 +42,9 @@ import java.util.Locale
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class StatusViewModel @Inject constructor(
-    @param:ApplicationContext private val context: Context,
     private val useCases: StatusUseCases,
     private val databaseReadinessRepo: DatabaseReadinessRepository,
-    private val clock: AppClock,
-    private val dispatchers: DispatcherProvider
+    private val clock: AppClock
 ) : ViewModel() {
 
     val databaseStatus: StateFlow<DatabaseStatus> = databaseReadinessRepo.status
@@ -103,7 +96,7 @@ class StatusViewModel @Inject constructor(
         }
         .stateIn(
             scope        = viewModelScope,
-            started      = SharingStarted.Eagerly,
+            started      = SharingStarted.WhileSubscribed(5_000L),
             initialValue = UiState.Loading
         )
 
@@ -124,7 +117,7 @@ class StatusViewModel @Inject constructor(
                 flowOf(null)
             }
         }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), null)
 
     init {
         // Initialization Group 1: Database Readiness and Initial Calculations
@@ -266,36 +259,15 @@ class StatusViewModel @Inject constructor(
     fun updateAvatarUri(uri: Uri) = launchCatching {
         val player = currentPlayer.value ?: return@launchCatching
 
-        val localUri = withContext(dispatchers.io) {
-            try {
-                val avatarDir = File(context.filesDir, "avatars")
-                if (!avatarDir.exists()) avatarDir.mkdirs()
-
-                // Delete existing files to avoid accumulation
-                avatarDir.listFiles()?.forEach { it.delete() }
-
-                val fileName = "avatar_${clock.now()}.jpg"
-                val destFile = File(avatarDir, fileName)
-
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    FileOutputStream(destFile).use { output ->
-                        input.copyTo(output)
-                    }
+        when (val avatarResult = useCases.saveAvatar(uri.toString())) {
+            is Result.Success -> {
+                useCases.updatePlayerAvatar(player, avatarResult.data).onFailure { e ->
+                    handleError(e)
                 }
-                destFile.toUri().toString()
-            } catch (e: IOException) {
-                Timber.e(e, "Failed to copy avatar to internal storage")
-                null
             }
-        }
-
-        if (localUri == null) {
-            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
-            return@launchCatching
-        }
-
-        useCases.updatePlayerAvatar(player, localUri).onFailure { e ->
-            handleError(e)
+            is Result.Error -> {
+                _uiEvents.emit(UiEvent.ShowError(avatarResult.error.asUiText()))
+            }
         }
     }
 
@@ -321,7 +293,7 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onAddTaskConfirmed(questId: Int, taskName: String) = launchCatching {
-        useCases.addTodayTodo(taskName)
+        useCases.addTaskToQuest(questId, taskName)
         onDismissDialog()
     }
 
@@ -348,8 +320,11 @@ class StatusViewModel @Inject constructor(
 
     fun onForceEndDay() = launchCatching {
         _questsReady.value = false
-        useCases.finalizeDay(forceComplete = true)
-        _questsReady.value = true
+        try {
+            useCases.finalizeDay(forceComplete = true)
+        } finally {
+            _questsReady.value = true
+        }
     }
 
     fun onSystemConfigConfirmed(config: SystemConfig) = launchCatching {
@@ -424,7 +399,7 @@ class StatusViewModel @Inject constructor(
             calendarDay.type.isWorkDay -> StatusWeekDayVisualType.WORK
             else -> StatusWeekDayVisualType.REST
         }
-        val locale = Locale.forLanguageTag("uk")
+        val locale = Locale.getDefault()
         return StatusWeekDayUiModel(
             date = date,
             weekDayLabel = date.dayOfWeek.getDisplayName(TextStyle.SHORT_STANDALONE, locale)

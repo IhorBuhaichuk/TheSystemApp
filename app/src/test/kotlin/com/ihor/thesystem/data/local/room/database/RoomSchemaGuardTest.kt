@@ -53,6 +53,35 @@ class RoomSchemaGuardTest {
         assertEquals("Room schema files must be contiguous once export starts", expected, schemaVersions)
     }
 
+    @Test
+    fun `latest room schema contains indices for high traffic queries`() {
+        val latestSchema = latestSchema().readText()
+        val expectedIndices = listOf(
+            "index_chat_message_table_sessionId_timestamp",
+            "index_chat_message_table_sessionId_role",
+            "index_exercises_category",
+            "index_exercise_set_logs_exerciseId",
+            "index_exercise_set_logs_exerciseId_sessionId",
+            "index_quest_status_date",
+            "index_quest_type_status_date",
+            "index_quest_task_questId",
+            "index_quest_log_questType_wasSuccessful_completedAt",
+            "index_reference_matrix_exerciseName",
+            "index_schedule_cycleDay",
+            "index_todo_dateEpochDay_parentTodoId_sortOrder",
+            "index_weight_log_timestamp",
+            "index_workout_exercise_cross_ref_workoutTemplateId_orderIndex",
+            "index_workout_session_logs_timestamp"
+        )
+
+        val missing = expectedIndices.filterNot { it in latestSchema }
+
+        assertTrue(
+            "Latest Room schema must keep data-layer query indices: $missing",
+            missing.isEmpty()
+        )
+    }
+
     private fun schemaVersions(): List<Int> {
         val schemaDir = projectRoot()
             .resolve("schemas")
@@ -63,6 +92,13 @@ class RoomSchemaGuardTest {
             .orEmpty()
             .mapNotNull { it.nameWithoutExtension.toIntOrNull() }
             .sorted()
+    }
+
+    private fun latestSchema(): File {
+        return projectRoot()
+            .resolve("schemas")
+            .resolve(AppDatabase::class.java.name)
+            .resolve("$APP_DATABASE_VERSION.json")
     }
 
     private fun projectRoot(): File =

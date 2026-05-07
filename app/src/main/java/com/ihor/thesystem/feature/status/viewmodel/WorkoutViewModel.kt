@@ -16,10 +16,10 @@ import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
 import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.domain.model.toActiveSetInput
 import com.ihor.thesystem.domain.model.toExerciseSetOrNull
+import com.ihor.thesystem.domain.usecase.GetExerciseReferenceUseCase
 import com.ihor.thesystem.domain.usecase.GetSystemConfigUseCase
 import com.ihor.thesystem.domain.usecase.WorkoutUseCases
 import com.ihor.thesystem.core.util.Result
-import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.toMatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,7 +38,7 @@ import javax.inject.Inject
 class WorkoutViewModel @Inject constructor(
     private val useCases: WorkoutUseCases,
     private val getSystemConfig: GetSystemConfigUseCase,
-    private val progressionMatrixRepository: ProgressionMatrixRepository,
+    private val getExerciseReference: GetExerciseReferenceUseCase,
     private val dispatchers: DispatcherProvider,
     private val clock: AppClock
 ) : ViewModel() {
@@ -104,7 +104,7 @@ class WorkoutViewModel @Inject constructor(
                 )
             }
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), emptyList())
 
     private val displayedWorkoutFlow: Flow<ActiveDayUiModel?> = displayedCycleDay
         .flatMapLatest { day ->
@@ -167,7 +167,7 @@ class WorkoutViewModel @Inject constructor(
             }.toImmutableList(),
             matrixEntries = stats.matrixEntries.map { it.toMatrixEntryUiModel() }.toImmutableList()
         )
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), null)
 
     fun onSetWeightChanged(exerciseId: Int, setId: Long, weight: String) {
         updateSetEdit(exerciseId, setId) { it.copy(weight = weight) }
@@ -481,7 +481,7 @@ class WorkoutViewModel @Inject constructor(
 
     private suspend fun resolveTrackingMode(exercise: ExerciseDetails): ExerciseTrackingMode {
         val reference = runCatching {
-            progressionMatrixRepository.getReferenceForExercise(exercise.id)
+            getExerciseReference(exercise.id)
         }.getOrNull()
         return ExerciseTrackingModeResolver.resolve(exercise, reference)
     }
@@ -496,7 +496,7 @@ class WorkoutViewModel @Inject constructor(
         externalId: String?
     ): ExerciseTrackingMode {
         val reference = runCatching {
-            progressionMatrixRepository.getReferenceForExercise(exerciseId)
+            getExerciseReference(exerciseId)
         }.getOrNull()
         return ExerciseTrackingModeResolver.resolve(
             trackingModeOverride = trackingModeOverride,

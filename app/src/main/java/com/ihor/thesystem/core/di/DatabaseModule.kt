@@ -61,18 +61,18 @@ abstract class DatabaseModule {
             return database
         }
 
-        @Provides fun providePlayerDao(db: AppDatabase)            = db.playerDao()
-        @Provides fun provideWeightLogDao(db: AppDatabase)         = db.weightLogDao()
-        @Provides fun provideSystemConfigDao(db: AppDatabase)      = db.systemConfigDao()
-        @Provides fun provideWorkoutDao(db: AppDatabase)           = db.workoutDao()
-        @Provides fun provideScheduleDao(db: AppDatabase)          = db.scheduleDao()
-        @Provides fun provideQuestDao(db: AppDatabase)             = db.questDao()
-        @Provides fun provideProgressionMatrixDao(db: AppDatabase) = db.progressionMatrixDao()
-        @Provides fun provideQuestLogDao(db: AppDatabase)          = db.questLogDao()
-        @Provides fun provideWorkoutAnalyticsDao(db: AppDatabase)  = db.workoutAnalyticsDao()
-        @Provides fun provideProtocolTemplateDao(db: AppDatabase)  = db.protocolTemplateDao()
-        @Provides fun provideChatDao(db: AppDatabase)              = db.chatDao()
-        @Provides fun provideCalendarCycleDao(db: AppDatabase)     = db.calendarCycleDao()
-        @Provides fun provideTodoDao(db: AppDatabase)              = db.todoDao()
+        @Provides @Singleton fun providePlayerDao(db: AppDatabase)            = db.playerDao()
+        @Provides @Singleton fun provideWeightLogDao(db: AppDatabase)         = db.weightLogDao()
+        @Provides @Singleton fun provideSystemConfigDao(db: AppDatabase)      = db.systemConfigDao()
+        @Provides @Singleton fun provideWorkoutDao(db: AppDatabase)           = db.workoutDao()
+        @Provides @Singleton fun provideScheduleDao(db: AppDatabase)          = db.scheduleDao()
+        @Provides @Singleton fun provideQuestDao(db: AppDatabase)             = db.questDao()
+        @Provides @Singleton fun provideProgressionMatrixDao(db: AppDatabase) = db.progressionMatrixDao()
+        @Provides @Singleton fun provideQuestLogDao(db: AppDatabase)          = db.questLogDao()
+        @Provides @Singleton fun provideWorkoutAnalyticsDao(db: AppDatabase)  = db.workoutAnalyticsDao()
+        @Provides @Singleton fun provideProtocolTemplateDao(db: AppDatabase)  = db.protocolTemplateDao()
+        @Provides @Singleton fun provideChatDao(db: AppDatabase)              = db.chatDao()
+        @Provides @Singleton fun provideCalendarCycleDao(db: AppDatabase)     = db.calendarCycleDao()
+        @Provides @Singleton fun provideTodoDao(db: AppDatabase)              = db.todoDao()
     }
 }

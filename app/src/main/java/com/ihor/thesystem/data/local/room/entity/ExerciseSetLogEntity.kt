@@ -15,7 +15,11 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("sessionId")]
+    indices = [
+        Index("sessionId"),
+        Index("exerciseId"),
+        Index(value = ["exerciseId", "sessionId"])
+    ]
 )
 data class ExerciseSetLogEntity(
     @PrimaryKey(autoGenerate = true)

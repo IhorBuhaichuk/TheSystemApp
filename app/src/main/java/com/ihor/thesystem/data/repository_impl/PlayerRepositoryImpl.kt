@@ -2,6 +2,7 @@ package com.ihor.thesystem.data.repository_impl
 
 import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteFullException
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.data.local.room.dao.PlayerDao
 import com.ihor.thesystem.data.local.room.dao.WeightLogDao
@@ -18,7 +19,8 @@ import javax.inject.Inject
 
 class PlayerRepositoryImpl @Inject constructor(
     private val playerDao: PlayerDao,
-    private val weightLogDao: WeightLogDao
+    private val weightLogDao: WeightLogDao,
+    private val clock: AppClock
 ) : PlayerRepository {
 
     override fun getPlayer(): Flow<Player?> =
@@ -37,7 +39,12 @@ class PlayerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logWeight(weight: Float): Result<Unit, DataError.Local> = runDbCatching {
-        weightLogDao.insert(WeightLogEntity(weight = weight))
+        weightLogDao.insert(
+            WeightLogEntity(
+                weight = weight,
+                timestamp = clock.now()
+            )
+        )
     }
 
     override suspend fun updateHeight(height: Float): Result<Unit, DataError.Local> = runDbCatching {

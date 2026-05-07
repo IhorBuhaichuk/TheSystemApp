@@ -16,6 +16,9 @@ abstract class RepositoryModule {
     abstract fun bindPlayerRepository(impl: PlayerRepositoryImpl): PlayerRepository
 
     @Binds @Singleton
+    abstract fun bindAvatarRepository(impl: AvatarRepositoryImpl): AvatarRepository
+
+    @Binds @Singleton
     abstract fun bindQuestRepository(impl: QuestRepositoryImpl): QuestRepository
 
     @Binds @Singleton

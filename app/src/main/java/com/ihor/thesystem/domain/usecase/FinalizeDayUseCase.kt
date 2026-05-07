@@ -69,19 +69,20 @@ class FinalizeDayUseCase @Inject constructor(
                 configRepo.saveLastInitDate(today)
                 configRepo.setNeedsDailyInit(true)
 
+                // Keep next-day initialization atomic with archiving and player updates.
+                generateDailyQuests()
+                when (val attributesResult = calculateAttributes()) {
+                    is Result.Success -> Unit
+                    is Result.Error -> throw TransactionRollbackException(attributesResult.error)
+                }
+                configRepo.setNeedsDailyInit(false)
+
                 when {
                     levelUpTriggered -> DayFinalizationResult.LevelUp
                     !wasPenaltyActive && finalPlayer.isPenaltyActive -> DayFinalizationResult.PenaltyZoneEntered
                     else -> DayFinalizationResult.Success
                 }
             }
-
-            // 3. Post-transaction initialization (Heavy work)
-            generateDailyQuests.invoke()
-            calculateAttributes.invoke()
-            
-            // 4. Mark initialization as complete
-            configRepo.setNeedsDailyInit(false)
 
             Timber.d("Day finalization completed successfully: $transactionResult")
             Result.Success(transactionResult)

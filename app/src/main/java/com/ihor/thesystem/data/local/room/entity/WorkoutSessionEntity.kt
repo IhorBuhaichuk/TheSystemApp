@@ -1,9 +1,16 @@
 package com.ihor.thesystem.data.local.room.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "workout_sessions")
+@Entity(
+    tableName = "workout_sessions",
+    indices = [
+        Index("questId"),
+        Index("timestamp")
+    ]
+)
 data class WorkoutSessionEntity(
     @PrimaryKey(autoGenerate = true)
     val sessionId: Long = 0L,

@@ -1,11 +1,21 @@
 package com.ihor.thesystem.data.local.room.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.model.MuscleGroup
 
-@Entity(tableName = "exercises")
+@Entity(
+    tableName = "exercises",
+    indices = [
+        Index("category"),
+        Index("equipment"),
+        Index("level"),
+        Index("mechanic"),
+        Index("force")
+    ]
+)
 data class ExerciseEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val externalId: String? = null,

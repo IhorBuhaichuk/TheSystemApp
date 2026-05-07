@@ -1,9 +1,16 @@
 package com.ihor.thesystem.data.local.room.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "schedule")
+@Entity(
+    tableName = "schedule",
+    indices = [
+        Index("cycleDay"),
+        Index("workoutTemplateId")
+    ]
+)
 data class ScheduleEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val cycleDay: Int,                     // 1–4

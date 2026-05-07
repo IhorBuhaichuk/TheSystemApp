@@ -16,6 +16,8 @@ class GetStatusScreenDataUseCase @Inject constructor(
     private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val clock: AppClock
 ) {
+    private val progressionConfig = PlayerProgressionConfig()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(): Flow<StatusData> =
         combine(
@@ -86,8 +88,8 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 val trainingDaysPerCycle = schedules.count { it.workoutTemplateName != null }
                 val monthWorkoutsTotal = trainingDaysPerCycle * config.microCyclesPerMonth
                 
-                val xpPerLevel = PlayerProgressionConfig().xpPerLevel
-                val derivedLevel = (player.xpTotal / xpPerLevel) + 1
+                val xpPerLevel = progressionConfig.xpPerLevel
+                val derivedLevel = progressionConfig.levelForXp(player.xpTotal)
                 val xpProgress = (player.xpTotal % xpPerLevel).coerceIn(0, xpPerLevel)
 
                 StatusData(
