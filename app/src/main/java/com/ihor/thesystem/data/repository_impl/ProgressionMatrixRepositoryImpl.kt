@@ -7,6 +7,7 @@ import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.model.ExerciseWeightType
 import com.ihor.thesystem.domain.model.Rank
+import com.ihor.thesystem.domain.model.RankProgressionPolicy
 import com.ihor.thesystem.domain.model.ReferenceMatrix
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
@@ -206,14 +207,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
 
     override suspend fun promoteRank(exerciseId: Int) {
         val existing = matrixDao.getEntryForExerciseSync(exerciseId) ?: return
-        val nextRank = when (existing.currentRank) {
-            Rank.E -> Rank.D
-            Rank.D -> Rank.C
-            Rank.C -> Rank.B
-            Rank.B -> Rank.A
-            Rank.A -> Rank.S
-            Rank.S -> Rank.S
-        }
+        val nextRank = RankProgressionPolicy.nextRank(existing.currentRank)
         matrixDao.update(existing.copy(
             isPromotionPending = false,
             currentRank = nextRank

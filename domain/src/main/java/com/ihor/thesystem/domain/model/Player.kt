@@ -34,7 +34,7 @@ data class Player(
         val nextStreak = currentStreak + 1
         val nextXpTotal = xpTotal + config.workoutCompletionXp
         return copy(
-            level = (nextXpTotal / config.xpPerLevel) + 1,
+            level = config.levelForXp(nextXpTotal),
             currentStreak = nextStreak,
             maxStreak = maxOf(maxStreak, nextStreak),
             xpTotal = nextXpTotal,
@@ -45,14 +45,17 @@ data class Player(
     /**
      * Оцінює виконання головних квестів, оновлює серії та нараховує досвід.
      */
-    fun evaluateQuests(mainQuests: List<Quest>): Player {
+    fun evaluateQuests(
+        mainQuests: List<Quest>,
+        config: PlayerProgressionConfig = PlayerProgressionConfig()
+    ): Player {
         if (mainQuests.isEmpty()) return this
-        val allCompleted = mainQuests.all { it.isCompleted }
+        val allCompleted = mainQuests.all { QuestCompletionPolicy.isSuccessful(it) }
 
         return if (!allCompleted) {
             copy(currentStreak = 0)
         } else {
-            rewardWorkoutCompletion()
+            rewardWorkoutCompletion(config)
         }
     }
 
@@ -84,7 +87,9 @@ data class Player(
      * Перевіряє можливість підвищення рангу та скидає тижневий досвід при новому місяці.
      * @return Пара: Оновлений гравець та прапорець LevelUp.
      */
-    fun checkLevelUp(): Pair<Player, Boolean> {
+    fun checkLevelUp(
+        config: PlayerProgressionConfig = PlayerProgressionConfig()
+    ): Pair<Player, Boolean> {
         val newRank = PlayerRank.resolveByMonth(currentMonth)
         val levelUpTriggered = playerClass != newRank
         val isNewMonthStart = currentCycleDay == 1 && currentWeek == 1
@@ -93,8 +98,8 @@ data class Player(
         if (levelUpTriggered) {
             updatedPlayer = updatedPlayer.copy(
                 playerClass = newRank,
-                xpTotal = xpTotal + 200,
-                xpThisWeek = xpThisWeek + 200
+                xpTotal = xpTotal + config.classRankPromotionXp,
+                xpThisWeek = xpThisWeek + config.classRankPromotionXp
             )
         }
 
@@ -109,5 +114,14 @@ data class Player(
 
 data class PlayerProgressionConfig(
     val xpPerLevel: Int = 1000,
-    val workoutCompletionXp: Int = 100
-)
+    val workoutCompletionXp: Int = 100,
+    val classRankPromotionXp: Int = 200
+) {
+    init {
+        require(xpPerLevel > 0) { "XP per level must be positive." }
+        require(workoutCompletionXp >= 0) { "Workout completion XP must not be negative." }
+        require(classRankPromotionXp >= 0) { "Class rank promotion XP must not be negative." }
+    }
+
+    fun levelForXp(xpTotal: Int): Int = (xpTotal.coerceAtLeast(0) / xpPerLevel) + 1
+}

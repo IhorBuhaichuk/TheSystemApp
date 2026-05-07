@@ -46,10 +46,8 @@ class FinalizeDayUseCase @Inject constructor(
 
                 // B) Evaluate player progress based on MAIN quests
                 val processedMainQuests = activeQuests.filter { it.type == DomainQuestType.MAIN }.map { q ->
-                    val hasTasks = q.tasks.isNotEmpty()
-                    val allDone = hasTasks && q.tasks.all { it.isCompleted }
-                    val isSuccess = if (!hasTasks) true else (allDone || forceComplete)
-                    q.copy(status = if (isSuccess) DomainQuestStatus.COMPLETED else DomainQuestStatus.FAILED)
+                    val resolution = QuestCompletionPolicy.resolveForDayFinalization(q, forceComplete)
+                    q.copy(status = resolution.status)
                 }
 
                 val wasPenaltyActive = player.isPenaltyActive

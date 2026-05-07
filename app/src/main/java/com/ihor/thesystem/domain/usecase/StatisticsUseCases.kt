@@ -7,6 +7,7 @@ import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
+import com.ihor.thesystem.domain.model.RankProgressionPolicy
 import com.ihor.thesystem.domain.model.toExerciseSetOrNull
 import com.ihor.thesystem.domain.model.toStoredActiveSetInputOrNull
 import kotlinx.coroutines.flow.Flow
@@ -76,7 +77,7 @@ class SaveExerciseSetsUseCase @Inject constructor(
         ) ?: return
 
         // - Перевір математичну вагу (weight: E=1..S=6)
-        if (newRank.weight > entry.currentRank.weight) {
+        if (RankProgressionPolicy.shouldPromote(entry.currentRank, newRank)) {
             // - Онови currentRank у базі даних
             matrixRepo.updateRank(exerciseId, newRank)
             

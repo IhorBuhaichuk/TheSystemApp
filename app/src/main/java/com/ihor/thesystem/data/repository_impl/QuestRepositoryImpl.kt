@@ -38,11 +38,11 @@ class QuestRepositoryImpl @Inject constructor(
         transactionProvider.runInTransaction {
             questDao.setTaskCompletion(taskId, isCompleted)
             val allTasks = questDao.getTasksForQuestSync(questId)
-            if (allTasks.isNotEmpty() && allTasks.all { it.isCompleted }) {
-                questDao.updateQuestStatus(questId, EntityQuestStatus.COMPLETED)
-            } else {
-                questDao.updateQuestStatus(questId, EntityQuestStatus.ACTIVE)
-            }
+            val status = QuestCompletionPolicy.resolveAfterTaskUpdate(
+                taskCount = allTasks.size,
+                completedTaskCount = allTasks.count { it.isCompleted }
+            )
+            questDao.updateQuestStatus(questId, status.toEntity())
         }
 
     override suspend fun completeQuestTasksForExercises(questId: Int, exerciseIds: Set<Int>) =
@@ -53,11 +53,15 @@ class QuestRepositoryImpl @Inject constructor(
                 .filter { task -> task.exerciseId != null && task.exerciseId in exerciseIds && !task.isCompleted }
                 .forEach { task ->
                     questDao.setTaskCompletion(task.id, true)
-                }
+            }
 
             val updatedTasks = questDao.getTasksForQuestSync(questId)
-            if (updatedTasks.isNotEmpty() && updatedTasks.all { it.isCompleted }) {
-                questDao.updateQuestStatus(questId, EntityQuestStatus.COMPLETED)
+            val status = QuestCompletionPolicy.resolveAfterTaskUpdate(
+                taskCount = updatedTasks.size,
+                completedTaskCount = updatedTasks.count { it.isCompleted }
+            )
+            if (status == DomainQuestStatus.COMPLETED) {
+                questDao.updateQuestStatus(questId, status.toEntity())
             }
         }
 

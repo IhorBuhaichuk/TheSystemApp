@@ -192,7 +192,7 @@ class FinalizeSessionUseCase @Inject constructor(
                 targetWeight = matrixEntry.targetWeight.toDouble()
             ) ?: return@forEach
             
-            if (newRank.weight > matrixEntry.currentRank.weight) {
+            if (RankProgressionPolicy.shouldPromote(matrixEntry.currentRank, newRank)) {
                 progressionMatrixRepository.updateRank(matrixEntry.exerciseId, newRank)
             }
         }
