@@ -4,6 +4,7 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.StringResourceException
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.repository.PlayerRepository
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class UpdatePlayerHeightUseCase @Inject constructor(
@@ -16,6 +17,8 @@ class UpdatePlayerHeightUseCase @Inject constructor(
         return try {
             repo.updateHeight(height)
             Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

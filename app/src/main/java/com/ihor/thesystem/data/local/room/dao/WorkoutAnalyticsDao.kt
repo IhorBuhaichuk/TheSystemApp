@@ -52,11 +52,15 @@ abstract class WorkoutAnalyticsDao {
 
     @Transaction
     @Query("""
-        SELECT * FROM workout_session_logs 
-        WHERE date(timestamp / 1000, 'unixepoch', 'localtime') = date(:dateMillis / 1000, 'unixepoch', 'localtime')
+        SELECT * FROM workout_session_logs
+        WHERE timestamp BETWEEN :startInclusive AND :endInclusive
+        ORDER BY timestamp ASC
         LIMIT 50
     """)
-    abstract fun getSessionLogsByDate(dateMillis: Long): Flow<List<SessionWithSets>>
+    abstract fun getSessionLogsBetween(
+        startInclusive: Long,
+        endInclusive: Long
+    ): Flow<List<SessionWithSets>>
 
     /**
      * Отримання історії ваги для всіх вправ одним запитом
@@ -70,12 +74,27 @@ abstract class WorkoutAnalyticsDao {
     abstract fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>>
 
     @Query("""
-        SELECT MAX(weight) as weight, s.timestamp
-        FROM exercise_set_logs e
-        JOIN workout_session_logs s ON s.sessionId = e.sessionId
-        WHERE e.exerciseId = :exerciseId
-        GROUP BY date(s.timestamp / 1000, 'unixepoch')
-        ORDER BY s.timestamp DESC
+        WITH daily_max AS (
+            SELECT
+                date(s.timestamp / 1000, 'unixepoch') AS workoutDay,
+                MAX(e.weight) AS weight
+            FROM exercise_set_logs e
+            JOIN workout_session_logs s ON s.sessionId = e.sessionId
+            WHERE e.exerciseId = :exerciseId
+            GROUP BY workoutDay
+        )
+        SELECT
+            daily_max.weight AS weight,
+            MAX(s.timestamp) AS timestamp
+        FROM daily_max
+        JOIN workout_session_logs s
+            ON date(s.timestamp / 1000, 'unixepoch') = daily_max.workoutDay
+        JOIN exercise_set_logs e
+            ON e.sessionId = s.sessionId
+            AND e.exerciseId = :exerciseId
+            AND e.weight = daily_max.weight
+        GROUP BY daily_max.workoutDay, daily_max.weight
+        ORDER BY timestamp DESC
         LIMIT 100
     """)
     abstract fun getWeightHistoryForExercise(exerciseId: Int): Flow<List<ExerciseWeightHistory>>

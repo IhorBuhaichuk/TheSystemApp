@@ -44,6 +44,7 @@ import com.ihor.thesystem.core.theme.BorderSubtle
 import com.ihor.thesystem.core.theme.TextMuted
 import com.ihor.thesystem.core.theme.TextPrimary
 import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.ui.asString
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
 

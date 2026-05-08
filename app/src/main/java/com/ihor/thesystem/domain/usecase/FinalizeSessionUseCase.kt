@@ -1,7 +1,5 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.R
-import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
@@ -12,8 +10,8 @@ import com.ihor.thesystem.core.util.*
 import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
 import com.ihor.thesystem.domain.model.formatForTrackingMode
 import timber.log.Timber
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
@@ -56,6 +54,7 @@ class FinalizeSessionUseCase @Inject constructor(
                 val recoveryHours = calculateRecovery(finalTonnage).toDouble(DurationUnit.HOURS)
 
                 recalculateGlobalRank()
+                completeWorkoutQuestIfPossible(session.questId, sets)
                 
                 LocalSessionData(
                     playerWeight = playerWeight,
@@ -65,11 +64,10 @@ class FinalizeSessionUseCase @Inject constructor(
                 )
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e, "Local session saving failed")
             return Result.Error(DataError.Local.SQLITE_EXCEPTION)
         }
-
-        completeWorkoutQuestIfPossible(session.questId, sets)
 
         // 2. Асинхронний запит до AiArchitectRepository та оновлення матриці
         val exerciseContexts = generateAiPrompt(
@@ -110,6 +108,7 @@ class FinalizeSessionUseCase @Inject constructor(
                 isFallback = false
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e, "Architect analysis failed")
             generateFallbackReport(sets, localData.matrix, localData.recoveryHours)
         }
@@ -127,6 +126,7 @@ class FinalizeSessionUseCase @Inject constructor(
             )
         )
     } catch (e: Exception) {
+        if (e is CancellationException) throw e
         Timber.e(e, "Unexpected error in FinalizeSessionUseCase")
         Result.Error(DataError.Local.UNKNOWN)
     }
@@ -220,7 +220,7 @@ class FinalizeSessionUseCase @Inject constructor(
             wasSuccessful = true
         )
 
-        val player = playerRepository.getPlayer().firstOrNull() ?: return
+        val player = playerRepository.getPlayerSnapshot() ?: return
         playerRepository.updatePlayer(player.rewardWorkoutCompletion())
     }
 
@@ -246,7 +246,7 @@ class FinalizeSessionUseCase @Inject constructor(
         }
 
         return AiArchitectReport(
-            architectFeedback = UiText.StringResource(R.string.ai_fallback_activated),
+            architectFeedback = MessageText.Resource(MessageTextKey.AI_FALLBACK_ACTIVATED),
             currentStageStatus = "[ FALLBACK ]",
             completedExercises = sets.map { it.exerciseId }.distinct(),
             pendingExercises = emptyList(),

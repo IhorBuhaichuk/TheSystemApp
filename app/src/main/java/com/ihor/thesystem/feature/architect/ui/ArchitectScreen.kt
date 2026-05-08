@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ihor.thesystem.core.ui.RefreshOnResume
+import com.ihor.thesystem.core.ui.asString
 import com.ihor.thesystem.core.theme.AccentAi
 import com.ihor.thesystem.core.theme.AccentAiSoft
 import com.ihor.thesystem.core.theme.AccentPrimary

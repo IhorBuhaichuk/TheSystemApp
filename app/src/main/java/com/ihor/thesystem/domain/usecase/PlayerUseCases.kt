@@ -6,6 +6,7 @@ import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.repository.AvatarRepository
 import com.ihor.thesystem.domain.repository.PlayerRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -19,6 +20,8 @@ class UpdatePlayerNameUseCase @Inject constructor(
         return try {
             repo.updatePlayer(player.copy(name = newName))
             Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -32,6 +35,8 @@ class UpdatePlayerAvatarUseCase @Inject constructor(
         return try {
             repo.updatePlayer(player.copy(avatarUri = avatarUri))
             Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -60,6 +65,8 @@ class LogWeightUseCase @Inject constructor(
         return try {
             repo.logWeight(weight)
             Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -76,6 +83,8 @@ class UpdatePlayerAgeUseCase @Inject constructor(
         return try {
             repo.updateAge(age)
             Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

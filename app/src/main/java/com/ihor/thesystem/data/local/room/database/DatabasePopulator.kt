@@ -2,12 +2,14 @@ package com.ihor.thesystem.data.local.room.database
 
 import android.content.Context
 import androidx.room.withTransaction
-import com.ihor.thesystem.data.local.room.dao.*
-import com.ihor.thesystem.data.local.room.entity.*
+import com.ihor.thesystem.data.local.room.entity.ExerciseEntity
+import com.ihor.thesystem.data.local.room.entity.PlayerEntity
+import com.ihor.thesystem.data.local.room.entity.SystemConfigEntity
 import com.ihor.thesystem.data.remote.dto.ExerciseDto
 import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.model.MuscleGroup
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -19,6 +21,11 @@ object DatabasePopulator {
 
     private val json = Json { ignoreUnknownKeys = true }
 
+    class DatabasePopulationException(
+        message: String,
+        cause: Throwable? = null
+    ) : IllegalStateException(message, cause)
+
     @Serializable
     private data class ExerciseTranslationDto(
         val id: String,
@@ -26,52 +33,38 @@ object DatabasePopulator {
     )
 
     @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-    suspend fun populate(context: Context, db: AppDatabase) {
+    suspend fun populate(
+        context: Context,
+        db: AppDatabase,
+        ioDispatcher: CoroutineDispatcher
+    ) {
         val workoutDao = db.workoutDao()
 
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val totalTime = measureTimeMillis {
-                val exerciseDtos = try {
-                    context.assets.open("exercises_ua.json").use { inputStream ->
-                        json.decodeFromStream<List<ExerciseDto>>(inputStream)
-                    }
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to read or parse exercises_ua.json")
-                    return@withContext
+                val existingExerciseCount = db.withTransaction {
+                    ensureRequiredSingletonRows(db)
+                    workoutDao.getExerciseCount()
                 }
 
-                val translations = try {
-                    context.assets.open("exercises_uk.json").use { inputStream ->
-                        json.decodeFromStream<List<ExerciseTranslationDto>>(inputStream)
-                            .associate { it.id to it.name_uk }
-                    }
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to read or parse exercises_uk.json")
-                    emptyMap()
+                if (existingExerciseCount > 0) {
+                    Timber.d("Database already has $existingExerciseCount exercises. Skipping exercise seed.")
+                    return@measureTimeMillis
                 }
+
+                Timber.d("Database has no exercises. Starting exercise seed.")
+
+                val exerciseDtos = readRequiredExerciseSeed(context)
+                val translations = readOptionalTranslations(context)
 
                 db.withTransaction {
-                    // 1. Атомарна перевірка: якщо вправи вже є, нічого не робимо
-                    if (workoutDao.getAllExercisesSync().isNotEmpty()) {
-                        Timber.d("Database already has exercise data. Skipping population.")
+                    ensureRequiredSingletonRows(db)
+
+                    if (workoutDao.getExerciseCount() > 0) {
+                        Timber.d("Exercises were seeded by another population pass. Skipping duplicate insert.")
                         return@withTransaction
                     }
 
-                    Timber.d("Database is empty. Starting population...")
-
-                    // 2. Ініціалізуємо гравця ТІЛЬКИ якщо його ще немає (id=1)
-                    if (db.playerDao().getPlayerSync() == null) {
-                        db.playerDao().insertOrUpdate(PlayerEntity())
-                        Timber.d("Initial player created")
-                    }
-
-                    // 3. Ініціалізуємо конфігурацію ТІЛЬКИ якщо її немає (id=1)
-                    if (db.systemConfigDao().getConfigSync() == null) {
-                        db.systemConfigDao().insertOrUpdate(SystemConfigEntity())
-                        Timber.d("Initial system config created")
-                    }
-
-                    // 4. Мапінг ExerciseDto -> ExerciseEntity та пакетне збереження
                     val entities = exerciseDtos.map { dto ->
                         ExerciseEntity(
                             externalId = dto.id,
@@ -91,11 +84,61 @@ object DatabasePopulator {
                     entities.chunked(200).forEach { chunk ->
                         workoutDao.insertExercises(chunk)
                     }
-                    
-                    Timber.d("Inserted ${entities.size} exercises")
+
+                    Timber.d("Inserted ${entities.size} exercises.")
                 }
             }
-            Timber.d("Database population check/completion took ${totalTime}ms")
+
+            Timber.d("Database population check/completion took ${totalTime}ms.")
+        }
+    }
+
+    private suspend fun ensureRequiredSingletonRows(db: AppDatabase) {
+        if (db.playerDao().getPlayerSync() == null) {
+            db.playerDao().insertOrUpdate(PlayerEntity())
+            Timber.d("Initial player created.")
+        }
+
+        if (db.systemConfigDao().getConfigSync() == null) {
+            db.systemConfigDao().insertOrUpdate(SystemConfigEntity())
+            Timber.d("Initial system config created.")
+        }
+    }
+
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+    private fun readRequiredExerciseSeed(context: Context): List<ExerciseDto> {
+        val exercises = try {
+            context.assets.open("exercises_ua.json").use { inputStream ->
+                json.decodeFromStream<List<ExerciseDto>>(inputStream)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw DatabasePopulationException(
+                "Failed to read or parse required seed asset exercises_ua.json.",
+                e
+            )
+        }
+
+        if (exercises.isEmpty()) {
+            throw DatabasePopulationException("Required seed asset exercises_ua.json is empty.")
+        }
+
+        return exercises
+    }
+
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+    private fun readOptionalTranslations(context: Context): Map<String, String> {
+        return try {
+            context.assets.open("exercises_uk.json").use { inputStream ->
+                json.decodeFromStream<List<ExerciseTranslationDto>>(inputStream)
+                    .associate { it.id to it.name_uk }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to read or parse optional seed asset exercises_uk.json.")
+            emptyMap()
         }
     }
 

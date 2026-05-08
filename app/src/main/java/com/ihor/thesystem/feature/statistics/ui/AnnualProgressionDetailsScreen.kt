@@ -1045,14 +1045,14 @@ private fun AnnualProgressionDetailStatus.statusColor(): Color =
     }
 
 private fun buildManualMonthLabels(currentDate: LocalDate): List<String> {
-    val formatter = DateTimeFormatter.ofPattern("LLL yyyy", Locale.forLanguageTag("uk"))
+    val formatter = DateTimeFormatter.ofPattern("LLL yyyy", Locale.getDefault())
     return (0 until 12).map { index ->
         currentDate.plusMonths(index.toLong()).format(formatter)
     }
 }
 
 private fun java.time.LocalDate.formatDate(): String =
-    format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.forLanguageTag("uk")))
+    format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
 
 private fun AnnualProgressionManualExerciseUiModel.manualMetricLabel(): String =
     if (trackingMode.usesWeightInput) {

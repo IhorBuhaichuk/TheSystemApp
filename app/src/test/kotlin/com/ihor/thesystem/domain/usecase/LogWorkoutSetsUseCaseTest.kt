@@ -8,6 +8,7 @@ import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
+import com.ihor.thesystem.domain.repository.TransactionProvider
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -17,6 +18,7 @@ import io.mockk.slot
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 import java.time.ZoneId
@@ -26,6 +28,7 @@ class LogWorkoutSetsUseCaseTest {
     private val playerRepository: PlayerRepository = mockk()
     private val matrixRepository: ProgressionMatrixRepository = mockk(relaxed = true)
     private val analyticsRepository: WorkoutAnalyticsRepository = mockk(relaxed = true)
+    private val transactionProvider = RecordingTransactionProvider()
     private val clock = FixedClock(
         nowMillis = LocalDate.of(2026, 5, 2)
             .atStartOfDay(TEST_ZONE)
@@ -37,6 +40,7 @@ class LogWorkoutSetsUseCaseTest {
         playerRepo = playerRepository,
         matrixRepo = matrixRepository,
         analyticsRepo = analyticsRepository,
+        transactionProvider = transactionProvider,
         clock = clock
     )
 
@@ -49,7 +53,13 @@ class LogWorkoutSetsUseCaseTest {
         val sessionSlot = slot<WorkoutSession>()
         every { playerRepository.getPlayer() } returns flowOf(player(currentCycleDay = 3))
         coEvery { analyticsRepository.getLogsForExerciseOnDate(7, any(), any()) } returns emptyList()
-        coEvery { analyticsRepository.saveFullSessionLog(capture(sessionSlot), any()) } returns 100L
+        coEvery { analyticsRepository.saveFullSessionLog(capture(sessionSlot), any()) } coAnswers {
+            assertTrue(transactionProvider.inTransaction)
+            100L
+        }
+        coEvery { matrixRepository.updateCurrentWeight(7, 80f) } coAnswers {
+            assertTrue(transactionProvider.inTransaction)
+        }
 
         useCase(
             exerciseId = 7,
@@ -60,6 +70,7 @@ class LogWorkoutSetsUseCaseTest {
 
         assertEquals(selectedTimestamp, sessionSlot.captured.timestamp)
         assertEquals(3, sessionSlot.captured.cycleDay)
+        assertEquals(1, transactionProvider.calls)
         coVerify { matrixRepository.updateCurrentWeight(7, 80f) }
     }
 
@@ -81,7 +92,18 @@ class LogWorkoutSetsUseCaseTest {
                 isCompleted = true
             )
         )
-        coEvery { analyticsRepository.updateSessionLog(capture(sessionSlot)) } returns Unit
+        coEvery { analyticsRepository.updateSessionLog(capture(sessionSlot)) } coAnswers {
+            assertTrue(transactionProvider.inTransaction)
+        }
+        coEvery { analyticsRepository.deleteSetsBySession(77L) } coAnswers {
+            assertTrue(transactionProvider.inTransaction)
+        }
+        coEvery { analyticsRepository.saveSetLogs(any()) } coAnswers {
+            assertTrue(transactionProvider.inTransaction)
+        }
+        coEvery { matrixRepository.updateCurrentWeight(7, 82.5f) } coAnswers {
+            assertTrue(transactionProvider.inTransaction)
+        }
 
         useCase(
             exerciseId = 7,
@@ -93,6 +115,7 @@ class LogWorkoutSetsUseCaseTest {
         assertEquals(77L, sessionSlot.captured.sessionId)
         assertEquals(selectedTimestamp, sessionSlot.captured.timestamp)
         assertEquals(4, sessionSlot.captured.cycleDay)
+        assertEquals(1, transactionProvider.calls)
         coVerify { analyticsRepository.deleteSetsBySession(77L) }
         coVerify { matrixRepository.updateCurrentWeight(7, 82.5f) }
     }
@@ -115,6 +138,24 @@ class LogWorkoutSetsUseCaseTest {
     ) : AppClock {
         override fun now(): Long = nowMillis
         override fun zoneId(): ZoneId = zoneId
+    }
+
+    private class RecordingTransactionProvider : TransactionProvider {
+        var calls: Int = 0
+            private set
+        var inTransaction: Boolean = false
+            private set
+
+        override suspend fun <R> runInTransaction(block: suspend () -> R): R {
+            check(!inTransaction)
+            calls++
+            inTransaction = true
+            return try {
+                block()
+            } finally {
+                inTransaction = false
+            }
+        }
     }
 
     private companion object {

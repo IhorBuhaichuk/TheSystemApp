@@ -182,7 +182,7 @@ fun RpgStatusDashboard(
 
 @Composable
 private fun StatusHeader() {
-    val locale = Locale.forLanguageTag("uk")
+    val locale = Locale.getDefault()
     val today = LocalDate.now()
     val weekDay = today.dayOfWeek.getDisplayName(TextStyle.FULL_STANDALONE, locale)
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }

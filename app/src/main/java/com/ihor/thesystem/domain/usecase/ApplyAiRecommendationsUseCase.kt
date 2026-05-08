@@ -1,12 +1,12 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.core.util.AppClock
-import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.util.AnnualProgressionPlanNoteParser
 import com.ihor.thesystem.domain.util.sanitizeForPrompt
 import timber.log.Timber
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.Serializable
@@ -21,6 +21,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
     private val aiRepository: AiArchitectRepository,
     private val getWeightContext: GetPlayerWeightContextUseCase,
     private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
+    private val transactionProvider: TransactionProvider,
     private val clock: AppClock
 ) {
 
@@ -124,18 +125,18 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             
             // Якщо текст відповіді містить ключову фразу помилки парсингу
             val responseText = when(val t = response.text) {
-                is UiText.DynamicString -> t.value
-                is UiText.StringResource -> ""
+                is MessageText.DynamicString -> t.value
+                is MessageText.Resource -> ""
             }
             if (responseText == "Помилка генерації AI, спробуйте ще раз" || 
-                response.text is UiText.StringResource) {
+                response.text is MessageText.Resource) {
                 Timber.e("AI returned error or parsing failed. Aborting database update.")
                 return
             }
 
             // 4. Розпарсинг та оновлення бази даних для кожної вправи
-            response.recommendations.forEach { rec ->
-                try {
+            transactionProvider.runInTransaction {
+                response.recommendations.forEach { rec ->
                     matrixRepo.updateTarget(
                         exerciseId = rec.exerciseId,
                         weight = rec.weight.toDouble(),
@@ -144,11 +145,10 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
                         aiFeedback = rec.aiFeedback ?: response.aiFeedback,
                         timestamp = now
                     )
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to update target for exercise ${rec.exerciseId}")
                 }
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Timber.e(e, "Critical error in ApplyAiRecommendationsUseCase")
         }
     }
@@ -157,15 +157,20 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
      * Перевантажений метод для підтримки прямого оновлення (наприклад, з чату).
      */
     suspend operator fun invoke(recommendations: List<AiWorkoutRecommendation>) {
-        recommendations.forEach { rec ->
-            matrixRepo.updateTarget(
-                exerciseId = rec.exerciseId,
-                weight = rec.weight.toDouble(),
-                sets = rec.sets,
-                reps = rec.reps,
-                aiFeedback = rec.aiFeedback,
-                timestamp = clock.now()
-            )
+        if (recommendations.isEmpty()) return
+
+        val timestamp = clock.now()
+        transactionProvider.runInTransaction {
+            recommendations.forEach { rec ->
+                matrixRepo.updateTarget(
+                    exerciseId = rec.exerciseId,
+                    weight = rec.weight.toDouble(),
+                    sets = rec.sets,
+                    reps = rec.reps,
+                    aiFeedback = rec.aiFeedback,
+                    timestamp = timestamp
+                )
+            }
         }
     }
 }

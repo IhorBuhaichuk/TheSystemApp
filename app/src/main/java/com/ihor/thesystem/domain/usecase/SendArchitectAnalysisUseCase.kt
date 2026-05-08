@@ -1,6 +1,8 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.domain.model.ChatRole
 import com.ihor.thesystem.domain.model.ChatMessage
+import com.ihor.thesystem.domain.model.MessageText
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
 import com.ihor.thesystem.domain.repository.ChatRepository
 import javax.inject.Inject
@@ -54,6 +56,23 @@ class SendArchitectAnalysisUseCase @Inject constructor(
             КРИТИЧНО: У текстах feedback_text та aiFeedback не використовуй лапки всередині значень і не додавай символи переносу рядка.
         """.trimIndent()
         
-        return aiArchitectRepository.getChatResponse(prompt)
+        val response = aiArchitectRepository.getChatResponse(prompt)
+        if (response.recommendations.isNotEmpty()) {
+            chatRepository.saveChatMessage(
+                sessionId = ARCHITECT_ANALYSIS_SESSION_ID,
+                role = ChatRole.AI,
+                text = response.persistableText()
+            )
+        }
+        return response
     }
+
+    private fun ChatMessage.persistableText(): String =
+        when (val value = text) {
+            is MessageText.DynamicString -> value.value
+            is MessageText.Resource -> aiFeedback ?: ARCHITECT_ANALYSIS_FALLBACK_TEXT
+        }
 }
+
+private const val ARCHITECT_ANALYSIS_SESSION_ID = 0L
+private const val ARCHITECT_ANALYSIS_FALLBACK_TEXT = "AI analysis complete"

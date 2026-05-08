@@ -20,6 +20,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ihor.thesystem.core.theme.NeonCyan
 import com.ihor.thesystem.core.theme.RajdhaniFamily
+import com.ihor.thesystem.core.ui.asString
 import com.ihor.thesystem.domain.model.AiArchitectReport
 
 @Composable

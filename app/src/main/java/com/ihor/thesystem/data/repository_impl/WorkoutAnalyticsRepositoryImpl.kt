@@ -1,5 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
+import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.WorkoutAnalyticsDao
 import com.ihor.thesystem.data.local.room.dao.WorkoutDao
 import com.ihor.thesystem.data.local.room.entity.ExerciseSetLogEntity
@@ -11,11 +12,13 @@ import com.ihor.thesystem.domain.repository.DailyTonnageStats
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 import javax.inject.Inject
 
 class WorkoutAnalyticsRepositoryImpl @Inject constructor(
     private val dao: WorkoutAnalyticsDao,
-    private val workoutDao: WorkoutDao
+    private val workoutDao: WorkoutDao,
+    private val clock: AppClock
 ) : WorkoutAnalyticsRepository {
 
     override suspend fun saveSessionWithSets(
@@ -40,7 +43,8 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
     }
 
     override fun getSessionsByDate(dateMillis: Long): Flow<List<WorkoutLog>> {
-        return dao.getSessionLogsByDate(dateMillis).map { list ->
+        val (startOfDay, endOfDay) = dayBounds(dateMillis)
+        return dao.getSessionLogsBetween(startOfDay, endOfDay).map { list ->
             list.map { it.toDomain() }
         }
     }
@@ -108,6 +112,15 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
 
     override suspend fun getAllExercisesMap(): Map<Int, String> {
         return workoutDao.getAllExercisesSync().associate { it.id to it.name }
+    }
+
+    private fun dayBounds(dateMillis: Long): Pair<Long, Long> {
+        val date = Instant.ofEpochMilli(dateMillis)
+            .atZone(clock.zoneId())
+            .toLocalDate()
+        val startOfDay = date.atStartOfDay(clock.zoneId()).toInstant().toEpochMilli()
+        val endOfDay = date.plusDays(1).atStartOfDay(clock.zoneId()).toInstant().toEpochMilli() - 1
+        return startOfDay to endOfDay
     }
 
     // =========================================

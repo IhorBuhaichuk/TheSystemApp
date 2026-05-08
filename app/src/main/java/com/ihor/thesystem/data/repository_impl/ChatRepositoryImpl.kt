@@ -1,11 +1,11 @@
 package com.ihor.thesystem.data.repository_impl
 
-import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.ChatDao
 import com.ihor.thesystem.data.local.room.entity.ChatMessageEntity
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
+import com.ihor.thesystem.domain.model.MessageText
 import com.ihor.thesystem.domain.repository.ChatRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -58,7 +58,7 @@ class ChatRepositoryImpl @Inject constructor(
                 "system" -> ChatRole.SYSTEM
                 else -> ChatRole.SYSTEM
             },
-            text = UiText.DynamicString(message)
+            text = MessageText.DynamicString(message)
         )
     }
 }

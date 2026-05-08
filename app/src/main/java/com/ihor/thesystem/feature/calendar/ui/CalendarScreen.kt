@@ -184,7 +184,7 @@ private fun CalendarHeader(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = currentMonth.toUkrainianMonthYear(),
+                text = currentMonth.toLocalizedMonthYear(),
                 style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -228,7 +228,7 @@ private fun MonthOverviewPanel(
     DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 14.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
-                title = uiState.currentMonth.toUkrainianMonthYear(),
+                title = uiState.currentMonth.toLocalizedMonthYear(),
                 subtitle = "Заплановано, виконано, пропущено"
             )
             CalendarGrid(
@@ -441,7 +441,7 @@ private fun SelectedDayDetailsPanel(
         val hasAnyPlan = day.hasTrainingPlan || day.totalTasks > 0
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
-                title = day.date.toUkrainianDate(),
+                title = day.date.toLocalizedDate(),
                 subtitle = "День ${day.cycleDay} тренувального циклу",
                 trailing = {
                     SystemStatusChip(
@@ -617,15 +617,15 @@ private fun CalendarDayCompletionStatus.toDisplayText(): String =
         CalendarDayCompletionStatus.NO_DATA -> "Немає даних"
     }
 
-private fun YearMonth.toUkrainianMonthYear(): String {
-    val locale = Locale.forLanguageTag("uk")
+private fun YearMonth.toLocalizedMonthYear(): String {
+    val locale = Locale.getDefault()
     val month = month.getDisplayName(TextStyle.FULL_STANDALONE, locale)
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
     return "$month $year"
 }
 
-private fun LocalDate.toUkrainianDate(): String {
-    val locale = Locale.forLanguageTag("uk")
+private fun LocalDate.toLocalizedDate(): String {
+    val locale = Locale.getDefault()
     val formatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", locale)
     return format(formatter).replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 }

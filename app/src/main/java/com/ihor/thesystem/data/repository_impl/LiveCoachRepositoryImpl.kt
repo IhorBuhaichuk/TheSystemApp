@@ -3,13 +3,13 @@ package com.ihor.thesystem.data.repository_impl
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.Content
 import com.ihor.thesystem.BuildConfig
+import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.data.remote.ai.AiErrorClassifier
 import com.ihor.thesystem.data.remote.ai.AiFailureType
 import com.ihor.thesystem.domain.repository.LiveCoachRepository
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -17,11 +17,12 @@ import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 
 class LiveCoachRepositoryImpl @Inject constructor(
-    @param:Named("LiveCoachModel") private val generativeModel: GenerativeModel
+    @param:Named("LiveCoachModel") private val generativeModel: GenerativeModel,
+    private val dispatchers: DispatcherProvider
 ) : LiveCoachRepository {
 
     override suspend fun sendMessage(history: List<Content>, newMessage: String): String =
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             if (!isApiKeyConfigured()) {
                 Timber.e("Gemini API key is not configured for LiveCoach.")
                 return@withContext CONFIGURATION_ERROR_MESSAGE

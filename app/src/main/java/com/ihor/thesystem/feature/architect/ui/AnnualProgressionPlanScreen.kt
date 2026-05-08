@@ -679,7 +679,7 @@ private fun EmptyAnnualBlock(text: String) {
 }
 
 private fun LocalDate.formatDate(): String =
-    format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.forLanguageTag("uk")))
+    format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
 
 private fun LocalDate.toEpochMillis(): Long =
     atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()

@@ -4,11 +4,13 @@ import com.ihor.thesystem.core.util.AppClock
 import com.ihor.thesystem.core.util.Result
 import com.ihor.thesystem.data.local.room.dao.PlayerDao
 import com.ihor.thesystem.data.local.room.dao.WeightLogDao
+import com.ihor.thesystem.data.local.room.entity.PlayerEntity
 import com.ihor.thesystem.data.local.room.entity.WeightLogEntity
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.ZoneId
@@ -37,6 +39,16 @@ class PlayerRepositoryImplTest {
                 }
             )
         }
+    }
+
+    @Test
+    fun `getPlayerSnapshot reads the synchronous player row`() = runTest {
+        coEvery { playerDao.getPlayerSync() } returns PlayerEntity(name = "Snapshot")
+
+        val player = repository.getPlayerSnapshot()
+
+        assertEquals("Snapshot", player?.name)
+        coVerify { playerDao.getPlayerSync() }
     }
 
     private companion object {

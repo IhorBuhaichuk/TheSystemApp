@@ -25,7 +25,7 @@ fun CurrentDateBlock(modifier: Modifier = Modifier) {
     val today = LocalDate.now()
     
     val day = today.dayOfMonth
-    val monthName = today.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("uk"))
+    val monthName = today.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
     
     val dateDisplay = "$day $monthName"
 

@@ -1,9 +1,9 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.google.ai.client.generativeai.type.content
-import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
+import com.ihor.thesystem.domain.model.MessageText
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
 import com.ihor.thesystem.domain.repository.ChatRepository
 import com.ihor.thesystem.domain.repository.LiveCoachRepository
@@ -75,8 +75,8 @@ class SendChatMessageUseCase @Inject constructor(
             // 3. Конвертуємо об'єкти у формат Content для Gemini
             val history = historyMessages.map { msg ->
                 val text = when(val t = msg.text) {
-                    is UiText.DynamicString -> t.value
-                    is UiText.StringResource -> ""
+                    is MessageText.DynamicString -> t.value
+                    is MessageText.Resource -> ""
                 }
                 content(role = if (msg.role == ChatRole.USER) "user" else "model") {
                     text(text)
@@ -93,7 +93,7 @@ class SendChatMessageUseCase @Inject constructor(
             // 5. Зберігаємо відповідь через репозиторій
             chatRepository.saveChatMessage(sessionId, ChatRole.AI, coachResponse)
             
-            ChatMessage(role = ChatRole.AI, text = UiText.DynamicString(coachResponse))
+            ChatMessage(role = ChatRole.AI, text = MessageText.DynamicString(coachResponse))
         }
     }
 }

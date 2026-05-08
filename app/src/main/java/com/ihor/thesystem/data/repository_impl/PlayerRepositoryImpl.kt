@@ -26,6 +26,9 @@ class PlayerRepositoryImpl @Inject constructor(
     override fun getPlayer(): Flow<Player?> =
         playerDao.getPlayer().map { it?.toDomain() }
 
+    override suspend fun getPlayerSnapshot(): Player? =
+        playerDao.getPlayerSync()?.toDomain()
+
     override fun getLatestWeight(): Flow<Float?> =
         weightLogDao.getLatestLog().map { it?.weight }
 

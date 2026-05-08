@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface PlayerRepository {
     fun getPlayer(): Flow<Player?>
+    suspend fun getPlayerSnapshot(): Player?
     fun getLatestWeight(): Flow<Float?>
     fun getWeightHistory(limit: Int = 100): Flow<List<BodyWeightLog>>
     suspend fun updatePlayer(player: Player): Result<Unit, DataError.Local>

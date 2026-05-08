@@ -9,6 +9,8 @@ import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
 import com.ihor.thesystem.domain.model.AiDashboardData
+import com.ihor.thesystem.domain.model.MessageText
+import com.ihor.thesystem.domain.model.MessageTextKey
 import com.ihor.thesystem.domain.repository.ChatRepository
 import com.ihor.thesystem.domain.usecase.ApplyAiRecommendationsUseCase
 import com.ihor.thesystem.domain.usecase.GetAiDashboardDataUseCase
@@ -82,7 +84,10 @@ class ArchitectViewModel @Inject constructor(
                 val initialMessages = listOf(
                     ChatMessage(
                         role = ChatRole.SYSTEM,
-                        text = UiText.StringResource(R.string.architect_initial_message, listOf(context)),
+                        text = MessageText.Resource(
+                            key = MessageTextKey.ARCHITECT_INITIAL_MESSAGE,
+                            args = listOf(context)
+                        ),
                         isActionable = true
                     )
                 )
@@ -98,7 +103,7 @@ class ArchitectViewModel @Inject constructor(
                 val initialMessages = listOf(
                     ChatMessage(
                         role = ChatRole.SYSTEM,
-                        text = UiText.StringResource(R.string.architect_no_data),
+                        text = MessageText.Resource(MessageTextKey.ARCHITECT_NO_DATA),
                         isActionable = false
                     )
                 )
@@ -165,7 +170,7 @@ class ArchitectViewModel @Inject constructor(
             // 2. Додаємо повідомлення користувача
             val userMsg = ChatMessage(
                 role = ChatRole.USER, 
-                text = UiText.StringResource(R.string.architect_btn_send_analysis)
+                text = MessageText.Resource(MessageTextKey.ARCHITECT_SEND_ANALYSIS)
             )
             
             // 3. Вмикаємо завантаження
@@ -194,9 +199,9 @@ class ArchitectViewModel @Inject constructor(
                 
                 val errorMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
-                    text = UiText.StringResource(
-                        R.string.error_network_architect, 
-                        listOf(e.message ?: "")
+                    text = MessageText.Resource(
+                        key = MessageTextKey.ERROR_NETWORK_ARCHITECT,
+                        args = listOf(e.message ?: "")
                     ),
                     isActionable = false
                 )
@@ -220,7 +225,7 @@ class ArchitectViewModel @Inject constructor(
                 
                 val systemMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
-                    text = UiText.StringResource(R.string.architect_directives_applied)
+                    text = MessageText.Resource(MessageTextKey.ARCHITECT_DIRECTIVES_APPLIED)
                 )
                 
                 _uiState.update { state ->

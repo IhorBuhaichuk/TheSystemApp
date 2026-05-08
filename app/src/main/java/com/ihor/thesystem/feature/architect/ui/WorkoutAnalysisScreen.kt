@@ -634,7 +634,7 @@ private fun AnnualProgressStatus.statusAccent(): Color =
 private fun Long.formatDate(): String =
     Instant.ofEpochMilli(this)
         .atZone(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.forLanguageTag("uk")))
+        .format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
 
 private fun Double?.formatSignedWeight(): String =
     this?.let {

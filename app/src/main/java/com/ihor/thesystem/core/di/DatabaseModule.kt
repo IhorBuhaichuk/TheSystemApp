@@ -8,6 +8,7 @@ import com.ihor.thesystem.data.local.room.TransactionProviderImpl
 import com.ihor.thesystem.data.local.room.database.AppDatabase
 import com.ihor.thesystem.data.local.room.database.DatabaseMigrations
 import com.ihor.thesystem.data.local.room.database.DatabasePopulator
+import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.domain.repository.DatabaseReadinessRepository
 import com.ihor.thesystem.domain.repository.TransactionProvider
 import dagger.Binds
@@ -18,7 +19,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Singleton
@@ -37,7 +37,8 @@ abstract class DatabaseModule {
         fun provideDatabase(
             @ApplicationContext context: Context,
             readinessRepo: DatabaseReadinessRepository,
-            @ApplicationScope appScope: CoroutineScope
+            @ApplicationScope appScope: CoroutineScope,
+            dispatchers: DispatcherProvider
         ): AppDatabase {
             val database = Room.databaseBuilder(
                 context,
@@ -47,9 +48,9 @@ abstract class DatabaseModule {
                 .addMigrations(*DatabaseMigrations.ALL_MIGRATIONS)
                 .build()
 
-            appScope.launch(Dispatchers.IO) {
+            appScope.launch(dispatchers.io) {
                 try {
-                    DatabasePopulator.populate(context, database)
+                    DatabasePopulator.populate(context, database, dispatchers.io)
                     readinessRepo.markAsReady()
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e

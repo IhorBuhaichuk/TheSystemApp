@@ -2,36 +2,37 @@ package com.ihor.thesystem.data.repository_impl
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.ihor.thesystem.BuildConfig
-import com.ihor.thesystem.R
-import com.ihor.thesystem.core.ui.UiText
+import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.data.remote.ai.AiArchitectResponseParser
 import com.ihor.thesystem.data.remote.ai.AiErrorClassifier
 import com.ihor.thesystem.data.remote.ai.AiFailureType
 import com.ihor.thesystem.data.remote.ai.AiMalformedResponseException
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
+import com.ihor.thesystem.domain.model.MessageText
+import com.ihor.thesystem.domain.model.MessageTextKey
 import com.ihor.thesystem.domain.repository.AiArchitectRepository
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 
 class AiArchitectRepositoryImpl @Inject constructor(
-    @param:Named("ArchitectModel") private val generativeModel: GenerativeModel
+    @param:Named("ArchitectModel") private val generativeModel: GenerativeModel,
+    private val dispatchers: DispatcherProvider
 ) : AiArchitectRepository {
 
     private val parser = AiArchitectResponseParser()
 
-    override suspend fun getChatResponse(prompt: String): ChatMessage = withContext(Dispatchers.IO) {
+    override suspend fun getChatResponse(prompt: String): ChatMessage = withContext(dispatchers.io) {
         if (!isApiKeyConfigured()) {
             Timber.e("Gemini API key is not configured.")
             return@withContext ChatMessage(
                 role = ChatRole.AI,
-                text = UiText.StringResource(R.string.error_ai_generic),
+                text = MessageText.Resource(MessageTextKey.ERROR_AI_GENERIC),
                 isActionable = false
             )
         }
@@ -48,7 +49,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
                         Timber.e(error, "Malformed AI architect response")
                         return@withTimeout ChatMessage(
                             role = ChatRole.AI,
-                            text = UiText.StringResource(R.string.error_ai_parsing),
+                            text = MessageText.Resource(MessageTextKey.ERROR_AI_PARSING),
                             isActionable = false
                         )
                     }
@@ -56,9 +57,9 @@ class AiArchitectRepositoryImpl @Inject constructor(
                     ChatMessage(
                         role = ChatRole.AI,
                         text = if (parsedResponse.feedbackText.isBlank()) {
-                            UiText.StringResource(R.string.ai_analysis_complete)
+                            MessageText.Resource(MessageTextKey.AI_ANALYSIS_COMPLETE)
                         } else {
-                            UiText.DynamicString(parsedResponse.feedbackText)
+                            MessageText.DynamicString(parsedResponse.feedbackText)
                         },
                         recommendations = parsedResponse.recommendations,
                         isActionable = parsedResponse.recommendations.isNotEmpty(),
@@ -72,7 +73,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
             Timber.e(error, "AI architect request failed after retries")
             ChatMessage(
                 role = ChatRole.AI,
-                text = error.toUiText(),
+                text = error.toMessageText(),
                 isActionable = false
             )
         }
@@ -83,13 +84,13 @@ class AiArchitectRepositoryImpl @Inject constructor(
         return apiKey.isNotBlank() && apiKey != "null"
     }
 
-    private fun Throwable.toUiText(): UiText =
+    private fun Throwable.toMessageText(): MessageText =
         when (AiErrorClassifier.classify(this)) {
-            AiFailureType.RateLimit -> UiText.StringResource(R.string.error_ai_rate_limit)
-            AiFailureType.Overloaded -> UiText.StringResource(R.string.error_ai_overloaded)
+            AiFailureType.RateLimit -> MessageText.Resource(MessageTextKey.ERROR_AI_RATE_LIMIT)
+            AiFailureType.Overloaded -> MessageText.Resource(MessageTextKey.ERROR_AI_OVERLOADED)
             AiFailureType.Timeout,
             AiFailureType.MalformedResponse,
-            AiFailureType.Unknown -> UiText.StringResource(R.string.error_ai_generic)
+            AiFailureType.Unknown -> MessageText.Resource(MessageTextKey.ERROR_AI_GENERIC)
         }
 
     private suspend fun <T> retry(

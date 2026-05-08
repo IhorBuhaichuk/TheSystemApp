@@ -12,6 +12,7 @@ class TemporalConsistencyGuardTest {
         val relativePaths = listOf(
             "src/main/java/com/ihor/thesystem/data/repository_impl/ProgressionMatrixRepositoryImpl.kt",
             "src/main/java/com/ihor/thesystem/data/repository_impl/QuestRepositoryImpl.kt",
+            "src/main/java/com/ihor/thesystem/data/repository_impl/WorkoutAnalyticsRepositoryImpl.kt",
             "src/main/java/com/ihor/thesystem/domain/usecase/GetDailySummaryForDateUseCase.kt",
             "src/main/java/com/ihor/thesystem/domain/usecase/GetPlayerWeightContextUseCase.kt",
             "src/main/java/com/ihor/thesystem/domain/usecase/GetWorkoutAnalysisUseCase.kt",

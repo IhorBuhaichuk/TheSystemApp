@@ -1,9 +1,30 @@
 package com.ihor.thesystem.domain.model
 
-import com.ihor.thesystem.core.ui.UiText
 import java.util.UUID
 
 enum class ChatRole { SYSTEM, USER, AI }
+
+enum class MessageTextKey {
+    ERROR_AI_GENERIC,
+    ERROR_AI_PARSING,
+    ERROR_AI_RATE_LIMIT,
+    ERROR_AI_OVERLOADED,
+    AI_ANALYSIS_COMPLETE,
+    AI_FALLBACK_ACTIVATED,
+    ARCHITECT_INITIAL_MESSAGE,
+    ARCHITECT_NO_DATA,
+    ARCHITECT_SEND_ANALYSIS,
+    ERROR_NETWORK_ARCHITECT,
+    ARCHITECT_DIRECTIVES_APPLIED
+}
+
+sealed interface MessageText {
+    data class DynamicString(val value: String) : MessageText
+    data class Resource(
+        val key: MessageTextKey,
+        val args: List<String> = emptyList()
+    ) : MessageText
+}
 
 data class AiWorkoutRecommendation(
     val exerciseId: Int, 
@@ -16,7 +37,7 @@ data class AiWorkoutRecommendation(
 data class ChatMessage(
     val id: String = UUID.randomUUID().toString(),
     val role: ChatRole,
-    val text: UiText = UiText.DynamicString(""),
+    val text: MessageText = MessageText.DynamicString(""),
     val recommendations: List<AiWorkoutRecommendation> = emptyList(),
     val isActionable: Boolean = false,
     val aiFeedback: String? = null
@@ -72,7 +93,7 @@ data class WorkoutDirective(
  * (Зберігаємо для сумісності під час рефакторингу)
  */
 data class AiArchitectReport(
-    val architectFeedback: UiText,
+    val architectFeedback: MessageText,
     val currentStageStatus: String,
     val completedExercises: List<Int>,
     val pendingExercises: List<Int>,
