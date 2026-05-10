@@ -2,14 +2,22 @@ package com.ihor.thesystem.core.worker
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
-import androidx.work.*
+import androidx.work.BackoffPolicy
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
+import androidx.work.ListenableWorker.Result as WorkResult
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import com.ihor.thesystem.domain.usecase.FinalizeDayUseCase
+import com.ihor.thesystem.domain.util.Result as DomainResult
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import com.ihor.thesystem.domain.usecase.FinalizeDayUseCase
-import timber.log.Timber
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.cancellation.CancellationException
+import timber.log.Timber
 
 @HiltWorker
 class DailyResetWorker @AssistedInject constructor(
@@ -18,24 +26,31 @@ class DailyResetWorker @AssistedInject constructor(
     private val finalizeDay: FinalizeDayUseCase
 ) : CoroutineWorker(appContext, params) {
 
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): WorkResult {
         return try {
             Timber.d("DailyResetWorker: starting midnight reset via FinalizeDayUseCase")
 
-            // Використовуємо єдиний UseCase для фіналізації дня
-            finalizeDay(forceComplete = false)
-
-            Timber.d("DailyResetWorker: completed successfully")
-
-            // Плануємо наступний запуск на наступну північ
-            scheduleNext()
-
-            Result.success()
+            when (val resetResult = finalizeDay(forceComplete = false)) {
+                is DomainResult.Success -> {
+                    Timber.d("DailyResetWorker: completed successfully")
+                    scheduleNext()
+                    WorkResult.success()
+                }
+                is DomainResult.Error -> {
+                    Timber.e("DailyResetWorker: finalization failed: ${resetResult.error.message}")
+                    retryOrFail()
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "DailyResetWorker: failed, will retry")
-            if (runAttemptCount < 3) Result.retry() else Result.failure()
+            retryOrFail()
         }
     }
+
+    private fun retryOrFail(): WorkResult =
+        if (runAttemptCount < MAX_RUN_ATTEMPTS) WorkResult.retry() else WorkResult.failure()
 
     private fun scheduleNext() {
         val now = LocalDateTime.now()
@@ -55,12 +70,9 @@ class DailyResetWorker @AssistedInject constructor(
 
     companion object {
         const val WORK_NAME = "daily_reset_worker"
-        const val WORK_TAG  = "daily_reset"
+        const val WORK_TAG = "daily_reset"
+        private const val MAX_RUN_ATTEMPTS = 3
 
-        /**
-         * Викликати один раз при старті застосунку.
-         * ExistingWorkPolicy.KEEP — якщо worker вже запланований, не перепланувати.
-         */
         fun scheduleIfNotRunning(context: Context) {
             val now = LocalDateTime.now()
             val nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay()
@@ -68,7 +80,7 @@ class DailyResetWorker @AssistedInject constructor(
 
             WorkManager.getInstance(context).enqueueUniqueWork(
                 WORK_NAME,
-                ExistingWorkPolicy.KEEP,   // ← не замінювати вже запланований
+                ExistingWorkPolicy.KEEP,
                 OneTimeWorkRequestBuilder<DailyResetWorker>()
                     .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
                     .setBackoffCriteria(BackoffPolicy.LINEAR, 15, TimeUnit.MINUTES)

@@ -1,6 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
-import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.domain.model.ActiveSetInput

@@ -21,7 +21,7 @@ import androidx.compose.ui.window.Dialog
 import com.ihor.thesystem.core.theme.RajdhaniFamily
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
 import com.ihor.thesystem.feature.status.ui.components.workout.ActiveDayCard
-import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close

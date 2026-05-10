@@ -2,8 +2,8 @@ package com.ihor.thesystem.feature.calendar.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ihor.thesystem.core.util.AppClock
-import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.util.AppClock
+import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.domain.model.CalendarCycleDay
 import com.ihor.thesystem.domain.model.CalendarCycleDayType
 import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus

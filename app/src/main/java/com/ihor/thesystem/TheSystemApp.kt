@@ -36,6 +36,10 @@ class TheSystemApp : Application(), ImageLoaderFactory, Configuration.Provider {
             Timber.plant(Timber.DebugTree())
         }
         
-        DailyResetWorker.scheduleIfNotRunning(this)
+        try {
+            DailyResetWorker.scheduleIfNotRunning(this)
+        } catch (e: Exception) {
+            Timber.e(e, "Unable to schedule daily reset worker during app startup")
+        }
     }
 }

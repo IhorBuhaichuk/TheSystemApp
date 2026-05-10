@@ -2,9 +2,9 @@ package com.ihor.thesystem.core.di
 
 import android.app.Application
 import com.ihor.thesystem.TheSystemApp
-import com.ihor.thesystem.core.util.AppClock
-import com.ihor.thesystem.core.util.AppLogger
-import com.ihor.thesystem.core.util.RealClock
+import com.ihor.thesystem.domain.util.AppClock
+import com.ihor.thesystem.domain.util.AppLogger
+import com.ihor.thesystem.domain.util.RealClock
 import com.ihor.thesystem.core.util.TimberLoggerImpl
 import dagger.Binds
 import dagger.Module

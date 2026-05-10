@@ -41,6 +41,7 @@ import com.ihor.thesystem.feature.status.viewmodel.StatusDialogState
 import com.ihor.thesystem.feature.status.viewmodel.StatusOneOffEvent
 import com.ihor.thesystem.feature.status.viewmodel.StatusUiData
 import com.ihor.thesystem.feature.status.viewmodel.StatusViewModel
+import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
 
 @Composable
 fun StatusScreen(

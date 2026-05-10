@@ -17,7 +17,7 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.BackgroundDeep
 import com.ihor.thesystem.core.theme.NeonCyan
 import com.ihor.thesystem.core.theme.TextSecondary
-import com.ihor.thesystem.core.util.OneRepMaxCalculator
+import com.ihor.thesystem.domain.util.OneRepMaxCalculator
 
 @Composable
 fun OneRepMaxText(

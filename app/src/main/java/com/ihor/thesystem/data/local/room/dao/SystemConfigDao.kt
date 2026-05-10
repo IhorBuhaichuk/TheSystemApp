@@ -17,4 +17,13 @@ interface SystemConfigDao {
 
     @Update
     suspend fun update(config: SystemConfigEntity)
+
+    @Query("INSERT OR IGNORE INTO system_config(id) VALUES(1)")
+    suspend fun ensureConfigExists()
+
+    @Query("UPDATE system_config SET needsDailyInit = :needed WHERE id = 1")
+    suspend fun updateNeedsDailyInit(needed: Boolean)
+
+    @Query("UPDATE system_config SET lastInitEpochDay = :epochDay WHERE id = 1")
+    suspend fun updateLastInitEpochDay(epochDay: Long)
 }

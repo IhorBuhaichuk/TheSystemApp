@@ -92,4 +92,23 @@ class ViewModelStructureGuardTest {
             offenders.isEmpty()
         )
     }
+
+    @Test
+    fun `statistics viewmodel depends on use cases instead of repositories`() {
+        val projectRoot = File(requireNotNull(System.getProperty("user.dir")))
+        val file = projectRoot.resolve(
+            "src/main/java/com/ihor/thesystem/feature/statistics/viewmodel/StatisticsViewModel.kt"
+        )
+        val source = file.readText()
+        val forbidden = listOf(
+            "domain.repository.",
+            "ProgressionMatrixRepository",
+            "ViewingDateRepository"
+        ).filter { it in source }
+
+        assertTrue(
+            "StatisticsViewModel should keep orchestration in domain use cases: $forbidden",
+            forbidden.isEmpty()
+        )
+    }
 }

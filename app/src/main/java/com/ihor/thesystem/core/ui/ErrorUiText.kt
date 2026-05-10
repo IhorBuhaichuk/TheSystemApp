@@ -4,6 +4,7 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.AppErrorType
 import com.ihor.thesystem.domain.model.DataError
+import com.ihor.thesystem.domain.model.ValidationError
 
 fun DomainError.asUiText(): UiText {
     return when (this) {
@@ -22,5 +23,10 @@ fun DomainError.asUiText(): UiText {
         AppErrorType.Unknown -> UiText.StringResource(R.string.error_unknown)
         AppErrorType.AiParsingError -> UiText.StringResource(R.string.error_ai_parsing)
         is AppErrorType.Message -> UiText.DynamicString(this.message ?: "")
+
+        ValidationError.INVALID_PLAYER_NAME -> UiText.StringResource(R.string.error_invalid_name)
+        ValidationError.INVALID_WEIGHT -> UiText.StringResource(R.string.error_invalid_weight)
+        ValidationError.INVALID_HEIGHT -> UiText.StringResource(R.string.error_invalid_height)
+        ValidationError.INVALID_AGE -> UiText.StringResource(R.string.error_invalid_age)
     }
 }

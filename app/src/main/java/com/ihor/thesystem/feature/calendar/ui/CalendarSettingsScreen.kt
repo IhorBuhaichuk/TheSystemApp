@@ -1,4 +1,4 @@
-п»їpackage com.ihor.thesystem.feature.calendar.ui
+package com.ihor.thesystem.feature.calendar.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -74,7 +74,7 @@ import com.ihor.thesystem.feature.calendar.viewmodel.CalendarCycleDayDraftUiMode
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarSettingsEvent
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarSettingsUiState
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarSettingsViewModel
-import com.ihor.thesystem.feature.status.ui.RpgStatusBackdrop
+import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
 
 @Composable
 fun CalendarSettingsScreen(
@@ -113,7 +113,7 @@ fun CalendarSettingsScreen(
             if (uiState.days.isEmpty()) {
                 DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "РљР°Р»РµРЅРґР°СЂРЅРёР№ С†РёРєР» Р·Р°РІР°РЅС‚Р°Р¶СѓС”С‚СЊСЃСЏ.",
+                        text = "Календарний цикл завантажується.",
                         style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
                     )
                 }
@@ -168,7 +168,7 @@ private fun CalendarSettingsHeader(onBack: () -> Unit) {
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "РќР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ РєР°Р»РµРЅРґР°СЂСЏ",
+                text = "Налаштування календаря",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Black
@@ -177,7 +177,7 @@ private fun CalendarSettingsHeader(onBack: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "РћРєСЂРµРјРёР№ РєР°Р»РµРЅРґР°СЂРЅРёР№ С†РёРєР»",
+                text = "Окремий календарний цикл",
                 style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -194,8 +194,8 @@ private fun TemplateBlock(
     DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "РЁР°Р±Р»РѕРЅ С†РёРєР»Сѓ",
-                subtitle = "РћР±СЂР°РЅРёР№ С€Р°Р±Р»РѕРЅ Р·Р°РїРѕРІРЅСЋС” С„РѕСЂРјСѓ РЅРёР¶С‡Рµ"
+                title = "Шаблон циклу",
+                subtitle = "Обраний шаблон заповнює форму нижче"
             )
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 calendarCycleTemplates.forEach { template ->
@@ -259,19 +259,19 @@ private fun CycleParametersBlock(
     DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
-                title = "РћСЃРЅРѕРІРЅС– РїР°СЂР°РјРµС‚СЂРё",
-                subtitle = "Р¦С– РґР°РЅС– СЃС‚РѕСЃСѓСЋС‚СЊСЃСЏ Р»РёС€Рµ РєР°Р»РµРЅРґР°СЂРЅРѕРіРѕ С†РёРєР»Сѓ"
+                title = "Основні параметри",
+                subtitle = "Ці дані стосуються лише календарного циклу"
             )
             CalendarTextField(
-                label = "РќР°Р·РІР° С†РёРєР»Сѓ",
+                label = "Назва циклу",
                 value = uiState.cycleName,
                 onValueChange = onCycleNameChanged
             )
             CalendarTextField(
-                label = "Р”Р°С‚Р° СЃС‚Р°СЂС‚Сѓ С†РёРєР»Сѓ",
+                label = "Дата старту циклу",
                 value = uiState.startDateInput,
                 onValueChange = onStartDateChanged,
-                supportingText = "Р¤РѕСЂРјР°С‚: YYYY-MM-DD"
+                supportingText = "Формат: YYYY-MM-DD"
             )
             CycleLengthRow(
                 cycleLength = uiState.cycleLength,
@@ -295,9 +295,9 @@ private fun TodayCycleAnchorBlock(
     DarkGlassCard(modifier = Modifier.fillMaxWidth(), active = todayCycleDayIndex != null) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "РЇРєРёР№ РґРµРЅСЊ СЃСЊРѕРіРѕРґРЅС–?",
-                subtitle = todayCycleDayIndex?.let { "РЎСЊРѕРіРѕРґРЅС– Р°РєС‚РёРІРЅРёР№ Р”РµРЅСЊ $it" }
-                    ?: "РћР±РµСЂС–С‚СЊ РґРµРЅСЊ РїРѕС‚РѕС‡РЅРѕРіРѕ С†РёРєР»Сѓ"
+                title = "Який день сьогодні?",
+                subtitle = todayCycleDayIndex?.let { "Сьогодні активний День $it" }
+                    ?: "Оберіть день поточного циклу"
             )
             Row(
                 modifier = Modifier
@@ -343,7 +343,7 @@ private fun TodayCycleDayChip(
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Р”РµРЅСЊ ${day.index}",
+                text = "День ${day.index}",
                 style = MaterialTheme.typography.labelMedium.copy(
                     color = if (selected) AccentPrimary else TextPrimary,
                     fontWeight = FontWeight.Bold
@@ -374,14 +374,14 @@ private fun CycleLengthRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Р”РѕРІР¶РёРЅР° С†РёРєР»Сѓ",
+                text = "Довжина циклу",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold
                 )
             )
             Text(
-                text = "$cycleLength РґРЅС–РІ",
+                text = "$cycleLength днів",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
             )
         }
@@ -410,14 +410,14 @@ private fun RepeatRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "РђРІС‚РѕРјР°С‚РёС‡РЅРµ РїРѕРІС‚РѕСЂРµРЅРЅСЏ",
+                text = "Автоматичне повторення",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold
                 )
             )
             Text(
-                text = if (repeats) "Р¦РёРєР» РїРѕРІС‚РѕСЂСЋС”С‚СЊСЃСЏ РїС–СЃР»СЏ РѕСЃС‚Р°РЅРЅСЊРѕРіРѕ РґРЅСЏ" else "Р¦РёРєР» РЅРµ РїРѕРІС‚РѕСЂСЋС”С‚СЊСЃСЏ",
+                text = if (repeats) "Цикл повторюється після останнього дня" else "Цикл не повторюється",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextMuted),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -443,8 +443,8 @@ private fun CycleDaysBlock(
     DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Р”РЅС– С†РёРєР»Сѓ",
-                subtitle = "${days.size} РґРЅС–РІ Сѓ РїРѕС‚РѕС‡РЅС–Р№ С„РѕСЂРјС–"
+                title = "Дні циклу",
+                subtitle = "${days.size} днів у поточній формі"
             )
             days.forEach { day ->
                 CycleDayEditor(
@@ -460,7 +460,7 @@ private fun CycleDaysBlock(
                 )
             }
             SystemButton(
-                text = "Р”РѕРґР°С‚Рё РґРµРЅСЊ",
+                text = "Додати день",
                 icon = Icons.Filled.Add,
                 onClick = onAddDay,
                 modifier = Modifier.fillMaxWidth()
@@ -497,7 +497,7 @@ private fun CycleDayEditor(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Р”РµРЅСЊ ${day.index}",
+                text = "День ${day.index}",
                 style = MaterialTheme.typography.titleSmall.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold
@@ -521,7 +521,7 @@ private fun CycleDayEditor(
             )
         }
         CalendarTextField(
-            label = "РќР°Р·РІР° РґРЅСЏ",
+            label = "Назва дня",
             value = day.name,
             onValueChange = { onDayNameChanged(day.index, it) }
         )
@@ -599,14 +599,14 @@ private fun CalendarSettingsActions(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 SystemButton(
-                    text = "РЎРєР°СЃСѓРІР°С‚Рё",
+                    text = "Скасувати",
                     icon = Icons.Filled.Close,
                     onClick = onCancel,
                     accent = TextSecondary,
                     modifier = Modifier.weight(1f)
                 )
                 SystemButton(
-                    text = if (isSaving) "Р—Р±РµСЂРµР¶РµРЅРЅСЏ" else "Р—Р±РµСЂРµРіС‚Рё С†РёРєР»",
+                    text = if (isSaving) "Збереження" else "Зберегти цикл",
                     icon = Icons.Filled.Save,
                     onClick = onSave,
                     enabled = !isSaving,
@@ -695,9 +695,9 @@ private val calendarCycleTemplates = listOf(
 
 private fun CalendarCycleDayType.toDisplayText(): String =
     when (this) {
-        CalendarCycleDayType.WORK -> "Р РѕР±РѕС‡РёР№"
-        CalendarCycleDayType.NIGHT -> "РќС–С‡РЅРёР№"
-        CalendarCycleDayType.RECOVERY -> "Р’С–РґСЃРёРїРЅРёР№"
-        CalendarCycleDayType.OFF -> "Р’РёС…С–РґРЅРёР№"
-        CalendarCycleDayType.CUSTOM -> "Р’Р»Р°СЃРЅРёР№"
+        CalendarCycleDayType.WORK -> "Робочий"
+        CalendarCycleDayType.NIGHT -> "Нічний"
+        CalendarCycleDayType.RECOVERY -> "Відсипний"
+        CalendarCycleDayType.OFF -> "Вихідний"
+        CalendarCycleDayType.CUSTOM -> "Власний"
     }

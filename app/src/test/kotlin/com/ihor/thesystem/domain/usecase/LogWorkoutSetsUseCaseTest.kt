@@ -1,6 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.Player

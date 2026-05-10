@@ -1,4 +1,4 @@
-п»їpackage com.ihor.thesystem.feature.architect.ui
+package com.ihor.thesystem.feature.architect.ui
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -84,7 +84,7 @@ import com.ihor.thesystem.domain.model.AnnualProgressionPlan
 import com.ihor.thesystem.feature.architect.viewmodel.AnnualProgressionExerciseUiModel
 import com.ihor.thesystem.feature.architect.viewmodel.AnnualProgressionPlanUiState
 import com.ihor.thesystem.feature.architect.viewmodel.AnnualProgressionPlanViewModel
-import com.ihor.thesystem.feature.status.ui.RpgStatusBackdrop
+import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -172,13 +172,13 @@ private fun AnnualPlanHeader(onBack: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "РќР°Р·Р°Рґ",
+                contentDescription = "Назад",
                 tint = TextSecondary
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "РџР»Р°РЅ СЂС–С‡РЅРѕС— РїСЂРѕРіСЂРµСЃС–С—",
+                text = "План річної прогресії",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Black
@@ -187,7 +187,7 @@ private fun AnnualPlanHeader(onBack: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "12 РјС–СЃСЏС†С–РІ РїРѕ РІРёР±СЂР°РЅРёС… РІРїСЂР°РІР°С…",
+                text = "12 місяців по вибраних вправах",
                 style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -207,11 +207,11 @@ private fun AdaptationStatusBlock(
     DarkGlassCard(active = state.isAdaptationComplete) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "РЎС‚Р°С‚СѓСЃ Р°РґР°РїС‚Р°С†С–С—",
-                subtitle = "2 С‚РёР¶РЅС– РїРµСЂРµРґ С„С–РЅР°Р»СЊРЅРёРј РїР»Р°РЅРѕРј"
+                title = "Статус адаптації",
+                subtitle = "2 тижні перед фінальним планом"
             )
             Text(
-                text = "РџРµСЂС€С– 2 С‚РёР¶РЅС– СЃРёСЃС‚РµРјР° Р·Р±РёСЂР°С” СЃС‚Р°СЂС‚РѕРІС– РґР°РЅС–. РџС–СЃР»СЏ С†СЊРѕРіРѕ РјРѕР¶РЅР° СЃС„РѕСЂРјСѓРІР°С‚Рё СЂС–С‡РЅРёР№ РіСЂР°С„С–Рє Р· С†С–Р»СЏРјРё РЅР° РєРѕР¶РµРЅ РјС–СЃСЏС†СЊ.",
+                text = "Перші 2 тижні система збирає стартові дані. Після цього можна сформувати річний графік з цілями на кожен місяць.",
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = TextSecondary,
                     fontWeight = FontWeight.Medium
@@ -219,13 +219,13 @@ private fun AdaptationStatusBlock(
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SystemButton(
-                    text = "РЎСЊРѕРіРѕРґРЅС–",
+                    text = "Сьогодні",
                     onClick = onUseToday,
                     accent = AccentAi,
                     modifier = Modifier.weight(1f)
                 )
                 SystemButton(
-                    text = "Р’РёР±СЂР°С‚Рё РґР°С‚Сѓ",
+                    text = "Вибрати дату",
                     onClick = { showDatePicker = true },
                     accent = AccentAi,
                     modifier = Modifier.weight(1f)
@@ -233,21 +233,21 @@ private fun AdaptationStatusBlock(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SystemStatusChip(
-                    text = "РЎС‚Р°СЂС‚: ${state.startDate.formatDate()}",
+                    text = "Старт: ${state.startDate.formatDate()}",
                     accent = AccentAi,
                     active = true
                 )
                 SystemStatusChip(
-                    text = "РџС–СЃР»СЏ: ${state.adaptationEndsOn.formatDate()}",
+                    text = "Після: ${state.adaptationEndsOn.formatDate()}",
                     accent = AccentPrimary,
                     active = state.isAdaptationComplete
                 )
             }
             Text(
                 text = if (state.isAdaptationComplete) {
-                    "РђРґР°РїС‚Р°С†С–СЋ Р·Р°РІРµСЂС€РµРЅРѕ. РњРѕР¶РЅР° С„РѕСЂРјСѓРІР°С‚Рё С„С–РЅР°Р»СЊРЅРёР№ СЂС–С‡РЅРёР№ РїР»Р°РЅ."
+                    "Адаптацію завершено. Можна формувати фінальний річний план."
                 } else {
-                    "Р”Рѕ Р·Р°РІРµСЂС€РµРЅРЅСЏ Р°РґР°РїС‚Р°С†С–С—: ${state.adaptationRemainingDays} РґРЅ. Р¤С–РЅР°Р»СЊРЅРёР№ РїР»Р°РЅ РЅРµ РіРµРЅРµСЂСѓС”С‚СЊСЃСЏ Р·Р°РІС‡Р°СЃРЅРѕ."
+                    "До завершення адаптації: ${state.adaptationRemainingDays} дн. Фінальний план не генерується завчасно."
                 },
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = if (state.isAdaptationComplete) AccentAi else TextMuted,
@@ -289,12 +289,12 @@ private fun AnnualStartDatePickerDialog(
                         ?.let(onConfirm)
                 }
             ) {
-                Text(text = "РћР±СЂР°С‚Рё", color = AccentAi)
+                Text(text = "Обрати", color = AccentAi)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "РЎРєР°СЃСѓРІР°С‚Рё", color = TextSecondary)
+                Text(text = "Скасувати", color = TextSecondary)
             }
         }
     ) {
@@ -314,15 +314,15 @@ private fun SelectedExercisesBlock(
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Р’РёР±СЂР°РЅС– РІРїСЂР°РІРё",
+                title = "Вибрані вправи",
                 subtitle = if (state.selectedExercises.isEmpty()) {
-                    "Р”РѕРґР°Р№ РІРїСЂР°РІРё РґР»СЏ РїСЂРѕРіРЅРѕР·Сѓ"
+                    "Додай вправи для прогнозу"
                 } else {
-                    "${state.selectedExercises.size} РІРїСЂР°РІ Сѓ РїР»Р°РЅС–"
+                    "${state.selectedExercises.size} вправ у плані"
                 },
                 trailing = {
                     SystemButton(
-                        text = "Р”РѕРґР°С‚Рё",
+                        text = "Додати",
                         icon = Icons.Filled.Add,
                         onClick = onOpenExercisePicker,
                         accent = AccentAi
@@ -330,7 +330,7 @@ private fun SelectedExercisesBlock(
                 }
             )
             if (state.selectedExercises.isEmpty()) {
-                EmptyAnnualBlock(text = "РЎРїРёСЃРѕРє РїРѕСЂРѕР¶РЅС–Р№. РћР±РµСЂРё РІРїСЂР°РІРё Р· Р±Р°Р·Рё, С‰РѕР± РїС–РґРіРѕС‚СѓРІР°С‚Рё СЂС–С‡РЅРёР№ РїСЂРѕРіРЅРѕР·.")
+                EmptyAnnualBlock(text = "Список порожній. Обери вправи з бази, щоб підготувати річний прогноз.")
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     state.selectedExercises.forEach { exercise ->
@@ -386,7 +386,7 @@ private fun SelectedExerciseCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "РџРѕС‚РѕС‡РЅР°: ${exercise.currentWorkingWeight.formatNullableWeight()} В· РџРѕРІС‚.: ${exercise.reps ?: "вЂ”"}",
+                    text = "Поточна: ${exercise.currentWorkingWeight.formatNullableWeight()} · Повт.: ${exercise.reps ?: "—"}",
                     style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -402,7 +402,7 @@ private fun SelectedExerciseCard(
             IconButton(onClick = onRemove, modifier = Modifier.size(34.dp)) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Р’РёРґР°Р»РёС‚Рё",
+                    contentDescription = "Видалити",
                     tint = TextMuted
                 )
             }
@@ -412,24 +412,24 @@ private fun SelectedExerciseCard(
             AnnualNumberField(
                 value = exercise.targetWeightInput,
                 onValueChange = onTargetWeightChanged,
-                label = "Р¦С–Р»СЊ Рњ12",
+                label = "Ціль М12",
                 modifier = Modifier.weight(1f)
             )
             AnnualNumberField(
                 value = exercise.inventoryStepInput,
                 onValueChange = onInventoryStepChanged,
-                label = "РљСЂРѕРє",
+                label = "Крок",
                 modifier = Modifier.weight(1f)
             )
         }
 
         if (exercise.isExpanded) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                AnnualMetricLine(label = "РћСЃС‚Р°РЅРЅС” С‚СЂРµРЅСѓРІР°РЅРЅСЏ", value = exercise.lastTrainingTimestamp.formatTimestamp())
+                AnnualMetricLine(label = "Останнє тренування", value = exercise.lastTrainingTimestamp.formatTimestamp())
                 AnnualMetricLine(label = "Estimated 1RM", value = exercise.estimatedOneRepMax.formatNullableWeight())
                 if (!exercise.canGenerate) {
                     Text(
-                        text = "РџРѕС‚СЂС–Р±РЅС– РїРѕС‚РѕС‡РЅР° РІР°РіР°, С†С–Р»СЊ РІРёС‰Рµ РїРѕС‚РѕС‡РЅРѕС— С‚Р° РєСЂРѕРє С–РЅРІРµРЅС‚Р°СЂСЋ.",
+                        text = "Потрібні поточна вага, ціль вище поточної та крок інвентарю.",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = TextMuted,
                             fontWeight = FontWeight.SemiBold
@@ -498,20 +498,20 @@ private fun GenerationBlock(
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Р“РµРЅРµСЂР°С†С–СЏ",
-                subtitle = "12 РјС–СЃСЏС†С–РІ В· С†С–Р»СЊ РЅР° РєРѕР¶РµРЅ РјС–СЃСЏС†СЊ"
+                title = "Генерація",
+                subtitle = "12 місяців · ціль на кожен місяць"
             )
             Text(
                 text = when {
-                    !state.isAdaptationComplete -> "РџР»Р°РЅ Р±СѓРґРµ РґРѕСЃС‚СѓРїРЅРёР№ РїС–СЃР»СЏ РїРµСЂС€РёС… 2 С‚РёР¶РЅС–РІ Р·Р±РѕСЂСѓ РґР°РЅРёС…."
-                    state.selectedExercises.isEmpty() -> "Р”РѕРґР°Р№ С…РѕС‡Р° Р± РѕРґРЅСѓ РІРїСЂР°РІСѓ."
-                    !state.canGenerate -> "Р—Р°РїРѕРІРЅРё РїРѕРєР°Р·РЅРёРєРё РґР»СЏ РєРѕР¶РЅРѕС— РІРїСЂР°РІРё."
-                    else -> "Р”Р°РЅС– РіРѕС‚РѕРІС– РґРѕ С„РѕСЂРјСѓРІР°РЅРЅСЏ РїР»Р°РЅСѓ."
+                    !state.isAdaptationComplete -> "План буде доступний після перших 2 тижнів збору даних."
+                    state.selectedExercises.isEmpty() -> "Додай хоча б одну вправу."
+                    !state.canGenerate -> "Заповни показники для кожної вправи."
+                    else -> "Дані готові до формування плану."
                 },
                 style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
             )
             SystemButton(
-                text = if (state.isGenerating) "Р¤РѕСЂРјСѓСЋ..." else "РЎС„РѕСЂРјСѓРІР°С‚Рё РїР»Р°РЅ",
+                text = if (state.isGenerating) "Формую..." else "Сформувати план",
                 icon = Icons.AutoMirrored.Filled.ArrowForward,
                 onClick = onGeneratePlan,
                 accent = AccentAi,
@@ -534,8 +534,8 @@ private fun AnnualPlanResultBlock(
     DarkGlassCard(active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Р РµР·СѓР»СЊС‚Р°С‚",
-                subtitle = "РџР»Р°РЅ СЃС‚Р°СЂС‚СѓС” ${plan.startDate.formatDate()}"
+                title = "Результат",
+                subtitle = "План стартує ${plan.startDate.formatDate()}"
             )
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 plan.exercises.forEach { exercisePlan ->
@@ -547,7 +547,7 @@ private fun AnnualPlanResultBlock(
                 }
             }
             SystemButton(
-                text = if (isSaving) "Р—Р±РµСЂС–РіР°СЋ..." else "Р—Р±РµСЂРµРіС‚Рё РїР»Р°РЅ",
+                text = if (isSaving) "Зберігаю..." else "Зберегти план",
                 icon = Icons.Filled.Save,
                 onClick = onSavePlan,
                 accent = AccentAi,
@@ -590,14 +590,14 @@ private fun AnnualExercisePlanCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "${plan.currentWeight.formatWeight()} РєРі в†’ ${plan.targetWeight.formatWeight()} РєРі",
+                    text = "${plan.currentWeight.formatWeight()} кг > ${plan.targetWeight.formatWeight()} кг",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = AccentAi,
                         fontWeight = FontWeight.SemiBold
                     )
                 )
             }
-            SystemStatusChip(text = "Р—Р° РїР»Р°РЅРѕРј", accent = AccentAi, active = true)
+            SystemStatusChip(text = "За планом", accent = AccentAi, active = true)
             IconButton(onClick = onToggleExpanded, modifier = Modifier.size(34.dp)) {
                 Icon(
                     imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
@@ -607,8 +607,8 @@ private fun AnnualExercisePlanCard(
             }
         }
         if (expanded) {
-            AnnualMetricLine(label = "Р†РґРµР°Р»СЊРЅРёР№ РєСЂРѕРє", value = "${plan.idealMonthlyStep.formatWeight()} РєРі/РјС–СЃ")
-            AnnualMetricLine(label = "РљСЂРѕРє С–РЅРІРµРЅС‚Р°СЂСЋ", value = "${plan.inventoryStep.formatWeight()} РєРі")
+            AnnualMetricLine(label = "Ідеальний крок", value = "${plan.idealMonthlyStep.formatWeight()} кг/міс")
+            AnnualMetricLine(label = "Крок інвентарю", value = "${plan.inventoryStep.formatWeight()} кг")
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(vertical = 2.dp)
@@ -688,10 +688,10 @@ private fun Long.toLocalDate(): LocalDate =
     Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 
 private fun Long?.formatTimestamp(): String =
-    this?.toLocalDate()?.formatDate() ?: "вЂ”"
+    this?.toLocalDate()?.formatDate() ?: "—"
 
 private fun Double?.formatNullableWeight(): String =
-    this?.let { "${it.formatWeight()} РєРі" } ?: "вЂ”"
+    this?.let { "${it.formatWeight()} кг" } ?: "—"
 
 private fun Double.formatWeight(): String =
     if (this % 1.0 == 0.0) {

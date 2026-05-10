@@ -1,6 +1,6 @@
 package com.ihor.thesystem.data.repository_impl
 
-import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.data.local.room.dao.TodoDao
 import com.ihor.thesystem.data.local.room.entity.TodoEntity
 import com.ihor.thesystem.domain.model.TodoItem

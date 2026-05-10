@@ -8,11 +8,12 @@ class PlayerUseCaseCancellationGuardTest {
 
     @Test
     fun `player update use cases rethrow coroutine cancellation`() {
-        val projectRoot = File(requireNotNull(System.getProperty("user.dir"))).absoluteFile
+        val appRoot = File(requireNotNull(System.getProperty("user.dir"))).absoluteFile
+        val repoRoot = requireNotNull(appRoot.parentFile)
         val files = listOf(
-            "src/main/java/com/ihor/thesystem/domain/usecase/PlayerUseCases.kt",
-            "src/main/java/com/ihor/thesystem/domain/usecase/UpdatePlayerHeightUseCase.kt"
-        ).map(projectRoot::resolve)
+            "domain/src/main/java/com/ihor/thesystem/domain/usecase/PlayerUseCases.kt",
+            "domain/src/main/java/com/ihor/thesystem/domain/usecase/UpdatePlayerHeightUseCase.kt"
+        ).map(repoRoot::resolve)
 
         files.forEach { file ->
             val source = file.readText()

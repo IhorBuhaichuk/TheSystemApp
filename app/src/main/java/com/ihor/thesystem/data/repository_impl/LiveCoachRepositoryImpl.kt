@@ -1,11 +1,13 @@
 package com.ihor.thesystem.data.repository_impl
 
 import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.Content
+import com.google.ai.client.generativeai.type.content
 import com.ihor.thesystem.BuildConfig
 import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.data.remote.ai.AiErrorClassifier
 import com.ihor.thesystem.data.remote.ai.AiFailureType
+import com.ihor.thesystem.domain.model.AiConversationMessage
+import com.ihor.thesystem.domain.model.AiConversationRole
 import com.ihor.thesystem.domain.repository.LiveCoachRepository
 import javax.inject.Inject
 import javax.inject.Named
@@ -21,7 +23,7 @@ class LiveCoachRepositoryImpl @Inject constructor(
     private val dispatchers: DispatcherProvider
 ) : LiveCoachRepository {
 
-    override suspend fun sendMessage(history: List<Content>, newMessage: String): String =
+    override suspend fun sendMessage(history: List<AiConversationMessage>, newMessage: String): String =
         withContext(dispatchers.io) {
             if (!isApiKeyConfigured()) {
                 Timber.e("Gemini API key is not configured for LiveCoach.")
@@ -31,7 +33,7 @@ class LiveCoachRepositoryImpl @Inject constructor(
             try {
                 retry(maxAttempts = 2, initialDelay = 1_000L) {
                     withTimeout(30_000L) {
-                        val chat = generativeModel.startChat(history)
+                        val chat = generativeModel.startChat(history.toGeminiContent())
                         val response = chat.sendMessage(newMessage)
                         response.text ?: throw IllegalStateException("Empty AI response")
                     }
@@ -86,6 +88,19 @@ class LiveCoachRepositoryImpl @Inject constructor(
             AiFailureType.Overloaded -> OVERLOADED_ERROR_MESSAGE
             AiFailureType.MalformedResponse,
             AiFailureType.Unknown -> DEFAULT_ERROR_MESSAGE
+        }
+
+    private fun List<AiConversationMessage>.toGeminiContent() =
+        map { message ->
+            content(role = message.role.toGeminiRole()) {
+                text(message.text)
+            }
+        }
+
+    private fun AiConversationRole.toGeminiRole(): String =
+        when (this) {
+            AiConversationRole.USER -> "user"
+            AiConversationRole.MODEL -> "model"
         }
 
     companion object {

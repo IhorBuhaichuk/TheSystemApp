@@ -1,6 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.domain.model.SystemConfig
 import org.junit.Assert.assertEquals
 import org.junit.Test

@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.OneRepMaxText
 import com.ihor.thesystem.core.ui.components.RankBadge
-import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 @Composable
 fun MatrixEntryCardPremium(
@@ -127,9 +127,9 @@ fun MatrixEntryCardPremium(
                                 )
                             }
                         }
-                        if (entry.lastAiFeedback != null) {
+                        entry.lastAiFeedback?.let { feedback ->
                             Text(
-                                text = entry.lastAiFeedback!!,
+                                text = feedback,
                                 style = MaterialTheme.typography.bodySmall.copy(color = Color.White.copy(alpha = 0.6f), lineHeight = 16.sp)
                             )
                         }

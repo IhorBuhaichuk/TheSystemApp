@@ -6,7 +6,7 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.ActiveSetInput
-import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.model.ExerciseDetails
@@ -19,9 +19,9 @@ import com.ihor.thesystem.domain.model.toExerciseSetOrNull
 import com.ihor.thesystem.domain.usecase.GetExerciseReferenceUseCase
 import com.ihor.thesystem.domain.usecase.GetSystemConfigUseCase
 import com.ihor.thesystem.domain.usecase.WorkoutUseCases
-import com.ihor.thesystem.core.util.Result
-import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
-import com.ihor.thesystem.feature.statistics.viewmodel.toMatrixEntryUiModel
+import com.ihor.thesystem.domain.util.Result
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
+import com.ihor.thesystem.presentation.common.model.toMatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList

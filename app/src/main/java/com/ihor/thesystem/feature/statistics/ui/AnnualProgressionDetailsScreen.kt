@@ -1,4 +1,4 @@
-п»їpackage com.ihor.thesystem.feature.statistics.ui
+package com.ihor.thesystem.feature.statistics.ui
 
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
@@ -88,7 +88,7 @@ import com.ihor.thesystem.feature.statistics.viewmodel.AnnualProgressionDetailsU
 import com.ihor.thesystem.feature.statistics.viewmodel.AnnualProgressionDetailsViewModel
 import com.ihor.thesystem.feature.statistics.viewmodel.AnnualProgressionManualEditorUiState
 import com.ihor.thesystem.feature.statistics.viewmodel.AnnualProgressionManualExerciseUiModel
-import com.ihor.thesystem.feature.status.ui.RpgStatusBackdrop
+import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -189,13 +189,13 @@ private fun AnnualDetailsHeader(onBack: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "РќР°Р·Р°Рґ",
+                contentDescription = "Назад",
                 tint = TextSecondary
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
             Text(
-                text = "Р С–С‡РЅР° РїСЂРѕРіСЂРµСЃС–СЏ",
+                text = "Річна прогресія",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Black
@@ -204,7 +204,7 @@ private fun AnnualDetailsHeader(onBack: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Р¤Р°РєС‚ РїСЂРѕС‚Рё РїР»Р°РЅСѓ",
+                text = "Факт проти плану",
                 style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -277,7 +277,7 @@ private fun AnnualProgressionChartBlock(exercise: AnnualProgressionExerciseDetai
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
                 title = exercise.exerciseName,
-                subtitle = "Р РЋРЎвЂљР В°РЎР‚РЎвЂљ ${exercise.startDate.formatDate()}"
+                subtitle = "РЎС‚Р°СЂС‚ ${exercise.startDate.formatDate()}"
             )
             AnnualProgressionLineChart(
                 progress = exercise.monthlyProgress,
@@ -416,8 +416,8 @@ private fun ChartLegend() {
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        LegendItem(label = "РџР»Р°РЅ", color = AccentAi)
-        LegendItem(label = "Р¤Р°РєС‚", color = AccentPrimary)
+        LegendItem(label = "План", color = AccentAi)
+        LegendItem(label = "Факт", color = AccentPrimary)
     }
 }
 
@@ -445,8 +445,8 @@ private fun MonthlyTargetsBlock(exercise: AnnualProgressionExerciseDetails) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "РњС–СЃСЏС‡РЅС– С†С–Р»С–",
-                subtitle = "12 РјС–СЃСЏС†С–РІ РїР»Р°РЅСѓ"
+                title = "Місячні цілі",
+                subtitle = "12 місяців плану"
             )
             exercise.monthlyProgress
                 .filter { it.monthIndex in 1..12 }
@@ -488,7 +488,7 @@ private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
-                text = "РџР»Р°РЅ ${month.planWeight.formatWeight()} РєРі",
+                text = "План ${month.planWeight.formatWeight()} кг",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold
@@ -497,7 +497,7 @@ private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Р¤Р°РєС‚ ${month.actualWeight?.let { "${it.formatWeight()} РєРі" } ?: "вЂ”"}",
+                text = "Факт ${month.actualWeight?.let { "${it.formatWeight()} кг" } ?: "—"}",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -517,8 +517,8 @@ private fun CurrentConclusionBlock(exercise: AnnualProgressionExerciseDetails) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "РџРѕС‚РѕС‡РЅРёР№ РІРёСЃРЅРѕРІРѕРє",
-                subtitle = "РћСЃС‚Р°РЅРЅС–Р№ РґРѕСЃС‚СѓРїРЅРёР№ С„Р°РєС‚ РїСЂРѕС‚Рё РїР»Р°РЅСѓ",
+                title = "Поточний висновок",
+                subtitle = "Останній доступний факт проти плану",
                 trailing = {
                     SystemStatusChip(
                         text = AnnualProgressionDetailsUiMapper.statusLabel(exercise.currentStatus),
@@ -628,7 +628,7 @@ private fun AnnualProgressionManualEditorScreen(
                     modifier = Modifier.weight(1f)
                 )
                 SystemButton(
-                    text = if (state.isSaving) "Р—Р±РµСЂС–РіР°СЋ..." else "Р—Р±РµСЂРµРіС‚Рё РіСЂР°С„С–Рє",
+                    text = if (state.isSaving) "Зберігаю..." else "Зберегти графік",
                     icon = Icons.Filled.Save,
                     onClick = onSave,
                     accent = AccentAi,
@@ -658,13 +658,13 @@ private fun AnnualManualHeader(onBack: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "РќР°Р·Р°Рґ",
+                contentDescription = "Назад",
                 tint = TextSecondary
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
             Text(
-                text = "РЎС‚РІРѕСЂРёС‚Рё СЃР°РјРѕСЃС‚С–Р№РЅРѕ",
+                text = "Створити самостійно",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Black
@@ -673,7 +673,7 @@ private fun AnnualManualHeader(onBack: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Р С–С‡РЅР° РїСЂРѕРіСЂРµСЃС–СЏ В· СЂСѓС‡РЅС– С†С–Р»С–",
+                text = "Річна прогресія · ручні цілі",
                 style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -687,11 +687,11 @@ private fun ManualEditorIntroBlock(exerciseCount: Int) {
     DarkGlassCard(active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SystemSectionHeader(
-                title = "РўР°Р±Р»РёС†СЏ С†С–Р»РµР№",
-                subtitle = "$exerciseCount РІРїСЂР°РІ Р· СЂРѕР·РєР»Р°РґСѓ"
+                title = "Таблиця цілей",
+                subtitle = "$exerciseCount вправ з розкладу"
             )
             Text(
-                text = "Р©РѕР± С‚Р°Р±Р»РёС†СЏ Р·Р°Р»РёС€Р°Р»Р°СЃСЊ С‡РёС‚Р°Р±РµР»СЊРЅРѕСЋ, РїРѕРєР°Р·Р°РЅРѕ 3 РјС–СЃСЏС†С– Р·Р° СЂР°Р·. РџРµСЂРµРјРёРєР°Р№ СЃС‚РѕСЂС–РЅРєРё РјС–СЃСЏС†С–РІ, Р° РІРїСЂР°РІРё РїРµСЂРµРіР»СЏРґР°Р№ РІРµСЂС‚РёРєР°Р»СЊРЅРѕ.",
+                text = "Щоб таблиця залишалась читабельною, показано 3 місяці за раз. Перемикай сторінки місяців, а вправи переглядай вертикально.",
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = TextSecondary,
                     fontWeight = FontWeight.Medium
@@ -733,7 +733,7 @@ private fun ManualMonthPager(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "РџРѕРїРµСЂРµРґРЅС– РјС–СЃСЏС†С–",
+                contentDescription = "Попередні місяці",
                 tint = if (page > 0) AccentAi else TextMuted
             )
         }
@@ -752,7 +752,7 @@ private fun ManualMonthPager(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "РЎС‚РѕСЂС–РЅРєР° ${page + 1}/$pageCount",
+                text = "Сторінка ${page + 1}/$pageCount",
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = TextMuted,
                     fontWeight = FontWeight.SemiBold
@@ -766,7 +766,7 @@ private fun ManualMonthPager(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "РќР°СЃС‚СѓРїРЅС– РјС–СЃСЏС†С–",
+                contentDescription = "Наступні місяці",
                 tint = if (page < pageCount - 1) AccentAi else TextMuted
             )
         }
@@ -829,7 +829,7 @@ private fun ManualExerciseTargetRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ManualMetaChip(text = exercise.manualMetricLabel())
-                ManualMetaChip(text = "Р”РЅС– ${exercise.cycleDays.joinToString(", ")}")
+                ManualMetaChip(text = "Дні ${exercise.cycleDays.joinToString(", ")}")
             }
         }
 
@@ -933,7 +933,7 @@ private fun EmptyManualScheduleBlock(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "РЈ СЂРѕР·РєР»Р°РґС– РїРѕРєРё РЅРµРјР°С” РІРїСЂР°РІ",
+                text = "У розкладі поки немає вправ",
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold
@@ -941,7 +941,7 @@ private fun EmptyManualScheduleBlock(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Р”РѕРґР°Р№ РІРїСЂР°РІРё РІ РќР°Р»Р°С€С‚СѓРІР°РЅРЅСЏ СЂРѕР·РєР»Р°РґСѓ, С– РІРѕРЅРё Р°РІС‚РѕРјР°С‚РёС‡РЅРѕ Р·вЂ™СЏРІР»СЏС‚СЊСЃСЏ С‚СѓС‚.",
+                text = "Додай вправи в Налаштування розкладу, і вони автоматично з’являться тут.",
                 style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
             )
         }
@@ -967,17 +967,17 @@ private fun AnnualProgressionEmptyState(
         Spacer(modifier = Modifier.height(24.dp))
         AnnualCreateOptionCard(
             icon = Icons.Filled.AutoAwesome,
-            title = "РЎС‚РІРѕСЂРёС‚Рё Р·Р° РґРѕРїРѕРјРѕРіРѕСЋ РЁР†",
-            text = "РЁР† СЃС„РѕСЂРјСѓС” РјС–СЃСЏС‡РЅС– С†С–Р»С– Р·Р° РІРёР±СЂР°РЅРёРјРё РІРїСЂР°РІР°РјРё С– Р·Р±РµСЂРµР¶Рµ С—С… Сѓ СЂС–С‡РЅРёР№ РіСЂР°С„С–Рє.",
-            buttonText = "РЎС‚РІРѕСЂРёС‚Рё РІ РЁР†",
+            title = "Створити за допомогою ШІ",
+            text = "ШІ сформує місячні цілі за вибраними вправами і збереже їх у річний графік.",
+            buttonText = "Створити в ШІ",
             onClick = onCreateInAi,
             active = true
         )
         AnnualCreateOptionCard(
             icon = Icons.Filled.Edit,
-            title = "РЎС‚РІРѕСЂРёС‚Рё СЃР°РјРѕСЃС‚С–Р№РЅРѕ",
-            text = "Р’С–РґРєСЂРёС”С‚СЊСЃСЏ С‚Р°Р±Р»РёС†СЏ Р· РІРїСЂР°РІР°РјРё Р· СѓСЃС–С… РґРЅС–РІ С†РёРєР»Сѓ. Р—РЅР°С‡РµРЅРЅСЏ РґР»СЏ РєРѕР¶РЅРѕРіРѕ РјС–СЃСЏС†СЏ РјРѕР¶РЅР° РІРІРµСЃС‚Рё РІСЂСѓС‡РЅСѓ.",
-            buttonText = "Р’С–РґРєСЂРёС‚Рё С‚Р°Р±Р»РёС†СЋ",
+            title = "Створити самостійно",
+            text = "Відкриється таблиця з вправами з усіх днів циклу. Значення для кожного місяця можна ввести вручну.",
+            buttonText = "Відкрити таблицю",
             onClick = onCreateManually,
             active = false
         )
@@ -1056,9 +1056,9 @@ private fun java.time.LocalDate.formatDate(): String =
 
 private fun AnnualProgressionManualExerciseUiModel.manualMetricLabel(): String =
     if (trackingMode.usesWeightInput) {
-        "РЎС‚Р°СЂС‚ ${currentWorkingWeight?.let { trackingMode.formatPrimaryValue(it) } ?: "вЂ”"}"
+        "Старт ${currentWorkingWeight?.let { trackingMode.formatPrimaryValue(it) } ?: "—"}"
     } else {
-        "РњРµС‚СЂРёРєР° ${trackingMode.metricUnit}"
+        "Метрика ${trackingMode.metricUnit}"
     }
 
 private fun Double.formatWeight(): String =

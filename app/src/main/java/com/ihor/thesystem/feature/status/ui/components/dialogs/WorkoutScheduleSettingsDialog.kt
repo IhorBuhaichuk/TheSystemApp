@@ -73,7 +73,7 @@ import com.ihor.thesystem.feature.exercise_search.ui.ExercisePickerScreen
 import com.ihor.thesystem.feature.exercise_search.ui.toEquipmentUiText
 import com.ihor.thesystem.feature.exercise_search.ui.toUiText
 import com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchViewModel
-import com.ihor.thesystem.feature.status.ui.RpgStatusBackdrop
+import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
 import com.ihor.thesystem.feature.status.viewmodel.WorkoutScheduleSettingsUiState
 
 @Composable

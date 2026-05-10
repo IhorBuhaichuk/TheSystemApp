@@ -62,24 +62,25 @@ data class Player(
     /**
      * Просуває час у системі: дні мікроциклу, тижні та місяці.
      */
-    fun advanceTime(config: SystemConfig): Player {
-        var newCycleDay = currentCycleDay + 1
-        var newWeek = currentWeek
-        var newMonth = currentMonth
-
-        if (newCycleDay > config.cycleDaysPerMicrocycle) {
-            newCycleDay = 1
-            newWeek += 1
-            if (newWeek > config.microCyclesPerMonth) {
-                newWeek = 1
-                newMonth += 1
-            }
-        }
+    fun advanceTime(config: SystemConfig, days: Long = 1L): Player {
+        val daysToAdvance = days.coerceAtLeast(0L)
+        val cycleDays = config.cycleDaysPerMicrocycle.coerceAtLeast(1)
+        val microCyclesPerMonth = config.microCyclesPerMonth.coerceAtLeast(1)
+        val daysPerMonth = cycleDays.toLong() * microCyclesPerMonth.toLong()
+        val currentDayIndex =
+            (currentMonth.coerceAtLeast(1) - 1).toLong() * daysPerMonth +
+                (currentWeek.coerceAtLeast(1) - 1).toLong() * cycleDays.toLong() +
+                (currentCycleDay.coerceIn(1, cycleDays) - 1).toLong()
+        val nextDayIndex = currentDayIndex + daysToAdvance
+        val nextMonth = (nextDayIndex / daysPerMonth).toInt() + 1
+        val indexWithinMonth = nextDayIndex % daysPerMonth
+        val nextWeek = (indexWithinMonth / cycleDays).toInt() + 1
+        val nextCycleDay = (indexWithinMonth % cycleDays).toInt() + 1
 
         return copy(
-            currentCycleDay = newCycleDay,
-            currentWeek = newWeek,
-            currentMonth = newMonth
+            currentCycleDay = nextCycleDay,
+            currentWeek = nextWeek,
+            currentMonth = nextMonth
         )
     }
 

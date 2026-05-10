@@ -2,7 +2,7 @@ package com.ihor.thesystem.feature.status.viewmodel
 
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
-import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 sealed class StatusDialogState {
     data object None                                                       : StatusDialogState()

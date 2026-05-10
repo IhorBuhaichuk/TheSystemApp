@@ -1,7 +1,7 @@
 package com.ihor.thesystem.data.repository_impl
 
-import com.ihor.thesystem.core.util.AppClock
-import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.util.AppClock
+import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.data.local.room.dao.PlayerDao
 import com.ihor.thesystem.data.local.room.dao.WeightLogDao
 import com.ihor.thesystem.data.local.room.entity.PlayerEntity

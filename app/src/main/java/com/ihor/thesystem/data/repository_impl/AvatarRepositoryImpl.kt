@@ -2,9 +2,9 @@ package com.ihor.thesystem.data.repository_impl
 
 import android.content.Context
 import android.net.Uri
-import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.core.util.DispatcherProvider
-import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.domain.model.DataError
 import com.ihor.thesystem.domain.repository.AvatarRepository
 import dagger.hilt.android.qualifiers.ApplicationContext

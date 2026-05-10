@@ -9,9 +9,9 @@ class AiDomainTextBoundaryGuardTest {
 
     @Test
     fun `ai chat domain models do not depend on ui text`() {
-        val source = File(requireNotNull(System.getProperty("user.dir")))
-            .absoluteFile
-            .resolve("src/main/java/com/ihor/thesystem/domain/model/AiDomainModels.kt")
+        val appRoot = File(requireNotNull(System.getProperty("user.dir"))).absoluteFile
+        val source = requireNotNull(appRoot.parentFile)
+            .resolve("domain/src/main/java/com/ihor/thesystem/domain/model/AiDomainModels.kt")
             .readText()
 
         assertFalse(

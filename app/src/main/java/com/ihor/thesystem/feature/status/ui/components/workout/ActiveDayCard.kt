@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
-import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType

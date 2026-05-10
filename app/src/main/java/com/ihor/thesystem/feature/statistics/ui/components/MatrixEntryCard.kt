@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.*
 import com.ihor.thesystem.core.ui.components.OneRepMaxText
 import com.ihor.thesystem.core.ui.components.RankBadge
-import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 @Composable
 fun MatrixEntryCard(

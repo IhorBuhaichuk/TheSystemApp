@@ -24,6 +24,7 @@ class SourceWarningGuardTest {
                         "androidx.hilt.navigation.compose.hiltViewModel" in line -> "$path:${index + 1} uses moved hiltViewModel import"
                         "Locale(\"uk\")" in line -> "$path:${index + 1} uses deprecated Locale constructor"
                         ".asFrameworkPaint()" in line -> "$path:${index + 1} uses deprecated Compose asFrameworkPaint"
+                        "!!" in line -> "$path:${index + 1} uses a non-null assertion"
                         else -> null
                     }
                 }

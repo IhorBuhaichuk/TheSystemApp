@@ -6,29 +6,38 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
-import com.ihor.thesystem.core.util.AppClock
-import com.ihor.thesystem.domain.repository.*
+import com.ihor.thesystem.core.ui.asUiText
+import com.ihor.thesystem.domain.util.AppClock
+import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
+import com.ihor.thesystem.domain.usecase.LogWorkoutSetsUseCase
 import com.ihor.thesystem.domain.usecase.LogWeightUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
+import com.ihor.thesystem.domain.usecase.SelectViewingDateUseCase
+import com.ihor.thesystem.domain.usecase.UpdateMatrixGoalsUseCase
 import com.ihor.thesystem.domain.usecase.UpdatePlayerAgeUseCase
 import com.ihor.thesystem.domain.usecase.UpdatePlayerHeightUseCase
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.StatisticsData
+import com.ihor.thesystem.domain.model.ValidationError
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
-    private val matrixRepo: ProgressionMatrixRepository,
-    private val viewingDateRepo: ViewingDateRepository,
     private val getStatisticsDataUseCase: GetStatisticsDataUseCase,
+    private val logWorkoutSetsUseCase: LogWorkoutSetsUseCase,
+    private val updateMatrixGoalsUseCase: UpdateMatrixGoalsUseCase,
     private val recalculateGlobalRankUseCase: RecalculateGlobalRankUseCase,
+    private val selectViewingDateUseCase: SelectViewingDateUseCase,
     private val logWeightUseCase: LogWeightUseCase,
     private val updatePlayerHeightUseCase: UpdatePlayerHeightUseCase,
     private val updatePlayerAgeUseCase: UpdatePlayerAgeUseCase,
@@ -63,7 +72,7 @@ class StatisticsViewModel @Inject constructor(
     val uiEvents = _uiEvents.asSharedFlow()
 
     fun refreshForCurrentDay() {
-        viewingDateRepo.selectToday()
+        selectViewingDateUseCase(todayDate())
         _refreshRequests.value = clock.now()
     }
 
@@ -104,7 +113,7 @@ class StatisticsViewModel @Inject constructor(
     fun onLogSetsConfirmed(exerciseId: Int, sets: List<ActiveSetInput>, feedback: String) {
         viewModelScope.launch {
             try {
-                matrixRepo.saveExerciseSetsWithDate(
+                logWorkoutSetsUseCase(
                     exerciseId = exerciseId,
                     sets = sets,
                     timestamp = clock.now(),
@@ -122,7 +131,7 @@ class StatisticsViewModel @Inject constructor(
     fun onConfirmSetup(exerciseId: Int, start: String, target: String) {
         viewModelScope.launch {
             try {
-                matrixRepo.updateMatrixGoals(exerciseId, start.toFloatOrNull() ?: 0f, target.toFloatOrNull() ?: 0f)
+                updateMatrixGoalsUseCase(exerciseId, start.toFloatOrNull() ?: 0f, target.toFloatOrNull() ?: 0f)
                 recalculateGlobalRank()
                 onDismissDialog()
             } catch (e: Exception) {
@@ -133,15 +142,13 @@ class StatisticsViewModel @Inject constructor(
         }
     }
 
-    private fun recalculateGlobalRank() {
-        viewModelScope.launch {
-            try {
-                recalculateGlobalRankUseCase()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                Timber.e(e, "Failed to recalculate global rank from statistics")
-                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_rank_update)))
-            }
+    private suspend fun recalculateGlobalRank() {
+        try {
+            recalculateGlobalRankUseCase()
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to recalculate global rank from statistics")
+            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_rank_update)))
         }
     }
 
@@ -160,33 +167,47 @@ class StatisticsViewModel @Inject constructor(
 
     fun onWeightConfirmed(weight: Float) {
         viewModelScope.launch {
-            logWeightUseCase(weight).onSuccess {
-                onDismissDialog()
-            }.onFailure {
-                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_weight_update)))
-            }
+            handleProfileUpdate(
+                result = logWeightUseCase(weight),
+                fallback = UiText.StringResource(R.string.error_weight_update)
+            )
         }
     }
 
     fun onHeightConfirmed(height: Float) {
         viewModelScope.launch {
-            updatePlayerHeightUseCase(height).onSuccess {
-                onDismissDialog()
-            }.onFailure {
-                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_height_update)))
-            }
+            handleProfileUpdate(
+                result = updatePlayerHeightUseCase(height),
+                fallback = UiText.StringResource(R.string.error_height_update)
+            )
         }
     }
 
     fun onAgeConfirmed(age: Int) {
         viewModelScope.launch {
-            updatePlayerAgeUseCase(age).onSuccess {
-                onDismissDialog()
-            }.onFailure {
-                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_age_update)))
-            }
+            handleProfileUpdate(
+                result = updatePlayerAgeUseCase(age),
+                fallback = UiText.StringResource(R.string.error_age_update)
+            )
         }
     }
 
     fun onDismissDialog() { _dialogState.value = StatisticsDialogState.None }
+
+    private fun todayDate() =
+        Instant.ofEpochMilli(clock.now())
+            .atZone(clock.zoneId())
+            .toLocalDate()
+
+    private suspend fun handleProfileUpdate(result: Result<Unit, DomainError>, fallback: UiText) {
+        when (result) {
+            is Result.Success -> onDismissDialog()
+            is Result.Error -> {
+                _uiEvents.emit(UiEvent.ShowError(result.error.validationTextOr(fallback)))
+            }
+        }
+    }
+
+    private fun DomainError.validationTextOr(fallback: UiText): UiText =
+        if (this is ValidationError) asUiText() else fallback
 }

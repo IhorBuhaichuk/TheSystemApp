@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiText
-import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.domain.model.AnnualProgressionPlan
 import com.ihor.thesystem.domain.model.AnnualProgressionPlanInput

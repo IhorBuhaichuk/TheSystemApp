@@ -13,15 +13,15 @@ class DomainInvariantGuardTest {
         val repoRoot = requireNotNull(appRoot.parentFile)
 
         assertContains(
-            file = appRoot.resolve("src/main/java/com/ihor/thesystem/domain/usecase/CycleUseCases.kt"),
+            file = repoRoot.resolve("domain/src/main/java/com/ihor/thesystem/domain/usecase/CycleUseCases.kt"),
             text = "QuestCompletionPolicy.resolveForDayFinalization"
         )
         assertContains(
-            file = appRoot.resolve("src/main/java/com/ihor/thesystem/domain/usecase/FinalizeDayUseCase.kt"),
+            file = repoRoot.resolve("domain/src/main/java/com/ihor/thesystem/domain/usecase/FinalizeDayUseCase.kt"),
             text = "QuestCompletionPolicy.resolveForDayFinalization"
         )
         assertContains(
-            file = appRoot.resolve("src/main/java/com/ihor/thesystem/domain/usecase/RecalculateGlobalRankUseCase.kt"),
+            file = repoRoot.resolve("domain/src/main/java/com/ihor/thesystem/domain/usecase/RecalculateGlobalRankUseCase.kt"),
             text = "RankProgressionPolicy.resolveGlobalRank"
         )
         assertContains(

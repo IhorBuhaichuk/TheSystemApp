@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.statistics.viewmodel
 
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -51,35 +52,6 @@ data class SystemInsightUiModel(
     val weakPoint: String = "",
     val recommendation: String = ""
 )
-
-data class MatrixEntryUiModel(
-    val exerciseId: Int,
-    val exerciseName: String,
-    val startWeight: Float,
-    val targetWeight: Float,
-    val currentWeight: Float,
-    val targetWeightNote: String?,
-    val weeklyStep: Float,
-    val progressPercent: Float,
-    val currentRank: Rank = Rank.E,
-    val completedCycles: Int = 0,
-    val isActive: Boolean = true,
-    val orderIndex: Int = 999,
-    val weightHistory: ImmutableList<WeightHistoryEntry> = persistentListOf(),
-    val nextRecommendedWeight: Double? = null,
-    val nextRecommendedSets: Int? = null,
-    val nextRecommendedReps: String? = null,
-    val lastAiFeedback: String? = null
-) {
-    val displayTarget: String
-        get() = if (targetWeight < 0f) targetWeightNote ?: "—"
-        else "${targetWeight}кг"
-    val displayCurrent: String
-        get() = "${currentWeight}кг"
-    val displayStart: String
-        get() = "${startWeight}кг"
-}
-
 
 sealed class StatisticsDialogState {
     data object None : StatisticsDialogState()

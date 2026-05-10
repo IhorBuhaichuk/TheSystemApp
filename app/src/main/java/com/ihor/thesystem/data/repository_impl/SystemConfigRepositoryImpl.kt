@@ -5,7 +5,6 @@ import com.ihor.thesystem.data.local.room.entity.SystemConfigEntity
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -20,13 +19,13 @@ class SystemConfigRepositoryImpl @Inject constructor(
         dao.insertOrUpdate(config.toEntity())
 
     override suspend fun setNeedsDailyInit(needed: Boolean) {
-        val current = dao.getConfigFlow().firstOrNull() ?: SystemConfigEntity()
-        dao.insertOrUpdate(current.copy(needsDailyInit = needed))
+        dao.ensureConfigExists()
+        dao.updateNeedsDailyInit(needed)
     }
 
     override suspend fun saveLastInitDate(epochDay: Long) {
-        val current = dao.getConfigFlow().firstOrNull() ?: SystemConfigEntity()
-        dao.insertOrUpdate(current.copy(lastInitEpochDay = epochDay))
+        dao.ensureConfigExists()
+        dao.updateLastInitEpochDay(epochDay)
     }
 }
 

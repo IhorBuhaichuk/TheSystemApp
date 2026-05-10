@@ -26,7 +26,6 @@ class ApplyAiRecommendationsUseCaseGuardTest {
     }
 
     private fun sourceFile(): File =
-        File(requireNotNull(System.getProperty("user.dir")))
-            .absoluteFile
-            .resolve("src/main/java/com/ihor/thesystem/domain/usecase/ApplyAiRecommendationsUseCase.kt")
+        requireNotNull(File(requireNotNull(System.getProperty("user.dir"))).absoluteFile.parentFile)
+            .resolve("domain/src/main/java/com/ihor/thesystem/domain/usecase/ApplyAiRecommendationsUseCase.kt")
 }

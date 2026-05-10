@@ -1,5 +1,6 @@
 package com.ihor.thesystem.core.util
 
+import com.ihor.thesystem.domain.util.AppLogger
 import timber.log.Timber
 import javax.inject.Inject
 

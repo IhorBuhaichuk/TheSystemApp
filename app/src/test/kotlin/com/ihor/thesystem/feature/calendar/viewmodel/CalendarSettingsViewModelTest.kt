@@ -2,7 +2,7 @@ package com.ihor.thesystem.feature.calendar.viewmodel
 
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiText
-import com.ihor.thesystem.core.util.AppClock
+import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.domain.model.CalendarCycle
 import com.ihor.thesystem.domain.model.CalendarCycleDay

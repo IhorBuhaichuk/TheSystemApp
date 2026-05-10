@@ -1,4 +1,4 @@
-﻿package com.ihor.thesystem.feature.status.viewmodel
+package com.ihor.thesystem.feature.status.viewmodel
 
 import android.content.Context
 import android.content.Intent
@@ -6,10 +6,9 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.R
-import com.ihor.thesystem.core.util.AppClock
-import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.util.AppClock
+import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.core.ui.asUiText
-import com.ihor.thesystem.core.ui.StringResourceException
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
@@ -17,6 +16,7 @@ import com.ihor.thesystem.domain.model.DomainQuestStatus
 import com.ihor.thesystem.domain.model.DomainQuestType
 import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus
 import com.ihor.thesystem.domain.model.CalendarWeekDay
+import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.model.StatusData
@@ -195,7 +195,7 @@ class StatusViewModel @Inject constructor(
         val dateChanged = lastDate < todayEpochDay
 
         if (config?.needsDailyInit == true || hasNoQuests || dateChanged) {
-            useCases.finalizeDay(forceComplete = false)
+            finalizeDayAndReport(forceComplete = false)
         }
     }
 
@@ -208,9 +208,6 @@ class StatusViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 block()
-            } catch (e: StringResourceException) {
-                Timber.e(e, "Domain error in launchCatching")
-                _uiEvents.emit(UiEvent.ShowError(e.uiText))
             } catch (e: SecurityException) {
                 Timber.e(e, "Security error in StatusViewModel")
                 _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_unknown)))
@@ -233,26 +230,23 @@ class StatusViewModel @Inject constructor(
 
     fun onNameConfirmed(newName: String) = launchCatching {
         val player = currentPlayer.value ?: return@launchCatching
-        useCases.updatePlayerName(player, newName).onSuccess {
-            onDismissDialog()
-        }.onFailure { e ->
-            handleError(e)
+        when (val result = useCases.updatePlayerName(player, newName)) {
+            is Result.Success -> onDismissDialog()
+            is Result.Error -> handleError(result.error)
         }
     }
 
     fun onWeightConfirmed(weight: Float) = launchCatching {
-        useCases.logWeight(weight).onSuccess {
-            onDismissDialog()
-        }.onFailure { e ->
-            handleError(e)
+        when (val result = useCases.logWeight(weight)) {
+            is Result.Success -> onDismissDialog()
+            is Result.Error -> handleError(result.error)
         }
     }
 
     fun onHeightConfirmed(height: Float) = launchCatching {
-        useCases.updateHeight(height).onSuccess {
-            onDismissDialog()
-        }.onFailure { e ->
-            handleError(e)
+        when (val result = useCases.updateHeight(height)) {
+            is Result.Success -> onDismissDialog()
+            is Result.Error -> handleError(result.error)
         }
     }
 
@@ -261,8 +255,9 @@ class StatusViewModel @Inject constructor(
 
         when (val avatarResult = useCases.saveAvatar(uri.toString())) {
             is Result.Success -> {
-                useCases.updatePlayerAvatar(player, avatarResult.data).onFailure { e ->
-                    handleError(e)
+                when (val updateResult = useCases.updatePlayerAvatar(player, avatarResult.data)) {
+                    is Result.Success -> Unit
+                    is Result.Error -> handleError(updateResult.error)
                 }
             }
             is Result.Error -> {
@@ -271,13 +266,8 @@ class StatusViewModel @Inject constructor(
         }
     }
 
-    private suspend fun handleError(e: Throwable) {
-        if (e is StringResourceException) {
-            _uiEvents.emit(UiEvent.ShowError(e.uiText))
-        } else {
-            Timber.e(e, "Handled unknown error")
-            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
-        }
+    private suspend fun handleError(error: DomainError) {
+        _uiEvents.emit(UiEvent.ShowError(error.asUiText()))
     }
 
     fun onTaskToggled(task: TaskUiModel, questId: Int) = launchCatching {
@@ -321,9 +311,19 @@ class StatusViewModel @Inject constructor(
     fun onForceEndDay() = launchCatching {
         _questsReady.value = false
         try {
-            useCases.finalizeDay(forceComplete = true)
+            finalizeDayAndReport(forceComplete = true)
         } finally {
             _questsReady.value = true
+        }
+    }
+
+    private suspend fun finalizeDayAndReport(forceComplete: Boolean): Boolean {
+        return when (val result = useCases.finalizeDay(forceComplete = forceComplete)) {
+            is Result.Success -> true
+            is Result.Error -> {
+                _uiEvents.emit(UiEvent.ShowError(result.error.asUiText()))
+                false
+            }
         }
     }
 

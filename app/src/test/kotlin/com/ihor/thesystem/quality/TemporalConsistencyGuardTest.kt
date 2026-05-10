@@ -8,26 +8,27 @@ class TemporalConsistencyGuardTest {
 
     @Test
     fun `critical domain and data paths use AppClock for current time and timezone`() {
-        val projectRoot = File(requireNotNull(System.getProperty("user.dir")))
+        val appRoot = File(requireNotNull(System.getProperty("user.dir"))).absoluteFile
+        val repoRoot = requireNotNull(appRoot.parentFile)
         val relativePaths = listOf(
-            "src/main/java/com/ihor/thesystem/data/repository_impl/ProgressionMatrixRepositoryImpl.kt",
-            "src/main/java/com/ihor/thesystem/data/repository_impl/QuestRepositoryImpl.kt",
-            "src/main/java/com/ihor/thesystem/data/repository_impl/WorkoutAnalyticsRepositoryImpl.kt",
-            "src/main/java/com/ihor/thesystem/domain/usecase/GetDailySummaryForDateUseCase.kt",
-            "src/main/java/com/ihor/thesystem/domain/usecase/GetPlayerWeightContextUseCase.kt",
-            "src/main/java/com/ihor/thesystem/domain/usecase/GetWorkoutAnalysisUseCase.kt",
-            "src/main/java/com/ihor/thesystem/domain/usecase/LogWorkoutSetsUseCase.kt",
-            "src/main/java/com/ihor/thesystem/feature/statistics/viewmodel/StatisticsViewModel.kt",
-            "src/main/java/com/ihor/thesystem/feature/status/viewmodel/StatusViewModel.kt",
-            "src/main/java/com/ihor/thesystem/feature/status/viewmodel/WorkoutViewModel.kt"
+            "app/src/main/java/com/ihor/thesystem/data/repository_impl/ProgressionMatrixRepositoryImpl.kt",
+            "app/src/main/java/com/ihor/thesystem/data/repository_impl/QuestRepositoryImpl.kt",
+            "app/src/main/java/com/ihor/thesystem/data/repository_impl/WorkoutAnalyticsRepositoryImpl.kt",
+            "domain/src/main/java/com/ihor/thesystem/domain/usecase/GetDailySummaryForDateUseCase.kt",
+            "domain/src/main/java/com/ihor/thesystem/domain/usecase/GetPlayerWeightContextUseCase.kt",
+            "domain/src/main/java/com/ihor/thesystem/domain/usecase/GetWorkoutAnalysisUseCase.kt",
+            "domain/src/main/java/com/ihor/thesystem/domain/usecase/LogWorkoutSetsUseCase.kt",
+            "app/src/main/java/com/ihor/thesystem/feature/statistics/viewmodel/StatisticsViewModel.kt",
+            "app/src/main/java/com/ihor/thesystem/feature/status/viewmodel/StatusViewModel.kt",
+            "app/src/main/java/com/ihor/thesystem/feature/status/viewmodel/WorkoutViewModel.kt"
         )
         val forbidden = listOf("System.currentTimeMillis()", "ZoneId.systemDefault()")
 
         val offenders = relativePaths
-            .map { projectRoot.resolve(it) }
+            .map { repoRoot.resolve(it) }
             .filter { it.exists() }
             .flatMap { file ->
-                val path = file.relativeTo(projectRoot).invariantSeparatorsPath
+                val path = file.relativeTo(repoRoot).invariantSeparatorsPath
                 file.readLines().mapIndexedNotNull { index, line ->
                     forbidden.firstOrNull { it in line }?.let { usage ->
                         "$path:${index + 1} uses $usage"

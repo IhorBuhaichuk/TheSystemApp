@@ -1,4 +1,4 @@
-﻿package com.ihor.thesystem.feature.statistics.ui
+package com.ihor.thesystem.feature.statistics.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -65,12 +65,12 @@ import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
-import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsViewModel
 import com.ihor.thesystem.feature.statistics.viewmodel.SystemInsightUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.WeeklyTrainingDayUiModel
-import com.ihor.thesystem.feature.status.ui.RpgStatusBackdrop
+import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
 import java.util.Locale
 import kotlin.math.roundToInt
 

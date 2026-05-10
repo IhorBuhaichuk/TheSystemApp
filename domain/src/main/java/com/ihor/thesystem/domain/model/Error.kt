@@ -55,3 +55,13 @@ sealed interface AppErrorType : DomainError {
 interface ExceptionMapper {
     fun map(e: Throwable): DomainError
 }
+
+enum class ValidationError : DomainError {
+    INVALID_PLAYER_NAME,
+    INVALID_WEIGHT,
+    INVALID_HEIGHT,
+    INVALID_AGE;
+
+    override val message: String?
+        get() = name
+}

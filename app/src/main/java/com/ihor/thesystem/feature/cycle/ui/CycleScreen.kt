@@ -1,4 +1,4 @@
-﻿package com.ihor.thesystem.feature.cycle.ui
+package com.ihor.thesystem.feature.cycle.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -59,8 +59,8 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.domain.model.Rank
-import com.ihor.thesystem.feature.statistics.viewmodel.MatrixEntryUiModel
-import com.ihor.thesystem.feature.status.ui.RpgStatusBackdrop
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
+import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
 import com.ihor.thesystem.feature.status.ui.WorkoutDialogHost
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
 import com.ihor.thesystem.feature.status.viewmodel.CycleDayUiModel

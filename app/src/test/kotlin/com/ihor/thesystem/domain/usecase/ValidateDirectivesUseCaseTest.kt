@@ -1,6 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.core.util.Result
+import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.domain.model.WorkoutDirective
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import org.junit.Assert.assertEquals

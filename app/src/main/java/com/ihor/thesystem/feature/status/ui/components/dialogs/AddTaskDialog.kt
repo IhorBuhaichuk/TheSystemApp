@@ -1,5 +1,8 @@
 package com.ihor.thesystem.feature.status.ui.components.dialogs
 
+import android.graphics.BlurMaskFilter
+import android.graphics.Paint as NativePaint
+import android.graphics.Path as NativePath
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -45,10 +48,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -75,6 +79,8 @@ import com.ihor.thesystem.core.ui.components.SystemButton
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sin
 
@@ -289,21 +295,22 @@ private fun BluePlasmaModalFrame(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2200, easing = LinearEasing),
+            animation = tween(durationMillis = 1650, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "plasma_phase"
     )
     val pulse by transition.animateFloat(
-        initialValue = 0.72f,
-        targetValue = 1.18f,
+        initialValue = 0.84f,
+        targetValue = 1.20f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 760, easing = LinearEasing),
+            animation = tween(durationMillis = 520, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "plasma_pulse"
     )
 
+    val plasmaPadding = 24.dp
     Box(
         modifier = modifier
             .drawBehind {
@@ -311,10 +318,10 @@ private fun BluePlasmaModalFrame(
                     phase = phase,
                     pulse = pulse,
                     cornerRadiusPx = cornerRadius.toPx(),
-                    insetPx = 17.dp.toPx()
+                    insetPx = plasmaPadding.toPx()
                 )
             }
-            .padding(17.dp),
+            .padding(plasmaPadding),
         contentAlignment = Alignment.Center
     ) {
         content()
@@ -334,212 +341,486 @@ private fun DrawScope.drawBluePlasmaFrame(
     if (right <= left || bottom <= top) return
 
     val frameSize = Size(right - left, bottom - top)
-    val cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx)
-    val plasma = Color(0xFF00E5FF)
-    val core = Color(0xFF7DFBFF)
-    val deep = Color(0xFF006DFF)
+    val radius = cornerRadiusPx.coerceAtMost(min(frameSize.width, frameSize.height) / 2f)
+    val cornerRadius = CornerRadius(radius, radius)
+    val points = buildRoundedPlasmaContour(left, top, right, bottom, radius)
+    val plasma = Color(0xFF00DFFF)
+    val core = Color(0xFFC6FDFF)
+    val deep = Color(0xFF0070FF)
+    val violetBlue = Color(0xFF004CFF)
+
+    drawPlasmaBand(
+        points = points,
+        phase = phase,
+        seed = 0.17f,
+        pulse = pulse,
+        innerOffsetPx = 4.dp.toPx(),
+        outerBasePx = 28.dp.toPx(),
+        outerVariancePx = 18.dp.toPx(),
+        tangentJitterPx = 6.dp.toPx(),
+        color = violetBlue,
+        alpha = 0.30f,
+        blurPx = 25.dp.toPx()
+    )
+    drawPlasmaBand(
+        points = points,
+        phase = phase,
+        seed = 1.93f,
+        pulse = pulse,
+        innerOffsetPx = 3.dp.toPx(),
+        outerBasePx = 14.dp.toPx(),
+        outerVariancePx = 20.dp.toPx(),
+        tangentJitterPx = 8.dp.toPx(),
+        color = deep,
+        alpha = 0.30f,
+        blurPx = 15.dp.toPx()
+    )
+    drawPlasmaBand(
+        points = points,
+        phase = phase,
+        seed = 3.41f,
+        pulse = pulse,
+        innerOffsetPx = 2.dp.toPx(),
+        outerBasePx = 7.dp.toPx(),
+        outerVariancePx = 16.dp.toPx(),
+        tangentJitterPx = 6.dp.toPx(),
+        color = plasma,
+        alpha = 0.36f,
+        blurPx = 8.dp.toPx()
+    )
+    drawPlasmaBand(
+        points = points,
+        phase = phase,
+        seed = 5.12f,
+        pulse = pulse,
+        innerOffsetPx = 1.dp.toPx(),
+        outerBasePx = 5.dp.toPx(),
+        outerVariancePx = 7.dp.toPx(),
+        tangentJitterPx = 3.dp.toPx(),
+        color = core,
+        alpha = 0.36f,
+        blurPx = 3.dp.toPx()
+    )
+    drawPlasmaFlares(
+        points = points,
+        phase = phase,
+        pulse = pulse,
+        plasma = plasma,
+        core = core,
+        deep = deep
+    )
+    drawPlasmaCells(
+        points = points,
+        phase = phase,
+        pulse = pulse,
+        plasma = plasma,
+        core = core,
+        deep = deep
+    )
+    drawPlasmaContourStroke(
+        points = points,
+        phase = phase,
+        seed = 7.8f,
+        pulse = pulse,
+        offsetBasePx = 10.dp.toPx(),
+        offsetVariancePx = 8.dp.toPx(),
+        widthPx = 2.5.dp.toPx(),
+        color = plasma,
+        alpha = 0.24f,
+        blurPx = 4.dp.toPx()
+    )
+    drawPlasmaContourStroke(
+        points = points,
+        phase = phase,
+        seed = 9.24f,
+        pulse = pulse,
+        offsetBasePx = 3.dp.toPx(),
+        offsetVariancePx = 4.dp.toPx(),
+        widthPx = 1.35.dp.toPx(),
+        color = core,
+        alpha = 0.58f,
+        blurPx = 1.4.dp.toPx()
+    )
 
     drawRoundRect(
-        color = plasma.copy(alpha = 0.10f * pulse),
-        topLeft = Offset(left, top),
-        size = frameSize,
-        cornerRadius = cornerRadius,
-        style = Stroke(width = 30.dp.toPx())
-    )
-    drawRoundRect(
-        color = plasma.copy(alpha = 0.18f * pulse),
+        color = deep.copy(alpha = 0.12f * pulse),
         topLeft = Offset(left, top),
         size = frameSize,
         cornerRadius = cornerRadius,
         style = Stroke(width = 18.dp.toPx())
     )
-
-    drawPlasmaEdge(
-        start = Offset(left + cornerRadiusPx, top),
-        end = Offset(right - cornerRadiusPx, top),
-        outward = Offset(0f, -1f),
-        phase = phase,
-        seed = 0.13f,
-        maxLength = 25.dp.toPx(),
-        coreColor = core,
-        flameColor = plasma,
-        deepColor = deep,
-        pulse = pulse,
-        samples = 34
-    )
-    drawPlasmaEdge(
-        start = Offset(right, top + cornerRadiusPx),
-        end = Offset(right, bottom - cornerRadiusPx),
-        outward = Offset(1f, 0f),
-        phase = phase,
-        seed = 1.41f,
-        maxLength = 26.dp.toPx(),
-        coreColor = core,
-        flameColor = plasma,
-        deepColor = deep,
-        pulse = pulse,
-        samples = 42
-    )
-    drawPlasmaEdge(
-        start = Offset(right - cornerRadiusPx, bottom),
-        end = Offset(left + cornerRadiusPx, bottom),
-        outward = Offset(0f, 1f),
-        phase = phase,
-        seed = 2.73f,
-        maxLength = 28.dp.toPx(),
-        coreColor = core,
-        flameColor = plasma,
-        deepColor = deep,
-        pulse = pulse,
-        samples = 34
-    )
-    drawPlasmaEdge(
-        start = Offset(left, bottom - cornerRadiusPx),
-        end = Offset(left, top + cornerRadiusPx),
-        outward = Offset(-1f, 0f),
-        phase = phase,
-        seed = 3.62f,
-        maxLength = 26.dp.toPx(),
-        coreColor = core,
-        flameColor = plasma,
-        deepColor = deep,
-        pulse = pulse,
-        samples = 42
+    drawRoundRect(
+        color = plasma.copy(alpha = 0.15f * pulse),
+        topLeft = Offset(left, top),
+        size = frameSize,
+        cornerRadius = cornerRadius,
+        style = Stroke(width = 8.dp.toPx())
     )
 
     val cornerBoost = 0.70f + abs(sin((phase * TWO_PI * 1.7f).toDouble())).toFloat() * 0.34f
     listOf(
-        Offset(left + cornerRadiusPx * 0.35f, top + cornerRadiusPx * 0.35f),
-        Offset(right - cornerRadiusPx * 0.35f, top + cornerRadiusPx * 0.35f),
-        Offset(right - cornerRadiusPx * 0.35f, bottom - cornerRadiusPx * 0.35f),
-        Offset(left + cornerRadiusPx * 0.35f, bottom - cornerRadiusPx * 0.35f)
+        Offset(left + radius * 0.55f, top + radius * 0.55f),
+        Offset(right - radius * 0.55f, top + radius * 0.55f),
+        Offset(right - radius * 0.55f, bottom - radius * 0.55f),
+        Offset(left + radius * 0.55f, bottom - radius * 0.55f)
     ).forEachIndexed { index, corner ->
-        drawCircle(
-            color = plasma.copy(alpha = 0.11f * cornerBoost),
-            radius = (18.dp.toPx() + index * 1.5f) * pulse,
-            center = corner
+        drawNativeCircle(
+            center = corner,
+            radiusPx = (17.dp.toPx() + index * 1.5f) * pulse,
+            color = plasma,
+            alpha = 0.22f * cornerBoost,
+            blurPx = 12.dp.toPx()
         )
-        drawCircle(
-            color = core.copy(alpha = 0.20f * cornerBoost),
-            radius = 4.5.dp.toPx() * pulse,
-            center = corner
+        drawNativeCircle(
+            center = corner,
+            radiusPx = 5.dp.toPx() * pulse,
+            color = core,
+            alpha = 0.50f * cornerBoost,
+            blurPx = 2.dp.toPx()
         )
     }
 
     drawRoundRect(
-        color = plasma.copy(alpha = 0.58f),
+        color = plasma.copy(alpha = 0.78f),
         topLeft = Offset(left, top),
         size = frameSize,
         cornerRadius = cornerRadius,
-        style = Stroke(width = 1.8.dp.toPx())
+        style = Stroke(width = 2.2.dp.toPx())
     )
     drawRoundRect(
         color = core.copy(alpha = 0.92f),
         topLeft = Offset(left, top),
         size = frameSize,
         cornerRadius = cornerRadius,
-        style = Stroke(width = 0.7.dp.toPx())
+        style = Stroke(width = 0.9.dp.toPx())
     )
 }
 
-private fun DrawScope.drawPlasmaEdge(
-    start: Offset,
-    end: Offset,
-    outward: Offset,
-    phase: Float,
-    seed: Float,
-    maxLength: Float,
-    coreColor: Color,
-    flameColor: Color,
-    deepColor: Color,
-    pulse: Float,
-    samples: Int
-) {
-    val tangent = Offset(end.x - start.x, end.y - start.y)
-    val tangentLength = kotlin.math.sqrt(tangent.x * tangent.x + tangent.y * tangent.y).coerceAtLeast(1f)
-    val tangentUnit = Offset(tangent.x / tangentLength, tangent.y / tangentLength)
+private data class PlasmaPoint(
+    val position: Offset,
+    val normal: Offset,
+    val tangent: Offset,
+    val progress: Float
+)
 
-    for (index in 0..samples) {
-        val t = index / samples.toFloat()
-        val base = Offset(
-            x = start.x + (end.x - start.x) * t,
-            y = start.y + (end.y - start.y) * t
-        )
-        val noise = plasmaSignal(t, phase, seed)
-        val lick = ((noise - 0.22f).coerceAtLeast(0f) / 0.78f).pow(1.55f)
-        if (lick <= 0.015f) continue
+private fun buildRoundedPlasmaContour(
+    left: Float,
+    top: Float,
+    right: Float,
+    bottom: Float,
+    radius: Float
+): List<PlasmaPoint> {
+    val raw = mutableListOf<PlasmaPoint>()
 
-        val sideJitter = (plasmaSignal(t, phase * 0.7f, seed + 4.8f) - 0.5f) * 12.dp.toPx()
-        val root = Offset(
-            x = base.x + tangentUnit.x * sideJitter - outward.x * 2.dp.toPx(),
-            y = base.y + tangentUnit.y * sideJitter - outward.y * 2.dp.toPx()
-        )
-        val length = (6.dp.toPx() + maxLength * lick) * pulse
-        val tip = Offset(
-            x = root.x + outward.x * length + tangentUnit.x * sideJitter * 0.22f,
-            y = root.y + outward.y * length + tangentUnit.y * sideJitter * 0.22f
-        )
-        val width = (2.2.dp.toPx() + 7.5.dp.toPx() * lick) * pulse
+    fun add(position: Offset, normal: Offset, tangent: Offset) {
+        raw += PlasmaPoint(position, normal, tangent, progress = 0f)
+    }
 
-        drawLine(
-            color = deepColor.copy(alpha = 0.14f * lick),
-            start = root,
-            end = tip,
-            strokeWidth = width * 2.4f,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = flameColor.copy(alpha = 0.30f * lick),
-            start = root,
-            end = tip,
-            strokeWidth = width * 1.35f,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = coreColor.copy(alpha = 0.55f * lick),
-            start = root,
-            end = Offset(
-                x = root.x + (tip.x - root.x) * 0.62f,
-                y = root.y + (tip.y - root.y) * 0.62f
-            ),
-            strokeWidth = width * 0.42f,
-            cap = StrokeCap.Round
-        )
-
-        if (index % 4 == 0) {
-            drawCircle(
-                color = coreColor.copy(alpha = 0.16f * lick),
-                radius = width * 1.1f,
-                center = tip
+    fun addEdge(
+        start: Offset,
+        end: Offset,
+        normal: Offset,
+        tangent: Offset,
+        samples: Int
+    ) {
+        for (index in 0 until samples) {
+            val t = index / samples.toFloat()
+            add(
+                position = Offset(
+                    x = start.x + (end.x - start.x) * t,
+                    y = start.y + (end.y - start.y) * t
+                ),
+                normal = normal,
+                tangent = tangent
             )
         }
     }
 
-    val ribbon = Path()
-    for (index in 0..samples) {
-        val t = index / samples.toFloat()
-        val base = Offset(
-            x = start.x + (end.x - start.x) * t,
-            y = start.y + (end.y - start.y) * t
-        )
-        val wave = plasmaSignal(t, phase, seed + 8.1f)
-        val distance = (4.dp.toPx() + maxLength * 0.42f * wave) * pulse
-        val point = Offset(base.x + outward.x * distance, base.y + outward.y * distance)
-        if (index == 0) ribbon.moveTo(point.x, point.y) else ribbon.lineTo(point.x, point.y)
+    fun addArc(center: Offset, fromAngle: Float, toAngle: Float, samples: Int) {
+        for (index in 0 until samples) {
+            val t = index / samples.toFloat()
+            val angle = fromAngle + (toAngle - fromAngle) * t
+            val normal = Offset(cos(angle), sin(angle))
+            val tangent = Offset(-sin(angle), cos(angle))
+            add(
+                position = Offset(
+                    x = center.x + normal.x * radius,
+                    y = center.y + normal.y * radius
+                ),
+                normal = normal,
+                tangent = tangent
+            )
+        }
     }
-    drawPath(
-        path = ribbon,
-        color = flameColor.copy(alpha = 0.13f * pulse),
-        style = Stroke(width = 2.2.dp.toPx(), cap = StrokeCap.Round)
+
+    val edgeSamples = 44
+    val cornerSamples = 18
+    addEdge(Offset(left + radius, top), Offset(right - radius, top), Offset(0f, -1f), Offset(1f, 0f), edgeSamples)
+    addArc(Offset(right - radius, top + radius), -HALF_PI, 0f, cornerSamples)
+    addEdge(Offset(right, top + radius), Offset(right, bottom - radius), Offset(1f, 0f), Offset(0f, 1f), edgeSamples)
+    addArc(Offset(right - radius, bottom - radius), 0f, HALF_PI, cornerSamples)
+    addEdge(Offset(right - radius, bottom), Offset(left + radius, bottom), Offset(0f, 1f), Offset(-1f, 0f), edgeSamples)
+    addArc(Offset(left + radius, bottom - radius), HALF_PI, PI.toFloat(), cornerSamples)
+    addEdge(Offset(left, bottom - radius), Offset(left, top + radius), Offset(-1f, 0f), Offset(0f, -1f), edgeSamples)
+    addArc(Offset(left + radius, top + radius), PI.toFloat(), PI.toFloat() + HALF_PI, cornerSamples)
+
+    val count = raw.size.coerceAtLeast(1)
+    return raw.mapIndexed { index, point ->
+        point.copy(progress = index / count.toFloat())
+    }
+}
+
+private fun DrawScope.drawPlasmaBand(
+    points: List<PlasmaPoint>,
+    phase: Float,
+    seed: Float,
+    pulse: Float,
+    innerOffsetPx: Float,
+    outerBasePx: Float,
+    outerVariancePx: Float,
+    tangentJitterPx: Float,
+    color: Color,
+    alpha: Float,
+    blurPx: Float
+) {
+    if (points.isEmpty()) return
+
+    val path = NativePath()
+    points.forEachIndexed { index, point ->
+        val crest = plasmaCrest(point.progress, phase, seed)
+        val breath = 0.80f + 0.20f * sin((point.progress * 5.0f + phase * 1.45f + seed) * TWO_PI)
+        val distance = (outerBasePx + outerVariancePx * crest * breath) * pulse
+        val jitter = (plasmaSignal(point.progress, phase * 0.83f, seed + 4.6f) - 0.5f) * tangentJitterPx
+        val outer = point.offset(outwardPx = distance, tangentPx = jitter)
+        if (index == 0) {
+            path.moveTo(outer.x, outer.y)
+        } else {
+            path.lineTo(outer.x, outer.y)
+        }
+    }
+
+    points.asReversed().forEach { point ->
+        val innerSwim = (plasmaSignal(point.progress, phase * 1.17f, seed + 8.3f) - 0.5f) * innerOffsetPx * 0.55f
+        val inner = point.offset(outwardPx = -innerOffsetPx + innerSwim, tangentPx = 0f)
+        path.lineTo(inner.x, inner.y)
+    }
+    path.close()
+
+    drawNativePath(path = path, color = color, alpha = alpha * pulse, blurPx = blurPx, strokeWidthPx = null)
+}
+
+private fun DrawScope.drawPlasmaContourStroke(
+    points: List<PlasmaPoint>,
+    phase: Float,
+    seed: Float,
+    pulse: Float,
+    offsetBasePx: Float,
+    offsetVariancePx: Float,
+    widthPx: Float,
+    color: Color,
+    alpha: Float,
+    blurPx: Float
+) {
+    if (points.isEmpty()) return
+
+    val path = NativePath()
+    points.forEachIndexed { index, point ->
+        val crest = plasmaCrest(point.progress, phase, seed)
+        val distance = (offsetBasePx + offsetVariancePx * crest) * pulse
+        val jitter = (plasmaSignal(point.progress, phase * 0.91f, seed + 3.7f) - 0.5f) * 3.dp.toPx()
+        val next = point.offset(outwardPx = distance, tangentPx = jitter)
+        if (index == 0) {
+            path.moveTo(next.x, next.y)
+        } else {
+            path.lineTo(next.x, next.y)
+        }
+    }
+    path.close()
+
+    drawNativePath(path = path, color = color, alpha = alpha * pulse, blurPx = blurPx, strokeWidthPx = widthPx)
+}
+
+private fun DrawScope.drawPlasmaFlares(
+    points: List<PlasmaPoint>,
+    phase: Float,
+    pulse: Float,
+    plasma: Color,
+    core: Color,
+    deep: Color
+) {
+    points.forEachIndexed { index, point ->
+        if (index % 4 != 0) return@forEachIndexed
+
+        val heat = plasmaCrest(point.progress, phase, seed = 14.5f + index * 0.021f)
+        if (heat <= 0.08f) return@forEachIndexed
+
+        val tangentDrift = (plasmaSignal(point.progress, phase * 1.07f, seed = 4.4f + index * 0.03f) - 0.5f) * 12.dp.toPx()
+        val length = (9.dp.toPx() + 24.dp.toPx() * heat) * pulse
+        val width = (4.5.dp.toPx() + 12.dp.toPx() * heat) * pulse
+        val lean = (plasmaSignal(point.progress, phase * 0.77f, seed = 8.0f + index * 0.017f) - 0.5f) * width
+
+        val rootLeft = point.offset(outwardPx = 1.dp.toPx(), tangentPx = tangentDrift - width * 0.62f)
+        val rootRight = point.offset(outwardPx = 1.dp.toPx(), tangentPx = tangentDrift + width * 0.62f)
+        val tip = point.offset(outwardPx = length, tangentPx = tangentDrift + lean)
+        val controlLeft = point.offset(outwardPx = length * 0.44f, tangentPx = tangentDrift - width)
+        val controlRight = point.offset(outwardPx = length * 0.40f, tangentPx = tangentDrift + width)
+
+        val flamePath = NativePath().apply {
+            moveTo(rootLeft.x, rootLeft.y)
+            cubicTo(controlLeft.x, controlLeft.y, tip.x, tip.y, tip.x, tip.y)
+            cubicTo(tip.x, tip.y, controlRight.x, controlRight.y, rootRight.x, rootRight.y)
+            close()
+        }
+
+        drawNativePath(
+            path = flamePath,
+            color = deep,
+            alpha = 0.17f * heat * pulse,
+            blurPx = 9.dp.toPx(),
+            strokeWidthPx = null
+        )
+        drawNativePath(
+            path = flamePath,
+            color = plasma,
+            alpha = 0.42f * heat * pulse,
+            blurPx = 5.dp.toPx(),
+            strokeWidthPx = null
+        )
+
+        if (index % 8 == 0) {
+            val coreWidth = width * 0.28f
+            val coreTip = point.offset(outwardPx = length * 0.70f, tangentPx = tangentDrift + lean * 0.42f)
+            val coreRootLeft = point.offset(outwardPx = 1.5.dp.toPx(), tangentPx = tangentDrift - coreWidth)
+            val coreRootRight = point.offset(outwardPx = 1.5.dp.toPx(), tangentPx = tangentDrift + coreWidth)
+            val corePath = NativePath().apply {
+                moveTo(coreRootLeft.x, coreRootLeft.y)
+                lineTo(coreTip.x, coreTip.y)
+                lineTo(coreRootRight.x, coreRootRight.y)
+                close()
+            }
+            drawNativePath(
+                path = corePath,
+                color = core,
+                alpha = 0.50f * heat,
+                blurPx = 2.2.dp.toPx(),
+                strokeWidthPx = null
+            )
+        }
+    }
+}
+
+private fun DrawScope.drawPlasmaCells(
+    points: List<PlasmaPoint>,
+    phase: Float,
+    pulse: Float,
+    plasma: Color,
+    core: Color,
+    deep: Color
+) {
+    points.forEachIndexed { index, point ->
+        if (index % 3 != 0) return@forEachIndexed
+
+        val heat = plasmaCrest(point.progress, phase, seed = 11.0f + index * 0.013f)
+        if (heat <= 0.045f) return@forEachIndexed
+
+        val outward = (7.dp.toPx() + 15.dp.toPx() * heat) * pulse
+        val jitter = (plasmaSignal(point.progress, phase * 1.31f, seed = 2.2f + index * 0.07f) - 0.5f) * 16.dp.toPx()
+        val center = point.offset(outwardPx = outward, tangentPx = jitter)
+        val largeRadius = (2.5.dp.toPx() + 11.dp.toPx() * heat) * pulse
+
+        drawNativeCircle(
+            center = center,
+            radiusPx = largeRadius * 1.55f,
+            color = deep,
+            alpha = 0.16f * heat * pulse,
+            blurPx = 10.dp.toPx()
+        )
+        drawNativeCircle(
+            center = center,
+            radiusPx = largeRadius,
+            color = plasma,
+            alpha = 0.34f * heat * pulse,
+            blurPx = 6.dp.toPx()
+        )
+        if (index % 6 == 0) {
+            drawNativeCircle(
+                center = center,
+                radiusPx = (1.4.dp.toPx() + 3.8.dp.toPx() * heat) * pulse,
+                color = core,
+                alpha = 0.72f * heat,
+                blurPx = 1.5.dp.toPx()
+            )
+        }
+    }
+}
+
+private fun DrawScope.drawNativePath(
+    path: NativePath,
+    color: Color,
+    alpha: Float,
+    blurPx: Float,
+    strokeWidthPx: Float?
+) {
+    val paint = NativePaint(NativePaint.ANTI_ALIAS_FLAG).apply {
+        this.color = color.copy(alpha = alpha.coerceIn(0f, 1f)).toArgb()
+        style = if (strokeWidthPx == null) NativePaint.Style.FILL else NativePaint.Style.STROKE
+        strokeWidthPx?.let {
+            strokeWidth = it
+            strokeJoin = NativePaint.Join.ROUND
+            strokeCap = NativePaint.Cap.ROUND
+        }
+        if (blurPx > 0f) {
+            maskFilter = BlurMaskFilter(blurPx, BlurMaskFilter.Blur.NORMAL)
+        }
+    }
+
+    drawIntoCanvas { canvas ->
+        canvas.nativeCanvas.drawPath(path, paint)
+    }
+}
+
+private fun DrawScope.drawNativeCircle(
+    center: Offset,
+    radiusPx: Float,
+    color: Color,
+    alpha: Float,
+    blurPx: Float
+) {
+    val paint = NativePaint(NativePaint.ANTI_ALIAS_FLAG).apply {
+        this.color = color.copy(alpha = alpha.coerceIn(0f, 1f)).toArgb()
+        style = NativePaint.Style.FILL
+        if (blurPx > 0f) {
+            maskFilter = BlurMaskFilter(blurPx, BlurMaskFilter.Blur.NORMAL)
+        }
+    }
+
+    drawIntoCanvas { canvas ->
+        canvas.nativeCanvas.drawCircle(center.x, center.y, radiusPx, paint)
+    }
+}
+
+private fun PlasmaPoint.offset(outwardPx: Float, tangentPx: Float): Offset =
+    Offset(
+        x = position.x + normal.x * outwardPx + tangent.x * tangentPx,
+        y = position.y + normal.y * outwardPx + tangent.y * tangentPx
     )
+
+private fun plasmaCrest(position: Float, phase: Float, seed: Float): Float {
+    val signal = plasmaSignal(position, phase, seed)
+    val flare = plasmaSignal(position, phase * 1.37f, seed + 6.9f)
+    return ((signal * 0.72f + flare * 0.28f - 0.16f) / 0.84f)
+        .coerceIn(0f, 1f)
+        .pow(1.55f)
 }
 
 private fun plasmaSignal(position: Float, phase: Float, seed: Float): Float {
     val angle = phase * TWO_PI
-    val a = sin((position * 7.0f + seed) * TWO_PI + angle)
-    val b = sin((position * 13.0f + seed * 1.7f) * TWO_PI - angle * 1.35f)
-    val c = sin((position * 23.0f + seed * 0.31f) * TWO_PI + angle * 2.25f)
-    return ((a * 0.52f + b * 0.32f + c * 0.16f) * 0.5f + 0.5f).coerceIn(0f, 1f)
+    val a = sin((position * 8.0f + seed) * TWO_PI + angle * 1.15f)
+    val b = sin((position * 17.0f + seed * 1.7f) * TWO_PI - angle * 1.85f)
+    val c = sin((position * 31.0f + seed * 0.31f) * TWO_PI + angle * 2.65f)
+    val d = sin((position * 53.0f + seed * 2.1f) * TWO_PI - angle * 3.35f)
+    return ((a * 0.40f + b * 0.28f + c * 0.20f + d * 0.12f) * 0.5f + 0.5f).coerceIn(0f, 1f)
 }
 
+private const val HALF_PI = (PI / 2.0).toFloat()
 private const val TWO_PI = (PI * 2.0).toFloat()
