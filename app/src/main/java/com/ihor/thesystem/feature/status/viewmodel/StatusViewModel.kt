@@ -185,18 +185,7 @@ class StatusViewModel @Inject constructor(
     }
 
     private suspend fun refreshDailyState() {
-        val config = useCases.getSystemConfig().first()
-        val statusData = useCases.getStatusData().firstOrNull() ?: return
-        val hasNoQuests = statusData.dailyQuest == null &&
-            statusData.mainQuest == null &&
-            statusData.promotionQuests.isEmpty()
-        val todayEpochDay = todayDate().toEpochDay()
-        val lastDate = config?.lastInitEpochDay ?: 0L
-        val dateChanged = lastDate < todayEpochDay
-
-        if (config?.needsDailyInit == true || hasNoQuests || dateChanged) {
-            finalizeDayAndReport(forceComplete = false)
-        }
+        syncTodayStateAndReport()
     }
 
     private fun todayDate(): LocalDate =
@@ -327,9 +316,19 @@ class StatusViewModel @Inject constructor(
         }
     }
 
+    private suspend fun syncTodayStateAndReport(): Boolean {
+        return when (val result = useCases.syncTodayState()) {
+            is Result.Success -> true
+            is Result.Error -> {
+                _uiEvents.emit(UiEvent.ShowError(result.error.asUiText()))
+                false
+            }
+        }
+    }
+
     fun onSystemConfigConfirmed(config: SystemConfig) = launchCatching {
         useCases.updateSystemConfig(config)
-        useCases.generateDailyQuests()
+        syncTodayStateAndReport()
         onDismissDialog()
     }
 

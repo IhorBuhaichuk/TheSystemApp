@@ -9,20 +9,24 @@ import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 
 class AdvanceCycleDayUseCase @Inject constructor(
-    private val questRepo: QuestRepository
+    private val questRepo: QuestRepository,
+    private val completeQuest: CompleteQuestUseCase
 ) {
     suspend operator fun invoke(forceComplete: Boolean = false): Result<Unit, DomainError> {
         val activeQuests = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
 
         activeQuests.forEach { quest ->
-            val resolution = QuestCompletionPolicy.resolveForDayFinalization(quest, forceComplete)
-
-            questRepo.updateQuestStatus(quest.id, resolution.status)
-            questRepo.logQuestResult(
-                questId = quest.id,
-                questType = quest.type,
-                wasSuccessful = resolution.wasSuccessful
-            )
+            QuestCompletionPolicy.resolveForDayFinalization(quest, forceComplete)
+            when (
+                val result = completeQuest(
+                    questId = quest.id,
+                    mode = QuestCompletionMode.DayFinalization,
+                    forceComplete = forceComplete
+                )
+            ) {
+                is Result.Success -> Unit
+                is Result.Error -> return result
+            }
         }
 
         return Result.Success(Unit)

@@ -38,6 +38,23 @@ class DomainInvariantGuardTest {
         )
     }
 
+    @Test
+    fun `quest rewards are not granted in repositories`() {
+        val appRoot = File(requireNotNull(System.getProperty("user.dir")))
+        val repositoryRoot = appRoot.resolve("src/main/java/com/ihor/thesystem/data/repository_impl")
+
+        val offenders = repositoryRoot.walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .filter { "rewardWorkoutCompletion" in it.readText() }
+            .map { it.relativeTo(appRoot).invariantSeparatorsPath }
+            .toList()
+
+        assertTrue(
+            "Quest XP/streak reward decisions belong in domain use cases, not repositories: $offenders",
+            offenders.isEmpty()
+        )
+    }
+
     private fun assertContains(file: File, text: String) {
         assertTrue(
             "${file.invariantSeparatorsPath} must contain $text",

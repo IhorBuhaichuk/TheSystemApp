@@ -23,6 +23,14 @@ class ApplyAiRecommendationsUseCaseGuardTest {
             "ApplyAiRecommendationsUseCase must rethrow CancellationException from catch-all blocks.",
             "if (e is CancellationException) throw e" in source
         )
+        assertTrue(
+            "AI recommendations must pass ValidateDirectivesUseCase before matrix persistence.",
+            "validateDirectives(rawDirectives, matrix)" in source
+        )
+        assertTrue(
+            "AI validation clamps or rejections must be logged.",
+            "logDirectiveAdjustments(rawDirectives" in source
+        )
     }
 
     private fun sourceFile(): File =

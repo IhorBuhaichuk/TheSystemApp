@@ -40,12 +40,21 @@ class FinalizeDayUseCase @Inject constructor(
                 ?: SystemConfig()
             val todayEpochDay = todayEpochDay()
             val daysToAdvance = daysToAdvance(config, todayEpochDay)
+            if (daysToAdvance <= 0L) {
+                logger.d("Day finalization skipped: today is already synchronized")
+                return Result.Success(DayFinalizationResult.None)
+            }
+
             val hasMissedTrainingDay = !forceComplete &&
                 hasMissedScheduledWorkoutDay(config, player, todayEpochDay)
 
             // 2. Atomic updates
             val transactionResult = transactionProvider.runInTransaction {
                 val activeQuests = questRepo.getActiveQuests().firstOrNull().orEmpty()
+                activeQuests.forEach {
+                    QuestCompletionPolicy.resolveForDayFinalization(it, forceComplete)
+                }
+                val wasPenaltyActive = player.isPenaltyActive
 
                 // A) Update active quests to COMPLETED/FAILED and log results
                 val statusResult = advanceCycleDayStatus(forceComplete)
@@ -53,16 +62,13 @@ class FinalizeDayUseCase @Inject constructor(
                     throw TransactionRollbackException(statusResult.error)
                 }
 
-                // B) Evaluate player progress based on MAIN quests
-                val processedMainQuests = activeQuests.filter { it.type == DomainQuestType.MAIN }.map { q ->
-                    val resolution = QuestCompletionPolicy.resolveForDayFinalization(q, forceComplete)
-                    q.copy(status = resolution.status)
+                // B) Apply day-level progression that is not quest reward itself.
+                val playerAfterQuestCompletion = playerRepo.getPlayerSnapshot() ?: player
+                val playerAfterMissedTrainingCheck = if (hasMissedTrainingDay) {
+                    PlayerProgressionPolicy.applyMissedScheduledWorkout(playerAfterQuestCompletion)
+                } else {
+                    playerAfterQuestCompletion
                 }
-
-                val wasPenaltyActive = player.isPenaltyActive
-                val playerAfterMissedTrainingCheck = player
-                    .evaluateQuests(processedMainQuests)
-                    .let { if (hasMissedTrainingDay) it.copy(currentStreak = 0) else it }
                 val (playerAfterXP, levelUpTriggered) = playerAfterMissedTrainingCheck.checkLevelUp()
                 val finalPlayer = playerAfterXP.advanceTime(config, daysToAdvance)
 
@@ -117,7 +123,7 @@ class FinalizeDayUseCase @Inject constructor(
         return if (lastInitEpochDay > 0L && lastInitEpochDay < todayEpochDay) {
             todayEpochDay - lastInitEpochDay
         } else {
-            1L
+            0L
         }
     }
 

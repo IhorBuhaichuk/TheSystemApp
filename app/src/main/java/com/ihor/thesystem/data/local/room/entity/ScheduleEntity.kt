@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "schedule",
     indices = [
-        Index("cycleDay"),
+        Index(value = ["cycleDay"], unique = true),
         Index("workoutTemplateId")
     ]
 )

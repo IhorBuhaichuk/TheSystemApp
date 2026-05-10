@@ -20,7 +20,6 @@ class FinalizeSessionUseCase @Inject constructor(
     private val analyticsRepository: WorkoutAnalyticsRepository,
     private val sendArchitectAnalysis: SendArchitectAnalysisUseCase,
     private val progressionMatrixRepository: ProgressionMatrixRepository,
-    private val playerRepository: PlayerRepository,
     private val recalculateGlobalRank: RecalculateGlobalRankUseCase,
     private val calculateRecovery: CalculateRecoveryWindowUseCase,
     private val validateDirectives: ValidateDirectivesUseCase,
@@ -28,6 +27,7 @@ class FinalizeSessionUseCase @Inject constructor(
     private val getWeightContext: GetPlayerWeightContextUseCase,
     private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
     private val questRepository: QuestRepository,
+    private val completeQuest: CompleteQuestUseCase,
     private val calculateProgressRank: CalculateProgressRankUseCase,
     private val clock: AppClock,
     private val logger: AppLogger
@@ -79,24 +79,17 @@ class FinalizeSessionUseCase @Inject constructor(
             weight6MonthsAgo = localData.weight6MonthsAgo
         )
         
+        var aiFeedbackByExercise: Map<Int, String?> = emptyMap()
+        var generalAiFeedback: String? = null
         val report = try {
             val chatMsg = sendArchitectAnalysis(exerciseContexts)
             if (chatMsg.recommendations.isEmpty()) {
                 throw IllegalStateException("AI architect returned no actionable workout directives.")
             }
+            aiFeedbackByExercise = chatMsg.recommendations.associate { it.exerciseId to it.aiFeedback }
+            generalAiFeedback = chatMsg.aiFeedback
             
             // Оновлення цілей у матриці на основі AI-аналізу
-            chatMsg.recommendations.forEach { rec ->
-                progressionMatrixRepository.updateTarget(
-                    exerciseId = rec.exerciseId,
-                    weight = rec.weight.toDouble(),
-                    sets = rec.sets,
-                    reps = rec.reps,
-                    aiFeedback = rec.aiFeedback ?: chatMsg.aiFeedback,
-                    timestamp = clock.now()
-                )
-            }
-
             AiArchitectReport(
                 architectFeedback = chatMsg.text,
                 currentStageStatus = "[ LOGGED ]",
@@ -115,10 +108,34 @@ class FinalizeSessionUseCase @Inject constructor(
         }
 
         // 3. Валідація та збереження фінальних директив
-        val validatedDirectives = validateDirectives(report.nextWorkoutDirectives, localData.matrix)
-            .getOrDefault(report.nextWorkoutDirectives)
+        val validatedDirectives = when (
+            val validation = validateDirectives(report.nextWorkoutDirectives, localData.matrix)
+        ) {
+            is Result.Success -> {
+                logDirectiveAdjustments(report.nextWorkoutDirectives, validation.data)
+                validation.data
+            }
+            is Result.Error -> {
+                logger.e(message = "Workout directives rejected by validation: ${validation.error.message}")
+                emptyList()
+            }
+        }
 
-        analyticsRepository.saveDirectives(validatedDirectives)
+        transactionProvider.runInTransaction {
+            if (!report.isFallback) {
+                validatedDirectives.forEach { directive ->
+                    progressionMatrixRepository.updateTarget(
+                        exerciseId = directive.exerciseId,
+                        weight = directive.targetWeight,
+                        sets = directive.targetSets,
+                        reps = directive.targetReps,
+                        aiFeedback = aiFeedbackByExercise[directive.exerciseId] ?: generalAiFeedback,
+                        timestamp = clock.now()
+                    )
+                }
+            }
+            analyticsRepository.saveDirectives(validatedDirectives)
+        }
 
         Result.Success(
             report.copy(
@@ -212,17 +229,7 @@ class FinalizeSessionUseCase @Inject constructor(
             ?: return
 
         questRepository.completeQuestTasksForExercises(activeMainQuest.id, completedExerciseIds)
-        val refreshedQuest = questRepository.getQuestById(activeMainQuest.id) ?: return
-        if (refreshedQuest.status != DomainQuestStatus.COMPLETED) return
-
-        questRepository.logQuestResult(
-            questId = refreshedQuest.id,
-            questType = refreshedQuest.type,
-            wasSuccessful = true
-        )
-
-        val player = playerRepository.getPlayerSnapshot() ?: return
-        playerRepository.updatePlayer(player.rewardWorkoutCompletion())
+        completeQuest(activeMainQuest.id, mode = QuestCompletionMode.TaskUpdate)
     }
 
     private fun generateFallbackReport(
@@ -255,6 +262,22 @@ class FinalizeSessionUseCase @Inject constructor(
             recoveryWindowHours = recoveryHours,
             isFallback = true
         )
+    }
+
+    private fun logDirectiveAdjustments(
+        rawDirectives: List<WorkoutDirective>,
+        validatedDirectives: List<WorkoutDirective>
+    ) {
+        val validatedByExercise = validatedDirectives.associateBy { it.exerciseId }
+        rawDirectives.forEach { raw ->
+            val validated = validatedByExercise[raw.exerciseId]
+            when {
+                validated == null ->
+                    logger.w("Workout directive rejected for exercise ${raw.exerciseId}: missing after validation")
+                validated != raw ->
+                    logger.w("Workout directive clamped for exercise ${raw.exerciseId}: $raw -> $validated")
+            }
+        }
     }
 }
 

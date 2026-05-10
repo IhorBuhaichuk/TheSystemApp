@@ -82,6 +82,25 @@ class RoomSchemaGuardTest {
         )
     }
 
+    @Test
+    fun `schedule cycle day is unique in entity and migration`() {
+        val scheduleEntity = projectRoot()
+            .resolve("src/main/java/com/ihor/thesystem/data/local/room/entity/ScheduleEntity.kt")
+            .readText()
+        val migrations = projectRoot()
+            .resolve("src/main/java/com/ihor/thesystem/data/local/room/database/DatabaseMigrations.kt")
+            .readText()
+
+        assertTrue(
+            "ScheduleEntity must enforce one schedule per cycle day.",
+            """Index(value = ["cycleDay"], unique = true)""" in scheduleEntity
+        )
+        assertTrue(
+            "Database migration must create the unique schedule.cycleDay index without dropping schedule data.",
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_schedule_cycleDay` ON `schedule` (`cycleDay`)" in migrations
+        )
+    }
+
     private fun schemaVersions(): List<Int> {
         val schemaDir = projectRoot()
             .resolve("schemas")

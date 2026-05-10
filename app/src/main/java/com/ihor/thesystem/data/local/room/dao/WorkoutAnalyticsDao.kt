@@ -74,38 +74,23 @@ abstract class WorkoutAnalyticsDao {
     abstract fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>>
 
     @Query("""
-        WITH daily_max AS (
-            SELECT
-                date(s.timestamp / 1000, 'unixepoch') AS workoutDay,
-                MAX(e.weight) AS weight
-            FROM exercise_set_logs e
-            JOIN workout_session_logs s ON s.sessionId = e.sessionId
-            WHERE e.exerciseId = :exerciseId
-            GROUP BY workoutDay
-        )
         SELECT
-            daily_max.weight AS weight,
-            MAX(s.timestamp) AS timestamp
-        FROM daily_max
-        JOIN workout_session_logs s
-            ON date(s.timestamp / 1000, 'unixepoch') = daily_max.workoutDay
+            e.weight AS weight,
+            s.timestamp AS timestamp
+        FROM workout_session_logs s
         JOIN exercise_set_logs e
             ON e.sessionId = s.sessionId
             AND e.exerciseId = :exerciseId
-            AND e.weight = daily_max.weight
-        GROUP BY daily_max.workoutDay, daily_max.weight
-        ORDER BY timestamp DESC
-        LIMIT 100
+        ORDER BY s.timestamp ASC
     """)
     abstract fun getWeightHistoryForExercise(exerciseId: Int): Flow<List<ExerciseWeightHistory>>
 
     @Query("""
         SELECT 
-            MIN(timestamp) AS dateUnixTimestamp, 
-            SUM(totalTonnage) AS totalTonnage
+            timestamp AS dateUnixTimestamp,
+            totalTonnage AS totalTonnage
         FROM workout_session_logs
         WHERE timestamp BETWEEN :start AND :end
-        GROUP BY date(timestamp / 1000, 'unixepoch')
         ORDER BY dateUnixTimestamp ASC
         LIMIT 365
     """)

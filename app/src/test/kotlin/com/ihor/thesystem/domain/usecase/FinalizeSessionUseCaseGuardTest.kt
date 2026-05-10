@@ -41,8 +41,29 @@ class FinalizeSessionUseCaseGuardTest {
             "playerRepository.getPlayer().firstOrNull()" in source
         )
         assertTrue(
-            "FinalizeSessionUseCase must use a synchronous player snapshot for transactional quest reward updates.",
-            "playerRepository.getPlayerSnapshot()" in source
+            "FinalizeSessionUseCase must delegate quest reward updates to CompleteQuestUseCase.",
+            "completeQuest(activeMainQuest.id" in source
+        )
+        assertFalse(
+            "FinalizeSessionUseCase must not grant quest XP directly.",
+            "rewardWorkoutCompletion()" in source
+        )
+    }
+
+    @Test
+    fun `ai session directives are validated before matrix persistence`() {
+        val source = sourceFile().readText()
+
+        val validationIndex = source.indexOf("validateDirectives(report.nextWorkoutDirectives")
+        val updateTargetIndex = source.indexOf("progressionMatrixRepository.updateTarget")
+
+        assertTrue(
+            "FinalizeSessionUseCase must validate AI directives before updating progression targets.",
+            validationIndex >= 0 && updateTargetIndex > validationIndex
+        )
+        assertTrue(
+            "Validated AI directive persistence must be transactional.",
+            source.indexOf("transactionProvider.runInTransaction", validationIndex) in validationIndex until updateTargetIndex
         )
     }
 

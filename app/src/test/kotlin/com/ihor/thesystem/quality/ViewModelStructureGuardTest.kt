@@ -111,4 +111,27 @@ class ViewModelStructureGuardTest {
             forbidden.isEmpty()
         )
     }
+
+    @Test
+    fun `status viewmodel delegates day synchronization decisions to domain`() {
+        val projectRoot = File(requireNotNull(System.getProperty("user.dir")))
+        val source = projectRoot
+            .resolve("src/main/java/com/ihor/thesystem/feature/status/viewmodel/StatusViewModel.kt")
+            .readText()
+        val forbidden = listOf(
+            "hasNoQuests",
+            "dateChanged",
+            "lastInitEpochDay <",
+            "needsDailyInit =="
+        ).filter { it in source }
+
+        assertTrue(
+            "StatusViewModel must not decide when to finalize/sync the day; call SyncTodayStateUseCase: $forbidden",
+            forbidden.isEmpty()
+        )
+        assertTrue(
+            "StatusViewModel should call SyncTodayStateUseCase through StatusUseCases.",
+            "useCases.syncTodayState()" in source
+        )
+    }
 }

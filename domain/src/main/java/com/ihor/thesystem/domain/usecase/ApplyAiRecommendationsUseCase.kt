@@ -5,6 +5,7 @@ import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.*
 import com.ihor.thesystem.domain.util.AppLogger
 import com.ihor.thesystem.domain.util.AnnualProgressionPlanNoteParser
+import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.domain.util.sanitizeForPrompt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
@@ -21,6 +22,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
     private val aiRepository: AiArchitectRepository,
     private val getWeightContext: GetPlayerWeightContextUseCase,
     private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
+    private val validateDirectives: ValidateDirectivesUseCase,
     private val transactionProvider: TransactionProvider,
     private val clock: AppClock,
     private val logger: AppLogger
@@ -136,14 +138,28 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             }
 
             // 4. Розпарсинг та оновлення бази даних для кожної вправи
+            val rawDirectives = response.recommendations.map { it.toDirective() }
+            val validatedDirectives = when (val validation = validateDirectives(rawDirectives, matrix)) {
+                is Result.Success -> {
+                    logDirectiveAdjustments(rawDirectives, validation.data)
+                    validation.data
+                }
+                is Result.Error -> {
+                    logger.e(message = "AI recommendations rejected by directive validation: ${validation.error.message}")
+                    return
+                }
+            }
+            val feedbackByExercise = response.recommendations.associateBy { it.exerciseId }
+
             transactionProvider.runInTransaction {
-                response.recommendations.forEach { rec ->
+                validatedDirectives.forEach { directive ->
+                    val source = feedbackByExercise[directive.exerciseId]
                     matrixRepo.updateTarget(
-                        exerciseId = rec.exerciseId,
-                        weight = rec.weight.toDouble(),
-                        sets = rec.sets,
-                        reps = rec.reps,
-                        aiFeedback = rec.aiFeedback ?: response.aiFeedback,
+                        exerciseId = directive.exerciseId,
+                        weight = directive.targetWeight,
+                        sets = directive.targetSets,
+                        reps = directive.targetReps,
+                        aiFeedback = source?.aiFeedback ?: response.aiFeedback,
                         timestamp = now
                     )
                 }
@@ -161,16 +177,54 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
         if (recommendations.isEmpty()) return
 
         val timestamp = clock.now()
+        val matrix = matrixRepo.getAllEntries().first()
+        val rawDirectives = recommendations.map { it.toDirective() }
+        val validatedDirectives = when (val validation = validateDirectives(rawDirectives, matrix)) {
+            is Result.Success -> {
+                logDirectiveAdjustments(rawDirectives, validation.data)
+                validation.data
+            }
+            is Result.Error -> {
+                logger.e(message = "Direct AI recommendations rejected by directive validation: ${validation.error.message}")
+                return
+            }
+        }
+        val feedbackByExercise = recommendations.associateBy { it.exerciseId }
+
         transactionProvider.runInTransaction {
-            recommendations.forEach { rec ->
+            validatedDirectives.forEach { directive ->
                 matrixRepo.updateTarget(
-                    exerciseId = rec.exerciseId,
-                    weight = rec.weight.toDouble(),
-                    sets = rec.sets,
-                    reps = rec.reps,
-                    aiFeedback = rec.aiFeedback,
+                    exerciseId = directive.exerciseId,
+                    weight = directive.targetWeight,
+                    sets = directive.targetSets,
+                    reps = directive.targetReps,
+                    aiFeedback = feedbackByExercise[directive.exerciseId]?.aiFeedback,
                     timestamp = timestamp
                 )
+            }
+        }
+    }
+
+    private fun AiWorkoutRecommendation.toDirective(): WorkoutDirective =
+        WorkoutDirective(
+            exerciseId = exerciseId,
+            targetWeight = weight.toDouble(),
+            targetSets = sets,
+            targetReps = reps
+        )
+
+    private fun logDirectiveAdjustments(
+        rawDirectives: List<WorkoutDirective>,
+        validatedDirectives: List<WorkoutDirective>
+    ) {
+        val validatedByExercise = validatedDirectives.associateBy { it.exerciseId }
+        rawDirectives.forEach { raw ->
+            val validated = validatedByExercise[raw.exerciseId]
+            when {
+                validated == null ->
+                    logger.w("AI recommendation rejected for exercise ${raw.exerciseId}: missing after validation")
+                validated != raw ->
+                    logger.w("AI recommendation clamped for exercise ${raw.exerciseId}: $raw -> $validated")
             }
         }
     }

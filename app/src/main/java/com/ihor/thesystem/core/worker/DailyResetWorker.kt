@@ -9,12 +9,14 @@ import androidx.work.ListenableWorker.Result as WorkResult
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.ihor.thesystem.domain.usecase.FinalizeDayUseCase
+import com.ihor.thesystem.domain.usecase.SyncTodayStateUseCase
+import com.ihor.thesystem.domain.util.AppClock
+import com.ihor.thesystem.domain.util.RealClock
 import com.ihor.thesystem.domain.util.Result as DomainResult
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.time.Duration
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
@@ -23,14 +25,15 @@ import timber.log.Timber
 class DailyResetWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted params: WorkerParameters,
-    private val finalizeDay: FinalizeDayUseCase
+    private val syncTodayState: SyncTodayStateUseCase,
+    private val clock: AppClock
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): WorkResult {
         return try {
-            Timber.d("DailyResetWorker: starting midnight reset via FinalizeDayUseCase")
+            Timber.d("DailyResetWorker: starting midnight reset via SyncTodayStateUseCase")
 
-            when (val resetResult = finalizeDay(forceComplete = false)) {
+            when (val resetResult = syncTodayState()) {
                 is DomainResult.Success -> {
                     Timber.d("DailyResetWorker: completed successfully")
                     scheduleNext()
@@ -53,9 +56,7 @@ class DailyResetWorker @AssistedInject constructor(
         if (runAttemptCount < MAX_RUN_ATTEMPTS) WorkResult.retry() else WorkResult.failure()
 
     private fun scheduleNext() {
-        val now = LocalDateTime.now()
-        val nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay()
-        val delayMillis = Duration.between(now, nextMidnight).toMillis().coerceAtLeast(1000L)
+        val delayMillis = delayUntilNextMidnightMillis(clock)
 
         WorkManager.getInstance(applicationContext).enqueueUniqueWork(
             WORK_NAME,
@@ -74,9 +75,7 @@ class DailyResetWorker @AssistedInject constructor(
         private const val MAX_RUN_ATTEMPTS = 3
 
         fun scheduleIfNotRunning(context: Context) {
-            val now = LocalDateTime.now()
-            val nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay()
-            val delayMillis = Duration.between(now, nextMidnight).toMillis().coerceAtLeast(1000L)
+            val delayMillis = delayUntilNextMidnightMillis(RealClock())
 
             WorkManager.getInstance(context).enqueueUniqueWork(
                 WORK_NAME,
@@ -87,6 +86,12 @@ class DailyResetWorker @AssistedInject constructor(
                     .addTag(WORK_TAG)
                     .build()
             )
+        }
+
+        internal fun delayUntilNextMidnightMillis(clock: AppClock): Long {
+            val now = Instant.ofEpochMilli(clock.now()).atZone(clock.zoneId())
+            val nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(clock.zoneId())
+            return Duration.between(now, nextMidnight).toMillis().coerceAtLeast(1000L)
         }
     }
 }

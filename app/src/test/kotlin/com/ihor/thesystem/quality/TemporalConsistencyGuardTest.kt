@@ -18,11 +18,20 @@ class TemporalConsistencyGuardTest {
             "domain/src/main/java/com/ihor/thesystem/domain/usecase/GetPlayerWeightContextUseCase.kt",
             "domain/src/main/java/com/ihor/thesystem/domain/usecase/GetWorkoutAnalysisUseCase.kt",
             "domain/src/main/java/com/ihor/thesystem/domain/usecase/LogWorkoutSetsUseCase.kt",
+            "domain/src/main/java/com/ihor/thesystem/domain/usecase/SyncCycleAnchorUseCase.kt",
+            "app/src/main/java/com/ihor/thesystem/core/worker/DailyResetWorker.kt",
+            "app/src/main/java/com/ihor/thesystem/feature/calendar/viewmodel/CalendarViewModel.kt",
             "app/src/main/java/com/ihor/thesystem/feature/statistics/viewmodel/StatisticsViewModel.kt",
             "app/src/main/java/com/ihor/thesystem/feature/status/viewmodel/StatusViewModel.kt",
             "app/src/main/java/com/ihor/thesystem/feature/status/viewmodel/WorkoutViewModel.kt"
         )
-        val forbidden = listOf("System.currentTimeMillis()", "ZoneId.systemDefault()")
+        val forbidden = listOf(
+            "System.currentTimeMillis()",
+            "ZoneId.systemDefault()",
+            "LocalDate.now()",
+            "LocalDateTime.now()",
+            "YearMonth.now()"
+        )
 
         val offenders = relativePaths
             .map { repoRoot.resolve(it) }

@@ -8,14 +8,20 @@ import javax.inject.Inject
 class ToggleQuestTaskUseCase @Inject constructor(
     private val repo: QuestRepository,
     private val matrixRepo: ProgressionMatrixRepository,
-    private val recalculateGlobalRank: RecalculateGlobalRankUseCase
+    private val recalculateGlobalRank: RecalculateGlobalRankUseCase,
+    private val completeQuest: CompleteQuestUseCase
 ) {
     suspend operator fun invoke(taskId: Int, questId: Int, currentCompletedState: Boolean) {
+        val initialQuest = repo.getQuestById(questId) ?: return
+        if (initialQuest.status != DomainQuestStatus.ACTIVE) return
+
         repo.toggleTaskCompletion(
             taskId      = taskId,
             questId     = questId,
             isCompleted = !currentCompletedState
         )
+
+        completeQuest(questId, mode = QuestCompletionMode.TaskUpdate)
 
         // Перевіряємо, чи цей квест є PROMOTION і чи він завершений
         val quest = repo.getQuestById(questId)

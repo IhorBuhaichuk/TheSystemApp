@@ -37,12 +37,6 @@ class QuestRepositoryImpl @Inject constructor(
     override suspend fun toggleTaskCompletion(taskId: Int, questId: Int, isCompleted: Boolean) =
         transactionProvider.runInTransaction {
             questDao.setTaskCompletion(taskId, isCompleted)
-            val allTasks = questDao.getTasksForQuestSync(questId)
-            val status = QuestCompletionPolicy.resolveAfterTaskUpdate(
-                taskCount = allTasks.size,
-                completedTaskCount = allTasks.count { it.isCompleted }
-            )
-            questDao.updateQuestStatus(questId, status.toEntity())
         }
 
     override suspend fun completeQuestTasksForExercises(questId: Int, exerciseIds: Set<Int>) =
@@ -53,15 +47,6 @@ class QuestRepositoryImpl @Inject constructor(
                 .filter { task -> task.exerciseId != null && task.exerciseId in exerciseIds && !task.isCompleted }
                 .forEach { task ->
                     questDao.setTaskCompletion(task.id, true)
-            }
-
-            val updatedTasks = questDao.getTasksForQuestSync(questId)
-            val status = QuestCompletionPolicy.resolveAfterTaskUpdate(
-                taskCount = updatedTasks.size,
-                completedTaskCount = updatedTasks.count { it.isCompleted }
-            )
-            if (status == DomainQuestStatus.COMPLETED) {
-                questDao.updateQuestStatus(questId, status.toEntity())
             }
         }
 

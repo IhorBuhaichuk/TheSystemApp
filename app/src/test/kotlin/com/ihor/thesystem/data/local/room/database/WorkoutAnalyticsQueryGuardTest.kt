@@ -36,15 +36,40 @@ class WorkoutAnalyticsQueryGuardTest {
         val daoSource = projectRoot()
             .resolve("src/main/java/com/ihor/thesystem/data/local/room/dao/WorkoutAnalyticsDao.kt")
             .readText()
+        val repositorySource = projectRoot()
+            .resolve("src/main/java/com/ihor/thesystem/data/repository_impl/WorkoutAnalyticsRepositoryImpl.kt")
+            .readText()
 
         assertFalse(
             "Weight history must not select MAX(weight) beside a non-aggregated session timestamp.",
             "SELECT MAX(weight) as weight, s.timestamp" in daoSource
         )
+        assertFalse(
+            "Weight history must not group user days through SQLite UTC date conversion.",
+            "date(s.timestamp / 1000, 'unixepoch')" in daoSource
+        )
         assertTrue(
-            "Weight history must resolve the timestamp from rows that match the daily max weight.",
-            "WITH daily_max AS" in daoSource &&
-                "AND e.weight = daily_max.weight" in daoSource
+            "Weight history must resolve local-day max weight in the AppClock-aware repository.",
+            "WorkoutAnalyticsLocalDayGrouper.dailyMaxWeightHistory" in repositorySource
+        )
+    }
+
+    @Test
+    fun `daily tonnage aggregation does not use sqlite UTC date boundary`() {
+        val daoSource = projectRoot()
+            .resolve("src/main/java/com/ihor/thesystem/data/local/room/dao/WorkoutAnalyticsDao.kt")
+            .readText()
+        val repositorySource = projectRoot()
+            .resolve("src/main/java/com/ihor/thesystem/data/repository_impl/WorkoutAnalyticsRepositoryImpl.kt")
+            .readText()
+
+        assertFalse(
+            "Daily tonnage must not group through SQLite UTC date conversion.",
+            "GROUP BY date(timestamp / 1000, 'unixepoch')" in daoSource
+        )
+        assertTrue(
+            "WorkoutAnalyticsRepositoryImpl must group tonnage by AppClock local day.",
+            "WorkoutAnalyticsLocalDayGrouper.groupTonnageByLocalDay" in repositorySource
         )
     }
 

@@ -75,7 +75,7 @@ data class CalendarUiState(
     val dailyTaskSnapshot: DailyTaskSnapshotUiModel = DailyTaskSnapshotUiModel.Empty,
     val nextWorkoutRecommendations: List<ProgressionMatrixEntry> = emptyList(),
     val loggedWeightForDate: Double? = null,
-    val currentMonth: YearMonth = YearMonth.now(),
+    val currentMonth: YearMonth = YearMonth.of(1970, 1),
     val playerName: String = "TheSystem",
     val playerRank: PlayerRank = PlayerRank.NOVICE,
     val globalRank: Rank = Rank.E,

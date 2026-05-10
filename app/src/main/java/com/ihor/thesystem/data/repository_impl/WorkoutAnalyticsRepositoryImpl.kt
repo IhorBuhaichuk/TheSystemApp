@@ -13,6 +13,8 @@ import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 class WorkoutAnalyticsRepositoryImpl @Inject constructor(
@@ -39,7 +41,9 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         monthStart: Long,
         monthEnd: Long
     ): Flow<List<DailyTonnageStats>> {
-        return dao.getDailyTonnageStats(monthStart, monthEnd)
+        return dao.getDailyTonnageStats(monthStart, monthEnd).map { rows ->
+            WorkoutAnalyticsLocalDayGrouper.groupTonnageByLocalDay(rows, clock.zoneId())
+        }
     }
 
     override fun getSessionsByDate(dateMillis: Long): Flow<List<WorkoutLog>> {
@@ -57,7 +61,10 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
 
     override fun getWeightHistory(exerciseId: Int): Flow<List<WeightHistoryEntry>> {
         return dao.getWeightHistoryForExercise(exerciseId).map { list ->
-            list.map { WeightHistoryEntry(it.weight, it.timestamp) }
+            WorkoutAnalyticsLocalDayGrouper.dailyMaxWeightHistory(
+                rows = list.map { WeightHistoryEntry(it.weight, it.timestamp) },
+                zoneId = clock.zoneId()
+            )
         }
     }
 
@@ -176,4 +183,42 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         session = this.session.toDomain(),
         sets = this.sets.map { it.toDomain() }
     )
+}
+
+internal object WorkoutAnalyticsLocalDayGrouper {
+    fun groupTonnageByLocalDay(
+        rows: List<DailyTonnageStats>,
+        zoneId: ZoneId
+    ): List<DailyTonnageStats> =
+        rows.groupBy { row -> localDate(row.dateUnixTimestamp, zoneId) }
+            .map { (date, entries) ->
+                DailyTonnageStats(
+                    dateUnixTimestamp = date.atStartOfDay(zoneId).toInstant().toEpochMilli(),
+                    totalTonnage = entries.sumOf { it.totalTonnage }
+                )
+            }
+            .sortedBy { it.dateUnixTimestamp }
+
+    fun dailyMaxWeightHistory(
+        rows: List<WeightHistoryEntry>,
+        zoneId: ZoneId
+    ): List<WeightHistoryEntry> =
+        rows.groupBy { row -> localDate(row.timestamp, zoneId) }
+            .map { (_, entries) ->
+                val maxWeight = entries.maxOf { it.weight }
+                val timestamp = entries
+                    .filter { it.weight == maxWeight }
+                    .maxOf { it.timestamp }
+                WeightHistoryEntry(
+                    weight = maxWeight,
+                    timestamp = timestamp
+                )
+            }
+            .sortedByDescending { it.timestamp }
+            .take(100)
+
+    private fun localDate(timestamp: Long, zoneId: ZoneId): LocalDate =
+        Instant.ofEpochMilli(timestamp)
+            .atZone(zoneId)
+            .toLocalDate()
 }

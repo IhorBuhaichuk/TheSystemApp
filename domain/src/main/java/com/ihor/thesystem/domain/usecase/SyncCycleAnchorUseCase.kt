@@ -3,21 +3,26 @@ package com.ihor.thesystem.domain.usecase
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
+import com.ihor.thesystem.domain.util.AppClock
 import kotlinx.coroutines.flow.firstOrNull
-import java.time.LocalDate
+import java.time.Instant
 import javax.inject.Inject
 
 class SyncCycleAnchorUseCase @Inject constructor(
     private val configRepo: SystemConfigRepository,
     private val playerRepo: PlayerRepository,
     private val questRepo: QuestRepository,
-    private val generateQuests: GenerateDailyQuestsUseCase
+    private val generateQuests: GenerateDailyQuestsUseCase,
+    private val clock: AppClock
 ) {
     suspend operator fun invoke(selectedDay: Int) {
         val config = configRepo.getConfigFlow().firstOrNull() ?: return
         
         // Гарантовано записуємо Epoch Day (кількість днів), а не мілісекунди
-        val todayEpochDay = LocalDate.now().toEpochDay()
+        val todayEpochDay = Instant.ofEpochMilli(clock.now())
+            .atZone(clock.zoneId())
+            .toLocalDate()
+            .toEpochDay()
         
         // 1. Оновлюємо конфігурацію системи (Anchor)
         configRepo.updateConfig(

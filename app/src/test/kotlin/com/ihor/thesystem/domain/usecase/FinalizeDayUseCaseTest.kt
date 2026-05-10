@@ -2,6 +2,7 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.DomainQuestStatus
 import com.ihor.thesystem.domain.model.DomainQuestType
+import com.ihor.thesystem.domain.model.DayFinalizationResult
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.PlayerRank
@@ -42,11 +43,17 @@ class FinalizeDayUseCaseTest {
     private val scheduleRepo: ScheduleRepository = mockk()
     private val generateDailyQuests: GenerateDailyQuestsUseCase = mockk()
     private val calculateAttributes: CalculateAttributesUseCase = mockk()
+    private val completeQuest = CompleteQuestUseCase(
+        transactionProvider = RecordingTransactionProvider(),
+        questRepository = questRepo,
+        playerRepository = playerRepo,
+        logger = NoOpLogger()
+    )
     private val resolveTrainingCycleDay = ResolveTrainingCycleDayUseCase(
         calculateCycleDay = CalculateCycleDayForDateUseCase(),
         clock = FixedClock(TODAY)
     )
-    private val advanceCycleDayStatus = AdvanceCycleDayUseCase(questRepo)
+    private val advanceCycleDayStatus = AdvanceCycleDayUseCase(questRepo, completeQuest)
     private val logger = NoOpLogger()
 
     @Test
@@ -61,9 +68,15 @@ class FinalizeDayUseCaseTest {
         )
         val activeQuest = completedMainQuest()
 
-        every { playerRepo.getPlayer() } returns flowOf(player(currentCycleDay = 1, currentStreak = 3))
+        val initialPlayer = player(currentCycleDay = 1, currentStreak = 3)
+        every { playerRepo.getPlayer() } returns flowOf(initialPlayer)
+        coEvery { playerRepo.getPlayerSnapshot() } returnsMany listOf(
+            initialPlayer,
+            initialPlayer.rewardWorkoutCompletion()
+        )
         every { configRepo.getConfigFlow() } returns flowOf(config)
         every { questRepo.getActiveQuests() } returns flowOf(listOf(activeQuest))
+        coEvery { questRepo.getQuestById(activeQuest.id) } returns activeQuest
         every { scheduleRepo.getScheduleForDay(2) } returns flowOf(workoutDay(cycleDay = 2))
         every { scheduleRepo.getScheduleForDay(3) } returns flowOf(restDay(cycleDay = 3))
         coEvery { questRepo.updateQuestStatus(any(), any()) } just runs
@@ -89,7 +102,7 @@ class FinalizeDayUseCaseTest {
     fun `finalize day rethrows coroutine cancellation`() = runTest {
         every { playerRepo.getPlayer() } returns flowOf(player())
         every { configRepo.getConfigFlow() } returns flowOf(
-            SystemConfig(lastInitEpochDay = TODAY.toEpochDay())
+            SystemConfig(lastInitEpochDay = TODAY.minusDays(1).toEpochDay())
         )
 
         try {
@@ -98,6 +111,61 @@ class FinalizeDayUseCaseTest {
         } catch (_: CancellationException) {
             // Expected: structured concurrency must own cancellation.
         }
+    }
+
+    @Test
+    fun `already synchronized day does not advance cycle again`() = runTest {
+        every { playerRepo.getPlayer() } returns flowOf(player(currentCycleDay = 2, currentStreak = 1))
+        every { configRepo.getConfigFlow() } returns flowOf(
+            SystemConfig(lastInitEpochDay = TODAY.toEpochDay())
+        )
+
+        val result = useCase(transactionProvider = RecordingTransactionProvider())()
+
+        assertTrue(result is Result.Success)
+        assertEquals(DayFinalizationResult.None, (result as Result.Success).data)
+        coVerify(exactly = 0) { playerRepo.updatePlayer(any()) }
+        coVerify(exactly = 0) { questRepo.archiveActiveQuests() }
+        coVerify(exactly = 0) { generateDailyQuests() }
+    }
+
+    @Test
+    fun `second failed main quest enters penalty zone during finalization`() = runTest {
+        val playerSlot = slot<Player>()
+        val initialPlayer = player(
+            currentCycleDay = 1,
+            currentStreak = 2,
+            consecutiveMainQuestFailures = 1
+        )
+        val penalizedPlayer = initialPlayer.copy(
+            currentStreak = 0,
+            consecutiveMainQuestFailures = 2,
+            isPenaltyActive = true
+        )
+        val activeQuest = incompleteMainQuest()
+
+        every { playerRepo.getPlayer() } returns flowOf(initialPlayer)
+        coEvery { playerRepo.getPlayerSnapshot() } returnsMany listOf(initialPlayer, penalizedPlayer)
+        every { configRepo.getConfigFlow() } returns flowOf(
+            SystemConfig(lastInitEpochDay = TODAY.minusDays(1).toEpochDay())
+        )
+        every { questRepo.getActiveQuests() } returns flowOf(listOf(activeQuest))
+        coEvery { questRepo.getQuestById(activeQuest.id) } returns activeQuest
+        coEvery { questRepo.updateQuestStatus(any(), any()) } just runs
+        coEvery { questRepo.logQuestResult(any(), any(), any()) } just runs
+        coEvery { playerRepo.updatePlayer(capture(playerSlot)) } returns Result.Success(Unit)
+        coEvery { questRepo.archiveActiveQuests() } just runs
+        coEvery { configRepo.saveLastInitDate(TODAY.toEpochDay()) } just runs
+        coEvery { configRepo.setNeedsDailyInit(any()) } just runs
+        coEvery { generateDailyQuests() } just runs
+        coEvery { calculateAttributes() } returns Result.Success(CalculatedAttributes(emptyMap()))
+
+        val result = useCase(transactionProvider = RecordingTransactionProvider())()
+
+        assertTrue(result is Result.Success)
+        assertEquals(DayFinalizationResult.PenaltyZoneEntered, (result as Result.Success).data)
+        assertTrue(playerSlot.captured.isPenaltyActive)
+        assertEquals(2, playerSlot.captured.consecutiveMainQuestFailures)
     }
 
     private fun useCase(
@@ -119,7 +187,9 @@ class FinalizeDayUseCaseTest {
 
     private fun player(
         currentCycleDay: Int = 1,
-        currentStreak: Int = 0
+        currentStreak: Int = 0,
+        consecutiveMainQuestFailures: Int = 0,
+        isPenaltyActive: Boolean = false
     ): Player =
         Player(
             id = 1,
@@ -131,7 +201,9 @@ class FinalizeDayUseCaseTest {
             currentWeek = 1,
             currentCycleDay = currentCycleDay,
             currentStreak = currentStreak,
-            maxStreak = currentStreak
+            maxStreak = currentStreak,
+            consecutiveMainQuestFailures = consecutiveMainQuestFailures,
+            isPenaltyActive = isPenaltyActive
         )
 
     private fun completedMainQuest(): Quest =
@@ -151,6 +223,19 @@ class FinalizeDayUseCaseTest {
                 )
             ),
             scheduleId = 2
+        )
+
+    private fun incompleteMainQuest(): Quest =
+        completedMainQuest().copy(
+            tasks = listOf(
+                QuestTask(
+                    id = 7,
+                    questId = 42,
+                    name = "Bench press",
+                    isCompleted = false,
+                    exerciseId = 10
+                )
+            )
         )
 
     private fun workoutDay(cycleDay: Int): ScheduleDay =

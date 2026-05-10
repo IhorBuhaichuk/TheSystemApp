@@ -32,5 +32,11 @@ object QuestCompletionPolicy {
         }
     }
 
+    fun resultForStatus(status: DomainQuestStatus): QuestCompletionResult =
+        QuestCompletionResult(
+            status = status,
+            wasSuccessful = status == DomainQuestStatus.COMPLETED
+        )
+
     fun isSuccessful(quest: Quest): Boolean = quest.status == DomainQuestStatus.COMPLETED
 }
