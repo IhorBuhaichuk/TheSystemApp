@@ -488,7 +488,7 @@ private fun CycleDayEditor(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(colors.surfaceGlass.copy(alpha = 0.62f))
+            .background(colors.surfaceGlassSoft)
             .border(1.dp, colors.borderSubtle, shape)
             .padding(SystemItemSpacing),
         verticalArrangement = Arrangement.spacedBy(10.dp)

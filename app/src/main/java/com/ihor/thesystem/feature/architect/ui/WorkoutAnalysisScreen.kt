@@ -548,7 +548,7 @@ private fun AnalysisRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(colors.surfaceGlass.copy(alpha = 0.58f))
+            .background(colors.surfaceGlassSoft)
             .border(1.dp, colors.borderSubtle, shape)
             .padding(SystemItemSpacing),
         horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing),

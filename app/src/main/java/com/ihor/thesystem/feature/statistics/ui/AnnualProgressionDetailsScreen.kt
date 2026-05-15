@@ -361,7 +361,7 @@ private fun AnnualProgressionLineChart(
                     month.actualWeight?.let { point(month.monthIndex, it) }
                 }
 
-                drawSeries(planPoints, colors.accentAi.copy(alpha = 0.78f), 2.dp.toPx())
+                drawSeries(planPoints, colors.accentAi.copy(alpha = 0.36f), 2.dp.toPx())
                 drawSeries(factPoints, colors.accentPrimary, 2.6.dp.toPx())
             }
         }
@@ -455,7 +455,7 @@ private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(colors.surfaceGlass.copy(alpha = 0.58f))
+            .background(colors.surfaceGlassSoft)
             .border(1.dp, accent.copy(alpha = 0.16f), shape)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -799,7 +799,7 @@ private fun ManualExerciseTargetRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(colors.surfaceGlass.copy(alpha = 0.54f))
+            .background(colors.surfaceGlassSoft)
             .border(1.dp, colors.borderSubtle, shape)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -849,7 +849,7 @@ private fun ManualMetaChip(text: String) {
     Box(
         modifier = Modifier
             .clip(shape)
-            .background(colors.accentAiSoft.copy(alpha = 0.50f))
+            .background(colors.accentAiSoft)
             .border(1.dp, colors.accentAi.copy(alpha = 0.18f), shape)
             .padding(horizontal = 9.dp, vertical = 5.dp)
     ) {

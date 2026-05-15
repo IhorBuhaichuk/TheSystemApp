@@ -9,18 +9,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.RajdhaniFamily
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemTheme
-import com.ihor.thesystem.core.theme.TekoFamily
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.core.ui.components.neonGlow
@@ -80,11 +80,10 @@ fun QuestCard(
             ) {
                 Text(
                     text = stringResource(R.string.text_exam),
-                    color = accentColor,
-                    fontFamily = RajdhaniFamily,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 10.sp,
-                    letterSpacing = 0.sp
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = accentColor,
+                        fontWeight = FontWeight.Black
+                    )
                 )
             }
         }
@@ -97,18 +96,25 @@ fun QuestCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = quest.title,
-                    color = if (quest.isCompleted) colors.textSecondary else (if (isPromotion) accentColor else colors.textPrimary),
-                    fontFamily = if (isPromotion) TekoFamily else RajdhaniFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = if (isPromotion) 28.sp else 16.sp,
-                    lineHeight = if (isPromotion) 32.sp else 20.sp
+                    style = (if (isPromotion) {
+                        MaterialTheme.typography.displayLarge
+                    } else {
+                        MaterialTheme.typography.titleMedium
+                    }).copy(
+                        color = if (quest.isCompleted) colors.textSecondary else if (isPromotion) accentColor else colors.textPrimary,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = quest.subtitle.asString(),
-                    color = if (quest.isCompleted) colors.textSecondary.copy(alpha = 0.5f) else (if (isPromotion) accentColor.copy(alpha = 0.8f) else colors.textSecondary),
-                    fontFamily = RajdhaniFamily,
-                    fontSize = 11.sp,
-                    fontWeight = if (isPromotion) FontWeight.Bold else FontWeight.Normal
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = if (quest.isCompleted) colors.textSecondary.copy(alpha = 0.5f) else if (isPromotion) accentColor.copy(alpha = 0.8f) else colors.textSecondary,
+                        fontWeight = if (isPromotion) FontWeight.Bold else FontWeight.Normal
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Icon(
@@ -144,12 +150,13 @@ fun QuestCard(
                         )
                         Text(
                             text = task.name,
-                            color = if (task.isCompleted) colors.textSecondary else colors.textPrimary,
-                            fontFamily = RajdhaniFamily,
-                            fontSize = 12.sp,
-                            style = if (task.isCompleted) androidx.compose.ui.text.TextStyle(
-                                textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
-                            ) else androidx.compose.ui.text.TextStyle.Default
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = if (task.isCompleted) colors.textSecondary else colors.textPrimary,
+                                fontWeight = FontWeight.Medium,
+                                textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -157,10 +164,11 @@ fun QuestCard(
                 if (remainingCount > 0) {
                     Text(
                         text = pluralStringResource(R.plurals.quest_tasks_more, remainingCount, remainingCount),
-                        color = accentColor.copy(alpha = 0.7f),
-                        fontFamily = RajdhaniFamily,
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(start = 14.dp)
+                        modifier = Modifier.padding(start = 14.dp),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = accentColor.copy(alpha = 0.7f),
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 }
             }
@@ -181,15 +189,14 @@ fun EmptyQuestCard(type: DomainQuestType) {
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
-            .sciPanel(colors.borderSubtle.copy(alpha = 0.2f), colors.surfaceGlassStrong.copy(alpha = 0.5f), SystemTheme.shapes.small),
+            .sciPanel(colors.borderSubtle, colors.surfaceGlassSoft, SystemTheme.shapes.small),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
-            color = colors.textSecondary.copy(alpha = 0.4f),
-            fontFamily = RajdhaniFamily,
-            fontSize = 12.sp,
-            letterSpacing = 0.sp
+            style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary.copy(alpha = 0.4f)),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

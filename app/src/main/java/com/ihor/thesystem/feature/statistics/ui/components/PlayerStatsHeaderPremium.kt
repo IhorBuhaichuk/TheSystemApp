@@ -19,7 +19,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ihor.thesystem.core.theme.SystemItemSpacing
@@ -101,7 +100,6 @@ fun PlayerStatsHeaderPremium(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = colors.accentSuccess,
-                                    letterSpacing = 0.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
@@ -183,9 +181,7 @@ private fun StatItemPremium(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = colors.textMuted,
-                fontSize = 9.sp,
-                letterSpacing = 0.sp
+                color = colors.textMuted
             )
         )
     }

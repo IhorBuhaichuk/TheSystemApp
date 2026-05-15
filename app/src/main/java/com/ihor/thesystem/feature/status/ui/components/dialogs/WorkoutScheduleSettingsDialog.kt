@@ -42,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -545,14 +544,7 @@ private fun ExerciseSettingsRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        colors.overlayMedium.copy(alpha = 0.58f),
-                        colors.surfaceGlassSoft
-                    )
-                )
-            )
+            .background(colors.surfaceGlassSoft)
             .border(1.dp, colors.borderSubtle, shape)
             .padding(horizontal = 12.dp, vertical = 11.dp),
     ) {
@@ -655,7 +647,7 @@ private fun ExerciseRowLead(number: Int?) {
         modifier = Modifier
             .size(42.dp)
             .clip(shape)
-            .background(colors.accentPrimarySoft.copy(alpha = 0.72f))
+            .background(colors.accentPrimarySoft)
             .border(1.dp, colors.accentPrimary.copy(alpha = 0.24f), shape),
         contentAlignment = Alignment.Center
     ) {

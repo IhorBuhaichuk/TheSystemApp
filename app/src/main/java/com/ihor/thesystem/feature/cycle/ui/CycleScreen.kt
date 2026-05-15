@@ -382,7 +382,7 @@ private fun ExerciseStackRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(colors.surfaceGlass.copy(alpha = 0.62f))
+            .background(colors.surfaceGlassSoft)
             .border(1.dp, colors.borderSubtle, shape)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 10.dp),

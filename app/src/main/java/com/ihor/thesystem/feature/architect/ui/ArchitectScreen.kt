@@ -416,7 +416,7 @@ private fun ChatPanel(
                     .fillMaxWidth()
                     .height(360.dp)
                     .clip(RoundedCornerShape(SystemTheme.shapes.medium))
-                    .background(colors.surfaceRaised.copy(alpha = 0.58f))
+                    .background(colors.surfaceGlassSoft)
                     .border(1.dp, colors.borderSubtle, RoundedCornerShape(SystemTheme.shapes.medium))
             ) {
                 if (selectedMode == 0) {

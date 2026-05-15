@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
@@ -130,8 +129,7 @@ fun LogWorkoutSetsDialog(
                     text = exerciseName.uppercase(),
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = colors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.sp
+                        fontWeight = FontWeight.Bold
                     )
                 )
                 

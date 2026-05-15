@@ -3,17 +3,16 @@ package com.ihor.thesystem.feature.statistics.ui.components
 import android.graphics.BlurMaskFilter
 import android.graphics.Paint as AndroidPaint
 import androidx.compose.foundation.Canvas
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.*
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
-import com.ihor.thesystem.core.theme.RajdhaniFamily
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.asUiText
 import com.ihor.thesystem.domain.model.MuscleGroup
@@ -31,6 +30,10 @@ fun RadarChartCanvas(
     val labels = MuscleGroup.entries
     val numPoints = labels.size
     val context = LocalContext.current
+    val labelStyle = MaterialTheme.typography.labelSmall.copy(
+        color = colors.textSecondary,
+        fontWeight = FontWeight.Bold
+    )
 
     // Pre-resolve names to use in drawing
     val labelNames = labels.map { it.asUiText().asString(context).uppercase() }
@@ -125,11 +128,7 @@ fun RadarChartCanvas(
             
             val textLayoutResult = textMeasurer.measure(
                 text = AnnotatedString(labelText),
-                style = TextStyle(
-                    color = colors.textPrimary,
-                    fontSize = 11.sp,
-                    fontFamily = RajdhaniFamily
-                )
+                style = labelStyle
             )
             
             drawText(

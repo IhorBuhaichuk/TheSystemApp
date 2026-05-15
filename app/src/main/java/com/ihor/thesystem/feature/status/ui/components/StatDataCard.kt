@@ -36,8 +36,8 @@ fun StatDataCard(
     Column(
         modifier = modifier
             .sciPanel(
-                borderColor = colors.borderSubtle.copy(alpha = 0.3f),
-                backgroundColor = colors.surfaceGlassStrong.copy(alpha = 0.5f),
+                borderColor = colors.borderSubtle,
+                backgroundColor = colors.surfaceGlassSoft,
                 cornerCut = 8.dp
             )
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)

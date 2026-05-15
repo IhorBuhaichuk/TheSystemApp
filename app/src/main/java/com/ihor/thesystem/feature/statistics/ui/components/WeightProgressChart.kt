@@ -5,6 +5,7 @@ import android.graphics.Paint
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,9 +15,8 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.RajdhaniFamily
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
 import com.ihor.thesystem.domain.model.BodyWeightLog
@@ -39,10 +39,11 @@ fun WeightProgressChart(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = "ДИНАМІКА ВАГИ ТІЛА",
-            color = accent,
-            fontFamily = RajdhaniFamily,
-            fontSize = 12.sp,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 8.dp),
+            style = MaterialTheme.typography.labelLarge.copy(
+                color = accent,
+                fontWeight = FontWeight.Bold
+            )
         )
 
         Box(

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,12 +18,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.R
-import com.ihor.thesystem.core.theme.RajdhaniFamily
 import com.ihor.thesystem.core.theme.SystemTheme
-import com.ihor.thesystem.core.theme.TekoFamily
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
 
 @Composable
@@ -97,20 +96,23 @@ private fun HexStatBadge(
             Spacer(Modifier.height(2.dp))
             Text(
                 text = label,
-                color = colors.textSecondary,
-                fontSize = 7.sp,
-                fontFamily = RajdhaniFamily,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                lineHeight = 8.sp
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = colors.textSecondary,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = value,
-                color = colors.textPrimary,
-                fontSize = 14.sp,
-                fontFamily = TekoFamily,
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

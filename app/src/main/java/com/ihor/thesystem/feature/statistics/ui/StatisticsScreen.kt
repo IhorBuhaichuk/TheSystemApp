@@ -332,7 +332,7 @@ private fun WeeklyRhythmBars(days: List<WeeklyTrainingDayUiModel>) {
                             .background(
                                 Brush.verticalGradient(
                                     listOf(
-                                        if (hasWorkout) colors.accentPrimary.copy(alpha = 0.62f) else colors.overlayMedium,
+                                        if (hasWorkout) colors.accentPrimary.copy(alpha = 0.34f) else colors.overlayMedium,
                                         if (hasWorkout) colors.accentPrimary.copy(alpha = 0.13f) else colors.overlayLight
                                     )
                                 )
@@ -462,7 +462,7 @@ private fun AnnualPlanFactChart(
             }
         }
 
-        drawSeries(targetValues, colors.accentAi.copy(alpha = 0.72f), 2.dp.toPx())
+        drawSeries(targetValues, colors.accentAi.copy(alpha = 0.36f), 2.dp.toPx())
         drawSeries(currentValues, colors.accentPrimary, 2.5.dp.toPx())
     }
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,14 +17,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.R
-import com.ihor.thesystem.core.theme.RajdhaniFamily
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemTheme
-import com.ihor.thesystem.core.theme.TekoFamily
 import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
@@ -83,17 +82,19 @@ fun PlayerStatsHeader(
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(
-                        text       = data.playerName,
-                        color      = colors.textPrimary,
-                        fontFamily = RajdhaniFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize   = 18.sp
+                        text = data.playerName,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = colors.textPrimary,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text       = "[ ${data.playerClass} ]",
-                        color      = colors.textSecondary,
-                        fontFamily = RajdhaniFamily,
-                        fontSize   = 11.sp
+                        text = "[ ${data.playerClass} ]",
+                        style = MaterialTheme.typography.labelMedium.copy(color = colors.textSecondary),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -108,10 +109,11 @@ fun PlayerStatsHeader(
                 ) {
                     Icon(Icons.Filled.Warning, null, tint = colors.accentError, modifier = Modifier.size(13.dp))
                     Text(
-                        text = stringResource(R.string.text_penalty), 
-                        color = colors.accentError, 
-                        fontFamily = RajdhaniFamily, 
-                        fontSize = 10.sp
+                        text = stringResource(R.string.text_penalty),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = colors.accentError,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 }
             }
@@ -158,17 +160,19 @@ private fun RowScope.StatChip(
     ) {
         Icon(icon, null, tint = colors.textSecondary, modifier = Modifier.size(14.dp))
         Text(
-            text       = value,
-            color      = colors.textPrimary,
-            fontFamily = TekoFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize   = 18.sp
+            text = value,
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = colors.textPrimary,
+                fontWeight = FontWeight.ExtraBold
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Text(
-            text       = label,
-            color      = colors.textSecondary,
-            fontFamily = RajdhaniFamily,
-            fontSize   = 8.sp
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
