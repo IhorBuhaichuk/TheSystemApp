@@ -1,24 +1,47 @@
 package com.ihor.thesystem.feature.statistics.ui.dialogs
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.*
+import androidx.compose.ui.window.Dialog
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.SystemDialogContainer
+import com.ihor.thesystem.core.ui.components.SystemGhostButton
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
-import androidx.compose.ui.Alignment
 import java.util.Locale
 
 @Composable
@@ -28,120 +51,148 @@ fun EditWeightDialog(
     onDismiss: () -> Unit,
     existingLog: ExerciseSet? = null
 ) {
-    var input    by remember { mutableStateOf(entry.currentWeight.toString()) }
-    // Завдання 1: Стан фітбеку згідно вимог
+    val colors = SystemTheme.colors
+    val usesExternalLoad = entry.usesExternalLoad
+    var input by remember(entry.exerciseId, usesExternalLoad) {
+        mutableStateOf(if (usesExternalLoad) entry.currentWeight.toString() else "")
+    }
     var feedback by remember(existingLog) { mutableStateOf(existingLog?.userFeedback ?: "") }
-    var isError  by remember { mutableStateOf(false) }
+    var isError by remember { mutableStateOf(false) }
+    val canConfirm = !usesExternalLoad || (!isError && input.isNotBlank())
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor   = PanelSurface,
-        shape            = RoundedCornerShape(4.dp),
-        icon = {
-            Icon(Icons.Filled.FitnessCenter, null, tint = NeonGreen)
-        },
-        title = {
+    Dialog(onDismissRequest = onDismiss) {
+        SystemDialogContainer(accent = colors.accentSuccess) {
+            Icon(Icons.Filled.FitnessCenter, contentDescription = null, tint = colors.accentSuccess)
             Text(
-                text       = "[ ПОТОЧНА ВАГА ]",
-                color      = NeonGreen,
-                fontFamily = FontFamily.Monospace,
-                fontSize   = 14.sp
+                text = if (usesExternalLoad) "[ ПОТОЧНА ВАГА ]" else "[ ВПРАВА БЕЗ КГ ]",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = colors.accentSuccess,
+                    fontWeight = FontWeight.Bold
+                )
             )
-        },
-        text = {
             Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .heightIn(max = 460.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
             ) {
                 Text(
-                    text       = entry.exerciseName,
-                    color      = TextPrimary,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    fontSize   = 13.sp
-                )
-                Row(
-                    modifier              = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    InfoChip("СТАРТ",  entry.displayStart)
-                    InfoChip("ЦІЛЬ",   entry.displayTarget)
-                    InfoChip("+/тиж", "+${String.format(Locale.US, "%.2f", entry.weeklyStep)}кг")
-                }
-                
-                OutlinedTextField(
-                    value         = input,
-                    onValueChange = {
-                        input   = it
-                        isError = it.toFloatOrNull() == null && it.isNotEmpty()
-                    },
-                    singleLine    = true,
-                    isError       = isError,
-                    label = {
-                        Text("Поточна вага (кг)", fontFamily = FontFamily.Monospace, fontSize = 11.sp)
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor   = NeonGreen,
-                        unfocusedBorderColor = PanelBorder,
-                        focusedLabelColor    = NeonGreen,
-                        cursorColor          = NeonGreen,
-                        focusedTextColor     = TextPrimary,
-                        unfocusedTextColor   = TextPrimary,
-                        errorBorderColor     = NeonRed
+                    text = entry.exerciseName,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        color = colors.textPrimary,
+                        fontWeight = FontWeight.Bold
                     ),
-                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
-                    modifier = Modifier.fillMaxWidth()
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
-                
-                if (isError) {
-                    Text("Введіть коректне число", color = NeonRed,
-                        fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                }
+                if (usesExternalLoad) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
+                    ) {
+                        InfoChip("СТАРТ", entry.displayStart, Modifier.weight(1f))
+                        InfoChip("ЦІЛЬ", entry.displayTarget, Modifier.weight(1f))
+                        InfoChip("+/тиж", "+${String.format(Locale.US, "%.2f", entry.weeklyStep)}кг", Modifier.weight(1f))
+                    }
 
-                // Завдання 1: Поле фітбеку
-                OutlinedTextField(
-                    value = feedback,
-                    onValueChange = { feedback = it },
-                    label = {
-                        Text("Фітбек (відчуття, біль, легкість...)", fontFamily = FontFamily.Monospace, fontSize = 11.sp)
-                    },
-                    leadingIcon = { Icon(Icons.Default.Edit, contentDescription = "Feedback") },
-                    modifier = Modifier.fillMaxWidth(),
-                    maxLines = 3,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor   = NeonCyan,
-                        unfocusedBorderColor = PanelBorder,
-                        focusedLabelColor    = NeonCyan,
-                        cursorColor          = NeonCyan,
-                        focusedTextColor     = TextPrimary,
-                        unfocusedTextColor   = TextPrimary
-                    ),
-                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 12.sp)
-                )
+                    OutlinedTextField(
+                        value = input,
+                        onValueChange = {
+                            input = it
+                            isError = it.toFloatOrNull() == null && it.isNotEmpty()
+                        },
+                        singleLine = true,
+                        isError = isError,
+                        label = { Text("Поточна вага (кг)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        colors = systemOutlinedTextFieldColors(accent = colors.accentSuccess),
+                        textStyle = LocalTextStyle.current.copy(color = colors.textPrimary),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (isError) {
+                        Text(
+                            text = "Введіть коректне число",
+                            style = MaterialTheme.typography.bodySmall.copy(color = colors.accentError)
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = feedback,
+                        onValueChange = { feedback = it },
+                        label = { Text("Фітбек (відчуття, біль, легкість...)") },
+                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 3,
+                        colors = systemOutlinedTextFieldColors(accent = colors.accentPrimary),
+                        textStyle = LocalTextStyle.current.copy(color = colors.textPrimary)
+                    )
+                } else {
+                    Text(
+                        text = "Для цієї вправи поточна вага не редагується. Використовуй логування підходів, щоб фіксувати повторення або час.",
+                        style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
+                    )
+                }
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { input.toFloatOrNull()?.let { onConfirm(it, feedback) } },
-                enabled = !isError && input.isNotBlank()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
             ) {
-                Text("ЗБЕРЕГТИ", color = NeonGreen, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("СКАСУВАТИ", color = TextSecondary, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                SystemGhostButton(
+                    text = "СКАСУВАТИ",
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                )
+                SystemButton(
+                    text = if (usesExternalLoad) "ЗБЕРЕГТИ" else "ЗАКРИТИ",
+                    onClick = {
+                        if (usesExternalLoad) {
+                            input.toFloatOrNull()?.let { onConfirm(it, feedback) }
+                        } else {
+                            onDismiss()
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    accent = colors.accentSuccess,
+                    enabled = !usesExternalLoad || (!isError && input.isNotBlank()),
+                    glow = canConfirm
+                )
             }
         }
-    )
+    }
 }
 
 @Composable
-private fun InfoChip(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, color = TextSecondary, fontFamily = FontFamily.Monospace, fontSize = 9.sp)
-        Text(value, color = NeonCyan, fontFamily = FontFamily.Monospace,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = 12.sp)
+private fun InfoChip(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.small)
+    Column(
+        modifier = modifier
+            .clip(shape)
+            .background(colors.overlayLight)
+            .border(1.dp, colors.borderSubtle, shape)
+            .padding(SystemCardPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = colors.accentPrimary,
+                fontWeight = FontWeight.Bold
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

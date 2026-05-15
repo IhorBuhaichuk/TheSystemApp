@@ -1,7 +1,6 @@
 package com.ihor.thesystem.presentation.common.components
 
 import android.os.Build.VERSION.SDK_INT
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -12,11 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import com.ihor.thesystem.core.theme.SystemTheme
 import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
 import coil.decode.GifDecoder
@@ -39,6 +37,7 @@ fun HologramExerciseImage(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val colors = SystemTheme.colors
     
     val imageLoader = remember(context) {
         ImageLoader.Builder(context)
@@ -70,7 +69,7 @@ fun HologramExerciseImage(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color.Cyan)
+                CircularProgressIndicator(color = colors.accentPrimary)
             }
         },
         error = {
@@ -81,7 +80,7 @@ fun HologramExerciseImage(
                 Icon(
                     imageVector = Icons.Default.FitnessCenter,
                     contentDescription = null,
-                    tint = Color.Cyan.copy(alpha = 0.4f)
+                    tint = colors.accentPrimary.copy(alpha = 0.4f)
                 )
             }
         }

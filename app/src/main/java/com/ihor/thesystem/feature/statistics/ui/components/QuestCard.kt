@@ -14,11 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.theme.RajdhaniFamily
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.theme.TekoFamily
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.core.ui.components.neonGlow
@@ -37,11 +39,13 @@ fun QuestCard(
     modifier: Modifier = Modifier,
     onLongClick: () -> Unit = {}
 ) {
+    val colors = SystemTheme.colors
     val isPromotion = type == DomainQuestType.PROMOTION
+    val shapes = SystemTheme.shapes
     val accentColor = when (type) {
-        DomainQuestType.DAILY -> NeonCyan
-        DomainQuestType.MAIN -> NeonGold
-        DomainQuestType.PROMOTION -> Color(0xFFFF003C) // Агресивний червоний для екзамену
+        DomainQuestType.DAILY -> colors.accentPrimary
+        DomainQuestType.MAIN -> colors.accentWarning
+        DomainQuestType.PROMOTION -> colors.accentError
     }
 
     // ФІКС: Картка завжди активна і має світіння, якщо вона не завершена
@@ -56,7 +60,7 @@ fun QuestCard(
             )
             .glassCard()
             .then(
-                if (isPromotion) Modifier.border(2.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                if (isPromotion) Modifier.border(2.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(shapes.medium))
                 else Modifier
             )
             .combinedClickable(
@@ -64,13 +68,13 @@ fun QuestCard(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(16.dp),
+            .padding(SystemCardPadding),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         if (isPromotion) {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
+                    .clip(RoundedCornerShape(shapes.extraSmall))
                     .background(accentColor.copy(alpha = 0.2f))
                     .padding(horizontal = 8.dp, vertical = 2.dp)
             ) {
@@ -80,7 +84,7 @@ fun QuestCard(
                     fontFamily = RajdhaniFamily,
                     fontWeight = FontWeight.Black,
                     fontSize = 10.sp,
-                    letterSpacing = 2.sp
+                    letterSpacing = 0.sp
                 )
             }
         }
@@ -93,7 +97,7 @@ fun QuestCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = quest.title,
-                    color = if (quest.isCompleted) TextSecondary else (if (isPromotion) accentColor else TextPrimary),
+                    color = if (quest.isCompleted) colors.textSecondary else (if (isPromotion) accentColor else colors.textPrimary),
                     fontFamily = if (isPromotion) TekoFamily else RajdhaniFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = if (isPromotion) 28.sp else 16.sp,
@@ -101,7 +105,7 @@ fun QuestCard(
                 )
                 Text(
                     text = quest.subtitle.asString(),
-                    color = if (quest.isCompleted) TextSecondary.copy(alpha = 0.5f) else (if (isPromotion) accentColor.copy(alpha = 0.8f) else TextSecondary),
+                    color = if (quest.isCompleted) colors.textSecondary.copy(alpha = 0.5f) else (if (isPromotion) accentColor.copy(alpha = 0.8f) else colors.textSecondary),
                     fontFamily = RajdhaniFamily,
                     fontSize = 11.sp,
                     fontWeight = if (isPromotion) FontWeight.Bold else FontWeight.Normal
@@ -110,7 +114,7 @@ fun QuestCard(
             Icon(
                 imageVector = if (isPromotion) Icons.Filled.Star else Icons.AutoMirrored.Filled.Assignment,
                 contentDescription = null,
-                tint = if (quest.isCompleted) Color.Gray.copy(alpha = 0.5f) else accentColor.copy(alpha = 0.8f),
+                tint = if (quest.isCompleted) colors.textMuted.copy(alpha = 0.5f) else accentColor.copy(alpha = 0.8f),
                 modifier = Modifier
                     .size(if (isPromotion) 32.dp else 24.dp)
                     .then(
@@ -136,11 +140,11 @@ fun QuestCard(
                             modifier = Modifier
                                 .size(6.dp)
                                 .clip(RoundedCornerShape(1.dp))
-                                .background(if (task.isCompleted) accentColor else Color.Gray.copy(alpha = 0.4f))
+                                .background(if (task.isCompleted) accentColor else colors.textMuted.copy(alpha = 0.4f))
                         )
                         Text(
                             text = task.name,
-                            color = if (task.isCompleted) TextSecondary else TextPrimary,
+                            color = if (task.isCompleted) colors.textSecondary else colors.textPrimary,
                             fontFamily = RajdhaniFamily,
                             fontSize = 12.sp,
                             style = if (task.isCompleted) androidx.compose.ui.text.TextStyle(
@@ -166,6 +170,7 @@ fun QuestCard(
 
 @Composable
 fun EmptyQuestCard(type: DomainQuestType) {
+    val colors = SystemTheme.colors
     val label = when(type) {
         DomainQuestType.DAILY -> stringResource(R.string.text_empty_routine)
         DomainQuestType.MAIN -> stringResource(R.string.text_empty_main_quest)
@@ -176,15 +181,15 @@ fun EmptyQuestCard(type: DomainQuestType) {
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
-            .sciPanel(PanelBorder.copy(alpha = 0.2f), PanelSurface.copy(alpha = 0.5f), 12.dp),
+            .sciPanel(colors.borderSubtle.copy(alpha = 0.2f), colors.surfaceGlassStrong.copy(alpha = 0.5f), SystemTheme.shapes.small),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
-            color = TextSecondary.copy(alpha = 0.4f),
+            color = colors.textSecondary.copy(alpha = 0.4f),
             fontFamily = RajdhaniFamily,
             fontSize = 12.sp,
-            letterSpacing = 1.sp
+            letterSpacing = 0.sp
         )
     }
 }

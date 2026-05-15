@@ -26,10 +26,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.navigation.Routes
-import com.ihor.thesystem.core.theme.AccentError
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.SystemBackground
-import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemScreenPadding
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.ui.RefreshOnResume
@@ -50,6 +49,7 @@ fun StatusScreen(
 ) {
     val uiState by statusViewModel.uiState.collectAsStateWithLifecycle()
     val statusDialogState by statusViewModel.dialogState.collectAsStateWithLifecycle()
+    val colors = SystemTheme.colors
 
     var levelUpEvent by remember { mutableStateOf<StatusOneOffEvent.ShowLevelUp?>(null) }
 
@@ -66,7 +66,7 @@ fun StatusScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SystemBackground)
+            .background(colors.background)
     ) {
         RpgStatusBackdrop()
 
@@ -113,8 +113,9 @@ fun StatusScreen(
 
 @Composable
 private fun StatusLoading() {
+    val colors = SystemTheme.colors
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = AccentPrimary)
+        CircularProgressIndicator(color = colors.accentPrimary)
     }
 }
 
@@ -153,25 +154,26 @@ private fun StatusDialogs(
 @Composable
 private fun DatabaseErrorScreen(message: UiText) {
     val context = LocalContext.current
+    val colors = SystemTheme.colors
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(SystemScreenPadding),
         contentAlignment = Alignment.Center
     ) {
         DarkGlassCard(active = true) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(SystemItemSpacing),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "Критична помилка системи",
-                    style = MaterialTheme.typography.titleLarge.copy(color = AccentError),
+                    style = MaterialTheme.typography.titleLarge.copy(color = colors.accentError),
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = message.asString(context),
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(2.dp))

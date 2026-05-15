@@ -53,6 +53,7 @@ class GetAnnualProgressionExerciseSnapshotUseCase @Inject constructor(
 
         return AnnualProgressionExerciseSnapshot(
             exercise = exercise,
+            trackingMode = trackingMode,
             currentWorkingWeight = currentWorkingWeight,
             reps = topSet?.reps,
             lastTrainingTimestamp = latestExerciseLog?.session?.timestamp,

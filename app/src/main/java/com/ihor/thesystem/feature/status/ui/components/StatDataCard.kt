@@ -7,14 +7,14 @@ import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.sciPanel
 
 @Composable
@@ -25,6 +25,7 @@ fun StatDataCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
+    val colors = SystemTheme.colors
     val imageVector = when (icon) {
         "weight" -> Icons.Default.MonitorWeight
         "height" -> Icons.Default.Height
@@ -35,8 +36,8 @@ fun StatDataCard(
     Column(
         modifier = modifier
             .sciPanel(
-                borderColor = PanelBorder.copy(alpha = 0.3f),
-                backgroundColor = PanelSurface.copy(alpha = 0.5f),
+                borderColor = colors.borderSubtle.copy(alpha = 0.3f),
+                backgroundColor = colors.surfaceGlassStrong.copy(alpha = 0.5f),
                 cornerCut = 8.dp
             )
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
@@ -47,21 +48,20 @@ fun StatDataCard(
         Icon(
             imageVector = imageVector,
             contentDescription = null,
-            tint = NeonCyan,
+            tint = colors.accentPrimary,
             modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = value,
-            style = TheSystemTypography.titleMedium,
-            color = Color.White,
-            fontSize = 16.sp
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = colors.textPrimary,
+                fontWeight = FontWeight.Bold
+            )
         )
         Text(
             text = label,
-            style = TheSystemTypography.labelSmall,
-            color = TextSecondary,
-            fontSize = 9.sp
+            style = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary)
         )
     }
 }

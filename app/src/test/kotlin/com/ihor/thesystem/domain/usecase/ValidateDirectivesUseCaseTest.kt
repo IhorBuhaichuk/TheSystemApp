@@ -1,6 +1,7 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.util.Result
+import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.model.WorkoutDirective
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import org.junit.Assert.assertEquals
@@ -80,5 +81,43 @@ class ValidateDirectivesUseCaseTest {
         val validated = (result as Result.Success).data[0]
         assertEquals(500.0, validated.targetWeight, 0.01) // Not clamped
         assertEquals(1, validated.targetSets) // Clamped to 1
+    }
+
+    @Test
+    fun `bodyweight tracking mode directive is rejected`() {
+        val bodyweightMatrix = listOf(
+            matrix[0].copy(
+                exerciseName = "Push-up",
+                exerciseTrackingMode = ExerciseTrackingMode.BODYWEIGHT_REPS.name,
+                startWeight = 0f,
+                targetWeight = 0f,
+                currentWeight = 0f
+            )
+        )
+        val directive = WorkoutDirective(exerciseId = 10, targetWeight = 25.0, targetSets = 3, targetReps = "12")
+
+        val result = useCase(listOf(directive), bodyweightMatrix)
+
+        assertTrue(result is Result.Success)
+        assertEquals(emptyList<WorkoutDirective>(), (result as Result.Success).data)
+    }
+
+    @Test
+    fun `non weight exercise name fallback directive is rejected when tracking mode is missing`() {
+        val timedMatrix = listOf(
+            matrix[0].copy(
+                exerciseName = "Plank",
+                exerciseTrackingMode = null,
+                startWeight = 0f,
+                targetWeight = 0f,
+                currentWeight = 0f
+            )
+        )
+        val directive = WorkoutDirective(exerciseId = 10, targetWeight = 10.0, targetSets = 3, targetReps = "60")
+
+        val result = useCase(listOf(directive), timedMatrix)
+
+        assertTrue(result is Result.Success)
+        assertEquals(emptyList<WorkoutDirective>(), (result as Result.Success).data)
     }
 }

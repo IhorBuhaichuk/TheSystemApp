@@ -3,6 +3,7 @@ package com.ihor.thesystem.domain.usecase
 import com.ihor.thesystem.domain.model.AiDashboardData
 import com.ihor.thesystem.domain.model.AiRecommendationSummary
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
+import com.ihor.thesystem.domain.repository.usesExternalLoad
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -27,6 +28,7 @@ class GetAiDashboardDataUseCase @Inject constructor(
 
     private fun ProgressionMatrixEntry.hasAiRecommendation(): Boolean {
         return lastAnalyzedTimestamp > 0L &&
+            usesExternalLoad() &&
             (nextRecommendedWeight != null ||
                 nextRecommendedSets != null ||
                 !nextRecommendedReps.isNullOrBlank() ||

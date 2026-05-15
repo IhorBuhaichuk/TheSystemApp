@@ -4,6 +4,7 @@ import java.time.LocalDate
 
 data class AnnualProgressionExerciseSnapshot(
     val exercise: ExerciseDetails,
+    val trackingMode: ExerciseTrackingMode,
     val currentWorkingWeight: Double?,
     val reps: Int?,
     val lastTrainingTimestamp: Long?,

@@ -18,6 +18,15 @@ class CalculateRecommendedSetUseCase @Inject constructor(
     private val matrixRepo: ProgressionMatrixRepository
 ) {
     suspend operator fun invoke(exerciseId: Int, exerciseName: String): SetRecommendation {
+        val sets = analyticsRepo.getLastSetsForExercise(exerciseId)
+        return fromSets(exerciseId, exerciseName, sets)
+    }
+
+    suspend fun fromSets(
+        exerciseId: Int,
+        exerciseName: String,
+        sets: List<ExerciseSet>
+    ): SetRecommendation {
         val entry = matrixRepo.getEntrySync(exerciseId)
         val startWeight = entry?.startWeight?.toDouble() ?: 0.0
         val progressionStep = entry?.weeklyStep
@@ -25,8 +34,7 @@ class CalculateRecommendedSetUseCase @Inject constructor(
             ?.toDouble()
             ?: DEFAULT_PROGRESSION_STEP
 
-        val completedSets: List<ExerciseSet> = analyticsRepo.getLastSetsForExercise(exerciseId)
-            .filter { it.isCompleted && it.weight > 0.0 && it.reps > 0 }
+        val completedSets = sets.filter { it.isCompleted && it.weight > 0.0 && it.reps > 0 }
 
         if (completedSets.isEmpty()) {
             return SetRecommendation(
@@ -76,4 +84,3 @@ private const val TARGET_REPS = 12
 private const val RESET_REPS = 8
 private const val DEFAULT_PROGRESSION_STEP = 2.5
 private const val LOAD_EPSILON = 0.001
-

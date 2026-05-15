@@ -17,6 +17,7 @@ data class MatrixEntryUiModel(
     val currentRank: Rank = Rank.E,
     val completedCycles: Int = 0,
     val isActive: Boolean = true,
+    val usesExternalLoad: Boolean = true,
     val orderIndex: Int = 999,
     val weightHistory: ImmutableList<WeightHistoryEntry> = persistentListOf(),
     val nextRecommendedWeight: Double? = null,
@@ -25,9 +26,15 @@ data class MatrixEntryUiModel(
     val lastAiFeedback: String? = null
 ) {
     val displayTarget: String
-        get() = if (targetWeight < 0f) targetWeightNote ?: "вЂ”" else "${targetWeight}РєРі"
+        get() = if (!usesExternalLoad) {
+            targetWeightNote ?: "—"
+        } else if (targetWeight < 0f) {
+            targetWeightNote ?: "—"
+        } else {
+            "${targetWeight}кг"
+        }
     val displayCurrent: String
-        get() = "${currentWeight}РєРі"
+        get() = if (usesExternalLoad) "${currentWeight}кг" else "—"
     val displayStart: String
-        get() = "${startWeight}РєРі"
+        get() = if (usesExternalLoad) "${startWeight}кг" else "—"
 }

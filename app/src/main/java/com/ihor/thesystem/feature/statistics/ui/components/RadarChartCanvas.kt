@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import com.ihor.thesystem.core.theme.RajdhaniFamily
-import com.ihor.thesystem.core.theme.Primary
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.asUiText
 import com.ihor.thesystem.domain.model.MuscleGroup
 import kotlin.math.cos
@@ -26,6 +26,7 @@ fun RadarChartCanvas(
     attributes: Map<MuscleGroup, Float>,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     val textMeasurer = rememberTextMeasurer()
     val labels = MuscleGroup.entries
     val numPoints = labels.size
@@ -62,7 +63,7 @@ fun RadarChartCanvas(
             }
             drawPath(
                 path = gridPath,
-                color = Color.Gray.copy(alpha = 0.3f),
+                color = colors.borderSubtle.copy(alpha = 0.3f),
                 style = Stroke(width = 1.dp.toPx())
             )
         }
@@ -71,7 +72,7 @@ fun RadarChartCanvas(
         for (i in 0 until numPoints) {
             val end = getCoordinates(i, radius)
             drawLine(
-                color = Color.Gray.copy(alpha = 0.3f),
+                color = colors.borderSubtle.copy(alpha = 0.3f),
                 start = center,
                 end = end,
                 strokeWidth = 1.dp.toPx()
@@ -95,13 +96,13 @@ fun RadarChartCanvas(
             // Fill
             drawPath(
                 path = progressPath,
-                color = Primary.copy(alpha = 0.15f)
+                color = colors.accentPrimary.copy(alpha = 0.15f)
             )
 
             // Stroke with Glow effect using native canvas
             drawContext.canvas.nativeCanvas.apply {
                 val paint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
-                    color = Primary.toArgb()
+                    color = colors.accentPrimary.toArgb()
                     strokeWidth = 4f
                     style = android.graphics.Paint.Style.STROKE
                     maskFilter = BlurMaskFilter(15f, BlurMaskFilter.Blur.NORMAL)
@@ -111,7 +112,7 @@ fun RadarChartCanvas(
 
             drawPath(
                 path = progressPath,
-                color = Primary,
+                color = colors.accentPrimary,
                 style = Stroke(width = 2.dp.toPx())
             )
         }
@@ -125,7 +126,7 @@ fun RadarChartCanvas(
             val textLayoutResult = textMeasurer.measure(
                 text = AnnotatedString(labelText),
                 style = TextStyle(
-                    color = Color.White,
+                    color = colors.textPrimary,
                     fontSize = 11.sp,
                     fontFamily = RajdhaniFamily
                 )

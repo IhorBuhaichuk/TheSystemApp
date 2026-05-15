@@ -34,7 +34,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,30 +42,23 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.ihor.thesystem.core.navigation.Routes
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.AccentPrimarySoft
-import com.ihor.thesystem.core.theme.BorderActive
-import com.ihor.thesystem.core.theme.BorderSubtle
-import com.ihor.thesystem.core.theme.SystemBackground
+import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
-import com.ihor.thesystem.core.theme.SystemSurfaceGlass
-import com.ihor.thesystem.core.theme.TextMuted
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.domain.model.Rank
-import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
-import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
 import com.ihor.thesystem.feature.status.ui.WorkoutDialogHost
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
 import com.ihor.thesystem.feature.status.viewmodel.CycleDayUiModel
 import com.ihor.thesystem.feature.status.viewmodel.DayType
 import com.ihor.thesystem.feature.status.viewmodel.ExerciseWorkoutUiModel
 import com.ihor.thesystem.feature.status.viewmodel.WorkoutViewModel
+import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 @Composable
 fun CycleScreen(
@@ -77,6 +69,7 @@ fun CycleScreen(
     val cycleDays by workoutViewModel.cycleDaysState.collectAsStateWithLifecycle()
     val dialogState by workoutViewModel.dialogState.collectAsStateWithLifecycle()
     val settingsUiState by workoutViewModel.settingsUiState.collectAsStateWithLifecycle()
+    val colors = SystemTheme.colors
     val selectedCycleDayModel = cycleDays.firstOrNull { it.isSelected }
     val activeCycleDay = cycleDays.firstOrNull { it.isActive }?.dayNumber
     val selectedCycleDay = selectedCycleDayModel?.dayNumber
@@ -96,7 +89,7 @@ fun CycleScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SystemBackground)
+            .background(colors.background)
     ) {
         RpgStatusBackdrop()
 
@@ -107,7 +100,7 @@ fun CycleScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(horizontal = SystemScreenPadding)
-                .padding(top = 16.dp, bottom = 24.dp),
+                .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
             verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
         ) {
             CycleHeader()
@@ -154,8 +147,8 @@ fun CycleScreen(
             activeDayWorkout = activeWorkout,
             settingsUiState = settingsUiState,
             workoutViewModel = workoutViewModel,
-            onOpenWorkoutAnalysis = {
-                navController.navigate(Routes.WorkoutAnalysis)
+            onOpenWorkoutAnalysis = { sessionId ->
+                navController.navigate(Routes.WorkoutAnalysis(sessionId = sessionId))
             }
         )
     }
@@ -163,17 +156,18 @@ fun CycleScreen(
 
 @Composable
 private fun CycleHeader() {
+    val colors = SystemTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = "Цикл",
             style = MaterialTheme.typography.headlineMedium.copy(
-                color = TextPrimary,
+                color = colors.textPrimary,
                 fontWeight = FontWeight.Black
             )
         )
         Text(
             text = "Поточний тренувальний день",
-            style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
+            style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -185,7 +179,7 @@ private fun TrainingDaySwitcher(
     days: List<CycleDayUiModel>,
     onSelectDay: (Int) -> Unit
 ) {
-    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 12.dp) {
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = SystemItemSpacing) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -217,7 +211,8 @@ private fun CycleDayChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     val subtitle = when {
         day.isActive -> "Сьогодні"
         day.workoutName != null -> day.workoutName
@@ -229,16 +224,16 @@ private fun CycleDayChip(
             .clip(shape)
             .background(
                 when {
-                    day.isSelected -> AccentPrimarySoft
-                    day.isActive -> AccentPrimary.copy(alpha = 0.085f)
-                    else -> Color.White.copy(alpha = 0.026f)
+                    day.isSelected -> colors.accentPrimarySoft
+                    day.isActive -> colors.accentPrimary.copy(alpha = 0.085f)
+                    else -> colors.surfaceGlassSoft
                 }
             )
             .border(
                 1.dp,
                 when {
-                    day.isSelected || day.isActive -> BorderActive
-                    else -> BorderSubtle
+                    day.isSelected || day.isActive -> colors.borderActive
+                    else -> colors.borderSubtle
                 },
                 shape
             )
@@ -249,7 +244,7 @@ private fun CycleDayChip(
         Text(
             text = "День ${day.dayNumber}",
             style = MaterialTheme.typography.labelLarge.copy(
-                color = if (day.isSelected || day.isActive) AccentPrimary else TextPrimary,
+                color = if (day.isSelected || day.isActive) colors.accentPrimary else colors.textPrimary,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
@@ -257,7 +252,7 @@ private fun CycleDayChip(
         )
         Text(
             text = subtitle,
-            style = MaterialTheme.typography.labelSmall.copy(color = TextMuted),
+            style = MaterialTheme.typography.labelSmall.copy(color = colors.textMuted),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -326,25 +321,27 @@ private fun SummaryMetric(
     value: String,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(Color.White.copy(alpha = 0.035f))
-            .border(1.dp, BorderSubtle, RoundedCornerShape(14.dp))
+            .clip(shape)
+            .background(colors.overlayLight)
+            .border(1.dp, colors.borderSubtle, shape)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = TextMuted,
+                color = colors.textMuted,
                 fontWeight = FontWeight.Bold
             )
         )
         Text(
             text = value,
             style = MaterialTheme.typography.titleLarge.copy(
-                color = TextPrimary,
+                color = colors.textPrimary,
                 fontWeight = FontWeight.Black
             )
         )
@@ -359,7 +356,7 @@ private fun TrainingStackCard(
     DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Training stack",
+                title = "Тренувальний стек",
                 subtitle = "Цільові ваги, підходи та повторення"
             )
             workout.exercises.forEachIndexed { index, exercise ->
@@ -379,13 +376,14 @@ private fun ExerciseStackRow(
     exercise: ExerciseWorkoutUiModel,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(14.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(SystemSurfaceGlass.copy(alpha = 0.62f))
-            .border(1.dp, BorderSubtle, shape)
+            .background(colors.surfaceGlass.copy(alpha = 0.62f))
+            .border(1.dp, colors.borderSubtle, shape)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -394,15 +392,19 @@ private fun ExerciseStackRow(
         Box(
             modifier = Modifier
                 .size(32.dp)
-                .clip(RoundedCornerShape(11.dp))
-                .background(AccentPrimarySoft)
-                .border(1.dp, AccentPrimary.copy(alpha = 0.28f), RoundedCornerShape(11.dp)),
+                .clip(RoundedCornerShape(SystemTheme.shapes.small))
+                .background(colors.accentPrimarySoft)
+                .border(
+                    1.dp,
+                    colors.accentPrimary.copy(alpha = 0.28f),
+                    RoundedCornerShape(SystemTheme.shapes.small)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = index.toString(),
                 style = MaterialTheme.typography.labelMedium.copy(
-                    color = AccentPrimary,
+                    color = colors.accentPrimary,
                     fontWeight = FontWeight.Black
                 )
             )
@@ -414,7 +416,7 @@ private fun ExerciseStackRow(
             Text(
                 text = exercise.nameUk ?: exercise.name,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 ),
                 maxLines = 1,
@@ -422,7 +424,7 @@ private fun ExerciseStackRow(
             )
             Text(
                 text = "Ціль: ${exercise.targetWeightText()}",
-                style = MaterialTheme.typography.bodySmall.copy(color = TextMuted),
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -430,7 +432,7 @@ private fun ExerciseStackRow(
         Text(
             text = exercise.setSchemeText(),
             style = MaterialTheme.typography.labelMedium.copy(
-                color = TextSecondary,
+                color = colors.textSecondary,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1
@@ -438,7 +440,7 @@ private fun ExerciseStackRow(
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
-            tint = TextMuted,
+            tint = colors.textMuted,
             modifier = Modifier.size(18.dp)
         )
     }
@@ -483,15 +485,16 @@ private fun EmptyCycleBlock(
     onEditDay: () -> Unit,
     onAddExercise: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = selectedDay?.let { "День $it без вправ" } ?: "Тренування не заплановано",
-                subtitle = "Для цього тренувального дня ще немає stack"
+                subtitle = "Для цього тренувального дня ще немає вправ"
             )
             Text(
                 text = "Додай вправу або відкрий редагування дня. Календарний цикл при цьому не змінюється.",
-                style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
             )
             SystemButton(
                 text = "Почати тренування",
@@ -523,19 +526,21 @@ private fun CompactActionButton(
     icon: ImageVector,
     onClick: () -> Unit
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Box(
         modifier = Modifier
             .size(38.dp)
-            .clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.035f))
-            .border(1.dp, BorderSubtle, RoundedCornerShape(13.dp))
+            .clip(shape)
+            .background(colors.overlayLight)
+            .border(1.dp, colors.borderSubtle, shape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = AccentPrimary,
+            tint = colors.accentPrimary,
             modifier = Modifier.size(18.dp)
         )
     }
@@ -570,7 +575,8 @@ private fun ExerciseWorkoutUiModel.toMatrixEntry(workout: ActiveDayUiModel): Mat
             targetWeightNote = null,
             weeklyStep = 0f,
             progressPercent = 0f,
-            currentRank = Rank.E
+            currentRank = Rank.E,
+            usesExternalLoad = trackingMode.usesWeightInput
         )
 
 private const val CYCLE_DAY_COLUMNS = 4

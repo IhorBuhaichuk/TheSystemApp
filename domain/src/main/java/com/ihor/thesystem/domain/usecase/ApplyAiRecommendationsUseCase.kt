@@ -65,6 +65,10 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
         // 2. Збір детального контексту для кожної вправи (Batch Context)
         val exercisesContext = exerciseIds.mapNotNull { id ->
             val entry = matrix.find { it.exerciseId == id } ?: return@mapNotNull null
+            if (!entry.usesExternalLoad()) {
+                logger.d("Skip AI target update for exercise $id: exercise has no external load")
+                return@mapNotNull null
+            }
             
             // Захист від занадто частих запитів (не частіше ніж раз на 12 годин для однієї вправи)
             if (now - entry.lastAnalyzedTimestamp < twelveHoursMillis) {
@@ -88,6 +92,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
                 user_feedback = todayLog?.userFeedback?.sanitizeForPrompt() ?: ""
             )
         }
+        if (exercisesContext.isEmpty()) return
 
         val exercisesJson = Json.encodeToString(exercisesContext)
 
@@ -99,8 +104,9 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             
             Дані вправ:
             $exercisesJson
-            
+
             Проаналізуй кожну вправу спокійно і природно.
+            Усі вправи в JSON є вправами із зовнішньою вагою. Не створюй kg-цілі для вправ, яких немає в JSON.
             Тон відповіді: як уважний тренер, без кіберпанку, пафосу, агресії, сорому і штучних метафор.
             Якщо триває фаза перших 14 днів, feedback_text та aiFeedback мають тільки хвалити і підтримувати гравця.
             Якщо річного графіка M0-M12 ще немає, не називай це проблемою і не проси користувача завантажити цілі.

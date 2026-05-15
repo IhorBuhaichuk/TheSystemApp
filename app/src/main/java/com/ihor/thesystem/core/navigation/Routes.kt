@@ -34,7 +34,7 @@ sealed interface Routes {
     data object AnnualProgressionDetails : Routes
 
     @Serializable
-    data object WorkoutAnalysis : Routes
+    data class WorkoutAnalysis(val sessionId: Long = 0L) : Routes
 
     @Serializable
     data class ExercisePicker(

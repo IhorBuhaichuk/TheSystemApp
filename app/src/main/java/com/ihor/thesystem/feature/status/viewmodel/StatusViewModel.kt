@@ -272,7 +272,11 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onAddTaskConfirmed(questId: Int, taskName: String) = launchCatching {
-        useCases.addTaskToQuest(questId, taskName)
+        if (questId > 0) {
+            useCases.addTaskToQuest(questId, taskName)
+        } else {
+            useCases.addTodayTodo(taskName)
+        }
         onDismissDialog()
     }
 

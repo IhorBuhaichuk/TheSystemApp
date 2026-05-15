@@ -5,7 +5,6 @@ import android.graphics.Paint
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,10 +16,8 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.NeonCyan
-import com.ihor.thesystem.core.theme.PanelBorder
 import com.ihor.thesystem.core.theme.RajdhaniFamily
-import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
 import com.ihor.thesystem.domain.model.BodyWeightLog
 
@@ -28,9 +25,11 @@ import com.ihor.thesystem.domain.model.BodyWeightLog
 fun WeightProgressChart(
     history: List<BodyWeightLog>,
     modifier: Modifier = Modifier,
-    accentColor: Color = NeonCyan
+    accentColor: Color? = null
 ) {
     if (history.size < 2) return
+    val colors = SystemTheme.colors
+    val accent = accentColor ?: colors.accentPrimary
 
     val animProgress = remember { Animatable(0f) }
     LaunchedEffect(history) {
@@ -40,7 +39,7 @@ fun WeightProgressChart(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = "ДИНАМІКА ВАГИ ТІЛА",
-            color = accentColor,
+            color = accent,
             fontFamily = RajdhaniFamily,
             fontSize = 12.sp,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -84,7 +83,7 @@ fun WeightProgressChart(
                 drawPath(
                     path = fillPath,
                     brush = Brush.verticalGradient(
-                        colors = listOf(accentColor.copy(alpha = 0.2f * animProgress.value), Color.Transparent),
+                        colors = listOf(accent.copy(alpha = 0.2f * animProgress.value), Color.Transparent),
                         startY = points.minOf { it.y },
                         endY = height
                     )
@@ -92,7 +91,7 @@ fun WeightProgressChart(
 
                 drawIntoCanvas { canvas ->
                     val paint = Paint().apply {
-                        color = accentColor.toArgb()
+                        color = accent.toArgb()
                         strokeWidth = 4.dp.toPx()
                         style = Paint.Style.STROKE
                         strokeCap = Paint.Cap.ROUND
@@ -106,7 +105,7 @@ fun WeightProgressChart(
 
                 drawPath(
                     path = strokePath,
-                    color = accentColor.copy(alpha = 0.9f * animProgress.value),
+                    color = accent.copy(alpha = 0.9f * animProgress.value),
                     style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                 )
 
@@ -119,13 +118,13 @@ fun WeightProgressChart(
                     withTransform({
                         translate(offset.x - hexSize, offset.y - hexSize)
                     }) {
-                        drawPath(hexPath, Color.White.copy(alpha = animProgress.value))
-                        drawPath(hexPath, accentColor.copy(alpha = animProgress.value), style = Stroke(1.dp.toPx()))
+                        drawPath(hexPath, colors.textPrimary.copy(alpha = animProgress.value))
+                        drawPath(hexPath, accent.copy(alpha = animProgress.value), style = Stroke(1.dp.toPx()))
                     }
                 }
                 
                 drawLine(
-                    color = PanelBorder.copy(alpha = 0.2f),
+                    color = colors.borderSubtle.copy(alpha = 0.2f),
                     start = Offset(0f, height),
                     end = Offset(width, height),
                     strokeWidth = 1.dp.toPx()

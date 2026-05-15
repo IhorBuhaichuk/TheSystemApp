@@ -58,6 +58,7 @@ class FinalizeSessionUseCase @Inject constructor(
                 completeWorkoutQuestIfPossible(session.questId, sets)
                 
                 LocalSessionData(
+                    sessionId = sessionId,
                     playerWeight = playerWeight,
                     weight6MonthsAgo = weight6MonthsAgo,
                     matrix = matrix,
@@ -78,15 +79,21 @@ class FinalizeSessionUseCase @Inject constructor(
             playerWeight = localData.playerWeight,
             weight6MonthsAgo = localData.weight6MonthsAgo
         )
+        val weightedExerciseIds = sets
+            .filter { it.isCompleted && it.hasRealExternalLoad() }
+            .map { it.exerciseId }
+            .toSet()
         
         var aiFeedbackByExercise: Map<Int, String?> = emptyMap()
         var generalAiFeedback: String? = null
         val report = try {
             val chatMsg = sendArchitectAnalysis(exerciseContexts)
-            if (chatMsg.recommendations.isEmpty()) {
-                throw IllegalStateException("AI architect returned no actionable workout directives.")
+            val weightedRecommendations = chatMsg.recommendations
+                .filter { it.exerciseId in weightedExerciseIds }
+            if (weightedExerciseIds.isNotEmpty() && weightedRecommendations.isEmpty()) {
+                throw IllegalStateException("AI architect returned no actionable weighted workout directives.")
             }
-            aiFeedbackByExercise = chatMsg.recommendations.associate { it.exerciseId to it.aiFeedback }
+            aiFeedbackByExercise = weightedRecommendations.associate { it.exerciseId to it.aiFeedback }
             generalAiFeedback = chatMsg.aiFeedback
             
             // Оновлення цілей у матриці на основі AI-аналізу
@@ -95,16 +102,17 @@ class FinalizeSessionUseCase @Inject constructor(
                 currentStageStatus = "[ LOGGED ]",
                 completedExercises = sets.map { it.exerciseId }.distinct(),
                 pendingExercises = emptyList(),
-                nextWorkoutDirectives = chatMsg.recommendations.map { 
+                nextWorkoutDirectives = weightedRecommendations.map {
                     WorkoutDirective(it.exerciseId, it.weight.toDouble(), it.sets, it.reps)
                 },
                 recoveryWindowHours = localData.recoveryHours,
-                isFallback = false
+                isFallback = false,
+                sessionId = localData.sessionId
             )
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             logger.e(e, "Architect analysis failed")
-            generateFallbackReport(sets, localData.matrix, localData.recoveryHours)
+            generateFallbackReport(sets, localData.matrix, localData.recoveryHours, localData.sessionId)
         }
 
         // 3. Валідація та збереження фінальних директив
@@ -150,6 +158,7 @@ class FinalizeSessionUseCase @Inject constructor(
     }
 
     private data class LocalSessionData(
+        val sessionId: Long,
         val playerWeight: Double?,
         val weight6MonthsAgo: Float?,
         val matrix: List<ProgressionMatrixEntry>,
@@ -172,7 +181,12 @@ class FinalizeSessionUseCase @Inject constructor(
             val annualGoals = matrixEntry?.annualGoalSummary() ?: "немає"
             
             val exerciseName = matrixEntry?.exerciseName ?: "ID $exId"
-            val trackingMode = ExerciseTrackingModeResolver.resolve(name = exerciseName)
+            val trackingMode = resolveTrackingModeForLoggedSets(exerciseName, exerciseSets)
+            val metricPolicy = if (exerciseSets.any { it.hasRealExternalLoad() }) {
+                "зовнішня вага у кг; можна додавати вправу до next_workout_targets"
+            } else {
+                "без зовнішньої ваги; НЕ додавай цю вправу до next_workout_targets і НЕ пропонуй кг"
+            }
             val sanitizedExerciseName = exerciseName.sanitizeForPrompt()
             val sanitizedFeedback = (exerciseSets.firstOrNull()?.userFeedback ?: "відсутній").sanitizeForPrompt()
             val recentLogsText = recentLogs.joinToString { it.formatForTrackingMode(trackingMode) }
@@ -184,6 +198,7 @@ class FinalizeSessionUseCase @Inject constructor(
             - Цілі Річної матриці (M0-M12): $annualGoals
             - Останні 10 тренувань: $recentLogsText
             - Сьогодні виконано: $completedSetsText
+            - Тип метрики: $metricPolicy
             - Коментар користувача: $sanitizedFeedback
             """.trimIndent()
         }.joinToString("\n\n")
@@ -235,23 +250,27 @@ class FinalizeSessionUseCase @Inject constructor(
     private fun generateFallbackReport(
         sets: List<ExerciseSet>,
         matrix: List<ProgressionMatrixEntry>,
-        recoveryHours: Double
+        recoveryHours: Double,
+        sessionId: Long
     ): AiArchitectReport {
         val matrixMap = matrix.associateBy { it.exerciseId }
-        val fallbackDirectives = sets.groupBy { it.exerciseId }.map { (exId, exerciseSets) ->
-            val entry = matrixMap[exId]
-            val lastSet = exerciseSets.lastOrNull { it.isCompleted } ?: exerciseSets.last()
-            
-            val fallbackWeight = lastSet.weight.takeIf { it > 0 } 
-                ?: ((entry?.targetWeight?.toDouble() ?: lastSet.weight) * 0.95)
+        val fallbackDirectives = sets
+            .filter { it.isCompleted && it.hasRealExternalLoad() }
+            .groupBy { it.exerciseId }
+            .map { (exId, exerciseSets) ->
+                val entry = matrixMap[exId]
+                val lastSet = exerciseSets.last()
 
-            WorkoutDirective(
-                exerciseId = exId,
-                targetWeight = fallbackWeight,
-                targetSets = entry?.nextRecommendedSets ?: 3,
-                targetReps = entry?.nextRecommendedReps ?: "10"
-            )
-        }
+                val fallbackWeight = lastSet.weight.takeIf { it > 0 }
+                    ?: ((entry?.targetWeight?.toDouble() ?: lastSet.weight) * 0.95)
+
+                WorkoutDirective(
+                    exerciseId = exId,
+                    targetWeight = fallbackWeight,
+                    targetSets = entry?.nextRecommendedSets ?: 3,
+                    targetReps = entry?.nextRecommendedReps ?: "10"
+                )
+            }
 
         return AiArchitectReport(
             architectFeedback = MessageText.Resource(MessageTextKey.AI_FALLBACK_ACTIVATED),
@@ -260,7 +279,8 @@ class FinalizeSessionUseCase @Inject constructor(
             pendingExercises = emptyList(),
             nextWorkoutDirectives = fallbackDirectives,
             recoveryWindowHours = recoveryHours,
-            isFallback = true
+            isFallback = true,
+            sessionId = sessionId
         )
     }
 
@@ -279,6 +299,21 @@ class FinalizeSessionUseCase @Inject constructor(
             }
         }
     }
+
+    private fun resolveTrackingModeForLoggedSets(
+        exerciseName: String,
+        sets: List<ExerciseSet>
+    ): ExerciseTrackingMode {
+        val resolved = ExerciseTrackingModeResolver.resolve(name = exerciseName)
+        return if (sets.none { it.hasRealExternalLoad() } && resolved == ExerciseTrackingMode.WEIGHT_REPS) {
+            ExerciseTrackingMode.BODYWEIGHT_REPS
+        } else {
+            resolved
+        }
+    }
+
+    private fun ExerciseSet.hasRealExternalLoad(): Boolean =
+        weight > TECHNICAL_LOAD_WEIGHT
 }
 
 private const val TECHNICAL_LOAD_WEIGHT = 1.0

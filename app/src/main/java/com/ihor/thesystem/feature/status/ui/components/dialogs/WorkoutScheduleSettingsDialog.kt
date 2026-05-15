@@ -32,7 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,21 +50,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.ihor.thesystem.core.theme.AccentError
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.AccentPrimarySoft
-import com.ihor.thesystem.core.theme.BorderActive
-import com.ihor.thesystem.core.theme.BorderSubtle
-import com.ihor.thesystem.core.theme.SystemBackground
+import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
-import com.ihor.thesystem.core.theme.SystemSurfaceGlass
-import com.ihor.thesystem.core.theme.TextMuted
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
@@ -91,6 +83,7 @@ fun WorkoutScheduleSettingsScreen(
     onTrackingModeChanged: (Int, ExerciseTrackingMode) -> Unit,
     exerciseSearchViewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
+    val colors = SystemTheme.colors
     var selectedPane by remember { mutableStateOf(ScheduleSettingsPane.Day) }
     var showExercisePicker by remember { mutableStateOf(false) }
 
@@ -115,7 +108,7 @@ fun WorkoutScheduleSettingsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SystemBackground)
+            .background(colors.background)
     ) {
         RpgStatusBackdrop()
 
@@ -125,7 +118,7 @@ fun WorkoutScheduleSettingsScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(horizontal = SystemScreenPadding)
-                .padding(top = 16.dp, bottom = 24.dp),
+                .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
             verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
         ) {
             ScheduleSettingsHeader(
@@ -206,6 +199,7 @@ private fun ScheduleSettingsHeader(
     exerciseCount: Int,
     onBack: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -218,7 +212,7 @@ private fun ScheduleSettingsHeader(
             Text(
                 text = "Налаштування розкладу",
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Black
                 ),
                 maxLines = 1,
@@ -226,7 +220,7 @@ private fun ScheduleSettingsHeader(
             )
             Text(
                 text = "День $selectedDay · ${exerciseCount.exerciseCountText()}",
-                style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
+                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -236,13 +230,13 @@ private fun ScheduleSettingsHeader(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(1.dp, BorderSubtle, CircleShape)
+                .background(colors.overlayLight)
+                .border(1.dp, colors.borderSubtle, CircleShape)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Назад",
-                tint = TextSecondary
+                tint = colors.textSecondary
             )
         }
     }
@@ -254,7 +248,7 @@ private fun ScheduleDaySelector(
     totalDays: Int,
     onSelectDay: (Int) -> Unit
 ) {
-    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 12.dp) {
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = SystemItemSpacing) {
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items((1..totalDays).toList(), key = { it }) { day ->
                 ScheduleDayChip(
@@ -273,21 +267,22 @@ private fun ScheduleDayChip(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(999.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.pill)
     Surface(
         modifier = Modifier
             .widthIn(min = 82.dp)
             .clip(shape)
             .clickable(onClick = onClick),
         shape = shape,
-        color = if (selected) AccentPrimarySoft else Color.White.copy(alpha = 0.035f),
-        border = BorderStroke(1.dp, if (selected) BorderActive else BorderSubtle)
+        color = if (selected) colors.accentPrimarySoft else colors.surfaceGlassSoft,
+        border = BorderStroke(1.dp, if (selected) colors.borderActive else colors.borderSubtle)
     ) {
         Text(
             text = "День $day",
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
             style = MaterialTheme.typography.labelLarge.copy(
-                color = if (selected) AccentPrimary else TextSecondary,
+                color = if (selected) colors.accentPrimary else colors.textSecondary,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
@@ -303,6 +298,7 @@ private fun WorkoutNameBlock(
     onValueChange: (String) -> Unit,
     onSave: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard(modifier = Modifier.fillMaxWidth(), active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
@@ -316,20 +312,12 @@ private fun WorkoutNameBlock(
                 placeholder = {
                     Text(
                         text = "Назва тренування",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
+                        style = MaterialTheme.typography.bodyMedium.copy(color = colors.textMuted)
                     )
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BorderActive,
-                    unfocusedBorderColor = BorderSubtle,
-                    focusedContainerColor = SystemSurfaceGlass.copy(alpha = 0.58f),
-                    unfocusedContainerColor = SystemSurfaceGlass.copy(alpha = 0.44f),
-                    cursorColor = AccentPrimary,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                )
+                shape = RoundedCornerShape(SystemTheme.shapes.medium),
+                colors = systemOutlinedTextFieldColors(accent = colors.accentPrimary)
             )
             SystemButton(
                 text = "Зберегти назву",
@@ -373,12 +361,13 @@ private fun ScheduleSettingsTab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(14.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Box(
         modifier = modifier
             .clip(shape)
-            .background(if (selected) AccentPrimarySoft else Color.White.copy(alpha = 0.03f))
-            .border(1.dp, if (selected) BorderActive else BorderSubtle, shape)
+            .background(if (selected) colors.accentPrimarySoft else colors.surfaceGlassSoft)
+            .border(1.dp, if (selected) colors.borderActive else colors.borderSubtle, shape)
             .clickable(onClick = onClick)
             .padding(vertical = 11.dp),
         contentAlignment = Alignment.Center
@@ -386,7 +375,7 @@ private fun ScheduleSettingsTab(
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge.copy(
-                color = if (selected) AccentPrimary else TextSecondary,
+                color = if (selected) colors.accentPrimary else colors.textSecondary,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
@@ -403,13 +392,14 @@ private fun DayExercisesPanel(
     onTrackingModeChanged: (Int, ExerciseTrackingMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard(modifier = modifier.fillMaxWidth(), contentPadding = 0.dp) {
         Column(modifier = Modifier.fillMaxSize()) {
             PanelHeader(
                 title = "Вправи дня",
                 subtitle = exercises.size.exerciseCountText(),
                 actionIcon = Icons.Filled.Add,
-                actionTint = AccentPrimary,
+                actionTint = colors.accentPrimary,
                 onAction = onAddExercise
             )
             if (exercises.isEmpty()) {
@@ -420,7 +410,7 @@ private fun DayExercisesPanel(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 14.dp),
+                    contentPadding = PaddingValues(start = SystemCardPadding, end = SystemCardPadding, bottom = SystemCardPadding),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     itemsIndexed(exercises, key = { _, exercise -> exercise.id }) { index, exercise ->
@@ -428,7 +418,7 @@ private fun DayExercisesPanel(
                             exercise = exercise,
                             leadingNumber = index + 1,
                             actionIcon = Icons.Filled.Delete,
-                            actionTint = AccentError,
+                            actionTint = colors.accentError,
                             onAction = { onRemoveExercise(exercise.id) },
                             onTrackingModeChanged = onTrackingModeChanged
                         )
@@ -447,13 +437,14 @@ private fun ExerciseLibraryPanel(
     onTrackingModeChanged: (Int, ExerciseTrackingMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard(modifier = modifier.fillMaxWidth(), contentPadding = 0.dp) {
         Column(modifier = Modifier.fillMaxSize()) {
             PanelHeader(
                 title = "База вправ",
                 subtitle = exercises.size.exerciseCountText(),
                 actionIcon = Icons.Filled.Add,
-                actionTint = AccentPrimary,
+                actionTint = colors.accentPrimary,
                 onAction = onAddExercise
             )
             if (exercises.isEmpty()) {
@@ -464,7 +455,7 @@ private fun ExerciseLibraryPanel(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 14.dp),
+                    contentPadding = PaddingValues(start = SystemCardPadding, end = SystemCardPadding, bottom = SystemCardPadding),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(exercises, key = { it.id }) { exercise ->
@@ -472,7 +463,7 @@ private fun ExerciseLibraryPanel(
                             exercise = exercise,
                             leadingNumber = null,
                             actionIcon = Icons.Filled.Delete,
-                            actionTint = AccentError,
+                            actionTint = colors.accentError,
                             onAction = { onDeleteExercise(exercise.id) },
                             onTrackingModeChanged = onTrackingModeChanged
                         )
@@ -491,10 +482,11 @@ private fun PanelHeader(
     actionTint: Color,
     onAction: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(14.dp),
+            .padding(SystemCardPadding),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -505,7 +497,7 @@ private fun PanelHeader(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Black
                 ),
                 maxLines = 1,
@@ -513,7 +505,7 @@ private fun PanelHeader(
             )
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(color = TextMuted),
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -536,6 +528,7 @@ private fun ExerciseSettingsRow(
     onTrackingModeChanged: (Int, ExerciseTrackingMode) -> Unit
 ) {
     val context = LocalContext.current
+    val colors = SystemTheme.colors
     val trackingMode = ExerciseTrackingModeResolver.resolve(exercise)
     val canConfigureTracking = exercise.externalId == null
     val primaryMuscle = exercise.muscleGroups.firstOrNull()
@@ -546,7 +539,7 @@ private fun ExerciseSettingsRow(
         ?.toEquipmentUiText()
         ?.asString(context)
         ?: "Без обладнання"
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
 
     Column(
         modifier = Modifier
@@ -555,12 +548,12 @@ private fun ExerciseSettingsRow(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        Color.White.copy(alpha = 0.045f),
-                        Color.White.copy(alpha = 0.022f)
+                        colors.overlayMedium.copy(alpha = 0.58f),
+                        colors.surfaceGlassSoft
                     )
                 )
             )
-            .border(1.dp, BorderSubtle, shape)
+            .border(1.dp, colors.borderSubtle, shape)
             .padding(horizontal = 12.dp, vertical = 11.dp),
     ) {
         Row(
@@ -575,7 +568,7 @@ private fun ExerciseSettingsRow(
                 Text(
                     text = exercise.nameUk ?: exercise.name,
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextPrimary,
+                        color = colors.textPrimary,
                         fontWeight = FontWeight.Bold
                     ),
                     maxLines = 1,
@@ -583,7 +576,7 @@ private fun ExerciseSettingsRow(
                 )
                 Text(
                     text = "$primaryMuscle / $equipment / ${trackingMode.settingsLabel()}",
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -631,12 +624,13 @@ private fun TrackingModeOptionChip(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(999.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.pill)
     Box(
         modifier = Modifier
             .clip(shape)
-            .background(if (selected) AccentPrimarySoft else Color.White.copy(alpha = 0.035f))
-            .border(1.dp, if (selected) BorderActive else BorderSubtle, shape)
+            .background(if (selected) colors.accentPrimarySoft else colors.surfaceGlassSoft)
+            .border(1.dp, if (selected) colors.borderActive else colors.borderSubtle, shape)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 7.dp),
         contentAlignment = Alignment.Center
@@ -644,7 +638,7 @@ private fun TrackingModeOptionChip(
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = if (selected) AccentPrimary else TextSecondary,
+                color = if (selected) colors.accentPrimary else colors.textSecondary,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
@@ -655,20 +649,21 @@ private fun TrackingModeOptionChip(
 
 @Composable
 private fun ExerciseRowLead(number: Int?) {
-    val shape = RoundedCornerShape(13.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.small)
     Box(
         modifier = Modifier
             .size(42.dp)
             .clip(shape)
-            .background(AccentPrimarySoft.copy(alpha = 0.72f))
-            .border(1.dp, AccentPrimary.copy(alpha = 0.24f), shape),
+            .background(colors.accentPrimarySoft.copy(alpha = 0.72f))
+            .border(1.dp, colors.accentPrimary.copy(alpha = 0.24f), shape),
         contentAlignment = Alignment.Center
     ) {
         if (number != null) {
             Text(
                 text = number.toString(),
                 style = MaterialTheme.typography.labelLarge.copy(
-                    color = AccentPrimary,
+                    color = colors.accentPrimary,
                     fontWeight = FontWeight.Black
                 )
             )
@@ -676,7 +671,7 @@ private fun ExerciseRowLead(number: Int?) {
             Icon(
                 imageVector = Icons.Filled.FitnessCenter,
                 contentDescription = null,
-                tint = AccentPrimary,
+                tint = colors.accentPrimary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -689,12 +684,13 @@ private fun CompactIconButton(
     tint: Color,
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Box(
         modifier = Modifier
             .size(38.dp)
-            .clip(RoundedCornerShape(13.dp))
+            .clip(shape)
             .background(tint.copy(alpha = 0.075f))
-            .border(1.dp, tint.copy(alpha = 0.2f), RoundedCornerShape(13.dp))
+            .border(1.dp, tint.copy(alpha = 0.2f), shape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -712,15 +708,16 @@ private fun EmptyPanelText(
     text: String,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(24.dp),
+            .padding(SystemScreenPadding),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
+            style = MaterialTheme.typography.bodyMedium.copy(color = colors.textMuted)
         )
     }
 }

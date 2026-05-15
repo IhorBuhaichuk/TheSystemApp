@@ -20,7 +20,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.R
-import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.theme.RajdhaniFamily
+import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.theme.TekoFamily
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
 
 @Composable
@@ -68,6 +70,7 @@ private fun HexStatBadge(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
+    val colors = SystemTheme.colors
     Box(
         modifier = modifier
             .aspectRatio(1.155f)
@@ -77,8 +80,8 @@ private fun HexStatBadge(
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val path = buildHexagonPath(size, rotationDegrees = 0f)
-            drawPath(path, PanelSurface)
-            drawPath(path, NeonCyan, style = Stroke(width = 2.dp.toPx()))
+            drawPath(path, colors.surfaceGlassStrong)
+            drawPath(path, colors.accentPrimary, style = Stroke(width = 2.dp.toPx()))
         }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -88,13 +91,13 @@ private fun HexStatBadge(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = NeonCyan,
+                tint = colors.accentPrimary,
                 modifier = Modifier.size(14.dp)
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 text = label,
-                color = TextSecondary,
+                color = colors.textSecondary,
                 fontSize = 7.sp,
                 fontFamily = RajdhaniFamily,
                 fontWeight = FontWeight.Bold,
@@ -103,7 +106,7 @@ private fun HexStatBadge(
             )
             Text(
                 text = value,
-                color = TextPrimary,
+                color = colors.textPrimary,
                 fontSize = 14.sp,
                 fontFamily = TekoFamily,
                 fontWeight = FontWeight.Black,

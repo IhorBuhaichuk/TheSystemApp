@@ -432,7 +432,9 @@ class CalendarViewModel @Inject constructor(
                 val exerciseIds = schedule.exercises.map { it.id }
                 matrixRepo.getAllEntries().first().let { allEntries ->
                     _recommendations.value = allEntries.filter { 
-                        exerciseIds.contains(it.exerciseId) && it.nextRecommendedWeight != null 
+                        exerciseIds.contains(it.exerciseId) &&
+                            it.usesExternalLoad() &&
+                            it.nextRecommendedWeight != null
                     }
                 }
             } else {

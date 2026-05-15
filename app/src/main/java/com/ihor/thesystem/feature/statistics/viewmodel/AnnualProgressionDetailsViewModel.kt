@@ -159,20 +159,23 @@ class AnnualProgressionDetailsViewModel @Inject constructor(
                     }
                 }
 
-                exerciseRows.values.map { seed ->
+                exerciseRows.values.mapNotNull { seed ->
                     val snapshot = runCatching { getExerciseSnapshot(seed.exerciseId) }
                         .getOrNull()
+                    val trackingMode = ExerciseTrackingModeResolver.resolve(
+                        trackingModeOverride = seed.trackingMode,
+                        name = seed.exerciseName,
+                        nameUk = seed.exerciseNameUk,
+                        externalId = seed.externalId,
+                        category = seed.category,
+                        equipment = seed.equipment
+                    )
+                    if (!trackingMode.usesWeightInput) return@mapNotNull null
+
                     AnnualProgressionManualExerciseUiModel(
                         exerciseId = seed.exerciseId,
                         exerciseName = seed.exerciseName,
-                        trackingMode = ExerciseTrackingModeResolver.resolve(
-                            trackingModeOverride = seed.trackingMode,
-                            name = seed.exerciseName,
-                            nameUk = seed.exerciseNameUk,
-                            externalId = seed.externalId,
-                            category = seed.category,
-                            equipment = seed.equipment
-                        ),
+                        trackingMode = trackingMode,
                         cycleDays = seed.cycleDays.toList(),
                         currentWorkingWeight = snapshot?.currentWorkingWeight,
                         inventoryStep = snapshot?.inventoryStep ?: DEFAULT_INVENTORY_STEP
@@ -184,7 +187,7 @@ class AnnualProgressionDetailsViewModel @Inject constructor(
                         isLoading = false,
                         exercises = exercises,
                         message = if (exercises.isEmpty()) {
-                            UiText.DynamicString("У розкладі поки немає вправ. Додай вправи в Налаштування розкладу.")
+                            UiText.DynamicString("У розкладі поки немає вагових вправ для річної прогресії.")
                         } else {
                             null
                         }

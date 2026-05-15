@@ -8,9 +8,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.IntOffset
-import com.ihor.thesystem.core.theme.GlitchCyan
-import com.ihor.thesystem.core.theme.GlitchPink
-import com.ihor.thesystem.core.theme.NeonCyan
+import com.ihor.thesystem.core.theme.SystemTheme
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 import androidx.compose.foundation.layout.offset
@@ -20,8 +18,9 @@ fun GlitchText(
     text: String,
     style: TextStyle,
     modifier: Modifier = Modifier,
-    primaryColor: Color = NeonCyan
+    primaryColor: Color = SystemTheme.colors.accentPrimary
 ) {
+    val colors = SystemTheme.colors
     var offsetX    by remember { mutableIntStateOf(0) }
     var showGlitch by remember { mutableStateOf(false) }
 
@@ -42,14 +41,14 @@ fun GlitchText(
         if (showGlitch) {
             Text(
                 text     = text,
-                style    = style.copy(color = GlitchPink),
+                style    = style.copy(color = colors.accentAi),
                 modifier = Modifier
                     .offset { IntOffset(offsetX * 3, 2) }
                     .alpha(0.7f)
             )
             Text(
                 text     = text,
-                style    = style.copy(color = GlitchCyan),
+                style    = style.copy(color = colors.accentPrimary),
                 modifier = Modifier
                     .offset { IntOffset(-offsetX * 2, -2) }
                     .alpha(0.7f)

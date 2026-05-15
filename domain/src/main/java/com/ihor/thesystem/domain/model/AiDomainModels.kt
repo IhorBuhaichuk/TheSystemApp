@@ -106,5 +106,6 @@ data class AiArchitectReport(
     val pendingExercises: List<Int>,
     val nextWorkoutDirectives: List<WorkoutDirective>,
     val recoveryWindowHours: Double,
-    val isFallback: Boolean
+    val isFallback: Boolean,
+    val sessionId: Long = 0L
 )

@@ -1,4 +1,4 @@
-﻿package com.ihor.thesystem.feature.architect.ui
+package com.ihor.thesystem.feature.architect.ui
 
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
@@ -57,21 +57,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ihor.thesystem.core.ui.RefreshOnResume
-import com.ihor.thesystem.core.ui.asString
-import com.ihor.thesystem.core.theme.AccentAi
-import com.ihor.thesystem.core.theme.AccentAiSoft
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.AccentPrimarySoft
-import com.ihor.thesystem.core.theme.BorderSubtle
-import com.ihor.thesystem.core.theme.SystemBackground
-import com.ihor.thesystem.core.theme.SystemBackgroundSecondary
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
-import com.ihor.thesystem.core.theme.TextMuted
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.UiEvent
+import com.ihor.thesystem.core.ui.asString
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
@@ -94,6 +86,7 @@ fun ArchitectScreen(
     onOpenWorkoutAnalysis: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val colors = SystemTheme.colors
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val dashboardState by viewModel.dashboardState.collectAsStateWithLifecycle()
     val chatHistory by viewModel.chatHistory.collectAsStateWithLifecycle()
@@ -119,7 +112,7 @@ fun ArchitectScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SystemBackground)
+            .background(colors.background)
     ) {
         AiSystemBackdrop()
 
@@ -129,7 +122,7 @@ fun ArchitectScreen(
                 .verticalScroll(rememberScrollState())
                 .statusBarsPadding()
                 .padding(horizontal = SystemScreenPadding)
-                .padding(top = 16.dp, bottom = 28.dp),
+                .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 8.dp),
             verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
         ) {
             AiHeader()
@@ -156,17 +149,18 @@ fun ArchitectScreen(
 
 @Composable
 private fun AiHeader() {
+    val colors = SystemTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(
-            text = "АІ",
+            text = "AI",
             style = MaterialTheme.typography.headlineMedium.copy(
-                color = TextPrimary,
+                color = colors.textPrimary,
                 fontWeight = FontWeight.Black
             )
         )
         Text(
             text = "Системні модулі",
-            style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
+            style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
         )
     }
 }
@@ -178,7 +172,7 @@ private fun AiModulesBlock(
     onOpenAnnualProgression: () -> Unit,
     onAnalyzeWorkout: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
         AiModuleCard(
             title = "План річної прогресії",
             description = "Прогноз на 12 місяців по вибраних вправах",
@@ -223,12 +217,14 @@ private fun AiModuleCard(
     enabled: Boolean,
     onClick: () -> Unit
 ) {
+    val colors = SystemTheme.colors
+    val iconShape = RoundedCornerShape(SystemTheme.shapes.medium)
     DarkGlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier),
         active = enabled,
-        contentPadding = 14.dp
+        contentPadding = SystemCardPadding
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -238,15 +234,15 @@ private fun AiModuleCard(
             Box(
                 modifier = Modifier
                     .size(46.dp)
-                    .clip(RoundedCornerShape(15.dp))
-                    .background(AccentAi.copy(alpha = if (enabled) 0.12f else 0.055f))
-                    .border(1.dp, AccentAi.copy(alpha = if (enabled) 0.26f else 0.11f), RoundedCornerShape(15.dp)),
+                    .clip(iconShape)
+                    .background(colors.accentAi.copy(alpha = if (enabled) 0.12f else 0.055f))
+                    .border(1.dp, colors.accentAi.copy(alpha = if (enabled) 0.26f else 0.11f), iconShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = if (enabled) AccentAi else TextMuted,
+                    tint = if (enabled) colors.accentAi else colors.textMuted,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -255,7 +251,7 @@ private fun AiModuleCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall.copy(
-                        color = if (enabled) TextPrimary else TextSecondary,
+                        color = if (enabled) colors.textPrimary else colors.textSecondary,
                         fontWeight = FontWeight.Bold
                     ),
                     maxLines = 1,
@@ -263,7 +259,7 @@ private fun AiModuleCard(
                 )
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -275,13 +271,13 @@ private fun AiModuleCard(
             ) {
                 SystemStatusChip(
                     text = status,
-                    accent = if (enabled) AccentAi else TextMuted,
+                    accent = if (enabled) colors.accentAi else colors.textMuted,
                     active = enabled
                 )
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
-                    tint = if (enabled) AccentAi else TextMuted.copy(alpha = 0.55f),
+                    tint = if (enabled) colors.accentAi else colors.textMuted.copy(alpha = 0.55f),
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -291,6 +287,7 @@ private fun AiModuleCard(
 
 @Composable
 private fun ShortConclusionBlock(state: AiDashboardUiState) {
+    val colors = SystemTheme.colors
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
@@ -303,13 +300,13 @@ private fun ShortConclusionBlock(state: AiDashboardUiState) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     CircularProgressIndicator(
-                        color = AccentAi,
+                        color = colors.accentAi,
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp
                     )
                     Text(
                         text = "Система читає метрики",
-                        style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
+                        style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
                     )
                 }
             } else {
@@ -324,6 +321,8 @@ private fun ShortConclusionBlock(state: AiDashboardUiState) {
 
 @Composable
 private fun LastRecommendationBlock(recommendation: AiRecommendationUiModel?) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
@@ -336,24 +335,24 @@ private fun LastRecommendationBlock(recommendation: AiRecommendationUiModel?) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(AccentAi.copy(alpha = 0.075f))
-                        .border(1.dp, AccentAi.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
-                        .padding(13.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        .clip(shape)
+                        .background(colors.accentAi.copy(alpha = 0.075f))
+                        .border(1.dp, colors.accentAi.copy(alpha = 0.18f), shape)
+                        .padding(SystemItemSpacing),
+                    horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
                             .size(38.dp)
-                            .clip(RoundedCornerShape(13.dp))
-                            .background(AccentAiSoft),
+                            .clip(RoundedCornerShape(SystemTheme.shapes.small))
+                            .background(colors.accentAiSoft),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.FitnessCenter,
                             contentDescription = null,
-                            tint = AccentAi,
+                            tint = colors.accentAi,
                             modifier = Modifier.size(19.dp)
                         )
                     }
@@ -361,7 +360,7 @@ private fun LastRecommendationBlock(recommendation: AiRecommendationUiModel?) {
                         Text(
                             text = recommendation.exerciseName,
                             style = MaterialTheme.typography.titleSmall.copy(
-                                color = TextPrimary,
+                                color = colors.textPrimary,
                                 fontWeight = FontWeight.Bold
                             ),
                             maxLines = 1,
@@ -370,7 +369,7 @@ private fun LastRecommendationBlock(recommendation: AiRecommendationUiModel?) {
                         Text(
                             text = formatRecommendationTarget(recommendation),
                             style = MaterialTheme.typography.bodySmall.copy(
-                                color = AccentAi,
+                                color = colors.accentAi,
                                 fontWeight = FontWeight.SemiBold
                             ),
                             maxLines = 1,
@@ -379,7 +378,7 @@ private fun LastRecommendationBlock(recommendation: AiRecommendationUiModel?) {
                         recommendation.feedback?.takeIf { it.isNotBlank() }?.let { feedback ->
                             Text(
                                 text = feedback,
-                                style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
+                                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -401,7 +400,8 @@ private fun ChatPanel(
     onApplyClick: (List<AiWorkoutRecommendation>) -> Unit,
     onSendMessage: (String) -> Unit
 ) {
-    DarkGlassCard(contentPadding = 14.dp) {
+    val colors = SystemTheme.colors
+    DarkGlassCard(contentPadding = SystemCardPadding) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Чат",
@@ -415,9 +415,9 @@ private fun ChatPanel(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(360.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.Black.copy(alpha = 0.18f))
-                    .border(1.dp, BorderSubtle, RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(SystemTheme.shapes.medium))
+                    .background(colors.surfaceRaised.copy(alpha = 0.58f))
+                    .border(1.dp, colors.borderSubtle, RoundedCornerShape(SystemTheme.shapes.medium))
             ) {
                 if (selectedMode == 0) {
                     ArchitectThreadView(
@@ -443,12 +443,14 @@ private fun ChatModeSwitch(
     selectedMode: Int,
     onModeSelected: (Int) -> Unit
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(Color.White.copy(alpha = 0.035f))
-            .border(1.dp, BorderSubtle, RoundedCornerShape(14.dp))
+            .clip(shape)
+            .background(colors.overlayLight)
+            .border(1.dp, colors.borderSubtle, shape)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -474,15 +476,17 @@ private fun ChatModeButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.small)
     Box(
         modifier = modifier
             .height(38.dp)
-            .clip(RoundedCornerShape(11.dp))
-            .background(if (selected) AccentAi.copy(alpha = 0.13f) else Color.Transparent)
+            .clip(shape)
+            .background(if (selected) colors.accentAi.copy(alpha = 0.13f) else Color.Transparent)
             .border(
                 1.dp,
-                if (selected) AccentAi.copy(alpha = 0.28f) else Color.Transparent,
-                RoundedCornerShape(11.dp)
+                if (selected) colors.accentAi.copy(alpha = 0.28f) else Color.Transparent,
+                shape
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -490,7 +494,7 @@ private fun ChatModeButton(
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium.copy(
-                color = if (selected) TextPrimary else TextSecondary,
+                color = if (selected) colors.textPrimary else colors.textSecondary,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
@@ -505,6 +509,7 @@ private fun ArchitectThreadView(
     onAnalyzeClick: () -> Unit,
     onApplyClick: (List<AiWorkoutRecommendation>) -> Unit
 ) {
+    val colors = SystemTheme.colors
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
@@ -520,7 +525,7 @@ private fun ArchitectThreadView(
         state = listState,
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(12.dp)
+        contentPadding = PaddingValues(SystemItemSpacing)
     ) {
         items(uiState.messages, key = { it.id }) { message ->
             ArchitectChatBubble(
@@ -538,13 +543,13 @@ private fun ArchitectThreadView(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     CircularProgressIndicator(
-                        color = AccentAi,
+                        color = colors.accentAi,
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp
                     )
                     Text(
                         text = "Архітектор формує відповідь",
-                        style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
+                        style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
                     )
                 }
             }
@@ -559,14 +564,15 @@ private fun ArchitectChatBubble(
     onApplyClick: (List<AiWorkoutRecommendation>) -> Unit,
     isAnalyzeEnabled: Boolean
 ) {
+    val colors = SystemTheme.colors
     val isUser = message.role == ChatRole.USER
     val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
     val isSystem = message.role == ChatRole.SYSTEM
-    val accent = if (message.role == ChatRole.AI) AccentAi else AccentPrimary
+    val accent = if (message.role == ChatRole.AI) colors.accentAi else colors.accentPrimary
     val shape = if (isUser) {
         RoundedCornerShape(topStart = 16.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
     } else if (isSystem) {
-        RoundedCornerShape(14.dp)
+        RoundedCornerShape(SystemTheme.shapes.medium)
     } else {
         RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
     }
@@ -584,7 +590,7 @@ private fun ArchitectChatBubble(
                     ChatRole.SYSTEM -> "Система"
                 },
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = if (isSystem) TextSecondary else if (isUser) TextMuted else accent,
+                    color = if (isSystem) colors.textSecondary else if (isUser) colors.textMuted else accent,
                     fontWeight = FontWeight.Bold
                 )
             )
@@ -593,27 +599,27 @@ private fun ArchitectChatBubble(
                     .clip(shape)
                     .background(
                         when {
-                            isSystem -> Color.White.copy(alpha = 0.035f)
-                            isUser -> Color.White.copy(alpha = 0.045f)
+                            isSystem -> colors.overlayLight
+                            isUser -> colors.overlayMedium
                             else -> accent.copy(alpha = 0.07f)
                         }
                     )
                     .border(
                         1.dp,
                         when {
-                            isSystem -> BorderSubtle
-                            isUser -> BorderSubtle
-                            else -> accent.copy(alpha = 0.2f)
+                            isSystem -> colors.borderSubtle
+                            isUser -> colors.borderSubtle
+                            else -> accent.copy(alpha = 0.20f)
                         },
                         shape
                     )
-                    .padding(13.dp),
+                    .padding(SystemItemSpacing),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
                     text = message.text.asString(),
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextPrimary,
+                        color = colors.textPrimary,
                         fontWeight = FontWeight.Medium
                     )
                 )
@@ -628,7 +634,7 @@ private fun ArchitectChatBubble(
                         text = "Аналізувати дані",
                         onClick = onAnalyzeClick,
                         icon = Icons.Filled.Psychology,
-                        accent = AccentAi,
+                        accent = colors.accentAi,
                         enabled = isAnalyzeEnabled
                     )
                 } else if (message.role == ChatRole.AI) {
@@ -636,7 +642,7 @@ private fun ArchitectChatBubble(
                         text = "Інтегрувати в систему",
                         onClick = { onApplyClick(message.recommendations) },
                         icon = Icons.AutoMirrored.Filled.ArrowForward,
-                        accent = AccentPrimary,
+                        accent = colors.accentPrimary,
                         enabled = message.recommendations.isNotEmpty()
                     )
                 }
@@ -647,6 +653,7 @@ private fun ArchitectChatBubble(
 
 @Composable
 private fun RecommendationList(recommendations: List<AiWorkoutRecommendation>) {
+    val colors = SystemTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         recommendations.forEach { recommendation ->
             Row(
@@ -657,12 +664,12 @@ private fun RecommendationList(recommendations: List<AiWorkoutRecommendation>) {
                     modifier = Modifier
                         .size(5.dp)
                         .clip(CircleShape)
-                        .background(AccentPrimary)
+                        .background(colors.accentPrimary)
                 )
                 Text(
                     text = "Вправа #${recommendation.exerciseId}: ${formatWeight(recommendation.weight)} кг · ${recommendation.sets} x ${recommendation.reps}",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = TextSecondary,
+                        color = colors.textSecondary,
                         fontWeight = FontWeight.SemiBold
                     ),
                     maxLines = 1,
@@ -678,27 +685,29 @@ private fun SystemInsightText(
     text: String,
     icon: ImageVector
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(AccentAi.copy(alpha = 0.075f))
-            .border(1.dp, AccentAi.copy(alpha = 0.16f), RoundedCornerShape(14.dp))
-            .padding(13.dp),
+            .clip(shape)
+            .background(colors.accentAi.copy(alpha = 0.075f))
+            .border(1.dp, colors.accentAi.copy(alpha = 0.16f), shape)
+            .padding(SystemItemSpacing),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.Top
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = AccentAi,
+            tint = colors.accentAi,
             modifier = Modifier.size(18.dp)
         )
         Text(
             text = text,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodySmall.copy(
-                color = TextSecondary,
+                color = colors.textSecondary,
                 fontWeight = FontWeight.Medium
             )
         )
@@ -707,16 +716,18 @@ private fun SystemInsightText(
 
 @Composable
 private fun EmptyAiBlock(text: String) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Text(
         text = text,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.026f))
-            .border(1.dp, BorderSubtle, RoundedCornerShape(13.dp))
-            .padding(14.dp),
+            .clip(shape)
+            .background(colors.surfaceGlassSoft)
+            .border(1.dp, colors.borderSubtle, shape)
+            .padding(SystemCardPadding),
         style = MaterialTheme.typography.bodySmall.copy(
-            color = TextMuted,
+            color = colors.textMuted,
             fontWeight = FontWeight.Medium
         )
     )
@@ -724,27 +735,28 @@ private fun EmptyAiBlock(text: String) {
 
 @Composable
 private fun AiSystemBackdrop() {
+    val colors = SystemTheme.colors
     Canvas(modifier = Modifier.fillMaxSize()) {
-        drawRect(SystemBackground)
+        drawRect(colors.background)
         drawRect(
             brush = Brush.verticalGradient(
                 listOf(
-                    SystemBackgroundSecondary.copy(alpha = 0.92f),
-                    SystemBackground,
-                    Color.Black.copy(alpha = 0.98f)
+                    colors.backgroundSecondary.copy(alpha = 0.92f),
+                    colors.background,
+                    colors.background.copy(alpha = 0.98f)
                 )
             )
         )
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(AccentAi.copy(alpha = 0.055f), Color.Transparent),
+                colors = listOf(colors.accentAi.copy(alpha = 0.055f), Color.Transparent),
                 center = Offset(size.width * 0.82f, size.height * 0.14f),
-                radius = size.width * 0.7f
+                radius = size.width * 0.70f
             )
         )
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(AccentPrimary.copy(alpha = 0.028f), Color.Transparent),
+                colors = listOf(colors.accentPrimary.copy(alpha = 0.028f), Color.Transparent),
                 center = Offset(size.width * 0.08f, size.height * 0.72f),
                 radius = size.width * 0.82f
             )

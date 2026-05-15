@@ -104,6 +104,7 @@
     <string name="error_workout_analysis_failed">Не вдалося сформувати аналіз тренування.</string>
     <string name="error_annual_progression_exercise_not_found">Не вдалося знайти вправу в базі.</string>
     <string name="error_annual_progression_snapshot_failed">Не вдалося підготувати дані вправи для річного плану.</string>
+    <string name="error_annual_progression_external_load_required">Річний ваговий графік доступний тільки для вправ із зовнішньою вагою.</string>
     <string name="annual_progression_adaptation_required">Річний графік відкриється після перших 2 тижнів збору даних.</string>
     <string name="error_annual_progression_input_required">Для кожної вправи потрібна поточна вага, ціль через 12 місяців і крок інвентарю.</string>
     <string name="annual_progression_plan_saved">План збережено. Аналітика підхопить його з матриці прогресії.</string>

@@ -4,25 +4,33 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.outlined.Flag
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemScreenPadding
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.OneRepMaxText
 import com.ihor.thesystem.core.ui.components.RankBadge
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
@@ -34,68 +42,73 @@ fun MatrixEntryCard(
     onSetupClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     val accentColor: Color = when {
-        entry.progressPercent >= 1f  -> NeonGreen
-        entry.progressPercent >= 0.5f -> NeonCyan
-        else                          -> NeonCyanDim
+        entry.progressPercent >= 1f -> colors.accentSuccess
+        entry.progressPercent >= 0.5f -> colors.accentPrimary
+        else -> colors.accentInfo
     }
+    val shape = RoundedCornerShape(SystemTheme.shapes.extraLarge)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .alpha(if (entry.isActive) 1f else 0.4f)
-            .clip(RoundedCornerShape(32.dp))
+            .clip(shape)
             .background(
-                Brush.linearGradient(
-                    colors = listOf(Color(0xFF1A1A2E), Color(0xFF0F0F1A)),
-                    start = Offset(0f, 0f),
-                    end = Offset(1000f, 1000f)
+                Brush.verticalGradient(
+                    listOf(
+                        colors.surfaceGlassStrong,
+                        colors.surfaceGlass,
+                        colors.surfaceGlassSoft
+                    )
                 )
             )
             .border(
                 BorderStroke(
                     1.dp,
-                    Brush.sweepGradient(
+                    Brush.linearGradient(
                         listOf(
-                            accentColor.copy(alpha = 0.2f),
-                            Color(0xFFB257FF).copy(alpha = 0.2f),
-                            accentColor.copy(alpha = 0.2f)
+                            accentColor.copy(alpha = 0.28f),
+                            colors.accentAi.copy(alpha = 0.22f),
+                            colors.borderSubtle
                         )
                     )
                 ),
-                RoundedCornerShape(32.dp)
+                shape
             )
             .clickable(enabled = entry.isActive) { onCardClick() }
-            .padding(24.dp),
+            .padding(SystemScreenPadding),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // --- Top Row: Name + Rank Badge ---
         Row(
-            modifier              = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment     = Alignment.Top
+            verticalAlignment = Alignment.Top
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text       = entry.exerciseName.uppercase(),
-                    color      = TextPrimary,
-                    fontFamily = RajdhaniFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize   = 13.sp
+                    text = entry.exerciseName.uppercase(),
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        color = colors.textPrimary,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
-                OneRepMaxText(
-                    weight = entry.currentWeight.toDouble(), 
-                    reps = 8,
-                    label = "EST. 1RM: "
-                )
+                if (entry.usesExternalLoad) {
+                    OneRepMaxText(
+                        weight = entry.currentWeight.toDouble(),
+                        reps = 8,
+                        label = "EST. 1RM: "
+                    )
+                }
             }
-            
-            // Ранг вправи спозиціонований праворуч
+
             RankBadge(rank = entry.currentRank, size = 44.dp)
         }
 
-        // --- Progress Chart ---
-        if (entry.weightHistory.size >= 2) {
+        if (entry.usesExternalLoad && entry.weightHistory.size >= 2) {
             ExerciseProgressChart(
                 history = entry.weightHistory,
                 accentColor = accentColor,
@@ -103,35 +116,35 @@ fun MatrixEntryCard(
             )
         }
 
-        MatrixProgressBar(
-            progress    = entry.progressPercent,
-            accentColor = accentColor
-        )
+        if (entry.usesExternalLoad) {
+            MatrixProgressBar(
+                progress = entry.progressPercent,
+                accentColor = accentColor
+            )
+        }
 
-        // --- AI Recommendation Row ---
         if (entry.nextRecommendedWeight != null) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "НАСТУПНЕ ТРЕНУВАННЯ: ",
-                    color = TextSecondary,
-                    fontFamily = RajdhaniFamily,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium
+                    text = "Наступне тренування: ",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = colors.textSecondary,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
                 Text(
-                    text = "${entry.nextRecommendedWeight}кг, ${entry.nextRecommendedSets}x, ${entry.nextRecommendedReps}",
-                    color = NeonCyan,
-                    fontFamily = TekoFamily,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "${entry.nextRecommendedWeight} кг, ${entry.nextRecommendedSets}x, ${entry.nextRecommendedReps}",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        color = colors.accentPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
                 )
             }
         }
 
-        // --- AI Feedback Row (Завдання 1) ---
         if (entry.lastAiFeedback != null) {
             Row(
                 modifier = Modifier
@@ -143,32 +156,30 @@ fun MatrixEntryCard(
                 Icon(
                     imageVector = Icons.Default.Psychology,
                     contentDescription = "Coach AI",
-                    tint = NeonCyan,
+                    tint = colors.accentPrimary,
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
                     text = entry.lastAiFeedback,
-                    color = Color.LightGray,
-                    fontFamily = RajdhaniFamily,
-                    fontSize = 14.sp,
-                    lineHeight = 18.sp
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
 
-        // --- Bottom Row: Weights + Setup Button ---
         Row(
-            modifier              = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment     = Alignment.Bottom
+            verticalAlignment = Alignment.Bottom
         ) {
             Row(
                 modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(SystemCardPadding)
             ) {
-                WeightBlock("СТАРТ",    entry.displayStart,   TextSecondary)
-                WeightBlock("ЗАРАЗ",    entry.displayCurrent, accentColor)
-                WeightBlock("ЦІЛЬ",     entry.displayTarget,  NeonGold)
+                WeightBlock("Старт", entry.displayStart, colors.textSecondary)
+                WeightBlock("Зараз", entry.displayCurrent, accentColor)
+                WeightBlock("Ціль", entry.displayTarget, colors.accentWarning)
             }
 
             IconButton(
@@ -178,7 +189,7 @@ fun MatrixEntryCard(
                 Icon(
                     imageVector = Icons.Outlined.Flag,
                     contentDescription = "Setup Goals",
-                    tint = NeonGold,
+                    tint = colors.accentWarning,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -188,19 +199,21 @@ fun MatrixEntryCard(
 
 @Composable
 private fun WeightBlock(label: String, value: String, valueColor: Color) {
+    val colors = SystemTheme.colors
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text       = label,
-            color      = TextSecondary.copy(alpha = 0.5f),
-            fontFamily = RajdhaniFamily,
-            fontSize   = 9.sp
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = colors.textSecondary.copy(alpha = 0.62f),
+                fontWeight = FontWeight.Bold
+            )
         )
         Text(
-            text       = value,
-            color      = valueColor,
-            fontFamily = TekoFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize   = 14.sp
+            text = value,
+            style = MaterialTheme.typography.titleSmall.copy(
+                color = valueColor,
+                fontWeight = FontWeight.Bold
+            )
         )
     }
 }

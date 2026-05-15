@@ -15,7 +15,7 @@ fun WorkoutDialogHost(
     activeDayWorkout: ActiveDayUiModel?,
     settingsUiState: WorkoutScheduleSettingsUiState,
     workoutViewModel: WorkoutViewModel,
-    onOpenWorkoutAnalysis: () -> Unit = {}
+    onOpenWorkoutAnalysis: (Long) -> Unit = {}
 ) {
     when (dialogState) {
         is StatusDialogState.MainQuestWorkout -> MainQuestWorkoutDialog(
@@ -37,6 +37,7 @@ fun WorkoutDialogHost(
                 exerciseName = dialogState.entry.exerciseName,
                 initialStart = dialogState.startWeight,
                 initialTarget = dialogState.targetWeight,
+                usesExternalLoad = dialogState.entry.usesExternalLoad,
                 onConfirm = { start, target ->
                     workoutViewModel.onConfirmSetup(dialogState.entry.exerciseId, start, target)
                 },
@@ -99,7 +100,7 @@ fun WorkoutDialogHost(
             onDismiss = { workoutViewModel.onDismissDialog() },
             onOpenAnalysis = {
                 workoutViewModel.onDismissDialog()
-                onOpenWorkoutAnalysis()
+                onOpenWorkoutAnalysis(dialogState.report.sessionId)
             }
         )
         else -> Unit

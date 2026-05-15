@@ -20,6 +20,7 @@ interface WorkoutAnalyticsRepository {
     suspend fun saveSessionWithSets(session: WorkoutSession, sets: List<ExerciseSet>): Long
     suspend fun saveDirectives(directives: List<WorkoutDirective>)
     fun getDailyTonnageStatsForMonth(monthStart: Long, monthEnd: Long): Flow<List<DailyTonnageStats>>
+    fun getSessionById(sessionId: Long): Flow<WorkoutLog?>
     fun getSessionsByDate(dateMillis: Long): Flow<List<WorkoutLog>>
     fun getAllLogs(): Flow<List<WorkoutLog>>
     

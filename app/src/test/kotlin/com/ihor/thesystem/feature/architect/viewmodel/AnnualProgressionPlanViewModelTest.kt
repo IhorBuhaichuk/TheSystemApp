@@ -6,6 +6,7 @@ import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.domain.model.AnnualProgressionExerciseSnapshot
 import com.ihor.thesystem.domain.model.ExerciseDetails
+import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.usecase.GenerateAnnualProgressionPlanUseCase
 import com.ihor.thesystem.domain.usecase.GetAnnualProgressionExerciseSnapshotUseCase
 import com.ihor.thesystem.domain.usecase.GetTrainingPhaseContextUseCase
@@ -76,6 +77,28 @@ class AnnualProgressionPlanViewModelTest {
         assertEquals(R.string.error_annual_progression_save_failed, message.resId)
     }
 
+    @Test
+    fun `bodyweight exercise is rejected for annual weight plan`() {
+        coEvery { getExerciseSnapshot.invoke(8) } returns exerciseSnapshot(
+            exerciseId = 8,
+            exerciseName = "Push-up",
+            exerciseNameUk = "Віджимання",
+            trackingMode = ExerciseTrackingMode.BODYWEIGHT_REPS,
+            currentWorkingWeight = null,
+            estimatedOneRepMax = null,
+            defaultTargetWeight = null
+        )
+
+        val viewModel = viewModel()
+        viewModel.onExerciseSelected(8)
+        mainDispatcherRule.advanceUntilIdle()
+
+        val message = viewModel.uiState.value.message as UiText.StringResource
+        assertFalse(viewModel.uiState.value.isLoadingExercise)
+        assertEquals(emptyList<AnnualProgressionExerciseUiModel>(), viewModel.uiState.value.selectedExercises)
+        assertEquals(R.string.error_annual_progression_external_load_required, message.resId)
+    }
+
     private fun viewModel(): AnnualProgressionPlanViewModel {
         coEvery { getTrainingPhaseContext.invoke(null) } returns TrainingPhaseContext(
             firstWorkoutDate = fixedDate,
@@ -94,18 +117,28 @@ class AnnualProgressionPlanViewModelTest {
         }
     }
 
-    private fun exerciseSnapshot(): AnnualProgressionExerciseSnapshot =
+    private fun exerciseSnapshot(
+        exerciseId: Int = 7,
+        exerciseName: String = "Bench press",
+        exerciseNameUk: String = "Жим лежачи",
+        trackingMode: ExerciseTrackingMode = ExerciseTrackingMode.WEIGHT_REPS,
+        currentWorkingWeight: Double? = 80.0,
+        estimatedOneRepMax: Double? = 93.0,
+        defaultTargetWeight: Double? = 100.0
+    ): AnnualProgressionExerciseSnapshot =
         AnnualProgressionExerciseSnapshot(
             exercise = ExerciseDetails(
-                id = 7,
-                name = "Bench press",
-                nameUk = "Жим лежачи"
+                id = exerciseId,
+                name = exerciseName,
+                nameUk = exerciseNameUk,
+                trackingMode = trackingMode.name
             ),
-            currentWorkingWeight = 80.0,
+            trackingMode = trackingMode,
+            currentWorkingWeight = currentWorkingWeight,
             reps = 5,
             lastTrainingTimestamp = null,
-            estimatedOneRepMax = 93.0,
-            defaultTargetWeight = 100.0,
+            estimatedOneRepMax = estimatedOneRepMax,
+            defaultTargetWeight = defaultTargetWeight,
             inventoryStep = 2.5
         )
 

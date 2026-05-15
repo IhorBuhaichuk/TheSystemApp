@@ -2,6 +2,7 @@ package com.ihor.thesystem.domain.repository
 
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.ExerciseCategory
+import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ReferenceMatrix
 import kotlinx.coroutines.flow.Flow
@@ -50,6 +51,7 @@ data class ProgressionMatrixEntry(
     val exerciseId: Int,
     val exerciseName: String,
     val exerciseNameUk: String? = null,
+    val exerciseTrackingMode: String? = null,
     val startWeight: Float,
     val targetWeight: Float,
     val currentWeight: Float,
@@ -65,3 +67,10 @@ data class ProgressionMatrixEntry(
     val lastAiFeedback: String? = null,
     val lastAnalyzedTimestamp: Long = 0L
 )
+
+fun ProgressionMatrixEntry.usesExternalLoad(): Boolean =
+    ExerciseTrackingModeResolver.resolve(
+        trackingModeOverride = exerciseTrackingMode,
+        name = exerciseName,
+        nameUk = exerciseNameUk
+    ).usesWeightInput

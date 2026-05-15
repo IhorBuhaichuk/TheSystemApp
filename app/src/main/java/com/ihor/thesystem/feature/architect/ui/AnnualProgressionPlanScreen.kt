@@ -41,7 +41,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -54,7 +53,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -62,21 +60,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ihor.thesystem.core.theme.AccentAi
-import com.ihor.thesystem.core.theme.AccentAiSoft
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.BorderSubtle
-import com.ihor.thesystem.core.theme.SystemBackground
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
-import com.ihor.thesystem.core.theme.SystemSurfaceGlass
-import com.ihor.thesystem.core.theme.TextMuted
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 import com.ihor.thesystem.domain.model.AnnualProgressionAdjustment
 import com.ihor.thesystem.domain.model.AnnualProgressionExercisePlan
 import com.ihor.thesystem.domain.model.AnnualProgressionMonthlyTarget
@@ -100,6 +92,7 @@ fun AnnualProgressionPlanScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val colors = SystemTheme.colors
 
     LaunchedEffect(uiState.message) {
         val message = uiState.message ?: return@LaunchedEffect
@@ -110,7 +103,7 @@ fun AnnualProgressionPlanScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(SystemBackground)
+            .background(colors.background)
     ) {
         RpgStatusBackdrop()
 
@@ -121,7 +114,7 @@ fun AnnualProgressionPlanScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(horizontal = SystemScreenPadding)
-                .padding(top = 16.dp, bottom = 24.dp),
+                .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
             verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
         ) {
             AnnualPlanHeader(onBack = onBack)
@@ -157,6 +150,7 @@ fun AnnualProgressionPlanScreen(
 
 @Composable
 private fun AnnualPlanHeader(onBack: () -> Unit) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -167,28 +161,28 @@ private fun AnnualPlanHeader(onBack: () -> Unit) {
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(1.dp, BorderSubtle, CircleShape)
+                .background(colors.overlayLight)
+                .border(1.dp, colors.borderSubtle, CircleShape)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Íàçàä",
-                tint = TextSecondary
+                contentDescription = "ÐÐ°Ð·Ð°Ð´",
+                tint = colors.textSecondary
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "Ïëàí ð³÷íî¿ ïðîãðåñ³¿",
+                text = "ÐŸÐ»Ð°Ð½ Ñ€Ñ–Ñ‡Ð½Ð¾Ñ— Ð¿Ñ€Ð¾Ð³Ñ€ÐµÑÑ–Ñ—",
                 style = MaterialTheme.typography.headlineSmall.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Black
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "12 ì³ñÿö³â ïî âèáðàíèõ âïðàâàõ",
-                style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
+                text = "12 Ð¼Ñ–ÑÑÑ†Ñ–Ð² Ð¿Ð¾ Ð²Ð¸Ð±Ñ€Ð°Ð½Ð¸Ñ… Ð²Ð¿Ñ€Ð°Ð²Ð°Ñ…",
+                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -202,55 +196,56 @@ private fun AdaptationStatusBlock(
     onUseToday: () -> Unit,
     onSelectDate: (LocalDate) -> Unit
 ) {
+    val colors = SystemTheme.colors
     var showDatePicker by remember { mutableStateOf(false) }
 
     DarkGlassCard(active = state.isAdaptationComplete) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Ñòàòóñ àäàïòàö³¿",
-                subtitle = "2 òèæí³ ïåðåä ô³íàëüíèì ïëàíîì"
+                title = "Ð¡Ñ‚Ð°Ñ‚ÑƒÑ Ð°Ð´Ð°Ð¿Ñ‚Ð°Ñ†Ñ–Ñ—",
+                subtitle = "2 Ñ‚Ð¸Ð¶Ð½Ñ– Ð¿ÐµÑ€ÐµÐ´ Ñ„Ñ–Ð½Ð°Ð»ÑŒÐ½Ð¸Ð¼ Ð¿Ð»Ð°Ð½Ð¾Ð¼"
             )
             Text(
-                text = "Ïåðø³ 2 òèæí³ ñèñòåìà çáèðàº ñòàðòîâ³ äàí³. Ï³ñëÿ öüîãî ìîæíà ñôîðìóâàòè ð³÷íèé ãðàô³ê ç ö³ëÿìè íà êîæåí ì³ñÿöü.",
+                text = "ÐŸÐµÑ€ÑˆÑ– 2 Ñ‚Ð¸Ð¶Ð½Ñ– ÑÐ¸ÑÑ‚ÐµÐ¼Ð° Ð·Ð±Ð¸Ñ€Ð°Ñ” ÑÑ‚Ð°Ñ€Ñ‚Ð¾Ð²Ñ– Ð´Ð°Ð½Ñ–. ÐŸÑ–ÑÐ»Ñ Ñ†ÑŒÐ¾Ð³Ð¾ Ð¼Ð¾Ð¶Ð½Ð° ÑÑ„Ð¾Ñ€Ð¼ÑƒÐ²Ð°Ñ‚Ð¸ Ñ€Ñ–Ñ‡Ð½Ð¸Ð¹ Ð³Ñ€Ð°Ñ„Ñ–Ðº Ð· Ñ†Ñ–Ð»ÑÐ¼Ð¸ Ð½Ð° ÐºÐ¾Ð¶ÐµÐ½ Ð¼Ñ–ÑÑÑ†ÑŒ.",
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = TextSecondary,
+                    color = colors.textSecondary,
                     fontWeight = FontWeight.Medium
                 )
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SystemButton(
-                    text = "Ñüîãîäí³",
+                    text = "Ð¡ÑŒÐ¾Ð³Ð¾Ð´Ð½Ñ–",
                     onClick = onUseToday,
-                    accent = AccentAi,
+                    accent = colors.accentAi,
                     modifier = Modifier.weight(1f)
                 )
                 SystemButton(
-                    text = "Âèáðàòè äàòó",
+                    text = "Ð’Ð¸Ð±Ñ€Ð°Ñ‚Ð¸ Ð´Ð°Ñ‚Ñƒ",
                     onClick = { showDatePicker = true },
-                    accent = AccentAi,
+                    accent = colors.accentAi,
                     modifier = Modifier.weight(1f)
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SystemStatusChip(
-                    text = "Ñòàðò: ${state.startDate.formatDate()}",
-                    accent = AccentAi,
+                    text = "Ð¡Ñ‚Ð°Ñ€Ñ‚: ${state.startDate.formatDate()}",
+                    accent = colors.accentAi,
                     active = true
                 )
                 SystemStatusChip(
-                    text = "Ï³ñëÿ: ${state.adaptationEndsOn.formatDate()}",
-                    accent = AccentPrimary,
+                    text = "ÐŸÑ–ÑÐ»Ñ: ${state.adaptationEndsOn.formatDate()}",
+                    accent = colors.accentPrimary,
                     active = state.isAdaptationComplete
                 )
             }
             Text(
                 text = if (state.isAdaptationComplete) {
-                    "Àäàïòàö³þ çàâåðøåíî. Ìîæíà ôîðìóâàòè ô³íàëüíèé ð³÷íèé ïëàí."
+                    "ÐÐ´Ð°Ð¿Ñ‚Ð°Ñ†Ñ–ÑŽ Ð·Ð°Ð²ÐµÑ€ÑˆÐµÐ½Ð¾. ÐœÐ¾Ð¶Ð½Ð° Ñ„Ð¾Ñ€Ð¼ÑƒÐ²Ð°Ñ‚Ð¸ Ñ„Ñ–Ð½Ð°Ð»ÑŒÐ½Ð¸Ð¹ Ñ€Ñ–Ñ‡Ð½Ð¸Ð¹ Ð¿Ð»Ð°Ð½."
                 } else {
-                    "Äî çàâåðøåííÿ àäàïòàö³¿: ${state.adaptationRemainingDays} äí. Ô³íàëüíèé ïëàí íå ãåíåðóºòüñÿ çàâ÷àñíî."
+                    "Ð”Ð¾ Ð·Ð°Ð²ÐµÑ€ÑˆÐµÐ½Ð½Ñ Ð°Ð´Ð°Ð¿Ñ‚Ð°Ñ†Ñ–Ñ—: ${state.adaptationRemainingDays} Ð´Ð½. Ð¤Ñ–Ð½Ð°Ð»ÑŒÐ½Ð¸Ð¹ Ð¿Ð»Ð°Ð½ Ð½Ðµ Ð³ÐµÐ½ÐµÑ€ÑƒÑ”Ñ‚ÑŒÑÑ Ð·Ð°Ð²Ñ‡Ð°ÑÐ½Ð¾."
                 },
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = if (state.isAdaptationComplete) AccentAi else TextMuted,
+                    color = if (state.isAdaptationComplete) colors.accentAi else colors.textMuted,
                     fontWeight = FontWeight.SemiBold
                 )
             )
@@ -276,6 +271,7 @@ private fun AnnualStartDatePickerDialog(
     onDismiss: () -> Unit,
     onConfirm: (LocalDate) -> Unit
 ) {
+    val colors = SystemTheme.colors
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = initialDate.toEpochMillis()
     )
@@ -289,12 +285,12 @@ private fun AnnualStartDatePickerDialog(
                         ?.let(onConfirm)
                 }
             ) {
-                Text(text = "Îáðàòè", color = AccentAi)
+                Text(text = "ÐžÐ±Ñ€Ð°Ñ‚Ð¸", color = colors.accentAi)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "Ñêàñóâàòè", color = TextSecondary)
+                Text(text = "Ð¡ÐºÐ°ÑÑƒÐ²Ð°Ñ‚Ð¸", color = colors.textSecondary)
             }
         }
     ) {
@@ -311,26 +307,27 @@ private fun SelectedExercisesBlock(
     onTargetWeightChanged: (Int, String) -> Unit,
     onInventoryStepChanged: (Int, String) -> Unit
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Âèáðàí³ âïðàâè",
+                title = "Ð’Ð¸Ð±Ñ€Ð°Ð½Ñ– Ð²Ð¿Ñ€Ð°Ð²Ð¸",
                 subtitle = if (state.selectedExercises.isEmpty()) {
-                    "Äîäàé âïðàâè äëÿ ïðîãíîçó"
+                    "Ð”Ð¾Ð´Ð°Ð¹ Ð²Ð¿Ñ€Ð°Ð²Ð¸ Ð´Ð»Ñ Ð¿Ñ€Ð¾Ð³Ð½Ð¾Ð·Ñƒ"
                 } else {
-                    "${state.selectedExercises.size} âïðàâ ó ïëàí³"
+                    "${state.selectedExercises.size} Ð²Ð¿Ñ€Ð°Ð² Ñƒ Ð¿Ð»Ð°Ð½Ñ–"
                 },
                 trailing = {
                     SystemButton(
-                        text = "Äîäàòè",
+                        text = "Ð”Ð¾Ð´Ð°Ñ‚Ð¸",
                         icon = Icons.Filled.Add,
                         onClick = onOpenExercisePicker,
-                        accent = AccentAi
+                        accent = colors.accentAi
                     )
                 }
             )
             if (state.selectedExercises.isEmpty()) {
-                EmptyAnnualBlock(text = "Ñïèñîê ïîðîæí³é. Îáåðè âïðàâè ç áàçè, ùîá ï³äãîòóâàòè ð³÷íèé ïðîãíîç.")
+                EmptyAnnualBlock(text = "Ð¡Ð¿Ð¸ÑÐ¾Ðº Ð¿Ð¾Ñ€Ð¾Ð¶Ð½Ñ–Ð¹. ÐžÐ±ÐµÑ€Ð¸ Ð²Ð¿Ñ€Ð°Ð²Ð¸ Ð· Ð±Ð°Ð·Ð¸, Ñ‰Ð¾Ð± Ð¿Ñ–Ð´Ð³Ð¾Ñ‚ÑƒÐ²Ð°Ñ‚Ð¸ Ñ€Ñ–Ñ‡Ð½Ð¸Ð¹ Ð¿Ñ€Ð¾Ð³Ð½Ð¾Ð·.")
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     state.selectedExercises.forEach { exercise ->
@@ -360,14 +357,15 @@ private fun SelectedExerciseCard(
     onTargetWeightChanged: (String) -> Unit,
     onInventoryStepChanged: (String) -> Unit
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(Color.White.copy(alpha = 0.035f))
-            .border(1.dp, BorderSubtle, shape)
-            .padding(12.dp),
+            .background(colors.surfaceGlassSoft)
+            .border(1.dp, colors.borderSubtle, shape)
+            .padding(SystemItemSpacing),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Row(
@@ -379,15 +377,15 @@ private fun SelectedExerciseCard(
                 Text(
                     text = exercise.exerciseName,
                     style = MaterialTheme.typography.titleSmall.copy(
-                        color = TextPrimary,
+                        color = colors.textPrimary,
                         fontWeight = FontWeight.Bold
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "Ïîòî÷íà: ${exercise.currentWorkingWeight.formatNullableWeight()} · Ïîâò.: ${exercise.reps ?: "—"}",
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
+                    text = "ÐŸÐ¾Ñ‚Ð¾Ñ‡Ð½Ð°: ${exercise.currentWorkingWeight.formatNullableWeight()} Â· ÐŸÐ¾Ð²Ñ‚.: ${exercise.reps ?: "â€”"}",
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -396,14 +394,14 @@ private fun SelectedExerciseCard(
                 Icon(
                     imageVector = if (exercise.isExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
                     contentDescription = null,
-                    tint = AccentAi
+                    tint = colors.accentAi
                 )
             }
             IconButton(onClick = onRemove, modifier = Modifier.size(34.dp)) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Âèäàëèòè",
-                    tint = TextMuted
+                    contentDescription = "Ð’Ð¸Ð´Ð°Ð»Ð¸Ñ‚Ð¸",
+                    tint = colors.textMuted
                 )
             }
         }
@@ -412,26 +410,26 @@ private fun SelectedExerciseCard(
             AnnualNumberField(
                 value = exercise.targetWeightInput,
                 onValueChange = onTargetWeightChanged,
-                label = "Ö³ëü Ì12",
+                label = "Ð¦Ñ–Ð»ÑŒ Ðœ12",
                 modifier = Modifier.weight(1f)
             )
             AnnualNumberField(
                 value = exercise.inventoryStepInput,
                 onValueChange = onInventoryStepChanged,
-                label = "Êðîê",
+                label = "ÐšÑ€Ð¾Ðº",
                 modifier = Modifier.weight(1f)
             )
         }
 
         if (exercise.isExpanded) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                AnnualMetricLine(label = "Îñòàííº òðåíóâàííÿ", value = exercise.lastTrainingTimestamp.formatTimestamp())
+                AnnualMetricLine(label = "ÐžÑÑ‚Ð°Ð½Ð½Ñ” Ñ‚Ñ€ÐµÐ½ÑƒÐ²Ð°Ð½Ð½Ñ", value = exercise.lastTrainingTimestamp.formatTimestamp())
                 AnnualMetricLine(label = "Estimated 1RM", value = exercise.estimatedOneRepMax.formatNullableWeight())
                 if (!exercise.canGenerate) {
                     Text(
-                        text = "Ïîòð³áí³ ïîòî÷íà âàãà, ö³ëü âèùå ïîòî÷íî¿ òà êðîê ³íâåíòàðþ.",
+                        text = "ÐŸÐ¾Ñ‚Ñ€Ñ–Ð±Ð½Ñ– Ð¿Ð¾Ñ‚Ð¾Ñ‡Ð½Ð° Ð²Ð°Ð³Ð°, Ñ†Ñ–Ð»ÑŒ Ð²Ð¸Ñ‰Ðµ Ð¿Ð¾Ñ‚Ð¾Ñ‡Ð½Ð¾Ñ— Ñ‚Ð° ÐºÑ€Ð¾Ðº Ñ–Ð½Ð²ÐµÐ½Ñ‚Ð°Ñ€ÑŽ.",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = TextMuted,
+                            color = colors.textMuted,
                             fontWeight = FontWeight.SemiBold
                         )
                     )
@@ -448,40 +446,34 @@ private fun AnnualNumberField(
     label: String,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier,
-        label = { Text(text = label, color = TextMuted) },
+        label = { Text(text = label, color = colors.textMuted) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = AccentAi,
-            unfocusedBorderColor = BorderSubtle,
-            focusedContainerColor = SystemSurfaceGlass.copy(alpha = 0.42f),
-            unfocusedContainerColor = Color.White.copy(alpha = 0.018f),
-            cursorColor = AccentAi,
-            focusedTextColor = TextPrimary,
-            unfocusedTextColor = TextPrimary
-        ),
-        shape = RoundedCornerShape(14.dp)
+        colors = systemOutlinedTextFieldColors(accent = colors.accentAi),
+        shape = RoundedCornerShape(SystemTheme.shapes.medium)
     )
 }
 
 @Composable
 private fun AnnualMetricLine(label: String, value: String) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
+            style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall.copy(
-                color = TextSecondary,
+                color = colors.textSecondary,
                 fontWeight = FontWeight.SemiBold
             ),
             maxLines = 1,
@@ -495,26 +487,27 @@ private fun GenerationBlock(
     state: AnnualProgressionPlanUiState,
     onGeneratePlan: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Ãåíåðàö³ÿ",
-                subtitle = "12 ì³ñÿö³â · ö³ëü íà êîæåí ì³ñÿöü"
+                title = "Ð“ÐµÐ½ÐµÑ€Ð°Ñ†Ñ–Ñ",
+                subtitle = "12 Ð¼Ñ–ÑÑÑ†Ñ–Ð² Â· Ñ†Ñ–Ð»ÑŒ Ð½Ð° ÐºÐ¾Ð¶ÐµÐ½ Ð¼Ñ–ÑÑÑ†ÑŒ"
             )
             Text(
                 text = when {
-                    !state.isAdaptationComplete -> "Ïëàí áóäå äîñòóïíèé ï³ñëÿ ïåðøèõ 2 òèæí³â çáîðó äàíèõ."
-                    state.selectedExercises.isEmpty() -> "Äîäàé õî÷à á îäíó âïðàâó."
-                    !state.canGenerate -> "Çàïîâíè ïîêàçíèêè äëÿ êîæíî¿ âïðàâè."
-                    else -> "Äàí³ ãîòîâ³ äî ôîðìóâàííÿ ïëàíó."
+                    !state.isAdaptationComplete -> "ÐŸÐ»Ð°Ð½ Ð±ÑƒÐ´Ðµ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ð¸Ð¹ Ð¿Ñ–ÑÐ»Ñ Ð¿ÐµÑ€ÑˆÐ¸Ñ… 2 Ñ‚Ð¸Ð¶Ð½Ñ–Ð² Ð·Ð±Ð¾Ñ€Ñƒ Ð´Ð°Ð½Ð¸Ñ…."
+                    state.selectedExercises.isEmpty() -> "Ð”Ð¾Ð´Ð°Ð¹ Ñ…Ð¾Ñ‡Ð° Ð± Ð¾Ð´Ð½Ñƒ Ð²Ð¿Ñ€Ð°Ð²Ñƒ."
+                    !state.canGenerate -> "Ð—Ð°Ð¿Ð¾Ð²Ð½Ð¸ Ð¿Ð¾ÐºÐ°Ð·Ð½Ð¸ÐºÐ¸ Ð´Ð»Ñ ÐºÐ¾Ð¶Ð½Ð¾Ñ— Ð²Ð¿Ñ€Ð°Ð²Ð¸."
+                    else -> "Ð”Ð°Ð½Ñ– Ð³Ð¾Ñ‚Ð¾Ð²Ñ– Ð´Ð¾ Ñ„Ð¾Ñ€Ð¼ÑƒÐ²Ð°Ð½Ð½Ñ Ð¿Ð»Ð°Ð½Ñƒ."
                 },
-                style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
             )
             SystemButton(
-                text = if (state.isGenerating) "Ôîðìóþ..." else "Ñôîðìóâàòè ïëàí",
+                text = if (state.isGenerating) "Ð¤Ð¾Ñ€Ð¼ÑƒÑŽ..." else "Ð¡Ñ„Ð¾Ñ€Ð¼ÑƒÐ²Ð°Ñ‚Ð¸ Ð¿Ð»Ð°Ð½",
                 icon = Icons.AutoMirrored.Filled.ArrowForward,
                 onClick = onGeneratePlan,
-                accent = AccentAi,
+                accent = colors.accentAi,
                 enabled = !state.isGenerating && state.canGenerate,
                 glow = state.canGenerate,
                 modifier = Modifier.fillMaxWidth()
@@ -531,11 +524,12 @@ private fun AnnualPlanResultBlock(
     onToggleExpanded: (Int) -> Unit,
     onSavePlan: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard(active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Ðåçóëüòàò",
-                subtitle = "Ïëàí ñòàðòóº ${plan.startDate.formatDate()}"
+                title = "Ð ÐµÐ·ÑƒÐ»ÑŒÑ‚Ð°Ñ‚",
+                subtitle = "ÐŸÐ»Ð°Ð½ ÑÑ‚Ð°Ñ€Ñ‚ÑƒÑ” ${plan.startDate.formatDate()}"
             )
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 plan.exercises.forEach { exercisePlan ->
@@ -547,10 +541,10 @@ private fun AnnualPlanResultBlock(
                 }
             }
             SystemButton(
-                text = if (isSaving) "Çáåð³ãàþ..." else "Çáåðåãòè ïëàí",
+                text = if (isSaving) "Ð—Ð±ÐµÑ€Ñ–Ð³Ð°ÑŽ..." else "Ð—Ð±ÐµÑ€ÐµÐ³Ñ‚Ð¸ Ð¿Ð»Ð°Ð½",
                 icon = Icons.Filled.Save,
                 onClick = onSavePlan,
-                accent = AccentAi,
+                accent = colors.accentAi,
                 enabled = !isSaving,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -564,14 +558,15 @@ private fun AnnualExercisePlanCard(
     expanded: Boolean,
     onToggleExpanded: () -> Unit
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(AccentAiSoft.copy(alpha = 0.34f))
-            .border(1.dp, AccentAi.copy(alpha = 0.18f), shape)
-            .padding(12.dp),
+            .background(colors.accentAiSoft.copy(alpha = 0.34f))
+            .border(1.dp, colors.accentAi.copy(alpha = 0.18f), shape)
+            .padding(SystemItemSpacing),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Row(
@@ -583,32 +578,32 @@ private fun AnnualExercisePlanCard(
                 Text(
                     text = plan.exerciseName,
                     style = MaterialTheme.typography.titleSmall.copy(
-                        color = TextPrimary,
+                        color = colors.textPrimary,
                         fontWeight = FontWeight.Bold
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "${plan.currentWeight.formatWeight()} êã > ${plan.targetWeight.formatWeight()} êã",
+                    text = "${plan.currentWeight.formatWeight()} ÐºÐ³ > ${plan.targetWeight.formatWeight()} ÐºÐ³",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = AccentAi,
+                        color = colors.accentAi,
                         fontWeight = FontWeight.SemiBold
                     )
                 )
             }
-            SystemStatusChip(text = "Çà ïëàíîì", accent = AccentAi, active = true)
+            SystemStatusChip(text = "Ð—Ð° Ð¿Ð»Ð°Ð½Ð¾Ð¼", accent = colors.accentAi, active = true)
             IconButton(onClick = onToggleExpanded, modifier = Modifier.size(34.dp)) {
                 Icon(
                     imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
                     contentDescription = null,
-                    tint = AccentAi
+                    tint = colors.accentAi
                 )
             }
         }
         if (expanded) {
-            AnnualMetricLine(label = "²äåàëüíèé êðîê", value = "${plan.idealMonthlyStep.formatWeight()} êã/ì³ñ")
-            AnnualMetricLine(label = "Êðîê ³íâåíòàðþ", value = "${plan.inventoryStep.formatWeight()} êã")
+            AnnualMetricLine(label = "Ð†Ð´ÐµÐ°Ð»ÑŒÐ½Ð¸Ð¹ ÐºÑ€Ð¾Ðº", value = "${plan.idealMonthlyStep.formatWeight()} ÐºÐ³/Ð¼Ñ–Ñ")
+            AnnualMetricLine(label = "ÐšÑ€Ð¾Ðº Ñ–Ð½Ð²ÐµÐ½Ñ‚Ð°Ñ€ÑŽ", value = "${plan.inventoryStep.formatWeight()} ÐºÐ³")
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(vertical = 2.dp)
@@ -623,18 +618,19 @@ private fun AnnualExercisePlanCard(
 
 @Composable
 private fun MonthlyTargetChip(target: AnnualProgressionMonthlyTarget) {
+    val colors = SystemTheme.colors
     val accent = when (target.adjustment) {
-        AnnualProgressionAdjustment.Baseline -> TextMuted
-        AnnualProgressionAdjustment.StandardStep -> AccentAi
-        AnnualProgressionAdjustment.Plateau -> AccentPrimary
-        AnnualProgressionAdjustment.ForcedJump -> AccentAi
+        AnnualProgressionAdjustment.Baseline -> colors.textMuted
+        AnnualProgressionAdjustment.StandardStep -> colors.accentAi
+        AnnualProgressionAdjustment.Plateau -> colors.accentPrimary
+        AnnualProgressionAdjustment.ForcedJump -> colors.accentAi
     }
     Column(
         modifier = Modifier
             .width(72.dp)
-            .clip(RoundedCornerShape(13.dp))
-            .background(Color.Black.copy(alpha = 0.18f))
-            .border(1.dp, accent.copy(alpha = 0.24f), RoundedCornerShape(13.dp))
+            .clip(RoundedCornerShape(SystemTheme.shapes.small))
+            .background(colors.surfaceGlassSoft)
+            .border(1.dp, accent.copy(alpha = 0.24f), RoundedCornerShape(SystemTheme.shapes.small))
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -642,14 +638,14 @@ private fun MonthlyTargetChip(target: AnnualProgressionMonthlyTarget) {
         Text(
             text = "M${target.monthIndex}",
             style = MaterialTheme.typography.labelSmall.copy(
-                color = TextMuted,
+                color = colors.textMuted,
                 fontWeight = FontWeight.Bold
             )
         )
         Text(
             text = target.weight.formatWeight(),
             style = MaterialTheme.typography.labelLarge.copy(
-                color = TextPrimary,
+                color = colors.textPrimary,
                 fontWeight = FontWeight.Black
             )
         )
@@ -663,16 +659,18 @@ private fun MonthlyTargetChip(target: AnnualProgressionMonthlyTarget) {
 
 @Composable
 private fun EmptyAnnualBlock(text: String) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Text(
         text = text,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(Color.White.copy(alpha = 0.026f))
-            .border(1.dp, BorderSubtle, RoundedCornerShape(14.dp))
-            .padding(14.dp),
+            .clip(shape)
+            .background(colors.surfaceGlassSoft)
+            .border(1.dp, colors.borderSubtle, shape)
+            .padding(SystemCardPadding),
         style = MaterialTheme.typography.bodySmall.copy(
-            color = TextMuted,
+            color = colors.textMuted,
             fontWeight = FontWeight.Medium
         )
     )
@@ -688,10 +686,10 @@ private fun Long.toLocalDate(): LocalDate =
     Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 
 private fun Long?.formatTimestamp(): String =
-    this?.toLocalDate()?.formatDate() ?: "—"
+    this?.toLocalDate()?.formatDate() ?: "â€”"
 
 private fun Double?.formatNullableWeight(): String =
-    this?.let { "${it.formatWeight()} êã" } ?: "—"
+    this?.let { "${it.formatWeight()} ÐºÐ³" } ?: "â€”"
 
 private fun Double.formatWeight(): String =
     if (this % 1.0 == 0.0) {

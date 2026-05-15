@@ -3,6 +3,7 @@ package com.ihor.thesystem.feature.statistics.ui.components.dialogs
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -13,14 +14,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.theme.SystemControlHeight
+import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.sciPanel
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 import com.ihor.thesystem.feature.status.viewmodel.QuestUiModel
 import com.ihor.thesystem.feature.status.viewmodel.TaskUiModel
 
@@ -34,6 +36,7 @@ fun QuestChecklistSheet(
     onRemoveTask: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     var newTaskName by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     
@@ -42,7 +45,7 @@ fun QuestChecklistSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor   = PanelSurface,
+        containerColor   = colors.surfaceGlassStrong,
         dragHandle       = {
             Box(
                 modifier = Modifier
@@ -65,18 +68,15 @@ fun QuestChecklistSheet(
             // Header
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text          = quest.title,
-                    color         = accentColor,
-                    fontFamily    = FontFamily.Monospace,
-                    fontWeight    = FontWeight.Bold,
-                    fontSize      = 15.sp,
-                    letterSpacing = 1.sp
+                    text = quest.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = accentColor,
+                        fontWeight = FontWeight.Bold
+                    )
                 )
                 Text(
-                    text       = "Daily Operations Protocol",
-                    color      = TextSecondary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize   = 11.sp
+                    text = "Daily Operations Protocol",
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
                 )
             }
 
@@ -86,22 +86,16 @@ fun QuestChecklistSheet(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
             ) {
-                TextField(
+                OutlinedTextField(
                     value = newTaskName,
                     onValueChange = { newTaskName = it },
-                    placeholder = { Text("Нова справа...", color = TextSecondary.copy(0.5f), fontSize = 13.sp) },
+                    placeholder = { Text("Нова справа...") },
                     modifier = Modifier.weight(1f),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = BackgroundDeep,
-                        unfocusedContainerColor = BackgroundDeep,
-                        focusedIndicatorColor = accentColor,
-                        unfocusedIndicatorColor = accentColor.copy(0.3f),
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    ),
-                    textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                    shape = RoundedCornerShape(SystemTheme.shapes.medium),
+                    colors = systemOutlinedTextFieldColors(accent = accentColor),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.textPrimary),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = {
                         if (newTaskName.isNotBlank()) {
@@ -110,6 +104,7 @@ fun QuestChecklistSheet(
                         }
                         focusManager.clearFocus()
                     }),
+                    singleLine = true,
                     maxLines = 1
                 )
                 IconButton(
@@ -120,7 +115,7 @@ fun QuestChecklistSheet(
                         }
                         focusManager.clearFocus()
                     },
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(SystemControlHeight)
                 ) {
                     Icon(Icons.Filled.Add, "Add", tint = accentColor)
                 }
@@ -132,10 +127,8 @@ fun QuestChecklistSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text       = "[ СПИСОК ПОРОЖНІЙ ]",
-                        color      = TextSecondary,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp
+                        text = "[ СПИСОК ПОРОЖНІЙ ]",
+                        style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
                     )
                 }
             } else {
@@ -162,19 +155,19 @@ fun QuestChecklistSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .sciPanel(
-                            borderColor     = NeonGreen,
-                            backgroundColor = NeonGreen.copy(alpha = 0.1f),
+                            borderColor     = colors.accentSuccess,
+                            backgroundColor = colors.accentSuccess.copy(alpha = 0.1f),
                             cornerCut       = 8.dp
                         )
                         .padding(12.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text       = "✓ ВСІ ЗАВДАННЯ ВИКОНАНО",
-                        color      = NeonGreen,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        fontSize   = 13.sp
+                        text = "✓ ВСІ ЗАВДАННЯ ВИКОНАНО",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            color = colors.accentSuccess,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 }
             }
@@ -189,12 +182,13 @@ private fun TaskRow(
     onToggle: () -> Unit,
     onRemove: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .sciPanel(
-                borderColor     = if (task.isCompleted) NeonGreen.copy(0.4f) else accentColor.copy(0.25f),
-                backgroundColor = if (task.isCompleted) NeonGreen.copy(0.07f) else PanelSurface,
+                borderColor     = if (task.isCompleted) colors.accentSuccess.copy(alpha = 0.4f) else accentColor.copy(alpha = 0.25f),
+                backgroundColor = if (task.isCompleted) colors.accentSuccess.copy(alpha = 0.07f) else colors.surfaceGlassStrong,
                 cornerCut       = 6.dp
             )
             .padding(horizontal = 8.dp, vertical = 8.dp),
@@ -207,26 +201,25 @@ private fun TaskRow(
                 imageVector = if (task.isCompleted) Icons.Filled.CheckBox
                 else Icons.Filled.CheckBoxOutlineBlank,
                 contentDescription = null,
-                tint     = if (task.isCompleted) NeonGreen else accentColor.copy(0.6f),
+                tint     = if (task.isCompleted) colors.accentSuccess else accentColor.copy(alpha = 0.6f),
                 modifier = Modifier.size(24.dp)
             )
         }
         
         Text(
-            text           = task.name,
-            color          = if (task.isCompleted) TextSecondary else TextPrimary,
-            fontFamily     = FontFamily.Monospace,
-            fontSize       = 13.sp,
-            textDecoration = if (task.isCompleted) TextDecoration.LineThrough
-            else TextDecoration.None,
-            modifier       = Modifier.weight(1f)
+            text = task.name,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = if (task.isCompleted) colors.textSecondary else colors.textPrimary,
+                textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+            ),
+            modifier = Modifier.weight(1f)
         )
 
         IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = "Delete",
-                tint = NeonRed.copy(0.5f),
+                tint = colors.accentError.copy(alpha = 0.5f),
                 modifier = Modifier.size(18.dp)
             )
         }

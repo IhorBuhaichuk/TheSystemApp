@@ -268,6 +268,15 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onConfirmSetup(exerciseId: Int, start: String, target: String) {
+        val setupState = _dialogState.value as? StatusDialogState.SetupMatrix
+        if (setupState?.entry?.usesExternalLoad == false) {
+            if (setupState.showWorkoutAfter) {
+                onOpenMainWorkout()
+            } else {
+                onDismissDialog()
+            }
+            return
+        }
         viewModelScope.launch {
             try {
                 // Замінюємо кому на крапку для безпечного парсингу

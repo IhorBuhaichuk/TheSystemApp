@@ -7,13 +7,22 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,13 +33,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.ihor.thesystem.core.theme.*
-import com.ihor.thesystem.core.ui.components.RankBadge
-import com.ihor.thesystem.core.ui.components.sciPanel
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemScreenPadding
+import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.components.SystemCard
+import com.ihor.thesystem.core.ui.components.SystemProgressBar
 import com.ihor.thesystem.feature.status.viewmodel.StatusUiData
 
 @Composable
@@ -40,20 +51,16 @@ fun ProfileHeaderCard(
     onAvatarSelected: (android.net.Uri) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri -> uri?.let { onAvatarSelected(it) } }
     )
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .sciPanel(
-                borderColor = PanelBorder.copy(alpha = 0.5f),
-                backgroundColor = PanelSurface.copy(alpha = 0.8f),
-                cornerCut = 16.dp
-            )
-            .padding(20.dp)
+    SystemCard(
+        modifier = modifier.fillMaxWidth(),
+        active = true,
+        contentPadding = SystemScreenPadding
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -66,44 +73,48 @@ fun ProfileHeaderCard(
             ) {
                 Text(
                     text = "ГРАВЕЦЬ",
-                    style = TheSystemTypography.labelSmall,
-                    color = TextSecondary,
-                    letterSpacing = 2.sp
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = colors.textSecondary,
+                        fontWeight = FontWeight.Bold
+                    )
                 )
                 Text(
                     text = data.playerName.uppercase(),
-                    style = TheSystemTypography.displayLarge.copy(
-                        fontSize = 36.sp,
-                        lineHeight = 40.sp
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        color = colors.textPrimary
                     ),
-                    color = Color.White,
-                    modifier = Modifier.clickable { onNameTap() }
+                    modifier = Modifier.clickable { onNameTap() },
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = "RANK ${data.globalRank.name}",
-                    style = TheSystemTypography.titleMedium,
-                    color = NeonCyan,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = colors.accentPrimary,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            
-            Spacer(modifier = Modifier.width(16.dp))
+
+            Spacer(modifier = Modifier.width(SystemCardPadding))
 
             Box(
                 modifier = Modifier
                     .size(220.dp)
                     .clip(CircleShape)
-                    .background(Color.Black)
+                    .background(colors.backgroundElevated)
                     .border(
                         BorderStroke(
-                            3.dp,
+                            2.dp,
                             Brush.sweepGradient(
-                                colors = listOf(
-                                    NeonCyan, 
-                                    Color.Transparent, 
-                                    NeonCyan.copy(alpha = 0.5f), 
-                                    Color.Transparent, 
-                                    NeonCyan
+                                listOf(
+                                    colors.accentPrimary,
+                                    colors.accentAi.copy(alpha = 0.20f),
+                                    colors.accentPrimary.copy(alpha = 0.52f),
+                                    Color.Transparent,
+                                    colors.accentPrimary
                                 )
                             )
                         ),
@@ -122,7 +133,7 @@ fun ProfileHeaderCard(
                             .data(data.avatarUri)
                             .crossfade(true)
                             .build(),
-                        contentDescription = "Avatar",
+                        contentDescription = "Аватар",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -131,20 +142,19 @@ fun ProfileHeaderCard(
                         imageVector = Icons.Filled.Person,
                         contentDescription = null,
                         modifier = Modifier.size(140.dp),
-                        tint = NeonCyan.copy(alpha = 0.2f)
+                        tint = colors.accentPrimary.copy(alpha = 0.18f)
                     )
-                    // Додатковий шар для стилізації "чоловічка"
                     Icon(
                         imageVector = Icons.Filled.Person,
                         contentDescription = null,
                         modifier = Modifier.size(130.dp),
-                        tint = NeonCyan.copy(alpha = 0.4f)
+                        tint = colors.accentPrimary.copy(alpha = 0.38f)
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(SystemScreenPadding))
 
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(
@@ -153,24 +163,26 @@ fun ProfileHeaderCard(
             ) {
                 Text(
                     text = "XP PROGRESS",
-                    style = TheSystemTypography.labelSmall,
-                    color = TextSecondary
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = colors.textSecondary,
+                        fontWeight = FontWeight.Bold
+                    )
                 )
                 Text(
                     text = "${data.xpTotal % 1000}/1000",
-                    style = TheSystemTypography.labelSmall,
-                    color = NeonCyan
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = colors.accentPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
                 )
             }
-            
-            LinearProgressIndicator(
-                progress = { (data.xpTotal % 1000) / 1000f },
+
+            SystemProgressBar(
+                progress = (data.xpTotal % 1000) / 1000f,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = NeonCyan,
-                trackColor = Color.White.copy(alpha = 0.1f)
+                    .height(8.dp),
+                accent = colors.accentPrimary
             )
         }
     }

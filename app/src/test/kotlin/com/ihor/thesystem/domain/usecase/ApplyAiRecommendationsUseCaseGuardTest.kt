@@ -31,6 +31,14 @@ class ApplyAiRecommendationsUseCaseGuardTest {
             "AI validation clamps or rejections must be logged.",
             "logDirectiveAdjustments(rawDirectives" in source
         )
+        assertTrue(
+            "Batch AI target generation must skip exercises that do not use external load.",
+            "if (!entry.usesExternalLoad())" in source
+        )
+        assertTrue(
+            "Batch AI target generation must not call AI with an empty actionable exercise list.",
+            "if (exercisesContext.isEmpty()) return" in source
+        )
     }
 
     private fun sourceFile(): File =

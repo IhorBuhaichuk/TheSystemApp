@@ -1,18 +1,34 @@
 package com.ihor.thesystem.feature.statistics.ui.components.dialogs
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.*
+import androidx.compose.ui.window.Dialog
+import com.ihor.thesystem.R
+import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.SystemDialogContainer
+import com.ihor.thesystem.core.ui.components.SystemGhostButton
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 
 @Composable
 fun LogWeightDialog(
@@ -20,74 +36,64 @@ fun LogWeightDialog(
     onConfirm: (Float) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     var input by remember { mutableStateOf(currentWeight.toString()) }
     var isError by remember { mutableStateOf(false) }
+    val canConfirm = !isError && input.isNotBlank()
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor   = PanelSurface,
-        shape            = RoundedCornerShape(4.dp),
-        icon = {
-            Icon(Icons.Filled.FitnessCenter, contentDescription = null, tint = NeonCyanDim)
-        },
-        title = {
+    Dialog(onDismissRequest = onDismiss) {
+        SystemDialogContainer(accent = colors.accentPrimary) {
+            Icon(Icons.Filled.FitnessCenter, contentDescription = null, tint = colors.accentPrimary)
             Text(
-                text       = "[ ЛОГУВАТИ ВАГУ ]",
-                color      = NeonCyan,
-                fontFamily = FontFamily.Monospace,
-                fontSize   = 14.sp
+                text = "[ ЛОГУВАТИ ВАГУ ]",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = colors.accentPrimary,
+                    fontWeight = FontWeight.Bold
+                )
             )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
                 OutlinedTextField(
-                    value         = input,
+                    value = input,
                     onValueChange = {
-                        input   = it
+                        input = it
                         isError = it.toFloatOrNull() == null && it.isNotEmpty()
                     },
-                    singleLine    = true,
-                    isError       = isError,
-                    label         = {
-                        Text("Вага (кг)", fontFamily = FontFamily.Monospace, fontSize = 11.sp)
-                    },
+                    singleLine = true,
+                    isError = isError,
+                    label = { Text("Вага (кг)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    colors        = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor   = NeonCyanDim,
-                        unfocusedBorderColor = PanelBorder,
-                        focusedLabelColor    = NeonCyanDim,
-                        cursorColor          = NeonCyanDim,
-                        focusedTextColor     = TextPrimary,
-                        unfocusedTextColor   = TextPrimary,
-                        errorBorderColor     = NeonRed
-                    ),
-                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace)
+                    colors = systemOutlinedTextFieldColors(accent = colors.accentPrimary),
+                    textStyle = LocalTextStyle.current.copy(color = colors.textPrimary),
+                    modifier = Modifier.fillMaxWidth()
                 )
                 if (isError) {
                     Text(
-                        text       = "Введіть коректне число",
-                        color      = NeonRed,
-                        fontSize   = 10.sp,
-                        fontFamily = FontFamily.Monospace
+                        text = "Введіть коректне число",
+                        style = MaterialTheme.typography.bodySmall.copy(color = colors.accentError)
                     )
                 }
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick  = {
-                    val w = input.toFloatOrNull()
-                    if (w != null && w > 0f) onConfirm(w)
-                },
-                enabled = !isError && input.isNotBlank()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
             ) {
-                Text("ЗБЕРЕГТИ", color = NeonCyanDim, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("СКАСУВАТИ", color = TextSecondary, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                SystemGhostButton(
+                    text = stringResource(R.string.text_cancel),
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                )
+                SystemButton(
+                    text = stringResource(R.string.text_confirm),
+                    onClick = {
+                        val weight = input.toFloatOrNull()
+                        if (weight != null && weight > 0f) onConfirm(weight)
+                    },
+                    modifier = Modifier.weight(1f),
+                    accent = colors.accentPrimary,
+                    enabled = canConfirm,
+                    glow = canConfirm
+                )
             }
         }
-    )
+    }
 }

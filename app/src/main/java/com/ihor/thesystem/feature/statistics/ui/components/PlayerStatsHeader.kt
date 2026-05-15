@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -20,8 +19,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.R
-import com.ihor.thesystem.core.theme.*
-import com.ihor.thesystem.core.ui.components.RankBadge
+import com.ihor.thesystem.core.theme.RajdhaniFamily
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.theme.TekoFamily
 import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
@@ -33,12 +35,13 @@ fun PlayerStatsHeader(
     data: StatisticsUiData,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     Column(
         modifier = modifier
             .fillMaxWidth()
             .glassCard()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(SystemCardPadding),
+        verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
         // Name + class + RANK
         Row(
@@ -57,7 +60,7 @@ fun PlayerStatsHeader(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .border(2.dp, NeonCyan.copy(alpha = 0.3f), CircleShape),
+                            .border(2.dp, colors.accentPrimary.copy(alpha = 0.3f), CircleShape),
                         contentScale = ContentScale.Crop
                     )
                 } else {
@@ -65,15 +68,15 @@ fun PlayerStatsHeader(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(Color.Black)
-                            .border(1.dp, NeonCyan.copy(alpha = 0.2f), CircleShape),
+                            .background(colors.backgroundElevated)
+                            .border(1.dp, colors.accentPrimary.copy(alpha = 0.2f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Person,
                             contentDescription = null,
                             modifier = Modifier.size(32.dp),
-                            tint = NeonCyan.copy(alpha = 0.5f)
+                            tint = colors.accentPrimary.copy(alpha = 0.5f)
                         )
                     }
                 }
@@ -81,14 +84,14 @@ fun PlayerStatsHeader(
                 Column {
                     Text(
                         text       = data.playerName,
-                        color      = TextPrimary,
+                        color      = colors.textPrimary,
                         fontFamily = RajdhaniFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize   = 18.sp
                     )
                     Text(
                         text       = "[ ${data.playerClass} ]",
-                        color      = TextSecondary,
+                        color      = colors.textSecondary,
                         fontFamily = RajdhaniFamily,
                         fontSize   = 11.sp
                     )
@@ -98,15 +101,15 @@ fun PlayerStatsHeader(
             if (data.isPenaltyActive) {
                 Row(
                     modifier = Modifier
-                        .sciPanel(NeonRed.copy(0.5f), NeonRed.copy(0.1f), 6.dp)
+                        .sciPanel(colors.accentError.copy(0.5f), colors.accentError.copy(0.1f), 6.dp)
                         .padding(horizontal = 10.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalAlignment     = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Filled.Warning, null, tint = NeonRed, modifier = Modifier.size(13.dp))
+                    Icon(Icons.Filled.Warning, null, tint = colors.accentError, modifier = Modifier.size(13.dp))
                     Text(
                         text = stringResource(R.string.text_penalty), 
-                        color = NeonRed, 
+                        color = colors.accentError, 
                         fontFamily = RajdhaniFamily, 
                         fontSize = 10.sp
                     )
@@ -144,25 +147,26 @@ private fun RowScope.StatChip(
     label: String,
     value: String
 ) {
+    val colors = SystemTheme.colors
     Column(
         modifier = Modifier
             .weight(1f)
-            .glassCard(radius = 12.dp)
+            .glassCard(radius = SystemTheme.shapes.small)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Icon(icon, null, tint = OnSurfaceVariant, modifier = Modifier.size(14.dp))
+        Icon(icon, null, tint = colors.textSecondary, modifier = Modifier.size(14.dp))
         Text(
             text       = value,
-            color      = OnBackground,
+            color      = colors.textPrimary,
             fontFamily = TekoFamily,
             fontWeight = FontWeight.Bold,
             fontSize   = 18.sp
         )
         Text(
             text       = label,
-            color      = OnSurfaceVariant,
+            color      = colors.textSecondary,
             fontFamily = RajdhaniFamily,
             fontSize   = 8.sp
         )

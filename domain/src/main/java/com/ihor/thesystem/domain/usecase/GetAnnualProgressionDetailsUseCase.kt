@@ -9,6 +9,7 @@ import com.ihor.thesystem.domain.model.WeightHistoryWithId
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
+import com.ihor.thesystem.domain.repository.usesExternalLoad
 import com.ihor.thesystem.domain.util.AnnualProgressionPlanNoteParser
 import com.ihor.thesystem.domain.util.ParsedAnnualProgressionPlanNote
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +31,7 @@ class GetAnnualProgressionDetailsUseCase @Inject constructor(
             val historiesByExercise = histories.groupBy { it.exerciseId }
             AnnualProgressionDetailsData(
                 exercises = entries
+                    .filter { it.usesExternalLoad() }
                     .mapNotNull { entry ->
                         val parsedPlan = AnnualProgressionPlanNoteParser.parse(entry.targetWeightNote)
                             ?: return@mapNotNull null

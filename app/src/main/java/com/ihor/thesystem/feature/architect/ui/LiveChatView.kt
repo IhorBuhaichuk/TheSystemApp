@@ -24,7 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,13 +37,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ihor.thesystem.core.theme.AccentAi
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.BorderSubtle
-import com.ihor.thesystem.core.theme.TextMuted
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemControlHeight
+import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.asString
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
 
@@ -55,6 +53,7 @@ fun LiveChatView(
     onSendMessage: (Long, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     var messageText by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
 
@@ -74,8 +73,8 @@ fun LiveChatView(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(12.dp)
+            verticalArrangement = Arrangement.spacedBy(SystemItemSpacing),
+            contentPadding = PaddingValues(SystemItemSpacing)
         ) {
             if (history.isEmpty()) {
                 item {
@@ -91,7 +90,7 @@ fun LiveChatView(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(SystemItemSpacing),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -102,21 +101,13 @@ fun LiveChatView(
                 placeholder = {
                     Text(
                         text = "Запит до тренера",
-                        style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
+                        style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
                     )
                 },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = AccentPrimary.copy(alpha = 0.45f),
-                    unfocusedBorderColor = BorderSubtle,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary,
-                    cursorColor = AccentPrimary,
-                    focusedContainerColor = Color.White.copy(alpha = 0.025f),
-                    unfocusedContainerColor = Color.White.copy(alpha = 0.02f)
-                ),
-                shape = RoundedCornerShape(16.dp),
+                colors = systemOutlinedTextFieldColors(),
+                shape = RoundedCornerShape(SystemTheme.shapes.medium),
                 maxLines = 3,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary)
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.textPrimary)
             )
 
             IconButton(
@@ -128,21 +119,21 @@ fun LiveChatView(
                 },
                 enabled = messageText.isNotBlank(),
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(SystemControlHeight)
                     .clip(CircleShape)
                     .background(
-                        if (messageText.isNotBlank()) AccentPrimary.copy(alpha = 0.11f) else Color.White.copy(alpha = 0.035f)
+                        if (messageText.isNotBlank()) colors.accentPrimary.copy(alpha = 0.11f) else colors.overlayLight
                     )
                     .border(
                         1.dp,
-                        if (messageText.isNotBlank()) AccentPrimary.copy(alpha = 0.32f) else BorderSubtle,
+                        if (messageText.isNotBlank()) colors.accentPrimary.copy(alpha = 0.32f) else colors.borderSubtle,
                         CircleShape
                     )
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = null,
-                    tint = if (messageText.isNotBlank()) AccentPrimary else TextMuted,
+                    tint = if (messageText.isNotBlank()) colors.accentPrimary else colors.textMuted,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -152,9 +143,10 @@ fun LiveChatView(
 
 @Composable
 private fun LiveChatBubble(message: ChatMessage) {
+    val colors = SystemTheme.colors
     val isUser = message.role == ChatRole.USER
     val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
-    val accent = if (message.role == ChatRole.AI) AccentAi else AccentPrimary
+    val accent = if (message.role == ChatRole.AI) colors.accentAi else colors.accentPrimary
     val shape = if (isUser) {
         RoundedCornerShape(topStart = 16.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
     } else {
@@ -176,7 +168,7 @@ private fun LiveChatBubble(message: ChatMessage) {
                     ChatRole.SYSTEM -> "Система"
                 },
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = if (isUser) TextMuted else accent,
+                    color = if (isUser) colors.textMuted else accent,
                     fontWeight = FontWeight.Bold
                 )
             )
@@ -184,14 +176,14 @@ private fun LiveChatBubble(message: ChatMessage) {
                 modifier = Modifier
                     .widthIn(max = 290.dp)
                     .clip(shape)
-                    .background(if (isUser) Color.White.copy(alpha = 0.045f) else accent.copy(alpha = 0.07f))
-                    .border(1.dp, if (isUser) BorderSubtle else accent.copy(alpha = 0.2f), shape)
-                    .padding(13.dp)
+                    .background(if (isUser) colors.overlayLight else accent.copy(alpha = 0.07f))
+                    .border(1.dp, if (isUser) colors.borderSubtle else accent.copy(alpha = 0.20f), shape)
+                    .padding(SystemItemSpacing)
             ) {
                 Text(
                     text = message.text.asString(),
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextPrimary,
+                        color = colors.textPrimary,
                         fontWeight = FontWeight.Medium
                     )
                 )
@@ -202,16 +194,18 @@ private fun LiveChatBubble(message: ChatMessage) {
 
 @Composable
 private fun EmptyChatMessage() {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Text(
         text = "Чат порожній",
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.026f))
-            .border(1.dp, BorderSubtle, RoundedCornerShape(13.dp))
-            .padding(14.dp),
+            .clip(shape)
+            .background(colors.surfaceGlassSoft)
+            .border(1.dp, colors.borderSubtle, shape)
+            .padding(SystemCardPadding),
         style = MaterialTheme.typography.bodySmall.copy(
-            color = TextSecondary,
+            color = colors.textSecondary,
             fontWeight = FontWeight.Medium
         )
     )

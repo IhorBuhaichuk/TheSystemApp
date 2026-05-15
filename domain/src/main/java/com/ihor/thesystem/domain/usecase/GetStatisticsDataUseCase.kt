@@ -169,11 +169,11 @@ class GetStatisticsDataUseCase @Inject constructor(
         xpThisWeek: Int
     ): SystemInsight {
         val improvedEntry = matrixEntries
-            .filter { it.entry.currentWeight > it.entry.startWeight }
+            .filter { it.entry.usesExternalLoad() && it.entry.currentWeight > it.entry.startWeight }
             .maxByOrNull { it.entry.currentWeight - it.entry.startWeight }
 
         val weakestEntry = matrixEntries
-            .filter { it.entry.targetWeight > 0f }
+            .filter { it.entry.usesExternalLoad() && it.entry.targetWeight > 0f }
             .minByOrNull { it.entry.progressPercent }
 
         val improved = improvedEntry?.let { entry ->

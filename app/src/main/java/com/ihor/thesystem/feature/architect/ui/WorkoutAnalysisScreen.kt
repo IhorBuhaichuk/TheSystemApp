@@ -44,18 +44,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ihor.thesystem.core.theme.AccentAi
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.AccentSuccess
-import com.ihor.thesystem.core.theme.AccentWarning
-import com.ihor.thesystem.core.theme.BorderSubtle
-import com.ihor.thesystem.core.theme.SystemBackground
+import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
-import com.ihor.thesystem.core.theme.SystemSurfaceGlass
-import com.ihor.thesystem.core.theme.TextMuted
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
@@ -86,26 +78,27 @@ fun WorkoutAnalysisScreen(
     viewModel: WorkoutAnalysisViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val colors = SystemTheme.colors
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(SystemBackground)
+            .background(colors.background)
     ) {
         RpgStatusBackdrop()
 
         when (val state = uiState) {
             UiState.Loading -> WorkoutAnalysisLoading()
             is UiState.Error -> WorkoutAnalysisMessage(
-                title = "Аналіз недоступний",
+                title = "РђРЅР°Р»С–Р· РЅРµРґРѕСЃС‚СѓРїРЅРёР№",
                 message = state.message.asString(),
                 onBack = onBack,
                 onRetry = viewModel::loadAnalysis
             )
             is UiState.Content -> if (state.data == null) {
                 WorkoutAnalysisMessage(
-                    title = "Немає завершеного тренування",
-                    message = "Система сформує аналіз після першого збереженого тренування.",
+                    title = "РќРµРјР°С” Р·Р°РІРµСЂС€РµРЅРѕРіРѕ С‚СЂРµРЅСѓРІР°РЅРЅСЏ",
+                    message = "РЎРёСЃС‚РµРјР° СЃС„РѕСЂРјСѓС” Р°РЅР°Р»С–Р· РїС–СЃР»СЏ РїРµСЂС€РѕРіРѕ Р·Р±РµСЂРµР¶РµРЅРѕРіРѕ С‚СЂРµРЅСѓРІР°РЅРЅСЏ.",
                     onBack = onBack,
                     onRetry = viewModel::loadAnalysis
                 )
@@ -133,7 +126,7 @@ private fun WorkoutAnalysisContent(
             .statusBarsPadding()
             .navigationBarsPadding()
             .padding(horizontal = SystemScreenPadding)
-            .padding(top = 16.dp, bottom = 24.dp),
+            .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
         WorkoutAnalysisHeader(
@@ -173,6 +166,7 @@ private fun WorkoutAnalysisHeader(
     analysis: WorkoutAnalysisData,
     onBack: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -183,28 +177,28 @@ private fun WorkoutAnalysisHeader(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(1.dp, BorderSubtle, CircleShape)
+                .background(colors.overlayLight)
+                .border(1.dp, colors.borderSubtle, CircleShape)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Назад",
-                tint = TextSecondary
+                contentDescription = "РќР°Р·Р°Рґ",
+                tint = colors.textSecondary
             )
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
             Text(
-                text = "Аналіз тренування",
+                text = "РђРЅР°Р»С–Р· С‚СЂРµРЅСѓРІР°РЅРЅСЏ",
                 style = MaterialTheme.typography.headlineSmall.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Black
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = listOfNotNull(analysis.workoutName, analysis.sessionTimestamp.formatDate()).joinToString(" · "),
-                style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
+                text = listOfNotNull(analysis.workoutName, analysis.sessionTimestamp.formatDate()).joinToString(" В· "),
+                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -214,29 +208,30 @@ private fun WorkoutAnalysisHeader(
 
 @Composable
 private fun ExecutionBlock(execution: WorkoutExecutionAnalysis) {
+    val colors = SystemTheme.colors
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Виконання плану",
-                subtitle = "Поточне або останнє завершене тренування"
+                title = "Р’РёРєРѕРЅР°РЅРЅСЏ РїР»Р°РЅСѓ",
+                subtitle = "РџРѕС‚РѕС‡РЅРµ Р°Р±Рѕ РѕСЃС‚Р°РЅРЅС” Р·Р°РІРµСЂС€РµРЅРµ С‚СЂРµРЅСѓРІР°РЅРЅСЏ"
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SystemMetricCard(
-                    label = "Підходи",
+                    label = "РџС–РґС…РѕРґРё",
                     value = "${execution.completedSets}/${execution.plannedSets.coerceAtLeast(execution.completedSets)}",
-                    accent = AccentPrimary,
+                    accent = colors.accentPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 SystemMetricCard(
-                    label = "Вправи",
+                    label = "Р’РїСЂР°РІРё",
                     value = execution.completedExercises.toString(),
-                    accent = AccentSuccess,
+                    accent = colors.accentSuccess,
                     modifier = Modifier.weight(1f)
                 )
                 SystemMetricCard(
-                    label = "Пропущено",
+                    label = "РџСЂРѕРїСѓС‰РµРЅРѕ",
                     value = execution.skippedExercises.toString(),
-                    accent = AccentWarning,
+                    accent = colors.accentWarning,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -249,11 +244,12 @@ private fun MotivationLevelBlock(
     result: MotivationLevelResult,
     onInfoClick: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard(active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Мотиваційний рівень",
-                subtitle = "Domain score за реальними метриками",
+                title = "РњРѕС‚РёРІР°С†С–Р№РЅРёР№ СЂС–РІРµРЅСЊ",
+                subtitle = "Domain score Р·Р° СЂРµР°Р»СЊРЅРёРјРё РјРµС‚СЂРёРєР°РјРё",
                 trailing = {
                     SmallInfoButton(onClick = onInfoClick)
                 }
@@ -267,7 +263,7 @@ private fun MotivationLevelBlock(
                     Text(
                         text = result.title,
                         style = MaterialTheme.typography.titleLarge.copy(
-                            color = AccentAi,
+                            color = colors.accentAi,
                             fontWeight = FontWeight.Black
                         ),
                         maxLines = 1,
@@ -275,20 +271,20 @@ private fun MotivationLevelBlock(
                     )
                     Text(
                         text = result.description,
-                        style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
+                        style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
                     )
                 }
                 Text(
                     text = "${result.finalScore}/100",
                     style = MaterialTheme.typography.titleLarge.copy(
-                        color = TextPrimary,
+                        color = colors.textPrimary,
                         fontWeight = FontWeight.Black
                     )
                 )
             }
             SystemProgressBar(
                 progress = result.finalScore / 100f,
-                accent = AccentAi,
+                accent = colors.accentAi,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -297,19 +293,20 @@ private fun MotivationLevelBlock(
 
 @Composable
 private fun SmallInfoButton(onClick: () -> Unit) {
+    val colors = SystemTheme.colors
     Box(
         modifier = Modifier
             .size(30.dp)
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.035f))
-            .border(1.dp, AccentAi.copy(alpha = 0.28f), CircleShape)
+            .background(colors.surfaceGlassSoft)
+            .border(1.dp, colors.accentAi.copy(alpha = 0.28f), CircleShape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = Icons.Filled.Info,
-            contentDescription = "Як розраховується рівень",
-            tint = AccentAi,
+            contentDescription = "РЇРє СЂРѕР·СЂР°С…РѕРІСѓС”С‚СЊСЃСЏ СЂС–РІРµРЅСЊ",
+            tint = colors.accentAi,
             modifier = Modifier.size(16.dp)
         )
     }
@@ -320,14 +317,15 @@ private fun MotivationInfoDialog(
     result: MotivationLevelResult,
     onDismiss: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     Dialog(onDismissRequest = onDismiss) {
-        DarkGlassCard(active = true, contentPadding = 18.dp) {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                SystemSectionHeader(title = "Як розраховується рівень")
+        DarkGlassCard(active = true, contentPadding = SystemCardPadding) {
+            Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
+                SystemSectionHeader(title = "РЇРє СЂРѕР·СЂР°С…РѕРІСѓС”С‚СЊСЃСЏ СЂС–РІРµРЅСЊ")
                 Text(
                     text = WorkoutAnalysisUiTextMapper.motivationExplanation,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextSecondary,
+                        color = colors.textSecondary,
                         fontWeight = FontWeight.Medium
                     )
                 )
@@ -337,9 +335,9 @@ private fun MotivationInfoDialog(
                     }
                 }
                 SystemButton(
-                    text = "Зрозуміло",
+                    text = "Р—СЂРѕР·СѓРјС–Р»Рѕ",
                     onClick = onDismiss,
-                    accent = AccentAi,
+                    accent = colors.accentAi,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -349,6 +347,7 @@ private fun MotivationInfoDialog(
 
 @Composable
 private fun BreakdownRow(label: String, score: Int) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -356,12 +355,12 @@ private fun BreakdownRow(label: String, score: Int) {
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
+            style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
         )
         Text(
             text = "$score/100",
             style = MaterialTheme.typography.bodySmall.copy(
-                color = TextPrimary,
+                color = colors.textPrimary,
                 fontWeight = FontWeight.Bold
             )
         )
@@ -373,36 +372,40 @@ private fun ExerciseProgressBlock(
     progress: List<ExerciseProgressAnalysis>,
     isInitialDataCollection: Boolean
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Прогрес",
+                title = "РџСЂРѕРіСЂРµСЃ",
                 subtitle = if (isInitialDataCollection) {
-                    "Стартова база без критики"
+                    "РЎС‚Р°СЂС‚РѕРІР° Р±Р°Р·Р° Р±РµР· РєСЂРёС‚РёРєРё"
                 } else {
-                    "Поточний результат проти попереднього"
+                    "РџРѕС‚РѕС‡РЅРёР№ СЂРµР·СѓР»СЊС‚Р°С‚ РїСЂРѕС‚Рё РїРѕРїРµСЂРµРґРЅСЊРѕРіРѕ"
                 }
             )
+            if (progress.isEmpty()) {
+                EmptyAnalysisText(text = "Р’Р°РіРѕРІРёС… РїС–РґС…РѕРґС–РІ РґР»СЏ 1RM Сѓ С†СЊРѕРјСѓ С‚СЂРµРЅСѓРІР°РЅРЅС– РЅРµРјР°С”.")
+            }
             progress.forEach { item ->
                 val hideCriticism = isInitialDataCollection && item.status == ExerciseProgressStatus.Decreased
                 val previousOneRepMax = item.previousEstimatedOneRepMax
                 AnalysisRow(
                     title = item.exerciseName,
-                    primary = "Поточний 1RM: ${item.currentEstimatedOneRepMax.formatWeight()} кг",
+                    primary = "РџРѕС‚РѕС‡РЅРёР№ 1RM: ${item.currentEstimatedOneRepMax.formatWeight()} РєРі",
                     secondary = when {
                         hideCriticism ->
-                            "Це корисна стартова точка для майбутнього графіка."
+                            "Р¦Рµ РєРѕСЂРёСЃРЅР° СЃС‚Р°СЂС‚РѕРІР° С‚РѕС‡РєР° РґР»СЏ РјР°Р№Р±СѓС‚РЅСЊРѕРіРѕ РіСЂР°С„С–РєР°."
                         previousOneRepMax != null ->
-                            "Попередній: ${previousOneRepMax.formatWeight()} кг · ? ${item.difference.formatSignedWeight()}"
+                            "РџРѕРїРµСЂРµРґРЅС–Р№: ${previousOneRepMax.formatWeight()} РєРі В· Р·РјС–РЅР° ${item.difference.formatSignedWeight()}"
                         else ->
-                            "Попереднього результату ще немає"
+                            "РџРѕРїРµСЂРµРґРЅСЊРѕРіРѕ СЂРµР·СѓР»СЊС‚Р°С‚Сѓ С‰Рµ РЅРµРјР°С”"
                     },
                     status = if (hideCriticism) {
-                        "Збір бази"
+                        "Р—Р±С–СЂ Р±Р°Р·Рё"
                     } else {
                         WorkoutAnalysisUiTextMapper.exerciseStatusLabel(item.status)
                     },
-                    accent = if (hideCriticism) AccentAi else item.status.statusAccent()
+                    accent = if (hideCriticism) colors.accentAi else item.status.statusAccent()
                 )
             }
         }
@@ -415,36 +418,40 @@ private fun AnnualProgressBlock(
     isInitialDataCollection: Boolean,
     adaptationRemainingDays: Long
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Відносно річної прогресії",
+                title = "Р’С–РґРЅРѕСЃРЅРѕ СЂС–С‡РЅРѕС— РїСЂРѕРіСЂРµСЃС–С—",
                 subtitle = if (isInitialDataCollection) {
-                    "Збір бази, ще ${adaptationRemainingDays} дн."
+                    "Р—Р±С–СЂ Р±Р°Р·Рё, С‰Рµ ${adaptationRemainingDays} РґРЅ."
                 } else {
-                    "Факт проти збереженого плану"
+                    "Р¤Р°РєС‚ РїСЂРѕС‚Рё Р·Р±РµСЂРµР¶РµРЅРѕРіРѕ РїР»Р°РЅСѓ"
                 }
             )
+            if (progress.isEmpty()) {
+                EmptyAnalysisText(text = "Р’Р°РіРѕРІРѕРіРѕ С„Р°РєС‚Сѓ РґР»СЏ СЂС–С‡РЅРѕРіРѕ РїР»Р°РЅСѓ РІ С†СЊРѕРјСѓ С‚СЂРµРЅСѓРІР°РЅРЅС– РЅРµРјР°С”.")
+            }
             progress.forEach { item ->
                 val isCollectingBase = isInitialDataCollection && item.status == AnnualProgressStatus.NoPlan
                 val plannedWeight = item.plannedWeight
                 AnalysisRow(
                     title = item.exerciseName,
-                    primary = "Факт: ${item.factWeight.formatWeight()} кг",
+                    primary = "Р¤Р°РєС‚: ${item.factWeight.formatWeight()} РєРі",
                     secondary = when {
                         plannedWeight != null ->
-                            "План: ${plannedWeight.formatWeight()} кг · ? ${item.difference.formatSignedWeight()}"
+                            "РџР»Р°РЅ: ${plannedWeight.formatWeight()} РєРі В· Р·РјС–РЅР° ${item.difference.formatSignedWeight()}"
                         isCollectingBase ->
-                            "Перші 2 тижні система збирає стартові дані. Графік ще не оцінюється."
+                            "РџРµСЂС€С– 2 С‚РёР¶РЅС– СЃРёСЃС‚РµРјР° Р·Р±РёСЂР°С” СЃС‚Р°СЂС‚РѕРІС– РґР°РЅС–. Р“СЂР°С„С–Рє С‰Рµ РЅРµ РѕС†С–РЅСЋС”С‚СЊСЃСЏ."
                         else ->
-                            "Річний план ще можна сформувати на основі зібраної бази."
+                            "Р С–С‡РЅРёР№ РїР»Р°РЅ С‰Рµ РјРѕР¶РЅР° СЃС„РѕСЂРјСѓРІР°С‚Рё РЅР° РѕСЃРЅРѕРІС– Р·С–Р±СЂР°РЅРѕС— Р±Р°Р·Рё."
                     },
                     status = if (isCollectingBase) {
-                        "Збір бази"
+                        "Р—Р±С–СЂ Р±Р°Р·Рё"
                     } else {
                         WorkoutAnalysisUiTextMapper.annualStatusLabel(item.status)
                     },
-                    accent = if (isCollectingBase) AccentAi else item.status.statusAccent()
+                    accent = if (isCollectingBase) colors.accentAi else item.status.statusAccent()
                 )
             }
         }
@@ -453,19 +460,23 @@ private fun AnnualProgressBlock(
 
 @Composable
 private fun RecommendationsBlock(recommendations: List<NextWorkoutRecommendationAnalysis>) {
+    val colors = SystemTheme.colors
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Рекомендації на наступне",
-                subtitle = "Вага і повторення з існуючої логіки"
+                title = "Р РµРєРѕРјРµРЅРґР°С†С–С— РЅР° РЅР°СЃС‚СѓРїРЅРµ",
+                subtitle = "Р’Р°РіР° С– РїРѕРІС‚РѕСЂРµРЅРЅСЏ Р· С–СЃРЅСѓСЋС‡РѕС— Р»РѕРіС–РєРё"
             )
+            if (recommendations.isEmpty()) {
+                EmptyAnalysisText(text = "Р’Р°РіРѕРІРёС… СЂРµРєРѕРјРµРЅРґР°С†С–Р№ РґР»СЏ С†СЊРѕРіРѕ С‚СЂРµРЅСѓРІР°РЅРЅСЏ РЅРµРјР°С”.")
+            }
             recommendations.forEach { recommendation ->
                 AnalysisRow(
                     title = recommendation.exerciseName,
-                    primary = "${recommendation.recommendedWeight.formatWeight()} кг · ${recommendation.recommendedSets} x ${recommendation.recommendedReps}",
+                    primary = "${recommendation.recommendedWeight.formatWeight()} РєРі В· ${recommendation.recommendedSets} x ${recommendation.recommendedReps}",
                     secondary = recommendation.reason,
-                    status = "Наступний сет",
-                    accent = AccentAi
+                    status = "РќР°СЃС‚СѓРїРЅРёР№ СЃРµС‚",
+                    accent = colors.accentAi
                 )
             }
         }
@@ -474,32 +485,34 @@ private fun RecommendationsBlock(recommendations: List<NextWorkoutRecommendation
 
 @Composable
 private fun SystemInsightBlock(text: String) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Системний фідбек",
-                subtitle = "Збережений AI-висновок"
+                title = "РЎРёСЃС‚РµРјРЅРёР№ С„С–РґР±РµРє",
+                subtitle = "Р—Р±РµСЂРµР¶РµРЅРёР№ AI-РІРёСЃРЅРѕРІРѕРє"
             )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(AccentAi.copy(alpha = 0.075f))
-                    .border(1.dp, AccentAi.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
-                    .padding(13.dp),
+                    .clip(shape)
+                    .background(colors.accentAi.copy(alpha = 0.075f))
+                    .border(1.dp, colors.accentAi.copy(alpha = 0.18f), shape)
+                    .padding(SystemItemSpacing),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 Icon(
                     imageVector = Icons.Filled.Psychology,
                     contentDescription = null,
-                    tint = AccentAi,
+                    tint = colors.accentAi,
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
                     text = text,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextSecondary,
+                        color = colors.textSecondary,
                         fontWeight = FontWeight.Medium
                     ),
                     modifier = Modifier.weight(1f)
@@ -510,6 +523,18 @@ private fun SystemInsightBlock(text: String) {
 }
 
 @Composable
+private fun EmptyAnalysisText(text: String) {
+    val colors = SystemTheme.colors
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall.copy(
+            color = colors.textMuted,
+            fontWeight = FontWeight.Medium
+        )
+    )
+}
+
+@Composable
 private fun AnalysisRow(
     title: String,
     primary: String,
@@ -517,21 +542,23 @@ private fun AnalysisRow(
     status: String,
     accent: Color
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(SystemSurfaceGlass.copy(alpha = 0.58f))
-            .border(1.dp, BorderSubtle, RoundedCornerShape(14.dp))
-            .padding(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .clip(shape)
+            .background(colors.surfaceGlass.copy(alpha = 0.58f))
+            .border(1.dp, colors.borderSubtle, shape)
+            .padding(SystemItemSpacing),
+        horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 ),
                 maxLines = 1,
@@ -540,7 +567,7 @@ private fun AnalysisRow(
             Text(
                 text = primary,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = TextSecondary,
+                    color = colors.textSecondary,
                     fontWeight = FontWeight.SemiBold
                 ),
                 maxLines = 1,
@@ -548,7 +575,7 @@ private fun AnalysisRow(
             )
             Text(
                 text = secondary,
-                style = MaterialTheme.typography.bodySmall.copy(color = TextMuted),
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -559,8 +586,9 @@ private fun AnalysisRow(
 
 @Composable
 private fun WorkoutAnalysisLoading() {
+    val colors = SystemTheme.colors
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = AccentAi)
+        CircularProgressIndicator(color = colors.accentAi)
     }
 }
 
@@ -571,13 +599,14 @@ private fun WorkoutAnalysisMessage(
     onBack: () -> Unit,
     onRetry: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     Column(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
             .padding(horizontal = SystemScreenPadding)
-            .padding(top = 16.dp, bottom = 24.dp),
+            .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -586,31 +615,31 @@ private fun WorkoutAnalysisMessage(
                 modifier = Modifier
                     .size(42.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.04f))
-                    .border(1.dp, BorderSubtle, CircleShape)
+                    .background(colors.overlayLight)
+                    .border(1.dp, colors.borderSubtle, CircleShape)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = TextSecondary)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "РќР°Р·Р°Рґ", tint = colors.textSecondary)
             }
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Black
                 )
             )
         }
         Spacer(modifier = Modifier.height(32.dp))
         DarkGlassCard {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
                 Text(
                     text = message,
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
+                    style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
                 )
                 SystemButton(
-                    text = "Оновити",
+                    text = "РћРЅРѕРІРёС‚Рё",
                     icon = Icons.Filled.Refresh,
                     onClick = onRetry,
-                    accent = AccentAi,
+                    accent = colors.accentAi,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -618,20 +647,26 @@ private fun WorkoutAnalysisMessage(
     }
 }
 
-private fun ExerciseProgressStatus.statusAccent(): Color =
-    when (this) {
-        ExerciseProgressStatus.Improved -> AccentSuccess
-        ExerciseProgressStatus.Stable -> AccentPrimary
-        ExerciseProgressStatus.Decreased -> AccentWarning
+@Composable
+private fun ExerciseProgressStatus.statusAccent(): Color {
+    val colors = SystemTheme.colors
+    return when (this) {
+        ExerciseProgressStatus.Improved -> colors.accentSuccess
+        ExerciseProgressStatus.Stable -> colors.accentPrimary
+        ExerciseProgressStatus.Decreased -> colors.accentWarning
     }
+}
 
-private fun AnnualProgressStatus.statusAccent(): Color =
-    when (this) {
-        AnnualProgressStatus.OnPlan -> AccentSuccess
-        AnnualProgressStatus.BelowPlan -> AccentWarning
-        AnnualProgressStatus.AbovePlan -> AccentPrimary
-        AnnualProgressStatus.NoPlan -> TextMuted
+@Composable
+private fun AnnualProgressStatus.statusAccent(): Color {
+    val colors = SystemTheme.colors
+    return when (this) {
+        AnnualProgressStatus.OnPlan -> colors.accentSuccess
+        AnnualProgressStatus.BelowPlan -> colors.accentWarning
+        AnnualProgressStatus.AbovePlan -> colors.accentPrimary
+        AnnualProgressStatus.NoPlan -> colors.textMuted
     }
+}
 
 private fun Long.formatDate(): String =
     Instant.ofEpochMilli(this)
@@ -641,8 +676,8 @@ private fun Long.formatDate(): String =
 private fun Double?.formatSignedWeight(): String =
     this?.let {
         val prefix = if (it > 0.0) "+" else ""
-        "$prefix${it.formatWeight()} кг"
-    } ?: "—"
+        "$prefix${it.formatWeight()} РєРі"
+    } ?: "вЂ”"
 
 private fun Double.formatWeight(): String =
     if (this % 1.0 == 0.0) {

@@ -129,6 +129,11 @@ class StatisticsViewModel @Inject constructor(
     }
 
     fun onConfirmSetup(exerciseId: Int, start: String, target: String) {
+        val setupState = _dialogState.value as? StatisticsDialogState.SetupMatrix
+        if (setupState?.entry?.usesExternalLoad == false) {
+            onDismissDialog()
+            return
+        }
         viewModelScope.launch {
             try {
                 updateMatrixGoalsUseCase(exerciseId, start.toFloatOrNull() ?: 0f, target.toFloatOrNull() ?: 0f)

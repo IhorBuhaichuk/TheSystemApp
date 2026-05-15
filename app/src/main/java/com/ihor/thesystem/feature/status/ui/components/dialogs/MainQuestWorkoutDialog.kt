@@ -1,31 +1,35 @@
 package com.ihor.thesystem.feature.status.ui.components.dialogs
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.ihor.thesystem.core.theme.RajdhaniFamily
-import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
-import com.ihor.thesystem.feature.status.ui.components.workout.ActiveDayCard
-import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.window.DialogProperties
+import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.SystemIconButton
+import com.ihor.thesystem.feature.status.ui.components.workout.ActiveDayCard
+import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
+import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 @Composable
 fun MainQuestWorkoutDialog(
@@ -38,23 +42,22 @@ fun MainQuestWorkoutDialog(
     onFinishWorkout: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val colors = SystemTheme.colors
+
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false
-        )
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF020408))
+                .background(colors.background)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(top = 16.dp)
             ) {
-                // Top Row: Title and Close button
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -63,22 +66,18 @@ fun MainQuestWorkoutDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "ТРЕНУВАННЯ",
+                        text = "Тренування",
                         style = MaterialTheme.typography.headlineSmall.copy(
-                            color = Color.White,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontFamily = RajdhaniFamily,
-                            letterSpacing = 2.sp
+                            color = colors.textPrimary,
+                            fontWeight = FontWeight.ExtraBold
                         )
                     )
 
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = Color.White
-                        )
-                    }
+                    SystemIconButton(
+                        icon = Icons.Default.Close,
+                        contentDescription = "Close",
+                        onClick = onDismiss
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -99,34 +98,23 @@ fun MainQuestWorkoutDialog(
                                 onSetCompleted = onSetCompleted,
                                 onOpenSetup = onOpenSetup
                             )
-                            
+
                             Spacer(modifier = Modifier.height(32.dp))
 
-                            Button(
+                            SystemButton(
+                                text = "Завершити тренування",
                                 onClick = onFinishWorkout,
+                                glow = true,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(56.dp)
-                                    .padding(bottom = 8.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF00F0FF),
-                                    contentColor = Color.Black
-                                )
-                            ) {
-                                Text(
-                                    text = "ЗАВЕРШИТИ ТРЕНУВАННЯ",
-                                    fontWeight = FontWeight.Black,
-                                    letterSpacing = 1.5.sp,
-                                    fontFamily = RajdhaniFamily
-                                )
-                            }
-                            
+                                    .padding(bottom = 8.dp)
+                            )
+
                             Spacer(modifier = Modifier.height(32.dp))
                         }
                     } else {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = Color(0xFF00F0FF))
+                            CircularProgressIndicator(color = colors.accentPrimary)
                         }
                     }
                 }

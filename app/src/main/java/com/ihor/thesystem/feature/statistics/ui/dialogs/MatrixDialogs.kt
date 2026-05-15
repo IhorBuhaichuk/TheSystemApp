@@ -5,7 +5,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -19,15 +18,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.SystemDialogContainer
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
@@ -37,16 +39,22 @@ fun SetupMatrixDialog(
     exerciseName: String,
     initialStart: String,
     initialTarget: String,
+    usesExternalLoad: Boolean = true,
     onConfirm: (String, String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var start by remember { mutableStateOf(initialStart) }
-    var target by remember { mutableStateOf(initialTarget) }
+    val colors = SystemTheme.colors
+    var start by remember(initialStart, usesExternalLoad) {
+        mutableStateOf(if (usesExternalLoad) initialStart else "")
+    }
+    var target by remember(initialTarget, usesExternalLoad) {
+        mutableStateOf(if (usesExternalLoad) initialTarget else "")
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         PremiumDialogContainer(
             title = "Налаштування матриці",
-            accentColor = AccentPrimary,
+            accentColor = colors.accentPrimary,
             onDismiss = onDismiss
         ) {
             Column(
@@ -56,21 +64,37 @@ fun SetupMatrixDialog(
                 Text(
                     text = exerciseName,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        color = TextPrimary,
+                        color = colors.textPrimary,
                         fontWeight = FontWeight.Bold
                     ),
                     maxLines = 2
                 )
                 
-                PremiumInputField(label = "Стартова вага (кг)", value = start, accentColor = AccentPrimary) { start = it }
-                PremiumInputField(label = "Цільова вага (кг)", value = target, accentColor = AccentPrimary) { target = it }
+                if (usesExternalLoad) {
+                    PremiumInputField(label = "Стартова вага (кг)", value = start, accentColor = colors.accentPrimary) { start = it }
+                    PremiumInputField(label = "Цільова вага (кг)", value = target, accentColor = colors.accentPrimary) { target = it }
+                } else {
+                    Text(
+                        text = "Ця вправа не використовує зовнішню вагу. Прогрес фіксується через повторення або час у логуванні підходів.",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = colors.textSecondary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 PremiumDialogButton(
-                    text = "Підтвердити",
-                    color = AccentPrimary,
-                    onClick = { onConfirm(start, target) }
+                    text = if (usesExternalLoad) "Підтвердити" else "Зрозуміло",
+                    color = colors.accentPrimary,
+                    onClick = {
+                        if (usesExternalLoad) {
+                            onConfirm(start, target)
+                        } else {
+                            onDismiss()
+                        }
+                    }
                 )
             }
         }
@@ -89,12 +113,13 @@ fun LogWorkoutSetsDialog(
     onDismiss: () -> Unit,
     existingLogs: List<ExerciseSet> = emptyList()
 ) {
+    val colors = SystemTheme.colors
     var feedback by remember(existingLogs) { mutableStateOf(existingLogs.firstOrNull()?.userFeedback ?: "") }
 
     Dialog(onDismissRequest = onDismiss) {
         PremiumDialogContainer(
             title = "ЛОГУВАННЯ ПІДХОДІВ",
-            accentColor = NeonCyan,
+            accentColor = colors.accentPrimary,
             onDismiss = onDismiss
         ) {
             Column(
@@ -104,9 +129,9 @@ fun LogWorkoutSetsDialog(
                 Text(
                     text = exerciseName.uppercase(),
                     style = MaterialTheme.typography.titleMedium.copy(
-                        color = Color.White,
+                        color = colors.textPrimary,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
+                        letterSpacing = 0.sp
                     )
                 )
                 
@@ -121,7 +146,7 @@ fun LogWorkoutSetsDialog(
                             Text(
                                 text = "СЕТ ${index + 1}",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color.White.copy(alpha = 0.4f),
+                                    color = colors.textMuted,
                                     fontWeight = FontWeight.Bold
                                 ),
                                 modifier = Modifier.width(40.dp)
@@ -131,7 +156,7 @@ fun LogWorkoutSetsDialog(
                                 SmallPremiumInputField(
                                     hint = "Вага",
                                     value = set.weight,
-                                    accentColor = NeonCyan,
+                                    accentColor = colors.accentPrimary,
                                     keyboardType = KeyboardType.Decimal,
                                     modifier = Modifier.weight(1f)
                                 ) { onUpdate(set.id, it, set.reps) }
@@ -140,7 +165,7 @@ fun LogWorkoutSetsDialog(
                             SmallPremiumInputField(
                                 hint = trackingMode.valueLabel,
                                 value = set.reps,
-                                accentColor = NeonCyan,
+                                accentColor = colors.accentPrimary,
                                 keyboardType = if (trackingMode.usesTimeInput) KeyboardType.Text else KeyboardType.Number,
                                 modifier = Modifier.weight(1f)
                             ) { onUpdate(set.id, set.weight, it) }
@@ -151,48 +176,42 @@ fun LogWorkoutSetsDialog(
                 // Керування підходами
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
                 ) {
                     IconButton(
                         onClick = onRemove,
                         modifier = Modifier
                             .weight(1f)
                             .height(44.dp)
-                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
+                            .background(colors.overlayLight, RoundedCornerShape(SystemTheme.shapes.small))
                     ) {
-                        Icon(Icons.Default.Remove, contentDescription = null, tint = NeonRed)
+                        Icon(Icons.Default.Remove, contentDescription = null, tint = colors.accentError)
                     }
                     IconButton(
                         onClick = onAdd,
                         modifier = Modifier
                             .weight(1f)
                             .height(44.dp)
-                            .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
+                            .background(colors.overlayLight, RoundedCornerShape(SystemTheme.shapes.small))
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, tint = NeonGreen)
+                        Icon(Icons.Default.Add, contentDescription = null, tint = colors.accentSuccess)
                     }
                 }
 
                 OutlinedTextField(
                     value = feedback,
                     onValueChange = { feedback = it },
-                    placeholder = { Text("Фітбек (відчуття, памп...)", color = Color.White.copy(alpha = 0.2f)) },
+                    placeholder = { Text("Фітбек (відчуття, памп...)", color = colors.textMuted) },
                     maxLines = 2,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = NeonCyan.copy(alpha = 0.5f),
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-                        cursorColor = NeonCyan,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
-                    ),
-                    textStyle = MaterialTheme.typography.bodyMedium
+                    shape = RoundedCornerShape(SystemTheme.shapes.medium),
+                    colors = systemOutlinedTextFieldColors(accent = colors.accentPrimary),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.textPrimary)
                 )
 
                 PremiumDialogButton(
                     text = "ЗАЛОГУВАТИ",
-                    color = NeonCyan,
+                    color = colors.accentPrimary,
                     onClick = { onSave(feedback) }
                 )
             }
@@ -207,37 +226,19 @@ fun PremiumDialogContainer(
     onDismiss: () -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(22.dp)
-    Box(
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .clip(shape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        SystemSurfaceGlassStrong,
-                        SystemSurfaceGlass,
-                        SystemSurfaceGlass.copy(alpha = 0.64f)
-                    )
-                )
-            )
-            .border(
-                1.dp,
-                Brush.linearGradient(
-                    listOf(
-                        Color.White.copy(alpha = 0.14f),
-                        accentColor.copy(alpha = 0.24f),
-                        BorderSubtle
-                    )
-                ),
-                shape
-            )
+    val colors = SystemTheme.colors
+    SystemDialogContainer(
+        modifier = Modifier.fillMaxWidth(0.92f),
+        accent = accentColor,
+        contentPadding = SystemCardPadding
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = 560.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(18.dp)
+                .padding(2.dp),
+            verticalArrangement = Arrangement.spacedBy(SystemCardPadding)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -247,7 +248,7 @@ fun PremiumDialogContainer(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall.copy(
-                        color = TextPrimary,
+                        color = colors.textPrimary,
                         fontWeight = FontWeight.Bold
                     ),
                     maxLines = 1
@@ -256,16 +257,13 @@ fun PremiumDialogContainer(
                     onClick = onDismiss,
                     modifier = Modifier
                         .size(34.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.035f))
-                        .border(1.dp, BorderSubtle, RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(SystemTheme.shapes.small))
+                        .background(colors.overlayLight)
+                        .border(1.dp, colors.borderSubtle, RoundedCornerShape(SystemTheme.shapes.small))
                 ) {
-                    Icon(Icons.Default.Close, null, tint = TextSecondary, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Close, null, tint = colors.textSecondary, modifier = Modifier.size(18.dp))
                 }
             }
-
-            Spacer(modifier = Modifier.height(18.dp))
-            
             content()
         }
     }
@@ -278,11 +276,12 @@ private fun PremiumInputField(
     accentColor: Color,
     onValueChange: (String) -> Unit
 ) {
+    val colors = SystemTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = TextSecondary,
+                color = colors.textSecondary,
                 fontWeight = FontWeight.SemiBold
             )
         )
@@ -291,18 +290,10 @@ private fun PremiumInputField(
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            shape = RoundedCornerShape(14.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = accentColor,
-                unfocusedBorderColor = BorderSubtle,
-                focusedContainerColor = Color.White.copy(alpha = 0.04f),
-                unfocusedContainerColor = Color.White.copy(alpha = 0.02f),
-                cursorColor = accentColor,
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary
-            ),
+            shape = RoundedCornerShape(SystemTheme.shapes.medium),
+            colors = systemOutlinedTextFieldColors(accent = accentColor),
             textStyle = MaterialTheme.typography.bodyLarge.copy(
-                color = TextPrimary,
+                color = colors.textPrimary,
                 fontWeight = FontWeight.Bold
             ),
             singleLine = true
@@ -319,21 +310,25 @@ private fun SmallPremiumInputField(
     modifier: Modifier = Modifier,
     onValueChange: (String) -> Unit
 ) {
+    val colors = SystemTheme.colors
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(hint, fontSize = 12.sp, color = Color.White.copy(alpha = 0.2f)) },
+        placeholder = {
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.labelSmall.copy(color = colors.textMuted)
+            )
+        },
         modifier = modifier,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = accentColor,
-            unfocusedBorderColor = Color.White.copy(alpha = 0.1f),
-            cursorColor = accentColor,
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White
+        shape = RoundedCornerShape(SystemTheme.shapes.small),
+        colors = systemOutlinedTextFieldColors(accent = accentColor),
+        textStyle = MaterialTheme.typography.bodyMedium.copy(
+            color = colors.textPrimary,
+            fontWeight = FontWeight.Bold,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         ),
-        textStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center),
         singleLine = true
     )
 }
@@ -344,31 +339,12 @@ private fun PremiumDialogButton(
     color: Color,
     onClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        color.copy(alpha = 0.18f),
-                        Color.White.copy(alpha = 0.045f)
-                    )
-                )
-            )
-            .border(1.dp, color.copy(alpha = 0.52f), RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge.copy(
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold
-            ),
-            maxLines = 1
-        )
-    }
+    SystemButton(
+        text = text,
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        accent = color,
+        glow = true
+    )
 }
 

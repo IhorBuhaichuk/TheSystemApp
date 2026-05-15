@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -24,18 +27,16 @@ fun TonnageChartCanvas(
     entries: List<DailyTonnageStats>,
     modifier: Modifier = Modifier
 ) {
-    // Якщо у вас у темі є ці кольори, можете імпортувати їх, тут використано хардкод для надійності
-    val backgroundDeep = Color(0xFF0A0A0A)
-    val neonGold = Color(0xFFFFD700)
-
+    val colors = SystemTheme.colors
     val textMeasurer = rememberTextMeasurer()
+    val labelStyle = TextStyle(color = colors.textSecondary, fontSize = 10.sp)
 
     Canvas(
         modifier = modifier
             .fillMaxWidth()
             .height(220.dp)
-            .background(backgroundDeep)
-            .padding(16.dp)
+            .background(colors.backgroundElevated)
+            .padding(SystemCardPadding)
     ) {
         if (entries.isEmpty()) return@Canvas
 
@@ -48,13 +49,13 @@ fun TonnageChartCanvas(
 
         // Малюємо вісі X та Y
         drawLine(
-            color = Color.DarkGray,
+            color = colors.borderSubtle,
             start = Offset(paddingX, 0f),
             end = Offset(paddingX, chartHeight),
             strokeWidth = 2f
         )
         drawLine(
-            color = Color.DarkGray,
+            color = colors.borderSubtle,
             start = Offset(paddingX, chartHeight),
             end = Offset(size.width, chartHeight),
             strokeWidth = 2f
@@ -76,7 +77,7 @@ fun TonnageChartCanvas(
 
             // Малюємо точку на графіку
             drawCircle(
-                color = neonGold,
+                color = colors.accentWarning,
                 radius = 6f,
                 center = Offset(x, y)
             )
@@ -88,7 +89,8 @@ fun TonnageChartCanvas(
                 drawText(
                     textMeasurer = textMeasurer,
                     text = dateString,
-                    topLeft = Offset(x - 30f, chartHeight + 15f)
+                    topLeft = Offset(x - 30f, chartHeight + 15f),
+                    style = labelStyle
                 )
             }
         }
@@ -96,7 +98,7 @@ fun TonnageChartCanvas(
         // Малюємо лінію самого графіка
         drawPath(
             path = path,
-            color = neonGold,
+            color = colors.accentWarning,
             style = Stroke(width = 5f)
         )
 
@@ -107,7 +109,8 @@ fun TonnageChartCanvas(
             drawText(
                 textMeasurer = textMeasurer,
                 text = "${value.toInt()} кг",
-                topLeft = Offset(0f, y - 20f)
+                topLeft = Offset(0f, y - 20f),
+                style = labelStyle
             )
         }
     }

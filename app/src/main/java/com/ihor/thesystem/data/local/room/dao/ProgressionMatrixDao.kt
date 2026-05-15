@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ProgressionMatrixDao {
     @Query("""
-        SELECT pm.*, e.name as exerciseName, e.nameUk as exerciseNameUk
+        SELECT pm.*, e.name as exerciseName, e.nameUk as exerciseNameUk, e.trackingMode as exerciseTrackingMode
         FROM progression_matrix pm
         JOIN exercises e ON pm.exerciseId = e.id
     """)
@@ -31,7 +31,7 @@ interface ProgressionMatrixDao {
     suspend fun getEntryForExerciseSync(exerciseId: Int): ProgressionMatrixEntity?
 
     @Query("""
-        SELECT pm.*, e.name as exerciseName, e.nameUk as exerciseNameUk
+        SELECT pm.*, e.name as exerciseName, e.nameUk as exerciseNameUk, e.trackingMode as exerciseTrackingMode
         FROM progression_matrix pm
         JOIN exercises e ON pm.exerciseId = e.id
         WHERE pm.exerciseId = :exerciseId LIMIT 1
@@ -39,7 +39,7 @@ interface ProgressionMatrixDao {
     fun getEntryWithExerciseName(exerciseId: Int): Flow<ProgressionMatrixWithExercise?>
 
     @Query("""
-        SELECT pm.*, e.name as exerciseName, e.nameUk as exerciseNameUk
+        SELECT pm.*, e.name as exerciseName, e.nameUk as exerciseNameUk, e.trackingMode as exerciseTrackingMode
         FROM progression_matrix pm
         JOIN exercises e ON pm.exerciseId = e.id
         WHERE pm.exerciseId = :exerciseId LIMIT 1
@@ -66,5 +66,6 @@ interface ProgressionMatrixDao {
 data class ProgressionMatrixWithExercise(
     @Embedded val entity: ProgressionMatrixEntity,
     val exerciseName: String,
-    val exerciseNameUk: String? = null
+    val exerciseNameUk: String? = null,
+    val exerciseTrackingMode: String? = null
 )

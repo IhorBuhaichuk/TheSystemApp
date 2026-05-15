@@ -134,4 +134,59 @@ class ViewModelStructureGuardTest {
             "useCases.syncTodayState()" in source
         )
     }
+
+    @Test
+    fun `status viewmodel routes top level todos outside quest tasks`() {
+        val projectRoot = File(requireNotNull(System.getProperty("user.dir")))
+        val source = projectRoot
+            .resolve("src/main/java/com/ihor/thesystem/feature/status/viewmodel/StatusViewModel.kt")
+            .readText()
+        val methodBody = Regex(
+            pattern = """fun onAddTaskConfirmed\(questId: Int, taskName: String\).*?\{([\s\S]*?)\n    \}"""
+        ).find(source)?.groupValues?.get(1).orEmpty()
+
+        assertTrue(
+            "Top-level To-do additions must use AddTodayTodoUseCase when there is no quest id.",
+            "questId > 0" in methodBody && "useCases.addTodayTodo(taskName)" in methodBody
+        )
+        assertTrue(
+            "Quest task additions should still use AddTaskToQuestUseCase for real quest ids.",
+            "useCases.addTaskToQuest(questId, taskName)" in methodBody
+        )
+    }
+
+    @Test
+    fun `workout report opens analysis for the saved session`() {
+        val projectRoot = File(requireNotNull(System.getProperty("user.dir")))
+        val routeSource = projectRoot
+            .resolve("src/main/java/com/ihor/thesystem/core/navigation/Routes.kt")
+            .readText()
+        val hostSource = projectRoot
+            .resolve("src/main/java/com/ihor/thesystem/feature/status/ui/WorkoutDialogHost.kt")
+            .readText()
+        val cycleSource = projectRoot
+            .resolve("src/main/java/com/ihor/thesystem/feature/cycle/ui/CycleScreen.kt")
+            .readText()
+        val viewModelSource = projectRoot
+            .resolve("src/main/java/com/ihor/thesystem/feature/architect/viewmodel/WorkoutAnalysisViewModel.kt")
+            .readText()
+
+        assertTrue(
+            "WorkoutAnalysis route must carry the saved workout session id.",
+            "data class WorkoutAnalysis(val sessionId: Long = 0L)" in routeSource
+        )
+        assertTrue(
+            "WorkoutReportDialog must pass the saved report session id into navigation.",
+            "onOpenWorkoutAnalysis(dialogState.report.sessionId)" in hostSource
+        )
+        assertTrue(
+            "Cycle screen must navigate to analysis with the report session id.",
+            "Routes.WorkoutAnalysis(sessionId = sessionId)" in cycleSource
+        )
+        assertTrue(
+            "WorkoutAnalysisViewModel must read the route session id before loading analysis.",
+            "savedStateHandle.get<Long>(SESSION_ID_ARG)" in viewModelSource &&
+                "private const val SESSION_ID_ARG = \"sessionId\"" in viewModelSource
+        )
+    }
 }

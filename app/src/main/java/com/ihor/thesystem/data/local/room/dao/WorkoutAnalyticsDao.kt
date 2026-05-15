@@ -47,6 +47,10 @@ abstract class WorkoutAnalyticsDao {
     }
 
     @Transaction
+    @Query("SELECT * FROM workout_session_logs WHERE sessionId = :sessionId LIMIT 1")
+    abstract fun getSessionLogById(sessionId: Long): Flow<SessionWithSets?>
+
+    @Transaction
     @Query("SELECT * FROM workout_session_logs ORDER BY timestamp DESC LIMIT 100")
     abstract fun getAllSessionLogs(): Flow<List<SessionWithSets>>
 

@@ -13,7 +13,7 @@ import androidx.navigation.toRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.ihor.thesystem.core.theme.BackgroundDeep
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.SystemBottomNavBar
 import com.ihor.thesystem.feature.architect.ui.AnnualProgressionPlanScreen
 import com.ihor.thesystem.feature.architect.ui.ArchitectScreen
@@ -38,7 +38,7 @@ fun AppNavGraph(navController: NavHostController) {
             destination?.hasRoute<Routes.Architect>() == true
 
     Scaffold(
-        containerColor = BackgroundDeep,
+        containerColor = SystemTheme.colors.background,
         bottomBar = {
             if (showBottomNav) {
                 SystemBottomNavBar(navController = navController)
@@ -76,7 +76,7 @@ fun AppNavGraph(navController: NavHostController) {
                         navController.navigate(Routes.AnnualProgressionPlan)
                     },
                     onOpenWorkoutAnalysis = {
-                        navController.navigate(Routes.WorkoutAnalysis)
+                        navController.navigate(Routes.WorkoutAnalysis())
                     }
                 )
             }

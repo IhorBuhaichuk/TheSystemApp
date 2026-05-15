@@ -2,7 +2,6 @@ package com.ihor.thesystem.presentation.common.components
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -12,12 +11,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.ihor.thesystem.core.theme.SystemTheme
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.delay
@@ -41,6 +39,7 @@ fun ExerciseAnimationPlayer(
 
     var currentFrame by remember { mutableIntStateOf(0) }
     val context = LocalContext.current
+    val colors = SystemTheme.colors
 
     LaunchedEffect(exerciseExternalId) {
         while (true) {
@@ -76,7 +75,7 @@ fun ExerciseAnimationPlayer(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
-                            color = Color.Cyan,
+                            color = colors.accentPrimary,
                             strokeWidth = 2.dp
                         )
                     }
@@ -89,7 +88,7 @@ fun ExerciseAnimationPlayer(
                         Icon(
                             imageVector = Icons.Default.FitnessCenter,
                             contentDescription = null,
-                            tint = Color.Cyan.copy(alpha = 0.4f)
+                            tint = colors.accentPrimary.copy(alpha = 0.4f)
                         )
                     }
                 }

@@ -1,10 +1,13 @@
 package com.ihor.thesystem.presentation.common.model
 
 import com.ihor.thesystem.domain.model.MatrixEntryData
+import com.ihor.thesystem.domain.model.WeightHistoryEntry
+import com.ihor.thesystem.domain.repository.usesExternalLoad
 import kotlinx.collections.immutable.toImmutableList
 
 fun MatrixEntryData.toMatrixEntryUiModel(): MatrixEntryUiModel {
     val source = entry
+    val canShowWeightMetrics = source.usesExternalLoad()
     return MatrixEntryUiModel(
         exerciseId = source.exerciseId,
         exerciseName = source.exerciseName,
@@ -17,11 +20,16 @@ fun MatrixEntryData.toMatrixEntryUiModel(): MatrixEntryUiModel {
         currentRank = source.currentRank,
         completedCycles = source.completedCycles,
         isActive = isActive,
+        usesExternalLoad = canShowWeightMetrics,
         orderIndex = orderIndex,
-        weightHistory = weightHistory.toImmutableList(),
-        nextRecommendedWeight = source.nextRecommendedWeight,
-        nextRecommendedSets = source.nextRecommendedSets,
-        nextRecommendedReps = source.nextRecommendedReps,
-        lastAiFeedback = source.lastAiFeedback
+        weightHistory = if (canShowWeightMetrics) {
+            weightHistory.toImmutableList()
+        } else {
+            emptyList<WeightHistoryEntry>().toImmutableList()
+        },
+        nextRecommendedWeight = source.nextRecommendedWeight.takeIf { canShowWeightMetrics },
+        nextRecommendedSets = source.nextRecommendedSets.takeIf { canShowWeightMetrics },
+        nextRecommendedReps = source.nextRecommendedReps.takeIf { canShowWeightMetrics },
+        lastAiFeedback = source.lastAiFeedback.takeIf { canShowWeightMetrics }
     )
 }

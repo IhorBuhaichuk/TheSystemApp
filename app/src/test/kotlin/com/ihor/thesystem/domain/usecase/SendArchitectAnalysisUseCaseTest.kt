@@ -9,8 +9,10 @@ import com.ihor.thesystem.domain.repository.ChatRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SendArchitectAnalysisUseCaseTest {
@@ -67,5 +69,21 @@ class SendArchitectAnalysisUseCaseTest {
         coVerify(exactly = 0) {
             chatRepository.saveChatMessage(any(), any(), any())
         }
+    }
+
+    @Test
+    fun `architect prompt forbids kg targets for exercises without external load`() = runTest {
+        val prompt = slot<String>()
+        coEvery { aiArchitectRepository.getChatResponse(capture(prompt)) } returns ChatMessage(
+            role = ChatRole.AI,
+            text = MessageText.DynamicString("analysis ready"),
+            recommendations = emptyList()
+        )
+
+        useCase("Вправа: Push-up\n- Тип метрики: без зовнішньої ваги")
+
+        assertTrue("без зовнішньої ваги" in prompt.captured)
+        assertTrue("НЕ додавай цю вправу до next_workout_targets" in prompt.captured)
+        assertTrue("НЕ пропонуй кг" in prompt.captured)
     }
 }

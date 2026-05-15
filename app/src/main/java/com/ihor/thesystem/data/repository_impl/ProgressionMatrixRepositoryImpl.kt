@@ -26,13 +26,23 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     override fun getAllEntries(): Flow<List<ProgressionMatrixEntry>> =
         matrixDao.getAllEntriesWithNames().map { list ->
             list.map { item ->
-                item.entity.toDomain(item.exerciseName, item.exerciseNameUk, matrixWeeks = 48)
+                item.entity.toDomain(
+                    exerciseName = item.exerciseName,
+                    exerciseNameUk = item.exerciseNameUk,
+                    exerciseTrackingMode = item.exerciseTrackingMode,
+                    matrixWeeks = 48
+                )
             }
         }
 
     override suspend fun getEntrySync(exerciseId: Int): ProgressionMatrixEntry? {
         val item = matrixDao.getEntryWithExerciseNameSync(exerciseId) ?: return null
-        return item.entity.toDomain(item.exerciseName, item.exerciseNameUk, matrixWeeks = 48)
+        return item.entity.toDomain(
+            exerciseName = item.exerciseName,
+            exerciseNameUk = item.exerciseNameUk,
+            exerciseTrackingMode = item.exerciseTrackingMode,
+            matrixWeeks = 48
+        )
     }
 
     override suspend fun updateCurrentWeight(exerciseId: Int, newWeight: Float) {
@@ -252,6 +262,7 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
 private fun ProgressionMatrixEntity.toDomain(
     exerciseName: String,
     exerciseNameUk: String?,
+    exerciseTrackingMode: String?,
     matrixWeeks: Int
 ): ProgressionMatrixEntry {
     val weeklyStep = if (targetWeight > 0f && matrixWeeks > 0)
@@ -266,6 +277,7 @@ private fun ProgressionMatrixEntity.toDomain(
         exerciseId        = this.exerciseId,
         exerciseName      = exerciseName,
         exerciseNameUk    = exerciseNameUk,
+        exerciseTrackingMode = exerciseTrackingMode,
         startWeight       = startWeight,
         targetWeight      = targetWeight,
         currentWeight     = currentWeight,

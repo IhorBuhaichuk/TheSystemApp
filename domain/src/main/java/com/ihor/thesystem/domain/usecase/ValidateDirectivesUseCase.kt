@@ -5,6 +5,7 @@ import com.ihor.thesystem.domain.model.DataError
 import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.model.WorkoutDirective
+import com.ihor.thesystem.domain.repository.usesExternalLoad
 import javax.inject.Inject
 
 class ValidateDirectivesUseCase @Inject constructor() {
@@ -17,8 +18,11 @@ class ValidateDirectivesUseCase @Inject constructor() {
         matrix: List<ProgressionMatrixEntry>
     ): Result<List<WorkoutDirective>, DomainError> {
         return try {
-            val validated = directives.map { directive ->
+            val validated = directives.mapNotNull { directive ->
                 val matrixEntry = matrix.find { it.exerciseId == directive.exerciseId }
+                if (matrixEntry != null && !matrixEntry.usesExternalLoad()) {
+                    return@mapNotNull null
+                }
 
                 // 1. Валідація ваги: якщо <= 0 і є запис у матриці — беремо поточну вагу з матриці
                 val initialWeight = if (directive.targetWeight <= 0.0 && matrixEntry != null) {
@@ -71,4 +75,5 @@ class ValidateDirectivesUseCase @Inject constructor() {
             reps.toIntOrNull()?.coerceIn(1, 30)?.toString() ?: "8"
         }
     }
+
 }

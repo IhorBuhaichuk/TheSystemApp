@@ -14,8 +14,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.unit.dp
-import com.ihor.thesystem.core.theme.NeonCyan
-import com.ihor.thesystem.core.theme.PanelBorder
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
 import com.ihor.thesystem.domain.model.WeightHistoryEntry
 
@@ -27,9 +26,11 @@ import com.ihor.thesystem.domain.model.WeightHistoryEntry
 fun ExerciseProgressChart(
     history: List<WeightHistoryEntry>,
     modifier: Modifier = Modifier,
-    accentColor: Color = NeonCyan
+    accentColor: Color? = null
 ) {
     if (history.size < 2) return
+    val colors = SystemTheme.colors
+    val accent = accentColor ?: colors.accentPrimary
 
     val animProgress = remember { Animatable(0f) }
     LaunchedEffect(history) {
@@ -74,7 +75,7 @@ fun ExerciseProgressChart(
             drawPath(
                 path = fillPath,
                 brush = Brush.verticalGradient(
-                    colors = listOf(accentColor.copy(alpha = 0.2f * animProgress.value), Color.Transparent),
+                    colors = listOf(accent.copy(alpha = 0.2f * animProgress.value), Color.Transparent),
                     startY = points.minOf { it.y },
                     endY = height
                 )
@@ -82,7 +83,7 @@ fun ExerciseProgressChart(
 
             drawIntoCanvas { canvas ->
                 val paint = Paint().apply {
-                    color = accentColor.toArgb()
+                    color = accent.toArgb()
                     strokeWidth = 4.dp.toPx()
                     style = Paint.Style.STROKE
                     strokeCap = Paint.Cap.ROUND
@@ -96,7 +97,7 @@ fun ExerciseProgressChart(
 
             drawPath(
                 path = strokePath,
-                color = accentColor.copy(alpha = 0.9f * animProgress.value),
+                color = accent.copy(alpha = 0.9f * animProgress.value),
                 style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
             )
 
@@ -109,13 +110,13 @@ fun ExerciseProgressChart(
                 withTransform({
                     translate(offset.x - hexSize, offset.y - hexSize)
                 }) {
-                    drawPath(hexPath, Color.White.copy(alpha = animProgress.value))
-                    drawPath(hexPath, accentColor.copy(alpha = animProgress.value), style = Stroke(1.dp.toPx()))
+                    drawPath(hexPath, colors.textPrimary.copy(alpha = animProgress.value))
+                    drawPath(hexPath, accent.copy(alpha = animProgress.value), style = Stroke(1.dp.toPx()))
                 }
             }
             
             drawLine(
-                color = PanelBorder.copy(alpha = 0.2f),
+                color = colors.borderSubtle.copy(alpha = 0.2f),
                 start = Offset(0f, height),
                 end = Offset(width, height),
                 strokeWidth = 1.dp.toPx()

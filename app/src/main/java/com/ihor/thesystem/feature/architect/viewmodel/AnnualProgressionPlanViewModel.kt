@@ -8,6 +8,7 @@ import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.core.util.DispatcherProvider
 import com.ihor.thesystem.domain.model.AnnualProgressionPlan
 import com.ihor.thesystem.domain.model.AnnualProgressionPlanInput
+import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.usecase.ANNUAL_PROGRESSION_ADAPTATION_DAYS
 import com.ihor.thesystem.domain.usecase.GenerateAnnualProgressionPlanUseCase
 import com.ihor.thesystem.domain.usecase.GetAnnualProgressionExerciseSnapshotUseCase
@@ -56,6 +57,7 @@ data class AnnualProgressionExerciseUiModel(
     val estimatedOneRepMax: Double?,
     val targetWeightInput: String,
     val inventoryStepInput: String,
+    val trackingMode: ExerciseTrackingMode,
     val isExpanded: Boolean = false
 ) {
     val targetWeight: Double?
@@ -137,6 +139,15 @@ class AnnualProgressionPlanViewModel @Inject constructor(
                         }
                         return@onSuccess
                     }
+                    if (!snapshot.trackingMode.usesWeightInput) {
+                        _uiState.update {
+                            it.copy(
+                                isLoadingExercise = false,
+                                message = UiText.StringResource(R.string.error_annual_progression_external_load_required)
+                            )
+                        }
+                        return@onSuccess
+                    }
 
                     val exerciseUiModel = AnnualProgressionExerciseUiModel(
                         exerciseId = snapshot.exercise.id,
@@ -146,7 +157,8 @@ class AnnualProgressionPlanViewModel @Inject constructor(
                         lastTrainingTimestamp = snapshot.lastTrainingTimestamp,
                         estimatedOneRepMax = snapshot.estimatedOneRepMax,
                         targetWeightInput = snapshot.defaultTargetWeight?.formatWeight().orEmpty(),
-                        inventoryStepInput = snapshot.inventoryStep.formatWeight()
+                        inventoryStepInput = snapshot.inventoryStep.formatWeight(),
+                        trackingMode = snapshot.trackingMode
                     )
 
                     _uiState.update {

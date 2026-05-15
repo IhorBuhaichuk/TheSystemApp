@@ -2,33 +2,33 @@ package com.ihor.thesystem.feature.statistics.ui.components.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cake
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.NeonCyan
-import com.ihor.thesystem.core.theme.NeonCyanDim
-import com.ihor.thesystem.core.theme.NeonRed
-import com.ihor.thesystem.core.theme.PanelBorder
-import com.ihor.thesystem.core.theme.PanelSurface
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
+import androidx.compose.ui.window.Dialog
+import com.ihor.thesystem.R
+import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.SystemDialogContainer
+import com.ihor.thesystem.core.ui.components.SystemGhostButton
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 
 @Composable
 fun LogAgeDialog(
@@ -36,26 +36,22 @@ fun LogAgeDialog(
     onConfirm: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     var input by remember { mutableStateOf(if (currentAge > 0) currentAge.toString() else "") }
     var isError by remember { mutableStateOf(false) }
+    val canConfirm = !isError && input.isNotBlank()
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = PanelSurface,
-        shape = RoundedCornerShape(4.dp),
-        icon = {
-            Icon(Icons.Filled.Cake, contentDescription = null, tint = NeonCyanDim)
-        },
-        title = {
+    Dialog(onDismissRequest = onDismiss) {
+        SystemDialogContainer(accent = colors.accentPrimary) {
+            Icon(Icons.Filled.Cake, contentDescription = null, tint = colors.accentPrimary)
             Text(
                 text = "[ ОНОВИТИ ВІК ]",
-                color = NeonCyan,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 14.sp
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = colors.accentPrimary,
+                    fontWeight = FontWeight.Bold
+                )
             )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
                 OutlinedTextField(
                     value = input,
                     onValueChange = {
@@ -65,46 +61,40 @@ fun LogAgeDialog(
                     },
                     singleLine = true,
                     isError = isError,
-                    label = {
-                        Text("Вік", fontFamily = FontFamily.Monospace, fontSize = 11.sp)
-                    },
+                    label = { Text("Вік") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = NeonCyanDim,
-                        unfocusedBorderColor = PanelBorder,
-                        focusedLabelColor = NeonCyanDim,
-                        cursorColor = NeonCyanDim,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        errorBorderColor = NeonRed
-                    ),
-                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace)
+                    colors = systemOutlinedTextFieldColors(accent = colors.accentPrimary),
+                    textStyle = LocalTextStyle.current.copy(color = colors.textPrimary),
+                    modifier = Modifier.fillMaxWidth()
                 )
                 if (isError) {
                     Text(
                         text = "Введіть коректний вік",
-                        color = NeonRed,
-                        fontSize = 10.sp,
-                        fontFamily = FontFamily.Monospace
+                        style = MaterialTheme.typography.bodySmall.copy(color = colors.accentError)
                     )
                 }
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val age = input.toIntOrNull()
-                    if (age != null && age in 1..120) onConfirm(age)
-                },
-                enabled = !isError && input.isNotBlank()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
             ) {
-                Text("ЗБЕРЕГТИ", color = NeonCyanDim, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("СКАСУВАТИ", color = TextSecondary, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                SystemGhostButton(
+                    text = stringResource(R.string.text_cancel),
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                )
+                SystemButton(
+                    text = stringResource(R.string.text_confirm),
+                    onClick = {
+                        val age = input.toIntOrNull()
+                        if (age != null && age in 1..120) onConfirm(age)
+                    },
+                    modifier = Modifier.weight(1f),
+                    accent = colors.accentPrimary,
+                    enabled = canConfirm,
+                    glow = canConfirm
+                )
             }
         }
-    )
+    }
 }

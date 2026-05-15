@@ -3,7 +3,9 @@ package com.ihor.thesystem.feature.exercise_search.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.domain.model.ExerciseDetails
+import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
+import com.ihor.thesystem.domain.repository.usesExternalLoad
 import com.ihor.thesystem.domain.usecase.SearchExercisesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -68,16 +70,11 @@ class ExerciseSearchViewModel @Inject constructor(
         exercises,
         progressionMatrixRepository.getAllEntries()
     ) { exerciseList, matrixEntries ->
-        val currentWeightsByExerciseId = matrixEntries.associate { entry ->
-            entry.exerciseId to entry.currentWeight
-        }
+        val matrixEntriesByExerciseId = matrixEntries.associateBy { entry -> entry.exerciseId }
         exerciseList.map { exercise ->
             ExercisePickerItemUiModel(
                 exercise = exercise,
-                lastResultText = currentWeightsByExerciseId[exercise.id]
-                    ?.takeIf { it > 0f }
-                    ?.formatWeight()
-                    ?.let { "$it кг" }
+                lastResultText = matrixEntriesByExerciseId[exercise.id]?.toExercisePickerLastResultText()
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -165,6 +162,12 @@ class ExerciseSearchViewModel @Inject constructor(
         }
     }
 }
+
+internal fun ProgressionMatrixEntry.toExercisePickerLastResultText(): String? =
+    currentWeight
+        .takeIf { usesExternalLoad() && it > 0f }
+        ?.formatWeight()
+        ?.let { "$it кг" }
 
 private fun Float.formatWeight(): String =
     if (this % 1f == 0f) {

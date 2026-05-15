@@ -52,15 +52,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.AccentPrimarySoft
-import com.ihor.thesystem.core.theme.AccentSuccess
-import com.ihor.thesystem.core.theme.AccentWarning
+import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
-import com.ihor.thesystem.core.theme.TextMuted
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemProgressBar
@@ -135,6 +130,7 @@ fun RpgStatusDashboard(
 
 @Composable
 private fun StatusHeader() {
+    val colors = SystemTheme.colors
     val locale = Locale.getDefault()
     val today = LocalDate.now()
     val weekDay = today.dayOfWeek.getDisplayName(TextStyle.FULL_STANDALONE, locale)
@@ -151,14 +147,14 @@ private fun StatusHeader() {
             Text(
                 text = "Статус",
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Black
                 )
             )
             Text(
                 text = dateText,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = TextSecondary,
+                    color = colors.textSecondary,
                     fontWeight = FontWeight.Medium
                 )
             )
@@ -169,6 +165,7 @@ private fun StatusHeader() {
 
 @Composable
 private fun XpLevelBlock(data: StatusUiData) {
+    val colors = SystemTheme.colors
     val progress = remember(data.xpTotal, data.xpMax) {
         if (data.xpMax > 0) (data.xpTotal.toFloat() / data.xpMax).coerceIn(0f, 1f) else 0f
     }
@@ -185,19 +182,19 @@ private fun XpLevelBlock(data: StatusUiData) {
                     Text(
                         text = "Рівень ${data.level}",
                         style = MaterialTheme.typography.titleLarge.copy(
-                            color = TextPrimary,
+                            color = colors.textPrimary,
                             fontWeight = FontWeight.Black
                         )
                     )
                     Text(
                         text = "${data.xpTotal} / ${data.xpMax} XP",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
+                        style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
                     )
                 }
                 Text(
                     text = "${(progress * 100).roundToInt()}%",
                     style = MaterialTheme.typography.titleMedium.copy(
-                        color = AccentPrimary,
+                        color = colors.accentPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 )
@@ -205,7 +202,7 @@ private fun XpLevelBlock(data: StatusUiData) {
             SystemProgressBar(progress = progress)
             Text(
                 text = "До наступного рівня: $xpRemaining XP",
-                style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
             )
         }
     }
@@ -217,32 +214,33 @@ private fun MainFocusBlock(
     onStartWorkout: () -> Unit,
     onOpenWorkoutSettings: () -> Unit
 ) {
-    DarkGlassCard(modifier = Modifier.fillMaxWidth(), active = true, contentPadding = 18.dp) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    val colors = SystemTheme.colors
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), active = true, contentPadding = SystemCardPadding) {
+        Column(verticalArrangement = Arrangement.spacedBy(SystemCardPadding)) {
             SystemSectionHeader(
                 title = "Головний фокус",
                 subtitle = if (mainQuest != null) "Поточна дія дня" else "Сьогодні без активного тренування",
                 trailing = {
                     IconButton(onClick = onOpenWorkoutSettings) {
-                        Icon(Icons.Filled.Settings, contentDescription = null, tint = TextSecondary)
+                        Icon(Icons.Filled.Settings, contentDescription = null, tint = colors.textSecondary)
                     }
                 }
             )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 FocusIcon(
                     icon = if (mainQuest != null) Icons.Filled.FitnessCenter else Icons.Filled.Shield,
-                    tint = if (mainQuest != null) AccentPrimary else AccentSuccess
+                    tint = if (mainQuest != null) colors.accentPrimary else colors.accentSuccess
                 )
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         text = mainQuest?.title ?: "Активне відновлення",
                         style = MaterialTheme.typography.titleLarge.copy(
-                            color = TextPrimary,
+                            color = colors.textPrimary,
                             fontWeight = FontWeight.Black
                         ),
                         maxLines = 2,
@@ -250,7 +248,7 @@ private fun MainFocusBlock(
                     )
                     Text(
                         text = mainQuest?.subtitle?.asString() ?: "Підтримай серію та віднови ресурс системи.",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
+                        style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -283,11 +281,12 @@ private fun WeekPreviewBlock(
     onOpenCalendar: () -> Unit,
     onSelectWeekDay: (LocalDate) -> Unit
 ) {
+    val colors = SystemTheme.colors
     if (days.isEmpty()) {
         DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "Календарний цикл синхронізується.",
-                style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
             )
         }
     } else {
@@ -308,6 +307,7 @@ private fun TodoBlock(
     onTodosReordered: (List<Int>) -> Unit,
     onRemoveTask: (Int) -> Unit
 ) {
+    val colors = SystemTheme.colors
     val allTasks = remember(todos) { todos.flatMapWithMicrotasks() }
     val completed = allTasks.count { it.isCompleted }
 
@@ -329,7 +329,7 @@ private fun TodoBlock(
             if (todos.isEmpty()) {
                 Text(
                     text = "Додай будь-яке завдання, яке має бути зроблене сьогодні.",
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextMuted)
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
                 )
             } else {
                 ReorderableTodoList(
@@ -541,6 +541,7 @@ private fun Modifier.dragAfterOneSecond(
 
 @Composable
 private fun SystemInfoBlock(data: StatusUiData) {
+    val colors = SystemTheme.colors
     val monthProgress = remember(data.monthWorkoutsCompleted, data.monthWorkoutsTotal) {
         if (data.monthWorkoutsTotal > 0) {
             data.monthWorkoutsCompleted.toFloat() / data.monthWorkoutsTotal
@@ -549,26 +550,26 @@ private fun SystemInfoBlock(data: StatusUiData) {
         }.coerceIn(0f, 1f)
     }
 
-    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 14.dp) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = SystemCardPadding) {
+        Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
             SystemSectionHeader(title = "Система", subtitle = "Короткий стан")
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 SystemInfoMetric(
                     label = "Серія",
                     value = data.currentStreak.toString(),
                     subtitle = "днів без пропуску",
-                    accent = AccentWarning,
+                    accent = colors.accentWarning,
                     modifier = Modifier.weight(1f)
                 )
                 SystemInfoMetric(
                     label = "Місяць",
                     value = "${data.monthWorkoutsCompleted}/${data.monthWorkoutsTotal.coerceAtLeast(0)}",
                     subtitle = "тренувальна ціль",
-                    accent = AccentPrimary,
+                    accent = colors.accentPrimary,
                     modifier = Modifier.weight(1f)
                 )
             }
-            SystemProgressBar(progress = monthProgress, accent = AccentSuccess)
+            SystemProgressBar(progress = monthProgress, accent = colors.accentSuccess)
         }
     }
 }
@@ -581,22 +582,23 @@ private fun SystemInfoMetric(
     accent: Color,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.028f))
+            .clip(RoundedCornerShape(SystemTheme.shapes.medium))
+            .background(colors.overlayLight)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall.copy(color = TextSecondary, fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary, fontWeight = FontWeight.Bold),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleLarge.copy(color = TextPrimary, fontWeight = FontWeight.Black),
+            style = MaterialTheme.typography.titleLarge.copy(color = colors.textPrimary, fontWeight = FontWeight.Black),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -626,6 +628,7 @@ private fun FocusIcon(icon: ImageVector, tint: Color) {
 
 @Composable
 private fun FocusTaskLine(task: TaskUiModel) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(9.dp),
@@ -635,12 +638,12 @@ private fun FocusTaskLine(task: TaskUiModel) {
             modifier = Modifier
                 .height(5.dp)
                 .width(5.dp)
-                .background(if (task.isCompleted) AccentSuccess else AccentPrimarySoft)
+                .background(if (task.isCompleted) colors.accentSuccess else colors.accentPrimarySoft)
         )
         Text(
             text = task.nameUk ?: task.name,
             style = MaterialTheme.typography.bodySmall.copy(
-                color = if (task.isCompleted) TextSecondary.copy(alpha = 0.58f) else TextSecondary,
+                color = if (task.isCompleted) colors.textSecondary.copy(alpha = 0.58f) else colors.textSecondary,
                 fontWeight = FontWeight.SemiBold
             ),
             maxLines = 1,

@@ -16,6 +16,7 @@ import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
+import com.ihor.thesystem.domain.repository.usesExternalLoad
 import com.ihor.thesystem.domain.util.AnnualProgressionPlanNoteParser
 import com.ihor.thesystem.domain.util.EstimatedOneRepMaxCalculator
 import kotlinx.coroutines.flow.first
@@ -37,13 +38,19 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
     private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
     private val clock: AppClock
 ) {
-    suspend operator fun invoke(): WorkoutAnalysisData? {
+    suspend operator fun invoke(sessionId: Long? = null): WorkoutAnalysisData? {
+        val requestedSessionId = sessionId?.takeIf { it > 0L }
+        val requestedLog = requestedSessionId
+            ?.let { analyticsRepository.getSessionById(it).firstOrNull() }
+        if (requestedSessionId != null && requestedLog == null) return null
+
         val allLogs = analyticsRepository.getAllLogs().firstOrNull().orEmpty()
-        val mostRecent = allLogs.firstOrNull() ?: return null
-        val sameDayLogs = analyticsRepository.getSessionsByDate(mostRecent.session.timestamp)
-            .firstOrNull()
-            .orEmpty()
-            .ifEmpty { listOf(mostRecent) }
+        val anchorLog = requestedLog ?: allLogs.firstOrNull() ?: return null
+        val sameDayLogs = requestedLog?.let { listOf(it) }
+            ?: analyticsRepository.getSessionsByDate(anchorLog.session.timestamp)
+                .firstOrNull()
+                .orEmpty()
+                .ifEmpty { listOf(anchorLog) }
         val exerciseNames = analyticsRepository.getAllExercisesMap()
         val matrixEntries = progressionMatrixRepository.getAllEntries().first()
         val matrixByExercise = matrixEntries.associateBy { it.exerciseId }
@@ -57,6 +64,7 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
 
         val completedSets = sameDayLogs.flatMap { it.sets }.filter { it.isCompleted && it.weight > 0.0 && it.reps > 0 }
         if (completedSets.isEmpty()) return null
+        val weightedCompletedSets = completedSets.filter { it.hasRealExternalLoad() }
 
         val plannedExerciseIds = schedule?.exercises?.map { it.id }.orEmpty()
         val completedExerciseIds = completedSets.map { it.exerciseId }.toSet()
@@ -76,11 +84,11 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
         val previousLogs = allLogs
             .filter { it.session.timestamp < sameDayLogs.minOf { log -> log.session.timestamp } }
 
-        val progress = completedSets.groupBy { it.exerciseId }.map { (exerciseId, sets) ->
+        val progress = weightedCompletedSets.groupBy { it.exerciseId }.map { (exerciseId, sets) ->
             val current = sets.maxEstimatedOneRepMax()
             val previous = previousLogs
                 .flatMap { it.sets }
-                .filter { it.exerciseId == exerciseId && it.isCompleted && it.weight > 0.0 && it.reps > 0 }
+                .filter { it.exerciseId == exerciseId && it.isCompleted && it.hasRealExternalLoad() && it.reps > 0 }
                 .maxEstimatedOneRepMaxOrNull()
             ExerciseProgressAnalysis(
                 exerciseId = exerciseId,
@@ -92,7 +100,7 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
             )
         }
 
-        val annualProgress = completedSets.groupBy { it.exerciseId }.map { (exerciseId, sets) ->
+        val annualProgress = weightedCompletedSets.groupBy { it.exerciseId }.map { (exerciseId, sets) ->
             val currentBestSet = sets.maxBy { EstimatedOneRepMaxCalculator.calculate(it.weight, it.reps) }
             val plannedWeight = matrixByExercise[exerciseId]
                 ?.plannedWeightForDate(latestDate)
@@ -108,9 +116,9 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
             )
         }
 
-        val recommendations = completedSets.map { it.exerciseId }.distinct().map { exerciseId ->
+        val recommendations = weightedCompletedSets.groupBy { it.exerciseId }.map { (exerciseId, sets) ->
             val exerciseName = exerciseNames[exerciseId] ?: "Вправа #$exerciseId"
-            val recommendation = calculateRecommendation(exerciseId, exerciseName)
+            val recommendation = calculateRecommendation.fromSets(exerciseId, exerciseName, sets)
             NextWorkoutRecommendationAnalysis(
                 exerciseId = exerciseId,
                 exerciseName = exerciseName,
@@ -132,27 +140,56 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
             .filter { date -> date in latestDate.minusDays(CONSISTENCY_WINDOW_DAYS - 1)..latestDate }
             .toSet()
             .size
-        val motivationAnchor = progress.maxBy { it.currentEstimatedOneRepMax }
-        val motivationSets = completedSets.filter { it.exerciseId == motivationAnchor.exerciseId }
-        val motivationTopSet = motivationSets.maxBy { EstimatedOneRepMaxCalculator.calculate(it.weight, it.reps) }
+        val motivationSourceSets = weightedCompletedSets.ifEmpty { completedSets }
+        val motivationAnchorExerciseId = progress
+            .maxByOrNull { it.currentEstimatedOneRepMax }
+            ?.exerciseId
+            ?: motivationSourceSets.groupBy { it.exerciseId }
+                .maxBy { (_, sets) -> sets.maxOf { it.reps } }
+                .key
+        val motivationUsesExternalLoad = motivationSourceSets.any {
+            it.exerciseId == motivationAnchorExerciseId && it.hasRealExternalLoad()
+        }
+        val motivationSets = motivationSourceSets.filter { it.exerciseId == motivationAnchorExerciseId }
+        val motivationTopSet = motivationSets.maxBy { set ->
+            if (motivationUsesExternalLoad) {
+                EstimatedOneRepMaxCalculator.calculate(set.weight, set.reps)
+            } else {
+                set.reps.toDouble()
+            }
+        }
         val motivationBaseline = allLogs
             .flatMap { it.sets }
-            .filter { it.exerciseId == motivationAnchor.exerciseId && it.isCompleted && it.weight > 0.0 && it.reps > 0 }
+            .filter {
+                it.exerciseId == motivationAnchorExerciseId &&
+                    it.isCompleted &&
+                    it.reps > 0 &&
+                    if (motivationUsesExternalLoad) it.hasRealExternalLoad() else it.weight > 0.0
+            }
             .minByOrNull { it.setId }
-            ?.let { EstimatedOneRepMaxCalculator.calculate(it.weight, it.reps) }
-        val motivationPlannedWeight = matrixByExercise[motivationAnchor.exerciseId]
-            ?.plannedWeightForDate(latestDate)
+            ?.let {
+                if (motivationUsesExternalLoad) {
+                    EstimatedOneRepMaxCalculator.calculate(it.weight, it.reps)
+                } else {
+                    it.reps.toDouble()
+                }
+            }
+        val motivationPlannedWeight = if (motivationUsesExternalLoad) {
+            matrixByExercise[motivationAnchorExerciseId]?.plannedWeightForDate(latestDate)
+        } else {
+            null
+        }
         val motivationPlannedEstimated = motivationPlannedWeight?.let {
             EstimatedOneRepMaxCalculator.calculate(it, motivationTopSet.reps)
         }
         val motivationExerciseCategory = schedule
             ?.exercises
-            ?.firstOrNull { it.id == motivationAnchor.exerciseId }
+            ?.firstOrNull { it.id == motivationAnchorExerciseId }
             ?.category
 
         val motivationLevel = calculateMotivationLevel(
             input = MotivationLevelInput(
-                exerciseId = motivationAnchor.exerciseId,
+                exerciseId = motivationAnchorExerciseId,
                 exerciseCategory = motivationExerciseCategory,
                 currentWeightKg = motivationTopSet.weight,
                 currentReps = motivationTopSet.reps,
@@ -175,8 +212,11 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
             recommendations = recommendations,
             motivationLevel = motivationLevel,
             aiFeedback = matrixEntries
-                .mapNotNull { it.lastAiFeedback }
-                .firstOrNull(),
+                .filter { it.exerciseId in completedExerciseIds }
+                .filter { it.usesExternalLoad() }
+                .filter { !it.lastAiFeedback.isNullOrBlank() }
+                .maxByOrNull { it.lastAnalyzedTimestamp }
+                ?.lastAiFeedback,
             isInitialDataCollection = trainingPhaseContext.isInitialDataCollection,
             adaptationRemainingDays = trainingPhaseContext.remainingAdaptationDays
         )
@@ -216,6 +256,9 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
 
     private fun List<ExerciseSet>.maxEstimatedOneRepMaxOrNull(): Double? =
         takeIf { it.isNotEmpty() }?.maxOf { EstimatedOneRepMaxCalculator.calculate(it.weight, it.reps) }
+
+    private fun ExerciseSet.hasRealExternalLoad(): Boolean =
+        weight > TECHNICAL_BODYWEIGHT_LOAD
 
     private fun resolveExerciseProgressStatus(
         current: Double,
@@ -264,6 +307,7 @@ class GetWorkoutAnalysisUseCase @Inject constructor(
 
 private const val DEFAULT_TARGET_SETS = 3
 private const val CONSISTENCY_WINDOW_DAYS = 28L
+private const val TECHNICAL_BODYWEIGHT_LOAD = 1.0
 private const val PROGRESS_EPSILON = 0.25
 private const val ON_PLAN_RATIO = 0.95
 private const val ABOVE_PLAN_RATIO = 1.05

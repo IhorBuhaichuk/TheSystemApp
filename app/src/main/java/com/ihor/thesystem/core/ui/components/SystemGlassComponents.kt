@@ -53,25 +53,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
-import com.ihor.thesystem.core.theme.AccentAi
-import com.ihor.thesystem.core.theme.AccentAiSoft
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.AccentPrimarySoft
-import com.ihor.thesystem.core.theme.AccentSuccess
-import com.ihor.thesystem.core.theme.AccentWarning
-import com.ihor.thesystem.core.theme.BorderActive
-import com.ihor.thesystem.core.theme.BorderSubtle
-import com.ihor.thesystem.core.theme.MixedDayGradientEnd
-import com.ihor.thesystem.core.theme.MixedDayGradientStart
+import com.ihor.thesystem.core.theme.SystemColorTokens
 import com.ihor.thesystem.core.theme.SystemCardPadding
-import com.ihor.thesystem.core.theme.SystemRadiusMedium
-import com.ihor.thesystem.core.theme.SystemSurfaceGlass
-import com.ihor.thesystem.core.theme.SystemSurfaceGlassStrong
-import com.ihor.thesystem.core.theme.TextMuted
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
-import com.ihor.thesystem.core.theme.TrainingDayColor
-import com.ihor.thesystem.core.theme.WorkDayColor
+import com.ihor.thesystem.core.theme.SystemControlHeight
+import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemRadiusPill
+import com.ihor.thesystem.core.theme.SystemTheme
 
 @Composable
 fun DarkGlassCard(
@@ -95,22 +82,25 @@ fun SystemCard(
     contentPadding: Dp = SystemCardPadding,
     content: @Composable () -> Unit
 ) {
-    val shape = RoundedCornerShape(SystemRadiusMedium)
+    val colors = SystemTheme.colors
+    val shapes = SystemTheme.shapes
+    val glow = SystemTheme.glow
+    val shape = RoundedCornerShape(shapes.medium)
     Box(
         modifier = modifier
             .shadow(
-                elevation = if (active) 22.dp else 14.dp,
+                elevation = if (active) glow.activeElevation else glow.restingElevation,
                 shape = shape,
-                ambientColor = if (active) AccentPrimary.copy(alpha = 0.16f) else Color.Black.copy(alpha = 0.36f),
-                spotColor = Color.Black.copy(alpha = 0.44f)
+                ambientColor = if (active) glow.activeAmbient else glow.shadowAmbient,
+                spotColor = glow.shadowSpot
             )
             .clip(shape)
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        SystemSurfaceGlassStrong,
-                        SystemSurfaceGlass,
-                        SystemSurfaceGlass.copy(alpha = 0.46f)
+                        colors.surfaceGlassStrong,
+                        colors.surfaceGlass,
+                        colors.surfaceGlassSoft
                     )
                 )
             )
@@ -119,9 +109,9 @@ fun SystemCard(
                     1.dp,
                     Brush.linearGradient(
                         listOf(
-                            Color.White.copy(alpha = if (active) 0.18f else 0.11f),
-                            if (active) BorderActive else BorderSubtle,
-                            Color.White.copy(alpha = 0.04f)
+                            if (active) colors.overlayStrong else colors.overlayMedium,
+                            if (active) colors.borderActive else colors.borderSubtle,
+                            colors.borderMuted
                         )
                     )
                 ),
@@ -139,26 +129,29 @@ fun SystemButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
-    accent: Color = AccentPrimary,
+    accent: Color = SystemTheme.colors.accentPrimary,
     enabled: Boolean = true,
     glow: Boolean = false
 ) {
-    val shape = RoundedCornerShape(14.dp)
+    val colors = SystemTheme.colors
+    val shapes = SystemTheme.shapes
+    val glowTokens = SystemTheme.glow
+    val shape = RoundedCornerShape(shapes.medium)
     Row(
         modifier = modifier
-            .height(48.dp)
+            .height(SystemControlHeight)
             .shadow(
-                elevation = if (glow && enabled) 18.dp else 6.dp,
+                elevation = if (glow && enabled) glowTokens.buttonActiveElevation else glowTokens.buttonElevation,
                 shape = shape,
                 ambientColor = accent.copy(alpha = if (glow && enabled) 0.28f else 0.06f),
-                spotColor = Color.Black.copy(alpha = 0.4f)
+                spotColor = glowTokens.shadowSpot
             )
             .clip(shape)
             .background(
                 Brush.verticalGradient(
                     listOf(
                         accent.copy(alpha = if (enabled) 0.18f else 0.06f),
-                        Color.White.copy(alpha = if (enabled) 0.045f else 0.02f)
+                        colors.overlayLight.copy(alpha = if (enabled) colors.overlayLight.alpha else 0.02f)
                     )
                 )
             )
@@ -175,11 +168,40 @@ fun SystemButton(
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge.copy(
-                color = if (enabled) TextPrimary else TextMuted,
+                color = if (enabled) colors.textPrimary else colors.textMuted,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun SystemIconButton(
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    accent: Color = SystemTheme.colors.textSecondary,
+    active: Boolean = false
+) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.small)
+    Box(
+        modifier = modifier
+            .size(SystemControlHeight)
+            .clip(shape)
+            .background(if (active) accent.copy(alpha = 0.12f) else colors.overlayLight)
+            .border(1.dp, if (active) accent.copy(alpha = 0.34f) else colors.borderSubtle, shape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = if (active) accent else colors.textSecondary,
+            modifier = Modifier.size(18.dp)
         )
     }
 }
@@ -191,6 +213,7 @@ fun SystemSectionHeader(
     subtitle: String? = null,
     trailing: @Composable (() -> Unit)? = null
 ) {
+    val colors = SystemTheme.colors
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -200,7 +223,7 @@ fun SystemSectionHeader(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 ),
                 maxLines = 1,
@@ -209,7 +232,7 @@ fun SystemSectionHeader(
             if (subtitle != null) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -223,18 +246,20 @@ fun SystemSectionHeader(
 fun SystemProgressBar(
     progress: Float,
     modifier: Modifier = Modifier,
-    accent: Color = AccentPrimary
+    accent: Color = SystemTheme.colors.accentPrimary
 ) {
+    val colors = SystemTheme.colors
+    val motion = SystemTheme.motion
     val animatedProgress by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(700, easing = EaseOutCubic),
+        animationSpec = tween(motion.progressMillis, easing = EaseOutCubic),
         label = "system_progress"
     )
     Box(
         modifier = modifier
             .height(7.dp)
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.07f))
+            .background(colors.overlayMedium)
     ) {
         Box(
             modifier = Modifier
@@ -242,7 +267,7 @@ fun SystemProgressBar(
                 .fillMaxHeight()
                 .background(
                     Brush.horizontalGradient(
-                        listOf(accent.copy(alpha = 0.72f), accent, AccentAi.copy(alpha = 0.72f))
+                        listOf(accent.copy(alpha = 0.72f), accent, colors.accentAi.copy(alpha = 0.72f))
                     )
                 )
         )
@@ -254,20 +279,21 @@ fun SystemMetricCard(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
-    accent: Color = AccentPrimary,
+    accent: Color = SystemTheme.colors.accentPrimary,
     subtitle: String? = null
 ) {
-    SystemCard(modifier = modifier, contentPadding = 12.dp) {
+    val colors = SystemTheme.colors
+    SystemCard(modifier = modifier, contentPadding = SystemItemSpacing) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondary, fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary, fontWeight = FontWeight.Bold),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge.copy(color = TextPrimary, fontWeight = FontWeight.Black),
+                style = MaterialTheme.typography.titleLarge.copy(color = colors.textPrimary, fontWeight = FontWeight.Black),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -287,14 +313,16 @@ fun SystemMetricCard(
 fun SystemStatusChip(
     text: String,
     modifier: Modifier = Modifier,
-    accent: Color = AccentPrimary,
+    accent: Color = SystemTheme.colors.accentPrimary,
     active: Boolean = false
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemRadiusPill)
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(if (active) accent.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.045f))
-            .border(1.dp, if (active) accent.copy(alpha = 0.38f) else BorderSubtle, RoundedCornerShape(999.dp))
+            .clip(shape)
+            .background(if (active) accent.copy(alpha = 0.12f) else colors.overlayLight)
+            .border(1.dp, if (active) accent.copy(alpha = 0.38f) else colors.borderSubtle, shape)
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -303,7 +331,7 @@ fun SystemStatusChip(
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = if (active) TextPrimary else TextSecondary,
+                color = if (active) colors.textPrimary else colors.textSecondary,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
@@ -319,14 +347,14 @@ fun SystemActionTile(
     icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    accent: Color = AccentPrimary
+    accent: Color = SystemTheme.colors.accentPrimary
 ) {
-    SystemCard(modifier = modifier.clickable(onClick = onClick), contentPadding = 14.dp) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+    SystemCard(modifier = modifier.clickable(onClick = onClick), contentPadding = SystemCardPadding) {
+        Row(horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing), verticalAlignment = Alignment.CenterVertically) {
             SystemIconBubble(icon = icon, accent = accent)
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleSmall.copy(color = TextPrimary, fontWeight = FontWeight.Bold), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(title, style = MaterialTheme.typography.titleSmall.copy(color = SystemTheme.colors.textPrimary, fontWeight = FontWeight.Bold), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(color = SystemTheme.colors.textSecondary), maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -344,11 +372,14 @@ fun SystemTodoItem(
     isDragging: Boolean = false,
     onRemove: (() -> Unit)? = null
 ) {
-    val shape = RoundedCornerShape(if (compact) 12.dp else 13.dp)
+    val colors = SystemTheme.colors
+    val shapes = SystemTheme.shapes
+    val shape = RoundedCornerShape(if (compact) shapes.small else shapes.medium)
+    val numberShape = RoundedCornerShape(shapes.extraSmall)
     val borderColor = when {
-        isDragging -> AccentPrimary.copy(alpha = 0.72f)
-        isCompleted -> Color.White.copy(alpha = 0.045f)
-        else -> Color.White.copy(alpha = 0.075f)
+        isDragging -> colors.accentPrimary.copy(alpha = 0.72f)
+        isCompleted -> colors.borderMuted
+        else -> colors.overlayMedium
     }
 
     Row(
@@ -357,9 +388,9 @@ fun SystemTodoItem(
             .clip(shape)
             .background(
                 if (isDragging) {
-                    AccentPrimary.copy(alpha = 0.1f)
+                    colors.accentPrimary.copy(alpha = 0.1f)
                 } else {
-                    Color.White.copy(alpha = if (isCompleted) 0.026f else 0.04f)
+                    if (isCompleted) colors.overlayLight.copy(alpha = 0.026f) else colors.overlayLight
                 }
             )
             .border(1.dp, borderColor, shape)
@@ -373,16 +404,16 @@ fun SystemTodoItem(
                 modifier = Modifier
                     .height(24.dp)
                     .widthIn(min = if (compact) 34.dp else 32.dp)
-                    .clip(RoundedCornerShape(9.dp))
-                    .background(AccentPrimary.copy(alpha = if (compact) 0.06f else 0.09f))
-                    .border(1.dp, AccentPrimary.copy(alpha = if (compact) 0.16f else 0.24f), RoundedCornerShape(9.dp))
+                    .clip(numberShape)
+                    .background(colors.accentPrimary.copy(alpha = if (compact) 0.06f else 0.09f))
+                    .border(1.dp, colors.accentPrimary.copy(alpha = if (compact) 0.16f else 0.24f), numberShape)
                     .padding(horizontal = 7.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = numberLabel,
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = if (isCompleted) TextMuted else AccentPrimary,
+                        color = if (isCompleted) colors.textMuted else colors.accentPrimary,
                         fontWeight = FontWeight.Black
                     ),
                     maxLines = 1,
@@ -395,14 +426,14 @@ fun SystemTodoItem(
             modifier = Modifier
                 .size(if (compact) 22.dp else 24.dp)
                 .clip(CircleShape)
-                .background(if (isCompleted) AccentSuccess.copy(alpha = 0.14f) else Color.Transparent)
-                .border(1.dp, if (isCompleted) AccentSuccess.copy(alpha = 0.52f) else BorderSubtle, CircleShape),
+                .background(if (isCompleted) colors.accentSuccess.copy(alpha = 0.14f) else Color.Transparent)
+                .border(1.dp, if (isCompleted) colors.accentSuccess.copy(alpha = 0.52f) else colors.borderSubtle, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = if (isCompleted) Icons.Filled.Check else Icons.Filled.RadioButtonUnchecked,
                 contentDescription = null,
-                tint = if (isCompleted) AccentSuccess else TextMuted,
+                tint = if (isCompleted) colors.accentSuccess else colors.textMuted,
                 modifier = Modifier.size(if (compact) 14.dp else 15.dp)
             )
         }
@@ -410,7 +441,7 @@ fun SystemTodoItem(
             text = title,
             modifier = Modifier.weight(1f),
             style = (if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium).copy(
-                color = if (isCompleted) TextSecondary.copy(alpha = 0.58f) else TextPrimary,
+                color = if (isCompleted) colors.textSecondary.copy(alpha = 0.58f) else colors.textPrimary,
                 fontWeight = FontWeight.SemiBold,
                 textDecoration = if (isCompleted) TextDecoration.LineThrough else null
             ),
@@ -420,7 +451,7 @@ fun SystemTodoItem(
         if (onAddMicrotask != null) {
             TodoActionIcon(
                 icon = Icons.Filled.Add,
-                tint = AccentPrimary,
+                tint = colors.accentPrimary,
                 onClick = onAddMicrotask,
                 compact = compact
             )
@@ -428,7 +459,7 @@ fun SystemTodoItem(
         if (onRemove != null) {
             TodoActionIcon(
                 icon = Icons.Filled.Close,
-                tint = TextMuted,
+                tint = colors.textMuted,
                 onClick = onRemove,
                 compact = compact
             )
@@ -444,12 +475,13 @@ private fun TodoActionIcon(
     compact: Boolean
 ) {
     val size = if (compact) 28.dp else 30.dp
+    val shape = RoundedCornerShape(SystemTheme.shapes.small)
     Box(
         modifier = Modifier
             .size(size)
-            .clip(RoundedCornerShape(10.dp))
+            .clip(shape)
             .background(tint.copy(alpha = if (compact) 0.055f else 0.075f))
-            .border(1.dp, tint.copy(alpha = if (compact) 0.12f else 0.2f), RoundedCornerShape(10.dp))
+            .border(1.dp, tint.copy(alpha = if (compact) 0.12f else 0.2f), shape)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -477,7 +509,7 @@ fun SystemModuleButton(
         icon = icon,
         onClick = onClick,
         modifier = modifier,
-        accent = if (isAi) AccentAi else AccentPrimary
+        accent = if (isAi) SystemTheme.colors.accentAi else SystemTheme.colors.accentPrimary
     )
 }
 
@@ -485,15 +517,17 @@ fun SystemModuleButton(
 fun SystemInsightBlock(
     text: String,
     modifier: Modifier = Modifier,
-    accent: Color = AccentAi
+    accent: Color = SystemTheme.colors.accentAi
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(shape)
             .background(accent.copy(alpha = 0.08f))
-            .border(1.dp, accent.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
-            .padding(13.dp),
+            .border(1.dp, accent.copy(alpha = 0.18f), shape)
+            .padding(SystemItemSpacing),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.Top
     ) {
@@ -501,7 +535,7 @@ fun SystemInsightBlock(
         Text(
             text = text,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary, fontWeight = FontWeight.Medium)
+            style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary, fontWeight = FontWeight.Medium)
         )
     }
 }
@@ -539,13 +573,14 @@ fun SystemWeekCalendarPreview(
     title: String = "Твій тиждень",
     actionLabel: String = "Відкрити"
 ) {
+    val colors = SystemTheme.colors
     DarkGlassCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onOpenCalendar),
-        contentPadding = 14.dp
+        contentPadding = SystemCardPadding
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -554,7 +589,7 @@ fun SystemWeekCalendarPreview(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        color = TextPrimary,
+                        color = colors.textPrimary,
                         fontWeight = FontWeight.Bold
                     ),
                     maxLines = 1,
@@ -562,7 +597,7 @@ fun SystemWeekCalendarPreview(
                 )
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(999.dp))
+                        .clip(RoundedCornerShape(SystemRadiusPill))
                         .clickable(onClick = onOpenCalendar)
                         .padding(start = 10.dp, top = 6.dp, bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -570,14 +605,14 @@ fun SystemWeekCalendarPreview(
                     Text(
                         text = actionLabel,
                         style = MaterialTheme.typography.labelMedium.copy(
-                            color = AccentPrimary,
+                            color = colors.accentPrimary,
                             fontWeight = FontWeight.Bold
                         )
                     )
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = AccentPrimary,
+                        tint = colors.accentPrimary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -592,7 +627,7 @@ fun SystemWeekCalendarPreview(
                 ) {
                     val y = size.height * 0.53f
                     drawLine(
-                        color = Color.White.copy(alpha = 0.055f),
+                        color = colors.borderMuted,
                         start = Offset(size.width * 0.04f, y),
                         end = Offset(size.width * 0.96f, y),
                         strokeWidth = 1.dp.toPx(),
@@ -622,13 +657,14 @@ private fun SystemWeekDayCell(
     onSelectDay: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(13.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Column(
         modifier = modifier
             .height(78.dp)
             .clip(shape)
-            .background(Color.White.copy(alpha = if (day.isToday) 0.05f else 0.022f))
-            .border(1.dp, dayBorderColor(day), shape)
+            .background(if (day.isToday) colors.overlayMedium else colors.overlayLight.copy(alpha = 0.022f))
+            .border(1.dp, dayBorderColor(day, colors), shape)
             .clickable(onClick = onSelectDay)
             .padding(vertical = 7.dp, horizontal = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -637,7 +673,7 @@ private fun SystemWeekDayCell(
         Text(
             text = day.label,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = if (day.isToday) AccentPrimary else TextMuted,
+                color = if (day.isToday) colors.accentPrimary else colors.textMuted,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1
@@ -658,7 +694,7 @@ private fun SystemWeekDayCell(
                 when (day.visualType) {
                     SystemWeekDayVisualType.Work -> {
                         drawRoundRect(
-                            color = WorkDayColor.copy(alpha = if (day.status == SystemWeekDayStatus.NoData) 0.11f else 0.28f),
+                            color = colors.workDay.copy(alpha = if (day.status == SystemWeekDayStatus.NoData) 0.11f else 0.28f),
                             topLeft = Offset(markerLeft, markerTop),
                             size = Size(markerWidth, markerHeight),
                             cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner)
@@ -666,7 +702,7 @@ private fun SystemWeekDayCell(
                     }
                     SystemWeekDayVisualType.Training -> {
                         drawRoundRect(
-                            color = TrainingDayColor.copy(alpha = 0.22f),
+                            color = colors.trainingDay.copy(alpha = 0.22f),
                             topLeft = Offset(markerLeft, markerTop),
                             size = Size(markerWidth, markerHeight),
                             cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner)
@@ -676,8 +712,8 @@ private fun SystemWeekDayCell(
                         drawRoundRect(
                             brush = Brush.linearGradient(
                                 colors = listOf(
-                                    MixedDayGradientStart.copy(alpha = 0.32f),
-                                    MixedDayGradientEnd.copy(alpha = 0.34f)
+                                    colors.mixedDayStart.copy(alpha = 0.32f),
+                                    colors.mixedDayEnd.copy(alpha = 0.34f)
                                 ),
                                 start = Offset(markerLeft, markerTop),
                                 end = Offset(markerLeft + markerWidth, markerTop + markerHeight)
@@ -689,7 +725,7 @@ private fun SystemWeekDayCell(
                     }
                     SystemWeekDayVisualType.Rest -> {
                         drawRoundRect(
-                            color = Color.White.copy(alpha = 0.018f),
+                            color = colors.overlayLight.copy(alpha = 0.018f),
                             topLeft = Offset(markerLeft, markerTop),
                             size = Size(markerWidth, markerHeight),
                             cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner)
@@ -698,7 +734,7 @@ private fun SystemWeekDayCell(
                 }
 
                 drawRoundRect(
-                    color = markerStrokeColor(day),
+                    color = markerStrokeColor(day, colors),
                     topLeft = Offset(markerLeft, markerTop),
                     size = Size(markerWidth, markerHeight),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner),
@@ -708,13 +744,13 @@ private fun SystemWeekDayCell(
                 when (day.status) {
                     SystemWeekDayStatus.Completed -> {
                         drawCircle(
-                            color = AccentSuccess.copy(alpha = 0.16f),
+                            color = colors.accentSuccess.copy(alpha = 0.16f),
                             radius = 7.dp.toPx(),
                             center = Offset(markerLeft + markerWidth - 4.dp.toPx(), markerTop + 5.dp.toPx())
                         )
                     }
                     SystemWeekDayStatus.Partial -> drawCircle(
-                        color = AccentWarning.copy(alpha = 0.9f),
+                        color = colors.accentWarning.copy(alpha = 0.9f),
                         radius = 2.6.dp.toPx(),
                         center = Offset(markerLeft + markerWidth - 5.dp.toPx(), markerTop + 5.dp.toPx())
                     )
@@ -726,7 +762,7 @@ private fun SystemWeekDayCell(
             Text(
                 text = day.dayNumber,
                 style = MaterialTheme.typography.labelMedium.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             )
@@ -734,7 +770,7 @@ private fun SystemWeekDayCell(
                 Icon(
                     imageVector = Icons.Filled.Check,
                     contentDescription = null,
-                    tint = AccentSuccess,
+                    tint = colors.accentSuccess,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(end = 5.dp, top = 1.dp)
@@ -745,22 +781,22 @@ private fun SystemWeekDayCell(
     }
 }
 
-private fun dayBorderColor(day: SystemWeekDayModel): Color =
+private fun dayBorderColor(day: SystemWeekDayModel, colors: SystemColorTokens): Color =
     when {
-        day.isToday -> BorderActive
-        day.status == SystemWeekDayStatus.Missed -> AccentWarning.copy(alpha = 0.42f)
-        else -> BorderSubtle
+        day.isToday -> colors.borderActive
+        day.status == SystemWeekDayStatus.Missed -> colors.accentWarning.copy(alpha = 0.42f)
+        else -> colors.borderSubtle
     }
 
-private fun markerStrokeColor(day: SystemWeekDayModel): Color =
+private fun markerStrokeColor(day: SystemWeekDayModel, colors: SystemColorTokens): Color =
     when {
-        day.isToday -> AccentPrimary.copy(alpha = 0.76f)
-        day.status == SystemWeekDayStatus.Missed -> AccentWarning.copy(alpha = 0.5f)
-        day.status == SystemWeekDayStatus.NoData -> Color.White.copy(alpha = 0.055f)
-        day.visualType == SystemWeekDayVisualType.Training -> TrainingDayColor.copy(alpha = 0.38f)
-        day.visualType == SystemWeekDayVisualType.Work -> WorkDayColor.copy(alpha = 0.28f)
-        day.visualType == SystemWeekDayVisualType.Mixed -> AccentPrimary.copy(alpha = 0.3f)
-        else -> BorderSubtle
+        day.isToday -> colors.accentPrimary.copy(alpha = 0.76f)
+        day.status == SystemWeekDayStatus.Missed -> colors.accentWarning.copy(alpha = 0.5f)
+        day.status == SystemWeekDayStatus.NoData -> colors.borderMuted
+        day.visualType == SystemWeekDayVisualType.Training -> colors.trainingDay.copy(alpha = 0.38f)
+        day.visualType == SystemWeekDayVisualType.Work -> colors.workDay.copy(alpha = 0.28f)
+        day.visualType == SystemWeekDayVisualType.Mixed -> colors.accentPrimary.copy(alpha = 0.3f)
+        else -> colors.borderSubtle
     }
 
 @Composable
@@ -776,12 +812,14 @@ fun SystemBottomNav(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.extraLarge)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(26.dp))
-            .background(SystemSurfaceGlassStrong)
-            .border(1.dp, BorderSubtle, RoundedCornerShape(26.dp))
+            .clip(shape)
+            .background(colors.surfaceGlassStrong)
+            .border(1.dp, colors.borderSubtle, shape)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,
@@ -796,21 +834,23 @@ fun SystemExerciseRow(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.035f))
+            .clip(shape)
+            .background(colors.overlayLight.copy(alpha = 0.035f))
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        SystemIconBubble(icon = Icons.Filled.FitnessCenter, accent = AccentPrimary)
+        SystemIconBubble(icon = Icons.Filled.FitnessCenter, accent = colors.accentPrimary)
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary, fontWeight = FontWeight.Bold), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(title, style = MaterialTheme.typography.bodyMedium.copy(color = colors.textPrimary, fontWeight = FontWeight.Bold), maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (subtitle != null) {
-                Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -822,14 +862,16 @@ private fun SystemIconBubble(
     accent: Color,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Box(
         modifier = modifier
             .size(38.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(shape)
             .background(
-                if (accent == AccentAi) AccentAiSoft else AccentPrimarySoft
+                if (accent == colors.accentAi) colors.accentAiSoft else colors.accentPrimarySoft
             )
-            .border(1.dp, accent.copy(alpha = 0.28f), RoundedCornerShape(12.dp)),
+            .border(1.dp, accent.copy(alpha = 0.28f), shape),
         contentAlignment = Alignment.Center
     ) {
         Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(19.dp))

@@ -2,6 +2,7 @@ package com.ihor.thesystem.core.ui.components
 
 import android.graphics.BlurMaskFilter
 import android.graphics.Paint as AndroidPaint
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
@@ -19,6 +20,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 
 import com.ihor.thesystem.core.theme.CornerRadius
+import com.ihor.thesystem.core.theme.SystemTheme
 
 /**
  * Малює статичну sci-fi панель із зрізаними кутами.
@@ -66,7 +68,11 @@ fun Modifier.neonGlow(color: Color, radius: Dp = 10.dp): Modifier = this.drawBeh
     }
 }
 
-fun Modifier.glassCard(radius: Dp = CornerRadius): Modifier = this
+@Composable
+fun Modifier.glassCard(radius: Dp = CornerRadius): Modifier {
+    val colors = SystemTheme.colors
+    return this
     .clip(RoundedCornerShape(radius))
-    .background(Color.White.copy(alpha = 0.08f))
-    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(radius))
+    .background(colors.overlayMedium)
+    .border(1.dp, colors.borderSubtle, RoundedCornerShape(radius))
+}

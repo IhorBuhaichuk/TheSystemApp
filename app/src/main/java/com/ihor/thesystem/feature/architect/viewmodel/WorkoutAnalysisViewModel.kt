@@ -1,6 +1,7 @@
 package com.ihor.thesystem.feature.architect.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiState
@@ -19,11 +20,13 @@ import javax.inject.Inject
 @HiltViewModel
 class WorkoutAnalysisViewModel @Inject constructor(
     private val getWorkoutAnalysis: GetWorkoutAnalysisUseCase,
-    private val dispatchers: DispatcherProvider
+    private val dispatchers: DispatcherProvider,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<WorkoutAnalysisData?>>(UiState.Loading)
     val uiState: StateFlow<UiState<WorkoutAnalysisData?>> = _uiState.asStateFlow()
+    private val routeSessionId = savedStateHandle.get<Long>(SESSION_ID_ARG)?.takeIf { it > 0L }
 
     init {
         loadAnalysis()
@@ -32,7 +35,9 @@ class WorkoutAnalysisViewModel @Inject constructor(
     fun loadAnalysis() {
         _uiState.value = UiState.Loading
         viewModelScope.launch(dispatchers.io) {
-            runCatching { getWorkoutAnalysis() }
+            runCatching {
+                routeSessionId?.let { getWorkoutAnalysis(it) } ?: getWorkoutAnalysis()
+            }
                 .onSuccess { analysis ->
                     _uiState.value = UiState.Content(analysis)
                 }
@@ -45,3 +50,5 @@ class WorkoutAnalysisViewModel @Inject constructor(
         }
     }
 }
+
+private const val SESSION_ID_ARG = "sessionId"

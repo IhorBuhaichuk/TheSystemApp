@@ -1,5 +1,6 @@
 package com.ihor.thesystem.feature.architect.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
@@ -11,6 +12,7 @@ import com.ihor.thesystem.domain.model.WorkoutAnalysisData
 import com.ihor.thesystem.domain.model.WorkoutExecutionAnalysis
 import com.ihor.thesystem.domain.usecase.GetWorkoutAnalysisUseCase
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -66,10 +68,24 @@ class WorkoutAnalysisViewModelTest {
         assertEquals(R.string.error_workout_analysis_failed, message.resId)
     }
 
-    private fun viewModel(): WorkoutAnalysisViewModel =
+    @Test
+    fun `loads routed workout analysis when session id is present`() {
+        val analysis = workoutAnalysis()
+        coEvery { getWorkoutAnalysis.invoke(42L) } returns analysis
+
+        val viewModel = viewModel(SavedStateHandle(mapOf("sessionId" to 42L)))
+        mainDispatcherRule.advanceUntilIdle()
+
+        assertEquals(UiState.Content(analysis), viewModel.uiState.value)
+        coVerify(exactly = 1) { getWorkoutAnalysis.invoke(42L) }
+        coVerify(exactly = 0) { getWorkoutAnalysis.invoke() }
+    }
+
+    private fun viewModel(savedStateHandle: SavedStateHandle = SavedStateHandle()): WorkoutAnalysisViewModel =
         WorkoutAnalysisViewModel(
             getWorkoutAnalysis = getWorkoutAnalysis,
-            dispatchers = TestDispatcherProvider(mainDispatcherRule.dispatcher)
+            dispatchers = TestDispatcherProvider(mainDispatcherRule.dispatcher),
+            savedStateHandle = savedStateHandle
         )
 
     private fun workoutAnalysis(): WorkoutAnalysisData =

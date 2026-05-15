@@ -5,6 +5,7 @@ import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -79,6 +80,26 @@ class CalculateRecommendedSetUseCaseTest {
         assertFalse(result.isProgression)
     }
 
+    @Test
+    fun `provided session sets drive recommendation without reading latest repository sets`() = runTest {
+        coEvery { matrixRepo.getEntrySync(1) } returns entry(startWeight = 40f, targetWeight = 70f, weeklyStep = 2.5f)
+
+        val result = useCase.fromSets(
+            exerciseId = 1,
+            exerciseName = "Bench",
+            sets = listOf(
+                set(weight = 55.0, reps = 12, sessionId = 42L),
+                set(weight = 55.0, reps = 12, sessionId = 42L),
+                set(weight = 55.0, reps = 12, sessionId = 42L)
+            )
+        )
+
+        assertEquals(57.5, result.weight, 0.001)
+        assertEquals(8, result.reps)
+        assertTrue(result.isProgression)
+        coVerify(exactly = 0) { analyticsRepo.getLastSetsForExercise(1) }
+    }
+
     private fun entry(
         startWeight: Float = 40f,
         targetWeight: Float = 60f,
@@ -98,13 +119,13 @@ class CalculateRecommendedSetUseCaseTest {
     private fun set(
         weight: Double,
         reps: Int,
-        isCompleted: Boolean = true
+        isCompleted: Boolean = true,
+        sessionId: Long = 1L
     ) = ExerciseSet(
-        sessionId = 1L,
+        sessionId = sessionId,
         exerciseId = 1,
         weight = weight,
         reps = reps,
         isCompleted = isCompleted
     )
 }
-

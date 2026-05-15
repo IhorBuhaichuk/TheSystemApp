@@ -17,12 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.theme.SystemCardPadding
+import com.ihor.thesystem.core.theme.SystemControlHeight
+import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
@@ -35,6 +37,7 @@ import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.res.stringResource
 import com.ihor.thesystem.R
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 
 @Composable
 fun ActiveDayCard(
@@ -48,7 +51,7 @@ fun ActiveDayCard(
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
         if (data.exercises.isNotEmpty()) {
             data.exercises.forEach { exercise ->
@@ -76,7 +79,8 @@ fun ActiveDayCard(
                                         targetWeightNote = null,
                                         weeklyStep = 0f,
                                         progressPercent = 0f,
-                                        currentRank = com.ihor.thesystem.domain.model.Rank.E
+                                        currentRank = com.ihor.thesystem.domain.model.Rank.E,
+                                        usesExternalLoad = exercise.trackingMode.usesWeightInput
                                     )
                                 )
                             }
@@ -99,6 +103,8 @@ fun ActiveDayCard(
     onSetup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
+    val shapes = SystemTheme.shapes
     var isExpanded by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxWidth()) {
@@ -107,8 +113,8 @@ fun ActiveDayCard(
                 .fillMaxWidth()
                 .glassCard()
                 .clickable { isExpanded = !isExpanded }
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(SystemCardPadding),
+            verticalArrangement = Arrangement.spacedBy(SystemCardPadding)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -118,13 +124,13 @@ fun ActiveDayCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Primary.copy(alpha = 0.1f)),
+                        .background(colors.accentPrimary.copy(alpha = 0.10f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.FitnessCenter,
                         contentDescription = null,
-                        tint = Primary,
+                        tint = colors.accentPrimary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -134,19 +140,22 @@ fun ActiveDayCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = (exercise.nameUk ?: exercise.name).uppercase(),
-                        color = OnBackground,
-                        fontSize = 18.sp,
-                        fontFamily = RajdhaniFamily,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = colors.textPrimary,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                     if (exercise.recommendation != null) {
                         Text(
                             text = exercise.recommendation,
-                            color = OnSurfaceVariant,
-                            fontSize = 13.sp,
-                            fontFamily = RajdhaniFamily,
-                            fontWeight = FontWeight.Medium
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = colors.textSecondary,
+                                fontWeight = FontWeight.Medium
+                            ),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -154,7 +163,7 @@ fun ActiveDayCard(
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = null,
-                    tint = OnSurfaceVariant
+                    tint = colors.textSecondary
                 )
             }
 
@@ -172,20 +181,20 @@ fun ActiveDayCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(200.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                                .clip(RoundedCornerShape(shapes.medium))
+                                .border(1.dp, colors.borderSubtle, RoundedCornerShape(shapes.medium))
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(SystemCardPadding))
                     } else if (exercise.gifUrl != null) {
                         com.ihor.thesystem.presentation.common.components.HologramExerciseImage(
                             gifUrl = exercise.gifUrl,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(200.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                                .clip(RoundedCornerShape(shapes.medium))
+                                .border(1.dp, colors.borderSubtle, RoundedCornerShape(shapes.medium))
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(SystemCardPadding))
                     }
 
                     // Sets Input Area
@@ -204,10 +213,10 @@ fun ActiveDayCard(
                     }
 
                     if (matrixEntry != null) {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(SystemCardPadding))
                         
                         // Progress Bar
-                        Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(bottom = SystemCardPadding)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -215,16 +224,17 @@ fun ActiveDayCard(
                             ) {
                                 Text(
                                     text = stringResource(R.string.text_exercise_progress),
-                                    color = OnSurfaceVariant,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 0.5.sp
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = colors.textSecondary,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 )
                                 Text(
                                     text = "${(matrixEntry.progressPercent * 100).toInt()}%",
-                                    color = Primary,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = colors.accentPrimary,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 )
                             }
                             Spacer(modifier = Modifier.height(6.dp))
@@ -233,14 +243,14 @@ fun ActiveDayCard(
                                     .fillMaxWidth()
                                     .height(4.dp)
                                     .clip(CircleShape)
-                                    .background(OnBackground.copy(alpha = 0.05f))
+                                    .background(colors.overlayLight)
                             ) {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth(matrixEntry.progressPercent.coerceIn(0f, 1f))
                                         .fillMaxHeight()
                                         .clip(CircleShape)
-                                        .background(Brush.horizontalGradient(listOf(Primary, Color(0xFFB257FF))))
+                                        .background(Brush.horizontalGradient(listOf(colors.accentPrimary, colors.accentAi)))
                                 )
                             }
                         }
@@ -254,7 +264,7 @@ fun ActiveDayCard(
                             StatItem(stringResource(R.string.text_rank_label), matrixEntry.currentRank.name)
                         }
                         
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(SystemItemSpacing))
                     }
 
                     Row(
@@ -264,10 +274,10 @@ fun ActiveDayCard(
                         IconButton(
                             onClick = onSetup,
                             modifier = Modifier
-                                .background(OnBackground.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
+                                .background(colors.overlayLight, RoundedCornerShape(shapes.small))
                                 .size(40.dp)
                         ) {
-                            Icon(Icons.Default.Settings, null, tint = OnSurfaceVariant, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Settings, null, tint = colors.textSecondary, modifier = Modifier.size(20.dp))
                         }
                     }
                 }
@@ -286,20 +296,22 @@ private fun SetInputRow(
     onFocusLost: () -> Unit,
     onComplete: () -> Unit
 ) {
+    val colors = SystemTheme.colors
+    val shapes = SystemTheme.shapes
     var weightText by remember(set.id) { mutableStateOf(set.weight) }
     var repsText by remember(set.id) { mutableStateOf(set.reps) }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .glassCard(radius = 12.dp)
-            .background(if (set.isCompleted) StatusSuccess.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.03f))
+            .glassCard(radius = shapes.small)
+            .background(if (set.isCompleted) colors.accentSuccess.copy(alpha = 0.10f) else colors.surfaceGlassSoft)
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "$index",
-            color = if (set.isCompleted) StatusSuccess else OnSurfaceVariant,
+            color = if (set.isCompleted) colors.accentSuccess else colors.textSecondary,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.width(24.dp),
             textAlign = TextAlign.Center
@@ -316,21 +328,25 @@ private fun SetInputRow(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .height(48.dp)
+                    .height(SystemControlHeight)
                     .onFocusChanged { focusState ->
                         if (!focusState.isFocused) {
                             onFocusLost()
                         }
-                    },
-                placeholder = { Text("кг", fontSize = 12.sp, color = OnSurfaceVariant) },
+                },
+                placeholder = {
+                    Text(
+                        text = "кг",
+                        style = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary)
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = OnBackground.copy(alpha = 0.1f),
-                    focusedBorderColor = Primary,
-                    unfocusedTextColor = OnBackground,
-                    focusedTextColor = OnBackground
+                colors = systemOutlinedTextFieldColors(),
+                shape = RoundedCornerShape(shapes.extraSmall),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    color = colors.textPrimary,
+                    textAlign = TextAlign.Center
                 ),
-                shape = RoundedCornerShape(8.dp),
                 singleLine = true
             )
 
@@ -345,23 +361,27 @@ private fun SetInputRow(
             },
             modifier = Modifier
                 .weight(1f)
-                .height(48.dp)
+                .height(SystemControlHeight)
                 .onFocusChanged { focusState ->
                     if (!focusState.isFocused) {
                         onFocusLost()
                     }
                 },
-            placeholder = { Text(trackingMode.valueHint, fontSize = 12.sp, color = OnSurfaceVariant) },
+            placeholder = {
+                Text(
+                    text = trackingMode.valueHint,
+                    style = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary)
+                )
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = if (trackingMode.usesTimeInput) KeyboardType.Text else KeyboardType.Number
             ),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = OnBackground.copy(alpha = 0.1f),
-                focusedBorderColor = Primary,
-                unfocusedTextColor = OnBackground,
-                focusedTextColor = OnBackground
+            colors = systemOutlinedTextFieldColors(),
+            shape = RoundedCornerShape(shapes.extraSmall),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                color = colors.textPrimary,
+                textAlign = TextAlign.Center
             ),
-            shape = RoundedCornerShape(8.dp),
             singleLine = true
         )
 
@@ -372,12 +392,12 @@ private fun SetInputRow(
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(if (set.isCompleted) StatusSuccess else OnBackground.copy(alpha = 0.1f))
+                .background(if (set.isCompleted) colors.accentSuccess else colors.overlayMedium)
         ) {
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = null,
-                tint = if (set.isCompleted) Color.Black else OnSurfaceVariant,
+                tint = if (set.isCompleted) colors.background else colors.textSecondary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -386,8 +406,18 @@ private fun SetInputRow(
 
 @Composable
 private fun StatItem(label: String, value: String) {
+    val colors = SystemTheme.colors
     Column {
-        Text(label, color = OnSurfaceVariant, fontSize = 10.sp)
-        Text(value, color = OnBackground, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = colors.textPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        )
     }
 }

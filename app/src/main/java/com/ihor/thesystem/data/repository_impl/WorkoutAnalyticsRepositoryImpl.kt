@@ -46,6 +46,10 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getSessionById(sessionId: Long): Flow<WorkoutLog?> {
+        return dao.getSessionLogById(sessionId).map { it?.toDomain() }
+    }
+
     override fun getSessionsByDate(dateMillis: Long): Flow<List<WorkoutLog>> {
         val (startOfDay, endOfDay) = dayBounds(dateMillis)
         return dao.getSessionLogsBetween(startOfDay, endOfDay).map { list ->

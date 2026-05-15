@@ -1,27 +1,43 @@
 package com.ihor.thesystem.feature.status.ui.components.workout
 
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.EaseInOutSine
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.R
-import com.ihor.thesystem.core.theme.*
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.feature.status.viewmodel.CycleDayUiModel
 
 @Composable
@@ -32,14 +48,14 @@ fun CycleDaySelector(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier              = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment     = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
         days.forEach { day ->
             CycleDayButton(
-                day      = day,
-                onTap    = { onTap(day.dayNumber) },
+                day = day,
+                onTap = { onTap(day.dayNumber) },
                 onLongPress = { onLongPress(day.dayNumber) },
                 modifier = Modifier.weight(1f)
             )
@@ -54,13 +70,9 @@ private fun CycleDayButton(
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val (icon, iconColor, glowColor) = when (day.dayNumber) {
-        1 -> Triple(Icons.Filled.WbSunny, Color(0xFFFFD600), Color(0xFFFFD600))
-        2 -> Triple(Icons.Filled.NightsStay, Color(0xFF81D4FA), Color(0xFF0288D1))
-        3 -> Triple(Icons.Filled.Bedtime, Color(0xFFA5D6A7), Color(0xFF4CAF50))
-        4 -> Triple(Icons.Filled.Favorite, Color(0xFFF06292), Color(0xFFE91E63))
-        else -> Triple(Icons.Filled.Circle, Color.White, Color.White)
-    }
+    val colors = SystemTheme.colors
+    val motion = SystemTheme.motion
+    val (icon, iconColor, glowColor) = cycleDayVisual(day.dayNumber)
 
     val label = when (day.dayNumber) {
         1 -> stringResource(R.string.cycle_day_1)
@@ -70,22 +82,26 @@ private fun CycleDayButton(
         else -> stringResource(R.string.cycle_day_default, day.dayNumber)
     }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    
+    val infiniteTransition = rememberInfiniteTransition(label = "cycle-day-pulse")
     val pulseValue by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
-        label = "pulse"
+        animationSpec = infiniteRepeatable(
+            animation = tween(motion.breathingMillis / 3, easing = EaseInOutSine),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "cycle-day-glow"
     )
 
+    val isEmphasized = day.isActive || day.isSelected
+
     Column(
-        modifier              = modifier,
-        horizontalAlignment   = Alignment.CenterHorizontally,
-        verticalArrangement   = Arrangement.spacedBy(8.dp)
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
-            modifier         = Modifier
+            modifier = Modifier
                 .size(56.dp)
                 .pointerInput(Unit) {
                     detectTapGestures(
@@ -98,36 +114,32 @@ private fun CycleDayButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (day.isActive || day.isSelected) {
-                    val factor = pulseValue * 0.3f
-                    Color(
-                        red = iconColor.red + (1f - iconColor.red) * factor,
-                        green = iconColor.green + (1f - iconColor.green) * factor,
-                        blue = iconColor.blue + (1f - iconColor.blue) * factor,
-                        alpha = 1f
-                    )
-                } else iconColor.copy(alpha = 0.15f),
+                tint = when {
+                    day.isActive -> lerp(iconColor, colors.textPrimary, pulseValue * 0.18f)
+                    day.isSelected -> iconColor
+                    else -> iconColor.copy(alpha = 0.24f)
+                },
                 modifier = Modifier
                     .size(30.dp)
                     .graphicsLayer {
-                        if (day.isActive || day.isSelected) {
-                            val scale = 1f + (0.05f * pulseValue)
+                        if (isEmphasized) {
+                            val scale = 1f + ((motion.activeScale - 1f) * pulseValue)
                             scaleX = scale
                             scaleY = scale
                         }
                     }
                     .drawBehind {
-                        if (day.isActive || day.isSelected) {
+                        if (isEmphasized) {
                             drawCircle(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        glowColor.copy(alpha = 0.6f * pulseValue),
+                                        glowColor.copy(alpha = 0.28f * pulseValue),
                                         Color.Transparent
                                     ),
                                     center = center,
-                                    radius = size.minDimension * 0.7f
+                                    radius = size.minDimension * 0.72f
                                 ),
-                                radius = size.minDimension * 0.7f
+                                radius = size.minDimension * 0.72f
                             )
                         }
                     }
@@ -135,12 +147,27 @@ private fun CycleDayButton(
         }
 
         Text(
-            text       = label.uppercase(),
-            color      = if (day.isActive) iconColor else if (day.isSelected) Color.White else Color.White.copy(alpha = 0.2f),
-            fontSize   = 10.sp,
-            fontFamily = RajdhaniFamily,
-            fontWeight = if (day.isActive || day.isSelected) FontWeight.Bold else FontWeight.Medium,
-            letterSpacing = 1.sp
+            text = label.uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = when {
+                    day.isActive -> iconColor
+                    day.isSelected -> colors.textPrimary
+                    else -> colors.textMuted
+                },
+                fontWeight = if (isEmphasized) FontWeight.Bold else FontWeight.Medium
+            )
         )
+    }
+}
+
+@Composable
+private fun cycleDayVisual(dayNumber: Int): Triple<ImageVector, Color, Color> {
+    val colors = SystemTheme.colors
+    return when (dayNumber) {
+        1 -> Triple(Icons.Filled.WbSunny, colors.accentWarning, colors.accentWarning)
+        2 -> Triple(Icons.Filled.NightsStay, colors.accentInfo, colors.accentPrimary)
+        3 -> Triple(Icons.Filled.Bedtime, colors.accentSuccess, colors.accentSuccess)
+        4 -> Triple(Icons.Filled.Favorite, colors.accentAi, colors.accentAi)
+        else -> Triple(Icons.Filled.Circle, colors.textSecondary, colors.textSecondary)
     }
 }

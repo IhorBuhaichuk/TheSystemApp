@@ -38,7 +38,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -61,24 +61,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ihor.thesystem.core.theme.AccentAi
-import com.ihor.thesystem.core.theme.AccentAiSoft
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.AccentSuccess
-import com.ihor.thesystem.core.theme.AccentWarning
-import com.ihor.thesystem.core.theme.BorderActive
-import com.ihor.thesystem.core.theme.BorderSubtle
-import com.ihor.thesystem.core.theme.SystemBackground
+import com.ihor.thesystem.core.theme.SystemColorTokens
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
-import com.ihor.thesystem.core.theme.SystemSurfaceGlass
-import com.ihor.thesystem.core.theme.TextMuted
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 import com.ihor.thesystem.domain.model.AnnualProgressionDetailStatus
 import com.ihor.thesystem.domain.model.AnnualProgressionExerciseDetails
 import com.ihor.thesystem.domain.model.AnnualProgressionMonthlyProgress
@@ -104,6 +95,7 @@ fun AnnualProgressionDetailsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val manualState by viewModel.manualEditorState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val colors = SystemTheme.colors
 
     LaunchedEffect(manualState.message) {
         val message = manualState.message ?: return@LaunchedEffect
@@ -114,7 +106,7 @@ fun AnnualProgressionDetailsScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(SystemBackground)
+            .background(colors.background)
     ) {
         RpgStatusBackdrop()
 
@@ -126,7 +118,7 @@ fun AnnualProgressionDetailsScreen(
                 onSave = viewModel::onSaveManualPlan
             )
             uiState.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = AccentAi)
+                CircularProgressIndicator(color = colors.accentAi)
             }
             uiState.data.exercises.isEmpty() -> AnnualProgressionEmptyState(
                 onBack = onBack,
@@ -174,38 +166,30 @@ private fun AnnualProgressionDetailsContent(
 
 @Composable
 private fun AnnualDetailsHeader(onBack: () -> Unit) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(1.dp, BorderSubtle, CircleShape)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Íàçàä",
-                tint = TextSecondary
-            )
-        }
+        RoundIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = "ÐÐ°Ð·Ð°Ð´",
+            onClick = onBack
+        )
         Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
             Text(
-                text = "Ð³÷íà ïðîãðåñ³ÿ",
+                text = "Ð Ñ–Ñ‡Ð½Ð° Ð¿Ñ€Ð¾Ð³Ñ€ÐµÑÑ–Ñ",
                 style = MaterialTheme.typography.headlineSmall.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Black
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Ôàêò ïðîòè ïëàíó",
-                style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
+                text = "Ð¤Ð°ÐºÑ‚ Ð¿Ñ€Ð¾Ñ‚Ð¸ Ð¿Ð»Ð°Ð½Ñƒ",
+                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -241,13 +225,14 @@ private fun ExerciseChip(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(999.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.pill)
     Row(
         modifier = Modifier
             .height(40.dp)
             .clip(shape)
-            .background(if (selected) AccentAiSoft else Color.White.copy(alpha = 0.035f))
-            .border(1.dp, if (selected) BorderActive else BorderSubtle, shape)
+            .background(if (selected) colors.accentAiSoft else colors.overlayLight)
+            .border(1.dp, if (selected) colors.borderActive else colors.borderSubtle, shape)
             .clickable(onClick = onClick)
             .padding(horizontal = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -257,12 +242,12 @@ private fun ExerciseChip(
             modifier = Modifier
                 .size(6.dp)
                 .clip(CircleShape)
-                .background(if (selected) AccentAi else TextMuted)
+                .background(if (selected) colors.accentAi else colors.textMuted)
         )
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium.copy(
-                color = if (selected) TextPrimary else TextSecondary,
+                color = if (selected) colors.textPrimary else colors.textSecondary,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
@@ -295,6 +280,7 @@ private fun AnnualProgressionLineChart(
     progress: List<AnnualProgressionMonthlyProgress>,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     val visibleProgress = progress.filter { it.monthIndex in 0..12 }
     val values = visibleProgress.map { it.planWeight } + visibleProgress.mapNotNull { it.actualWeight }
     val minValue = (values.minOrNull() ?: 0.0).coerceAtLeast(0.0)
@@ -323,9 +309,9 @@ private fun AnnualProgressionLineChart(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White.copy(alpha = 0.018f))
-                    .border(1.dp, BorderSubtle, RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(SystemTheme.shapes.medium))
+                    .background(colors.surfaceGlassSoft)
+                    .border(1.dp, colors.borderSubtle, RoundedCornerShape(SystemTheme.shapes.medium))
                     .padding(8.dp)
             ) {
                 val horizontalPadding = 14.dp.toPx()
@@ -337,7 +323,7 @@ private fun AnnualProgressionLineChart(
                 repeat(4) { index ->
                     val y = verticalPadding + graphHeight * (index / 3f)
                     drawLine(
-                        color = Color.White.copy(alpha = 0.055f),
+                        color = colors.overlayMedium,
                         start = Offset(horizontalPadding, y),
                         end = Offset(size.width - horizontalPadding, y),
                         strokeWidth = 1.dp.toPx()
@@ -375,8 +361,8 @@ private fun AnnualProgressionLineChart(
                     month.actualWeight?.let { point(month.monthIndex, it) }
                 }
 
-                drawSeries(planPoints, AccentAi.copy(alpha = 0.78f), 2.dp.toPx())
-                drawSeries(factPoints, AccentPrimary, 2.6.dp.toPx())
+                drawSeries(planPoints, colors.accentAi.copy(alpha = 0.78f), 2.dp.toPx())
+                drawSeries(factPoints, colors.accentPrimary, 2.6.dp.toPx())
             }
         }
         Row(
@@ -389,7 +375,7 @@ private fun AnnualProgressionLineChart(
                 Text(
                     text = "M$month",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = TextMuted,
+                        color = colors.textMuted,
                         fontWeight = FontWeight.Bold
                     )
                 )
@@ -400,10 +386,11 @@ private fun AnnualProgressionLineChart(
 
 @Composable
 private fun AxisLabel(value: Double) {
+    val colors = SystemTheme.colors
     Text(
         text = "${value.roundToInt()}",
         style = MaterialTheme.typography.labelSmall.copy(
-            color = TextMuted,
+            color = colors.textMuted,
             fontWeight = FontWeight.Bold
         ),
         maxLines = 1
@@ -412,17 +399,19 @@ private fun AxisLabel(value: Double) {
 
 @Composable
 private fun ChartLegend() {
+    val colors = SystemTheme.colors
     Row(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        LegendItem(label = "Ïëàí", color = AccentAi)
-        LegendItem(label = "Ôàêò", color = AccentPrimary)
+        LegendItem(label = "ÐŸÐ»Ð°Ð½", color = colors.accentAi)
+        LegendItem(label = "Ð¤Ð°ÐºÑ‚", color = colors.accentPrimary)
     }
 }
 
 @Composable
 private fun LegendItem(label: String, color: Color) {
+    val colors = SystemTheme.colors
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
@@ -433,7 +422,7 @@ private fun LegendItem(label: String, color: Color) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = TextSecondary,
+                color = colors.textSecondary,
                 fontWeight = FontWeight.SemiBold
             )
         )
@@ -445,8 +434,8 @@ private fun MonthlyTargetsBlock(exercise: AnnualProgressionExerciseDetails) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Ì³ñÿ÷í³ ö³ë³",
-                subtitle = "12 ì³ñÿö³â ïëàíó"
+                title = "ÐœÑ–ÑÑÑ‡Ð½Ñ– Ñ†Ñ–Ð»Ñ–",
+                subtitle = "12 Ð¼Ñ–ÑÑÑ†Ñ–Ð² Ð¿Ð»Ð°Ð½Ñƒ"
             )
             exercise.monthlyProgress
                 .filter { it.monthIndex in 1..12 }
@@ -459,13 +448,15 @@ private fun MonthlyTargetsBlock(exercise: AnnualProgressionExerciseDetails) {
 
 @Composable
 private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
-    val accent = month.status.statusColor()
+    val colors = SystemTheme.colors
+    val accent = month.status.statusColor(colors)
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(SystemSurfaceGlass.copy(alpha = 0.58f))
-            .border(1.dp, accent.copy(alpha = 0.16f), RoundedCornerShape(14.dp))
+            .clip(shape)
+            .background(colors.surfaceGlass.copy(alpha = 0.58f))
+            .border(1.dp, accent.copy(alpha = 0.16f), shape)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -473,9 +464,9 @@ private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
         Box(
             modifier = Modifier
                 .size(38.dp)
-                .clip(RoundedCornerShape(13.dp))
-                .background(accent.copy(alpha = 0.1f))
-                .border(1.dp, accent.copy(alpha = 0.2f), RoundedCornerShape(13.dp)),
+                .clip(RoundedCornerShape(SystemTheme.shapes.medium))
+                .background(accent.copy(alpha = 0.10f))
+                .border(1.dp, accent.copy(alpha = 0.20f), RoundedCornerShape(SystemTheme.shapes.medium)),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -488,17 +479,17 @@ private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
-                text = "Ïëàí ${month.planWeight.formatWeight()} êã",
+                text = "ÐŸÐ»Ð°Ð½ ${month.planWeight.formatWeight()} ÐºÐ³",
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Ôàêò ${month.actualWeight?.let { "${it.formatWeight()} êã" } ?: "—"}",
-                style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
+                text = "Ð¤Ð°ÐºÑ‚ ${month.actualWeight?.let { "${it.formatWeight()} ÐºÐ³" } ?: "-"}",
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -513,12 +504,14 @@ private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
 
 @Composable
 private fun CurrentConclusionBlock(exercise: AnnualProgressionExerciseDetails) {
-    val accent = exercise.currentStatus.statusColor()
+    val colors = SystemTheme.colors
+    val accent = exercise.currentStatus.statusColor(colors)
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Ïîòî÷íèé âèñíîâîê",
-                subtitle = "Îñòàíí³é äîñòóïíèé ôàêò ïðîòè ïëàíó",
+                title = "ÐŸÐ¾Ñ‚Ð¾Ñ‡Ð½Ð¸Ð¹ Ð²Ð¸ÑÐ½Ð¾Ð²Ð¾Ðº",
+                subtitle = "ÐžÑÑ‚Ð°Ð½Ð½Ñ–Ð¹ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ð¸Ð¹ Ñ„Ð°ÐºÑ‚ Ð¿Ñ€Ð¾Ñ‚Ð¸ Ð¿Ð»Ð°Ð½Ñƒ",
                 trailing = {
                     SystemStatusChip(
                         text = AnnualProgressionDetailsUiMapper.statusLabel(exercise.currentStatus),
@@ -530,7 +523,7 @@ private fun CurrentConclusionBlock(exercise: AnnualProgressionExerciseDetails) {
             Text(
                 text = AnnualProgressionDetailsUiMapper.conclusionText(exercise.currentStatus),
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = TextSecondary,
+                    color = colors.textSecondary,
                     fontWeight = FontWeight.Medium
                 )
             )
@@ -538,24 +531,24 @@ private fun CurrentConclusionBlock(exercise: AnnualProgressionExerciseDetails) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(AccentAi.copy(alpha = 0.075f))
-                        .border(1.dp, AccentAi.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
-                        .padding(13.dp),
+                        .clip(shape)
+                        .background(colors.accentAi.copy(alpha = 0.075f))
+                        .border(1.dp, colors.accentAi.copy(alpha = 0.18f), shape)
+                        .padding(SystemItemSpacing),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.Top
                 ) {
                     Icon(
                         imageVector = Icons.Filled.AutoAwesome,
                         contentDescription = null,
-                        tint = AccentAi,
+                        tint = colors.accentAi,
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
                         text = recommendation,
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = TextSecondary,
+                            color = colors.textSecondary,
                             fontWeight = FontWeight.Medium
                         )
                     )
@@ -572,6 +565,7 @@ private fun AnnualProgressionManualEditorScreen(
     onTargetChanged: (Int, Int, String) -> Unit,
     onSave: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     val monthLabels = remember(state.currentDate) {
         buildManualMonthLabels(state.currentDate)
     }
@@ -601,7 +595,7 @@ private fun AnnualProgressionManualEditorScreen(
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = AccentAi)
+                    CircularProgressIndicator(color = colors.accentAi)
                 }
             }
             state.exercises.isEmpty() -> {
@@ -628,10 +622,10 @@ private fun AnnualProgressionManualEditorScreen(
                     modifier = Modifier.weight(1f)
                 )
                 SystemButton(
-                    text = if (state.isSaving) "Çáåð³ãàþ..." else "Çáåðåãòè ãðàô³ê",
+                    text = if (state.isSaving) "Ð—Ð±ÐµÑ€Ñ–Ð³Ð°ÑŽ..." else "Ð—Ð±ÐµÑ€ÐµÐ³Ñ‚Ð¸ Ð³Ñ€Ð°Ñ„Ñ–Ðº",
                     icon = Icons.Filled.Save,
                     onClick = onSave,
-                    accent = AccentAi,
+                    accent = colors.accentAi,
                     enabled = state.canSave,
                     glow = state.canSave,
                     modifier = Modifier.fillMaxWidth()
@@ -643,38 +637,30 @@ private fun AnnualProgressionManualEditorScreen(
 
 @Composable
 private fun AnnualManualHeader(onBack: () -> Unit) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(1.dp, BorderSubtle, CircleShape)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Íàçàä",
-                tint = TextSecondary
-            )
-        }
+        RoundIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = "ÐÐ°Ð·Ð°Ð´",
+            onClick = onBack
+        )
         Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
             Text(
-                text = "Ñòâîðèòè ñàìîñò³éíî",
+                text = "Ð¡Ñ‚Ð²Ð¾Ñ€Ð¸Ñ‚Ð¸ ÑÐ°Ð¼Ð¾ÑÑ‚Ñ–Ð¹Ð½Ð¾",
                 style = MaterialTheme.typography.headlineSmall.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Black
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Ð³÷íà ïðîãðåñ³ÿ · ðó÷í³ ö³ë³",
-                style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
+                text = "Ð Ñ–Ñ‡Ð½Ð° Ð¿Ñ€Ð¾Ð³Ñ€ÐµÑÑ–Ñ Â· Ñ€ÑƒÑ‡Ð½Ñ– Ñ†Ñ–Ð»Ñ–",
+                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -684,16 +670,17 @@ private fun AnnualManualHeader(onBack: () -> Unit) {
 
 @Composable
 private fun ManualEditorIntroBlock(exerciseCount: Int) {
+    val colors = SystemTheme.colors
     DarkGlassCard(active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SystemSectionHeader(
-                title = "Òàáëèöÿ ö³ëåé",
-                subtitle = "$exerciseCount âïðàâ ç ðîçêëàäó"
+                title = "Ð¢Ð°Ð±Ð»Ð¸Ñ†Ñ Ñ†Ñ–Ð»ÐµÐ¹",
+                subtitle = "$exerciseCount Ð²Ð¿Ñ€Ð°Ð² Ð· Ñ€Ð¾Ð·ÐºÐ»Ð°Ð´Ñƒ"
             )
             Text(
-                text = "Ùîá òàáëèöÿ çàëèøàëàñü ÷èòàáåëüíîþ, ïîêàçàíî 3 ì³ñÿö³ çà ðàç. Ïåðåìèêàé ñòîð³íêè ì³ñÿö³â, à âïðàâè ïåðåãëÿäàé âåðòèêàëüíî.",
+                text = "Ð©Ð¾Ð± Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ Ð·Ð°Ð»Ð¸ÑˆÐ°Ð»Ð°ÑÑŒ Ñ‡Ð¸Ñ‚Ð°Ð±ÐµÐ»ÑŒÐ½Ð¾ÑŽ, Ð¿Ð¾ÐºÐ°Ð·Ð°Ð½Ð¾ 3 Ð¼Ñ–ÑÑÑ†Ñ– Ð·Ð° Ñ€Ð°Ð·. ÐŸÐµÑ€ÐµÐ¼Ð¸ÐºÐ°Ð¹ ÑÑ‚Ð¾Ñ€Ñ–Ð½ÐºÐ¸ Ð¼Ñ–ÑÑÑ†Ñ–Ð², Ð° Ð²Ð¿Ñ€Ð°Ð²Ð¸ Ð¿ÐµÑ€ÐµÐ³Ð»ÑÐ´Ð°Ð¹ Ð²ÐµÑ€Ñ‚Ð¸ÐºÐ°Ð»ÑŒÐ½Ð¾.",
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = TextSecondary,
+                    color = colors.textSecondary,
                     fontWeight = FontWeight.Medium
                 )
             )
@@ -709,6 +696,8 @@ private fun ManualMonthPager(
     pageCount: Int,
     onPageChanged: (Int) -> Unit
 ) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     val visibleRange = visibleMonthIndexes
         .takeIf { it.isNotEmpty() }
         ?.let { indexes ->
@@ -719,9 +708,9 @@ private fun ManualMonthPager(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.035f))
-            .border(1.dp, BorderSubtle, RoundedCornerShape(16.dp))
+            .clip(shape)
+            .background(colors.overlayLight)
+            .border(1.dp, colors.borderSubtle, shape)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -733,8 +722,8 @@ private fun ManualMonthPager(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Ïîïåðåäí³ ì³ñÿö³",
-                tint = if (page > 0) AccentAi else TextMuted
+                contentDescription = "ÐŸÐ¾Ð¿ÐµÑ€ÐµÐ´Ð½Ñ– Ð¼Ñ–ÑÑÑ†Ñ–",
+                tint = if (page > 0) colors.accentAi else colors.textMuted
             )
         }
         Column(
@@ -745,16 +734,16 @@ private fun ManualMonthPager(
             Text(
                 text = visibleRange,
                 style = MaterialTheme.typography.labelLarge.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Black
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Ñòîð³íêà ${page + 1}/$pageCount",
+                text = "Ð¡Ñ‚Ð¾Ñ€Ñ–Ð½ÐºÐ° ${page + 1}/$pageCount",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = TextMuted,
+                    color = colors.textMuted,
                     fontWeight = FontWeight.SemiBold
                 )
             )
@@ -766,8 +755,8 @@ private fun ManualMonthPager(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Íàñòóïí³ ì³ñÿö³",
-                tint = if (page < pageCount - 1) AccentAi else TextMuted
+                contentDescription = "ÐÐ°ÑÑ‚ÑƒÐ¿Ð½Ñ– Ð¼Ñ–ÑÑÑ†Ñ–",
+                tint = if (page < pageCount - 1) colors.accentAi else colors.textMuted
             )
         }
     }
@@ -804,13 +793,14 @@ private fun ManualExerciseTargetRow(
     visibleMonthIndexes: List<Int>,
     onTargetChanged: (Int, Int, String) -> Unit
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(SystemSurfaceGlass.copy(alpha = 0.54f))
-            .border(1.dp, BorderSubtle, shape)
+            .background(colors.surfaceGlass.copy(alpha = 0.54f))
+            .border(1.dp, colors.borderSubtle, shape)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -818,7 +808,7 @@ private fun ManualExerciseTargetRow(
             Text(
                 text = exercise.exerciseName,
                 style = MaterialTheme.typography.titleSmall.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 ),
                 maxLines = 2,
@@ -829,7 +819,7 @@ private fun ManualExerciseTargetRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ManualMetaChip(text = exercise.manualMetricLabel())
-                ManualMetaChip(text = "Äí³ ${exercise.cycleDays.joinToString(", ")}")
+                ManualMetaChip(text = "Ð”Ð½Ñ– ${exercise.cycleDays.joinToString(", ")}")
             }
         }
 
@@ -854,17 +844,19 @@ private fun ManualExerciseTargetRow(
 
 @Composable
 private fun ManualMetaChip(text: String) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.pill)
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(AccentAiSoft.copy(alpha = 0.5f))
-            .border(1.dp, AccentAi.copy(alpha = 0.18f), RoundedCornerShape(999.dp))
+            .clip(shape)
+            .background(colors.accentAiSoft.copy(alpha = 0.50f))
+            .border(1.dp, colors.accentAi.copy(alpha = 0.18f), shape)
             .padding(horizontal = 9.dp, vertical = 5.dp)
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = TextSecondary,
+                color = colors.textSecondary,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
@@ -881,6 +873,7 @@ private fun ManualTargetCell(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = SystemTheme.colors
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -888,7 +881,7 @@ private fun ManualTargetCell(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
-                color = AccentAi,
+                color = colors.accentAi,
                 fontWeight = FontWeight.Black
             ),
             maxLines = 1,
@@ -901,24 +894,16 @@ private fun ManualTargetCell(
             placeholder = {
                 Text(
                     text = hint,
-                    style = MaterialTheme.typography.labelSmall.copy(color = TextMuted)
+                    style = MaterialTheme.typography.labelSmall.copy(color = colors.textMuted)
                 )
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             textStyle = MaterialTheme.typography.bodyMedium.copy(
-                color = TextPrimary,
+                color = colors.textPrimary,
                 fontWeight = FontWeight.Bold
             ),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = AccentAi,
-                unfocusedBorderColor = BorderSubtle,
-                focusedContainerColor = Color.White.copy(alpha = 0.04f),
-                unfocusedContainerColor = Color.White.copy(alpha = 0.018f),
-                cursorColor = AccentAi,
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary
-            ),
-            shape = RoundedCornerShape(13.dp),
+            colors = systemOutlinedTextFieldColors(accent = colors.accentAi),
+            shape = RoundedCornerShape(SystemTheme.shapes.medium),
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -926,6 +911,7 @@ private fun ManualTargetCell(
 
 @Composable
 private fun EmptyManualScheduleBlock(modifier: Modifier = Modifier) {
+    val colors = SystemTheme.colors
     DarkGlassCard(modifier = modifier, active = true) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -933,16 +919,16 @@ private fun EmptyManualScheduleBlock(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Ó ðîçêëàä³ ïîêè íåìàº âïðàâ",
+                text = "Ð£ Ñ€Ð¾Ð·ÐºÐ»Ð°Ð´Ñ– Ð¿Ð¾ÐºÐ¸ Ð½ÐµÐ¼Ð°Ñ” Ð²Ð¿Ñ€Ð°Ð²",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Äîäàé âïðàâè â Íàëàøòóâàííÿ ðîçêëàäó, ³ âîíè àâòîìàòè÷íî ç’ÿâëÿòüñÿ òóò.",
-                style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
+                text = "Ð”Ð¾Ð´Ð°Ð¹ Ð²Ð¿Ñ€Ð°Ð²Ð¸ Ð² Ð½Ð°Ð»Ð°ÑˆÑ‚ÑƒÐ²Ð°Ð½Ð½Ñ Ñ€Ð¾Ð·ÐºÐ»Ð°Ð´Ñƒ, Ñ– Ð²Ð¾Ð½Ð¸ Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡Ð½Ð¾ Ð·'ÑÐ²Ð»ÑÑ‚ÑŒÑÑ Ñ‚ÑƒÑ‚.",
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
             )
         }
     }
@@ -967,17 +953,17 @@ private fun AnnualProgressionEmptyState(
         Spacer(modifier = Modifier.height(24.dp))
         AnnualCreateOptionCard(
             icon = Icons.Filled.AutoAwesome,
-            title = "Ñòâîðèòè çà äîïîìîãîþ Ø²",
-            text = "Ø² ñôîðìóº ì³ñÿ÷í³ ö³ë³ çà âèáðàíèìè âïðàâàìè ³ çáåðåæå ¿õ ó ð³÷íèé ãðàô³ê.",
-            buttonText = "Ñòâîðèòè â Ø²",
+            title = "Ð¡Ñ‚Ð²Ð¾Ñ€Ð¸Ñ‚Ð¸ Ð·Ð° Ð´Ð¾Ð¿Ð¾Ð¼Ð¾Ð³Ð¾ÑŽ AI",
+            text = "AI ÑÑ„Ð¾Ñ€Ð¼ÑƒÑ” Ð¼Ñ–ÑÑÑ‡Ð½Ñ– Ñ†Ñ–Ð»Ñ– Ð·Ð° Ð²Ð¸Ð±Ñ€Ð°Ð½Ð¸Ð¼Ð¸ Ð²Ð¿Ñ€Ð°Ð²Ð°Ð¼Ð¸ Ñ– Ð·Ð±ÐµÑ€ÐµÐ¶Ðµ Ñ—Ñ… Ñƒ Ñ€Ñ–Ñ‡Ð½Ð¸Ð¹ Ð³Ñ€Ð°Ñ„Ñ–Ðº.",
+            buttonText = "Ð¡Ñ‚Ð²Ð¾Ñ€Ð¸Ñ‚Ð¸ Ð² AI",
             onClick = onCreateInAi,
             active = true
         )
         AnnualCreateOptionCard(
             icon = Icons.Filled.Edit,
-            title = "Ñòâîðèòè ñàìîñò³éíî",
-            text = "Â³äêðèºòüñÿ òàáëèöÿ ç âïðàâàìè ç óñ³õ äí³â öèêëó. Çíà÷åííÿ äëÿ êîæíîãî ì³ñÿöÿ ìîæíà ââåñòè âðó÷íó.",
-            buttonText = "Â³äêðèòè òàáëèöþ",
+            title = "Ð¡Ñ‚Ð²Ð¾Ñ€Ð¸Ñ‚Ð¸ ÑÐ°Ð¼Ð¾ÑÑ‚Ñ–Ð¹Ð½Ð¾",
+            text = "Ð’Ñ–Ð´ÐºÑ€Ð¸Ñ”Ñ‚ÑŒÑÑ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ Ð· Ð²Ð¿Ñ€Ð°Ð²Ð°Ð¼Ð¸ Ð· ÑƒÑÑ–Ñ… Ð´Ð½Ñ–Ð² Ñ†Ð¸ÐºÐ»Ñƒ. Ð—Ð½Ð°Ñ‡ÐµÐ½Ð½Ñ Ð´Ð»Ñ ÐºÐ¾Ð¶Ð½Ð¾Ð³Ð¾ Ð¼Ñ–ÑÑÑ†Ñ Ð¼Ð¾Ð¶Ð½Ð° Ð²Ð²ÐµÑÑ‚Ð¸ Ð²Ñ€ÑƒÑ‡Ð½Ñƒ.",
+            buttonText = "Ð’Ñ–Ð´ÐºÑ€Ð¸Ñ‚Ð¸ Ñ‚Ð°Ð±Ð»Ð¸Ñ†ÑŽ",
             onClick = onCreateManually,
             active = false
         )
@@ -986,13 +972,15 @@ private fun AnnualProgressionEmptyState(
 
 @Composable
 private fun AnnualCreateOptionCard(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     title: String,
     text: String,
     buttonText: String,
     onClick: () -> Unit,
     active: Boolean
 ) {
+    val colors = SystemTheme.colors
+    val iconShape = RoundedCornerShape(SystemTheme.shapes.medium)
     DarkGlassCard(active = active) {
         Column(
             verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -1001,34 +989,34 @@ private fun AnnualCreateOptionCard(
             Box(
                 modifier = Modifier
                     .size(46.dp)
-                    .clip(RoundedCornerShape(15.dp))
-                    .background(AccentAiSoft)
-                    .border(1.dp, AccentAi.copy(alpha = 0.24f), RoundedCornerShape(15.dp)),
+                    .clip(iconShape)
+                    .background(colors.accentAiSoft)
+                    .border(1.dp, colors.accentAi.copy(alpha = 0.24f), iconShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = AccentAi,
+                    tint = colors.accentAi,
                     modifier = Modifier.size(22.dp)
                 )
             }
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             )
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
             )
             SystemButton(
                 text = buttonText,
                 icon = Icons.AutoMirrored.Filled.ArrowForward,
                 onClick = onClick,
-                accent = AccentAi,
+                accent = colors.accentAi,
                 glow = active,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1036,12 +1024,35 @@ private fun AnnualCreateOptionCard(
     }
 }
 
-private fun AnnualProgressionDetailStatus.statusColor(): Color =
+@Composable
+private fun RoundIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit
+) {
+    val colors = SystemTheme.colors
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(42.dp)
+            .clip(CircleShape)
+            .background(colors.overlayLight)
+            .border(1.dp, colors.borderSubtle, CircleShape)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = colors.textSecondary
+        )
+    }
+}
+
+private fun AnnualProgressionDetailStatus.statusColor(colors: SystemColorTokens): Color =
     when (this) {
-        AnnualProgressionDetailStatus.OnPlan -> AccentSuccess
-        AnnualProgressionDetailStatus.SlightlyBelow -> AccentWarning
-        AnnualProgressionDetailStatus.AbovePlan -> AccentPrimary
-        AnnualProgressionDetailStatus.NoFact -> TextMuted
+        AnnualProgressionDetailStatus.OnPlan -> colors.accentSuccess
+        AnnualProgressionDetailStatus.SlightlyBelow -> colors.accentWarning
+        AnnualProgressionDetailStatus.AbovePlan -> colors.accentPrimary
+        AnnualProgressionDetailStatus.NoFact -> colors.textMuted
     }
 
 private fun buildManualMonthLabels(currentDate: LocalDate): List<String> {
@@ -1051,14 +1062,14 @@ private fun buildManualMonthLabels(currentDate: LocalDate): List<String> {
     }
 }
 
-private fun java.time.LocalDate.formatDate(): String =
+private fun LocalDate.formatDate(): String =
     format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
 
 private fun AnnualProgressionManualExerciseUiModel.manualMetricLabel(): String =
     if (trackingMode.usesWeightInput) {
-        "Ñòàðò ${currentWorkingWeight?.let { trackingMode.formatPrimaryValue(it) } ?: "—"}"
+        "Ð¡Ñ‚Ð°Ñ€Ñ‚ ${currentWorkingWeight?.let { trackingMode.formatPrimaryValue(it) } ?: "-"}"
     } else {
-        "Ìåòðèêà ${trackingMode.metricUnit}"
+        "ÐœÐµÑ‚Ñ€Ð¸ÐºÐ° ${trackingMode.metricUnit}"
     }
 
 private fun Double.formatWeight(): String =

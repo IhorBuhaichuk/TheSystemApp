@@ -18,8 +18,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.RajdhaniFamily
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.theme.TekoFamily
-import com.ihor.thesystem.core.theme.TextPrimary
 import com.ihor.thesystem.domain.model.Rank
 
 /**
@@ -32,13 +32,14 @@ fun RankBadge(
     modifier: Modifier = Modifier,
     size: Dp = 48.dp
 ) {
+    val colors = SystemTheme.colors
     val rankColor = when (rank) {
-        Rank.E -> Color.Gray
-        Rank.D -> Color(0xFF1E90FF)
-        Rank.C -> Color(0xFF00FF00)
-        Rank.B -> Color(0xFFFFD700)
-        Rank.A -> Color(0xFFA020F0)
-        Rank.S -> Color(0xFFFF003C)
+        Rank.E -> colors.rankE
+        Rank.D -> colors.rankD
+        Rank.C -> colors.rankC
+        Rank.B -> colors.rankB
+        Rank.A -> colors.rankA
+        Rank.S -> colors.rankS
     }
 
     Box(
@@ -90,8 +91,8 @@ fun RankBadge(
                     fontFamily = RajdhaniFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = (size.value * 0.16f).sp,
-                    color = TextPrimary.copy(alpha = 0.6f),
-                    letterSpacing = 1.sp
+                    color = colors.textPrimary.copy(alpha = 0.6f),
+                    letterSpacing = 0.sp
                 ),
                 textAlign = TextAlign.Center
             )
@@ -101,7 +102,7 @@ fun RankBadge(
                     fontFamily = TekoFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = (size.value * 0.55f).sp,
-                    color = Color.White,
+                    color = colors.textPrimary,
                     shadow = Shadow(color = rankColor, blurRadius = 10f)
                 ),
                 textAlign = TextAlign.Center,

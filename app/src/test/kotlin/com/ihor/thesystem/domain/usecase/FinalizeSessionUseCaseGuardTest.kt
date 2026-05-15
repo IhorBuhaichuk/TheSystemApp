@@ -67,6 +67,30 @@ class FinalizeSessionUseCaseGuardTest {
         )
     }
 
+    @Test
+    fun `ai session directives only target externally loaded exercises`() {
+        val source = sourceFile().readText()
+
+        assertTrue(
+            "FinalizeSessionUseCase must identify weighted exercises before accepting AI directives.",
+            "val weightedExerciseIds = sets" in source &&
+                ".filter { it.isCompleted && it.hasRealExternalLoad() }" in source
+        )
+        assertTrue(
+            "AI recommendations must be filtered to weighted exercises before becoming WorkoutDirective.",
+            ".filter { it.exerciseId in weightedExerciseIds }" in source
+        )
+        assertTrue(
+            "Fallback directives must not create fake kg targets for bodyweight/time exercises.",
+            "val fallbackDirectives = sets" in source &&
+                ".filter { it.isCompleted && it.hasRealExternalLoad() }" in source
+        )
+        assertTrue(
+            "The AI prompt must explicitly forbid kg targets for exercises without external load.",
+            "НЕ додавай цю вправу до next_workout_targets і НЕ пропонуй кг" in source
+        )
+    }
+
     private fun sourceFile(): File =
         requireNotNull(File(requireNotNull(System.getProperty("user.dir"))).absoluteFile.parentFile)
             .resolve("domain/src/main/java/com/ihor/thesystem/domain/usecase/FinalizeSessionUseCase.kt")

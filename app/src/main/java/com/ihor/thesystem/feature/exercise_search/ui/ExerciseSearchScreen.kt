@@ -32,7 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,8 +43,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,19 +52,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ihor.thesystem.R
-import com.ihor.thesystem.core.theme.AccentPrimary
-import com.ihor.thesystem.core.theme.AccentPrimarySoft
-import com.ihor.thesystem.core.theme.BorderActive
-import com.ihor.thesystem.core.theme.BorderSubtle
-import com.ihor.thesystem.core.theme.SystemBackground
+import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
-import com.ihor.thesystem.core.theme.SystemSurfaceGlass
-import com.ihor.thesystem.core.theme.TextMuted
-import com.ihor.thesystem.core.theme.TextPrimary
-import com.ihor.thesystem.core.theme.TextSecondary
+import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseFilterState
 import com.ihor.thesystem.feature.exercise_search.viewmodel.ExercisePickerItemUiModel
@@ -82,7 +75,7 @@ fun ExerciseSearchScreen(
         viewModel = viewModel,
         onBack = {},
         onSelectExercise = onExerciseClick,
-        actionLabel = "Вибрати"
+        actionLabel = "Р’РёР±СЂР°С‚Рё"
     )
 }
 
@@ -91,19 +84,20 @@ fun ExercisePickerScreen(
     onBack: () -> Unit,
     onSelectExercise: (ExerciseDetails) -> Unit,
     modifier: Modifier = Modifier,
-    actionLabel: String = "Вибрати",
+    actionLabel: String = "Р’РёР±СЂР°С‚Рё",
     createExerciseLabel: String? = null,
     onCreateExercise: ((String) -> Unit)? = null,
     viewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
     val filterState by viewModel.filterState.collectAsStateWithLifecycle()
     val pickerItems by viewModel.pickerItems.collectAsStateWithLifecycle()
+    val colors = SystemTheme.colors
     var newExerciseName by remember { mutableStateOf("") }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(SystemBackground)
+            .background(colors.background)
     ) {
         RpgStatusBackdrop()
 
@@ -113,7 +107,7 @@ fun ExercisePickerScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(horizontal = SystemScreenPadding)
-                .padding(top = 16.dp, bottom = 24.dp),
+                .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
             verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
         ) {
             ExercisePickerHeader(onBack = onBack)
@@ -152,6 +146,7 @@ fun ExercisePickerScreen(
 
 @Composable
 private fun ExercisePickerHeader(onBack: () -> Unit) {
+    val colors = SystemTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -159,15 +154,15 @@ private fun ExercisePickerHeader(onBack: () -> Unit) {
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "Вибір вправи",
+                text = "Р’РёР±С–СЂ РІРїСЂР°РІРё",
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Black
                 )
             )
             Text(
-                text = "Швидкий пошук у базі вправ",
-                style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
+                text = "РЁРІРёРґРєРёР№ РїРѕС€СѓРє Сѓ Р±Р°Р·С– РІРїСЂР°РІ",
+                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
             )
         }
         IconButton(
@@ -175,13 +170,13 @@ private fun ExercisePickerHeader(onBack: () -> Unit) {
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(1.dp, BorderSubtle, CircleShape)
+                .background(colors.overlayLight)
+                .border(1.dp, colors.borderSubtle, CircleShape)
         ) {
             Icon(
                 imageVector = Icons.Filled.Close,
-                contentDescription = "Закрити",
-                tint = TextSecondary
+                contentDescription = "Р—Р°РєСЂРёС‚Рё",
+                tint = colors.textSecondary
             )
         }
     }
@@ -193,21 +188,22 @@ private fun ExercisePickerSearchField(
     onQueryChange: (String) -> Unit,
     onClear: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
         modifier = Modifier.fillMaxWidth(),
         placeholder = {
             Text(
-                text = "Пошук вправи",
-                style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
+                text = "РџРѕС€СѓРє РІРїСЂР°РІРё",
+                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textMuted)
             )
         },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Filled.Search,
                 contentDescription = null,
-                tint = AccentPrimary
+                tint = colors.accentPrimary
             )
         },
         trailingIcon = {
@@ -215,23 +211,15 @@ private fun ExercisePickerSearchField(
                 IconButton(onClick = onClear) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = "Очистити",
-                        tint = TextMuted
+                        contentDescription = "РћС‡РёСЃС‚РёС‚Рё",
+                        tint = colors.textMuted
                     )
                 }
             }
         },
         singleLine = true,
-        shape = RoundedCornerShape(16.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = BorderActive,
-            unfocusedBorderColor = BorderSubtle,
-            focusedContainerColor = SystemSurfaceGlass.copy(alpha = 0.58f),
-            unfocusedContainerColor = SystemSurfaceGlass.copy(alpha = 0.44f),
-            cursorColor = AccentPrimary,
-            focusedTextColor = TextPrimary,
-            unfocusedTextColor = TextPrimary
-        )
+        shape = RoundedCornerShape(SystemTheme.shapes.medium),
+        colors = systemOutlinedTextFieldColors()
     )
 }
 
@@ -240,9 +228,9 @@ private fun ExercisePickerFilters(
     state: ExerciseFilterState,
     onEvent: (ExerciseSearchEvent) -> Unit
 ) {
-    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 14.dp) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            FilterGroupTitle(text = "М'язова група")
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = SystemCardPadding) {
+        Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
+            FilterGroupTitle(text = "Рњ'СЏР·РѕРІР° РіСЂСѓРїР°")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(muscleFilters, key = { it.label }) { filter ->
                     val selected = filter.muscles.any { it in state.selectedMuscles }
@@ -256,7 +244,7 @@ private fun ExercisePickerFilters(
                 }
             }
 
-            FilterGroupTitle(text = "Обладнання")
+            FilterGroupTitle(text = "РћР±Р»Р°РґРЅР°РЅРЅСЏ")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(equipmentFilters, key = { it }) { equipment ->
                     val context = LocalContext.current
@@ -275,10 +263,11 @@ private fun ExercisePickerFilters(
 
 @Composable
 private fun FilterGroupTitle(text: String) {
+    val colors = SystemTheme.colors
     Text(
         text = text,
         style = MaterialTheme.typography.labelMedium.copy(
-            color = TextSecondary,
+            color = colors.textSecondary,
             fontWeight = FontWeight.Bold
         )
     )
@@ -290,20 +279,21 @@ private fun PickerFilterChip(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(999.dp)
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.pill)
     Surface(
         modifier = Modifier
             .clip(shape)
             .clickable(onClick = onClick),
         shape = shape,
-        color = if (selected) AccentPrimarySoft else Color.White.copy(alpha = 0.035f),
-        border = BorderStroke(1.dp, if (selected) BorderActive else BorderSubtle)
+        color = if (selected) colors.accentPrimarySoft else colors.overlayLight,
+        border = BorderStroke(1.dp, if (selected) colors.borderActive else colors.borderSubtle)
     ) {
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
             style = MaterialTheme.typography.labelMedium.copy(
-                color = if (selected) TextPrimary else TextSecondary,
+                color = if (selected) colors.textPrimary else colors.textSecondary,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
@@ -328,7 +318,7 @@ private fun ExercisePickerList(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(12.dp),
+                contentPadding = PaddingValues(SystemItemSpacing),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(items, key = { it.exercise.id }) { item ->
@@ -345,15 +335,16 @@ private fun ExercisePickerList(
 
 @Composable
 private fun ExercisePickerEmptyState() {
+    val colors = SystemTheme.colors
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(SystemScreenPadding),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = androidx.compose.ui.res.stringResource(R.string.text_no_exercises_found),
-            style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
+            text = stringResource(R.string.text_no_exercises_found),
+            style = MaterialTheme.typography.bodyMedium.copy(color = colors.textMuted)
         )
     }
 }
@@ -364,17 +355,18 @@ private fun ExercisePickerRow(
     actionLabel: String,
     onSelectExercise: (ExerciseDetails) -> Unit
 ) {
+    val colors = SystemTheme.colors
     val context = LocalContext.current
     val exercise = item.exercise
     val primaryMuscle = exercise.muscleGroups.firstOrNull()
         ?.toUiText()
         ?.asString(context)
-        ?: "М'язи не вказано"
+        ?: "Рњ'СЏР·Рё РЅРµ РІРєР°Р·Р°РЅРѕ"
     val equipment = exercise.equipment
         ?.toEquipmentUiText()
         ?.asString(context)
-        ?: "Без обладнання"
-    val shape = RoundedCornerShape(16.dp)
+        ?: "Р‘РµР· РѕР±Р»Р°РґРЅР°РЅРЅСЏ"
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
 
     Row(
         modifier = Modifier
@@ -383,29 +375,34 @@ private fun ExercisePickerRow(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        Color.White.copy(alpha = 0.045f),
-                        Color.White.copy(alpha = 0.022f)
+                        colors.overlayMedium,
+                        colors.overlayLight
                     )
                 )
             )
-            .border(1.dp, BorderSubtle, shape)
+            .border(1.dp, colors.borderSubtle, shape)
             .clickable { onSelectExercise(exercise) }
-            .padding(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(SystemItemSpacing),
+        horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val iconShape = RoundedCornerShape(SystemTheme.shapes.medium)
         Box(
             modifier = Modifier
                 .size(42.dp)
-                .clip(RoundedCornerShape(13.dp))
-                .background(AccentPrimarySoft.copy(alpha = 0.72f))
-                .border(1.dp, AccentPrimary.copy(alpha = 0.24f), RoundedCornerShape(13.dp)),
+                .clip(iconShape)
+                .background(colors.accentPrimarySoft)
+                .border(
+                    1.dp,
+                    colors.accentPrimary.copy(alpha = 0.24f),
+                    iconShape
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Filled.FitnessCenter,
                 contentDescription = null,
-                tint = AccentPrimary,
+                tint = colors.accentPrimary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -417,7 +414,7 @@ private fun ExercisePickerRow(
             Text(
                 text = exercise.nameUk ?: exercise.name,
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    color = TextPrimary,
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 ),
                 maxLines = 1,
@@ -425,15 +422,15 @@ private fun ExercisePickerRow(
             )
             Text(
                 text = "$primaryMuscle В· $equipment",
-                style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             item.lastResultText?.let { lastResult ->
                 Text(
-                    text = "Останній: $lastResult",
+                    text = "РћСЃС‚Р°РЅРЅС–Р№: $lastResult",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = TextMuted,
+                        color = colors.textMuted,
                         fontWeight = FontWeight.Medium
                     ),
                     maxLines = 1,
@@ -457,9 +454,10 @@ private fun ExercisePickerCreateBar(
     placeholder: String,
     onCreate: () -> Unit
 ) {
+    val colors = SystemTheme.colors
     val canCreate = value.trim().isNotEmpty()
 
-    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 12.dp) {
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = SystemItemSpacing) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -472,25 +470,17 @@ private fun ExercisePickerCreateBar(
                 placeholder = {
                     Text(
                         text = placeholder,
-                        style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted)
+                        style = MaterialTheme.typography.bodyMedium.copy(color = colors.textMuted)
                     )
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(SystemTheme.shapes.medium),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { if (canCreate) onCreate() }),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BorderActive,
-                    unfocusedBorderColor = BorderSubtle,
-                    focusedContainerColor = SystemSurfaceGlass.copy(alpha = 0.58f),
-                    unfocusedContainerColor = SystemSurfaceGlass.copy(alpha = 0.44f),
-                    cursorColor = AccentPrimary,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                )
+                colors = systemOutlinedTextFieldColors()
             )
             SystemButton(
-                text = "Створити",
+                text = "РЎС‚РІРѕСЂРёС‚Рё",
                 icon = Icons.Filled.Add,
                 onClick = onCreate,
                 enabled = canCreate,
@@ -506,12 +496,12 @@ private data class PickerMuscleFilter(
 )
 
 private val muscleFilters = listOf(
-    PickerMuscleFilter(label = "Груди", muscles = setOf("CHEST")),
-    PickerMuscleFilter(label = "Спина", muscles = setOf("BACK")),
-    PickerMuscleFilter(label = "Ноги", muscles = setOf("QUADS", "HAMSTRINGS_GLUTES", "LEGS")),
-    PickerMuscleFilter(label = "Плечі", muscles = setOf("SHOULDERS")),
-    PickerMuscleFilter(label = "Руки", muscles = setOf("ARMS")),
-    PickerMuscleFilter(label = "Кор", muscles = setOf("ABS", "CORE"))
+    PickerMuscleFilter(label = "Р“СЂСѓРґРё", muscles = setOf("CHEST")),
+    PickerMuscleFilter(label = "РЎРїРёРЅР°", muscles = setOf("BACK")),
+    PickerMuscleFilter(label = "РќРѕРіРё", muscles = setOf("QUADS", "HAMSTRINGS_GLUTES", "LEGS")),
+    PickerMuscleFilter(label = "РџР»РµС‡С–", muscles = setOf("SHOULDERS")),
+    PickerMuscleFilter(label = "Р СѓРєРё", muscles = setOf("ARMS")),
+    PickerMuscleFilter(label = "РљРѕСЂ", muscles = setOf("ABS", "CORE"))
 )
 
 private val equipmentFilters = listOf(
