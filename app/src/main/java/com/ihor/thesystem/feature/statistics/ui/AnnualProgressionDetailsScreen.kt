@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -67,6 +69,7 @@ import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.SystemGhostButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
 import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
@@ -600,12 +603,36 @@ private fun AnnualProgressionManualEditorScreen(
             }
             state.exercises.isEmpty() -> {
                 EmptyManualScheduleBlock(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             else -> {
+                val requiredTargetCount = state.exercises.sumOf { it.monthTargets.size }
+                val filledTargetCount = state.exercises.sumOf { exercise ->
+                    exercise.monthTargets.count { target -> target.isNotBlank() }
+                }
+                val hasEnteredTargets = filledTargetCount > 0
+                val targetsReady = requiredTargetCount > 0 && filledTargetCount == requiredTargetCount
+                val saveAccent = when {
+                    targetsReady -> colors.accentAi
+                    hasEnteredTargets -> colors.accentWarning
+                    else -> colors.textSecondary
+                }
+                val saveButtonText = when {
+                    state.isSaving -> "Зберігаю..."
+                    targetsReady -> "Зберегти графік"
+                    else -> "Перевірити цілі"
+                }
+                val tableModifier = when {
+                    state.exercises.size <= 1 -> Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 230.dp)
+                    state.exercises.size == 2 -> Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 430.dp)
+                    else -> Modifier.weight(1f)
+                }
+
                 ManualEditorIntroBlock(exerciseCount = state.exercises.size)
                 ManualMonthPager(
                     monthLabels = monthLabels,
@@ -619,15 +646,21 @@ private fun AnnualProgressionManualEditorScreen(
                     monthLabels = monthLabels,
                     visibleMonthIndexes = visibleMonthIndexes,
                     onTargetChanged = onTargetChanged,
-                    modifier = Modifier.weight(1f)
+                    modifier = tableModifier
+                )
+                ManualSaveProgressIndicator(
+                    filledTargetCount = filledTargetCount,
+                    requiredTargetCount = requiredTargetCount,
+                    ready = targetsReady,
+                    accent = saveAccent
                 )
                 SystemButton(
-                    text = if (state.isSaving) "Зберігаю..." else "Зберегти графік",
+                    text = saveButtonText,
                     icon = Icons.Filled.Save,
                     onClick = onSave,
-                    accent = colors.accentAi,
+                    accent = saveAccent,
                     enabled = state.canSave,
-                    glow = state.canSave,
+                    glow = targetsReady,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -758,6 +791,68 @@ private fun ManualMonthPager(
                 contentDescription = "Наступні місяці",
                 tint = if (page < pageCount - 1) colors.accentAi else colors.textMuted
             )
+        }
+    }
+}
+
+@Composable
+private fun ManualSaveProgressIndicator(
+    filledTargetCount: Int,
+    requiredTargetCount: Int,
+    ready: Boolean,
+    accent: Color
+) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.pill)
+    val progress = if (requiredTargetCount > 0) {
+        (filledTargetCount.toFloat() / requiredTargetCount.toFloat()).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+    val statusText = when {
+        ready -> "Готово"
+        filledTargetCount > 0 -> "Частково"
+        else -> "Порожньо"
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Заповнено $filledTargetCount/$requiredTargetCount",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = colors.textSecondary,
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            SystemStatusChip(
+                text = statusText,
+                accent = accent,
+                active = filledTargetCount > 0
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(5.dp)
+                .clip(shape)
+                .background(colors.overlayLight)
+                .border(1.dp, colors.borderMuted, shape)
+        ) {
+            if (progress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(progress)
+                        .height(5.dp)
+                        .clip(shape)
+                        .background(accent.copy(alpha = if (ready) 0.9f else 0.64f))
+                )
+            }
         }
     }
 }
@@ -912,24 +1007,47 @@ private fun ManualTargetCell(
 @Composable
 private fun EmptyManualScheduleBlock(modifier: Modifier = Modifier) {
     val colors = SystemTheme.colors
-    DarkGlassCard(modifier = modifier, active = true) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+    val iconShape = RoundedCornerShape(SystemTheme.shapes.medium)
+    DarkGlassCard(modifier = modifier) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "У розкладі поки немає вправ",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    color = colors.textPrimary,
-                    fontWeight = FontWeight.Bold
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(iconShape)
+                    .background(colors.accentAiSoft)
+                    .border(1.dp, colors.accentAi.copy(alpha = 0.22f), iconShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.FitnessCenter,
+                    contentDescription = null,
+                    tint = colors.accentAi,
+                    modifier = Modifier.size(22.dp)
                 )
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Додай вправи в налаштування розкладу, і вони автоматично з'являться тут.",
-                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
-            )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = "У розкладі поки немає вправ",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = colors.textPrimary,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Додай вправи в налаштування розкладу, і вони автоматично з'являться тут.",
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
@@ -950,7 +1068,7 @@ private fun AnnualProgressionEmptyState(
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
         AnnualDetailsHeader(onBack = onBack)
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         AnnualCreateOptionCard(
             icon = Icons.Filled.AutoAwesome,
             title = "Створити за допомогою AI",
@@ -981,23 +1099,26 @@ private fun AnnualCreateOptionCard(
 ) {
     val colors = SystemTheme.colors
     val iconShape = RoundedCornerShape(SystemTheme.shapes.medium)
+    val iconBackground = if (active) colors.accentAiSoft else colors.overlayLight
+    val iconBorder = if (active) colors.accentAi.copy(alpha = 0.24f) else colors.borderSubtle
+    val iconTint = if (active) colors.accentAi else colors.textSecondary
     DarkGlassCard(active = active) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.Start
         ) {
             Box(
                 modifier = Modifier
                     .size(46.dp)
                     .clip(iconShape)
-                    .background(colors.accentAiSoft)
-                    .border(1.dp, colors.accentAi.copy(alpha = 0.24f), iconShape),
+                    .background(iconBackground)
+                    .border(1.dp, iconBorder, iconShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = colors.accentAi,
+                    tint = iconTint,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -1006,20 +1127,34 @@ private fun AnnualCreateOptionCard(
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
-                )
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
             )
-            SystemButton(
-                text = buttonText,
-                icon = Icons.AutoMirrored.Filled.ArrowForward,
-                onClick = onClick,
-                accent = colors.accentAi,
-                glow = active,
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (active) {
+                SystemButton(
+                    text = buttonText,
+                    icon = Icons.AutoMirrored.Filled.ArrowForward,
+                    onClick = onClick,
+                    accent = colors.accentAi,
+                    glow = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                SystemGhostButton(
+                    text = buttonText,
+                    icon = Icons.AutoMirrored.Filled.ArrowForward,
+                    onClick = onClick,
+                    accent = colors.textSecondary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

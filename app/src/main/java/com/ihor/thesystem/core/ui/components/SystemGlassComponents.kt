@@ -137,38 +137,58 @@ fun SystemButton(
     val shapes = SystemTheme.shapes
     val glowTokens = SystemTheme.glow
     val shape = RoundedCornerShape(shapes.medium)
+    val backgroundBrush = if (enabled) {
+        Brush.verticalGradient(
+            listOf(
+                accent.copy(alpha = 0.18f),
+                colors.overlayLight.copy(alpha = colors.overlayLight.alpha)
+            )
+        )
+    } else {
+        Brush.verticalGradient(
+            listOf(
+                colors.overlayLight.copy(alpha = 0.035f),
+                colors.overlayLight.copy(alpha = 0.018f)
+            )
+        )
+    }
+    val borderColor = if (enabled) accent.copy(alpha = 0.52f) else colors.borderMuted
+    val iconTint = if (enabled) accent else colors.textMuted
+    val contentColor = if (enabled) colors.textPrimary else colors.textMuted
+
     Row(
         modifier = modifier
             .height(SystemControlHeight)
             .shadow(
-                elevation = if (glow && enabled) glowTokens.buttonActiveElevation else glowTokens.buttonElevation,
+                elevation = when {
+                    !enabled -> 0.dp
+                    glow -> glowTokens.buttonActiveElevation
+                    else -> glowTokens.buttonElevation
+                },
                 shape = shape,
-                ambientColor = accent.copy(alpha = if (glow && enabled) 0.28f else 0.06f),
-                spotColor = glowTokens.shadowSpot
+                ambientColor = if (enabled) {
+                    accent.copy(alpha = if (glow) 0.28f else 0.06f)
+                } else {
+                    Color.Transparent
+                },
+                spotColor = if (enabled) glowTokens.shadowSpot else Color.Transparent
             )
             .clip(shape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        accent.copy(alpha = if (enabled) 0.18f else 0.06f),
-                        colors.overlayLight.copy(alpha = if (enabled) colors.overlayLight.alpha else 0.02f)
-                    )
-                )
-            )
-            .border(1.dp, accent.copy(alpha = if (enabled) 0.52f else 0.16f), shape)
+            .background(backgroundBrush)
+            .border(1.dp, borderColor, shape)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
-            Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
+            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
         }
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge.copy(
-                color = if (enabled) colors.textPrimary else colors.textMuted,
+                color = contentColor,
                 fontWeight = FontWeight.Bold
             ),
             maxLines = 1,
