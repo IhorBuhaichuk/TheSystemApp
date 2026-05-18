@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.domain.util.Result
+import com.ihor.thesystem.domain.model.CalendarCycle
 import com.ihor.thesystem.domain.model.CalendarCycleDay
 import com.ihor.thesystem.domain.model.CalendarCycleDayType
 import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus
@@ -36,6 +37,7 @@ data class CalendarDayUiModel(
     val label: String,
     val isToday: Boolean,
     val isCalendarCycleConfigured: Boolean = true,
+    val isCycleStart: Boolean = false,
     val calendarDayType: CalendarCycleDayType = CalendarCycleDayType.OFF,
     val isActive: Boolean = false,
     val completedTasks: Int = 0,
@@ -277,6 +279,7 @@ class CalendarViewModel @Inject constructor(
                 label = calendarDay.name,
                 isToday = date == todayDate,
                 isCalendarCycleConfigured = isCalendarCycleConfigured,
+                isCycleStart = calendarCycle.isCycleStart(date),
                 calendarDayType = calendarDay.type,
                 isActive = date == todayDate,
                 completedTasks = if (isCalendarCycleConfigured) completedTasks else 0,
@@ -323,6 +326,7 @@ class CalendarViewModel @Inject constructor(
                 label = todayCalendarDay?.name ?: "Налаштуйте цикл",
                 isToday = true,
                 isCalendarCycleConfigured = todayCalendarDay != null,
+                isCycleStart = calendarCycle.isCycleStart(todayDate),
                 calendarDayType = todayCalendarDay?.type ?: CalendarCycleDayType.OFF
             ),
             selectedDate = selectedDate,
@@ -507,6 +511,16 @@ class CalendarViewModel @Inject constructor(
         Instant.ofEpochMilli(clock.now())
             .atZone(clock.zoneId())
             .toLocalDate()
+
+    private fun CalendarCycle.isCycleStart(date: LocalDate): Boolean {
+        val offset = date.toEpochDay() - startEpochDay
+        if (offset < 0) return false
+        return if (repeats) {
+            offset % days.size == 0L
+        } else {
+            offset == 0L
+        }
+    }
 
     private fun LocalDate.toStartOfDayMillis(): Long =
         atStartOfDay(clock.zoneId())

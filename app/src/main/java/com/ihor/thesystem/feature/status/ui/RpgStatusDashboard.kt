@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,7 +23,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +49,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
@@ -60,7 +59,6 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemProgressBar
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
-import com.ihor.thesystem.core.ui.components.SystemStatusChip
 import com.ihor.thesystem.core.ui.components.SystemTodoItem
 import com.ihor.thesystem.core.ui.components.SystemWeekCalendarPreview
 import com.ihor.thesystem.core.ui.components.SystemWeekDayModel
@@ -86,7 +84,6 @@ fun RpgStatusDashboard(
     onEditNameTap: () -> Unit,
     onStartWorkout: () -> Unit,
     onOpenCalendar: () -> Unit,
-    onSelectWeekDay: (LocalDate) -> Unit,
     onOpenWorkoutSettings: () -> Unit,
     onTaskToggled: (TodoUiModel) -> Unit,
     onAddTask: (Int) -> Unit,
@@ -104,18 +101,19 @@ fun RpgStatusDashboard(
             .padding(top = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
-        StatusHeader()
+        StatusHeader(
+            weekPreview = data.weekPreview,
+            isRecoveryDay = data.mainQuest == null,
+            onOpenCalendar = onOpenCalendar
+        )
         XpLevelBlock(data = data)
-        MainFocusBlock(
-            mainQuest = data.mainQuest,
-            onStartWorkout = onStartWorkout,
-            onOpenWorkoutSettings = onOpenWorkoutSettings
-        )
-        WeekPreviewBlock(
-            days = data.weekPreview,
-            onOpenCalendar = onOpenCalendar,
-            onSelectWeekDay = onSelectWeekDay
-        )
+        data.mainQuest?.let { mainQuest ->
+            MainFocusBlock(
+                mainQuest = mainQuest,
+                onStartWorkout = onStartWorkout,
+                onOpenWorkoutSettings = onOpenWorkoutSettings
+            )
+        }
         TodoBlock(
             todos = data.todos,
             onTaskToggled = onTaskToggled,
@@ -129,7 +127,11 @@ fun RpgStatusDashboard(
 }
 
 @Composable
-private fun StatusHeader() {
+private fun StatusHeader(
+    weekPreview: List<StatusWeekDayUiModel>,
+    isRecoveryDay: Boolean,
+    onOpenCalendar: () -> Unit
+) {
     val colors = SystemTheme.colors
     val locale = Locale.getDefault()
     val today = LocalDate.now()
@@ -140,26 +142,49 @@ private fun StatusHeader() {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Bottom
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
             Text(
                 text = "Статус",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Black
-                )
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+            if (isRecoveryDay) {
+                Text(
+                    text = "Активне відновлення",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = colors.accentSuccess,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 8.sp,
+                        lineHeight = 9.sp
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
             Text(
                 text = dateText,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Medium
-                )
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
-        SystemStatusChip(text = "ONLINE", active = true)
+        WeekPreviewBlock(
+            days = weekPreview,
+            onOpenCalendar = onOpenCalendar,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -210,7 +235,7 @@ private fun XpLevelBlock(data: StatusUiData) {
 
 @Composable
 private fun MainFocusBlock(
-    mainQuest: QuestUiModel?,
+    mainQuest: QuestUiModel,
     onStartWorkout: () -> Unit,
     onOpenWorkoutSettings: () -> Unit
 ) {
@@ -219,7 +244,7 @@ private fun MainFocusBlock(
         Column(verticalArrangement = Arrangement.spacedBy(SystemCardPadding)) {
             SystemSectionHeader(
                 title = "Головний фокус",
-                subtitle = if (mainQuest != null) "Поточна дія дня" else "Сьогодні без активного тренування",
+                subtitle = "Поточна дія дня",
                 trailing = {
                     IconButton(onClick = onOpenWorkoutSettings) {
                         Icon(Icons.Filled.Settings, contentDescription = null, tint = colors.textSecondary)
@@ -233,12 +258,12 @@ private fun MainFocusBlock(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 FocusIcon(
-                    icon = if (mainQuest != null) Icons.Filled.FitnessCenter else Icons.Filled.Shield,
-                    tint = if (mainQuest != null) colors.accentPrimary else colors.accentSuccess
+                    icon = Icons.Filled.FitnessCenter,
+                    tint = colors.accentPrimary
                 )
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = mainQuest?.title ?: "Активне відновлення",
+                        text = mainQuest.title,
                         style = MaterialTheme.typography.titleLarge.copy(
                             color = colors.textPrimary,
                             fontWeight = FontWeight.Black
@@ -247,7 +272,7 @@ private fun MainFocusBlock(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = mainQuest?.subtitle?.asString() ?: "Підтримай серію та віднови ресурс системи.",
+                        text = mainQuest.subtitle.asString(),
                         style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -255,7 +280,7 @@ private fun MainFocusBlock(
                 }
             }
 
-            if (mainQuest?.tasks?.isNotEmpty() == true) {
+            if (mainQuest.tasks.isNotEmpty()) {
                 Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     mainQuest.tasks.take(3).forEach { task ->
                         FocusTaskLine(task)
@@ -264,10 +289,10 @@ private fun MainFocusBlock(
             }
 
             SystemButton(
-                text = if (mainQuest?.isCompleted == true) "Тренування завершено" else "Почати тренування",
+                text = if (mainQuest.isCompleted) "Тренування завершено" else "Почати тренування",
                 icon = Icons.Filled.FitnessCenter,
                 onClick = onStartWorkout,
-                enabled = mainQuest != null && !mainQuest.isCompleted,
+                enabled = !mainQuest.isCompleted,
                 glow = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -279,11 +304,11 @@ private fun MainFocusBlock(
 private fun WeekPreviewBlock(
     days: List<StatusWeekDayUiModel>,
     onOpenCalendar: () -> Unit,
-    onSelectWeekDay: (LocalDate) -> Unit
+    modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
     if (days.isEmpty()) {
-        DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
+        Box(modifier = modifier.height(58.dp), contentAlignment = Alignment.Center) {
             Text(
                 text = "Календарний цикл синхронізується.",
                 style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
@@ -293,7 +318,7 @@ private fun WeekPreviewBlock(
         SystemWeekCalendarPreview(
             days = days.map { it.toSystemWeekDayModel() },
             onOpenCalendar = onOpenCalendar,
-            onSelectDay = onSelectWeekDay
+            modifier = modifier
         )
     }
 }

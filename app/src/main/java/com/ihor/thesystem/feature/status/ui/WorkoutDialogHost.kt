@@ -27,7 +27,10 @@ fun WorkoutDialogHost(
                 workoutViewModel.onSetRepsChanged(exerciseId, setId, reps)
             },
             onSetFocusLost = { exerciseId, setId -> workoutViewModel.onSetFocusLost(exerciseId, setId) },
-            onSetCompleted = { exerciseId, setId -> workoutViewModel.onSetCompleted(exerciseId, setId) },
+            onSetCompletionChanged = { exerciseId, setId, completed ->
+                workoutViewModel.onSetCompletionChanged(exerciseId, setId, completed)
+            },
+            onAddSet = { exerciseId, weight -> workoutViewModel.onAddWorkoutSet(exerciseId, weight) },
             onOpenSetup = { workoutViewModel.onOpenSetup(it, fromWorkout = true) },
             onFinishWorkout = { workoutViewModel.onFinishWorkout() },
             onDismiss = { workoutViewModel.onDismissDialog() }

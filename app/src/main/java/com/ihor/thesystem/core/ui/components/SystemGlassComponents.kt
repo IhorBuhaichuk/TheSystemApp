@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -41,7 +40,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -52,8 +50,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import java.time.DayOfWeek
 import java.time.LocalDate
-import com.ihor.thesystem.core.theme.SystemColorTokens
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemControlHeight
 import com.ihor.thesystem.core.theme.SystemItemSpacing
@@ -588,235 +586,162 @@ data class SystemWeekDayModel(
 fun SystemWeekCalendarPreview(
     days: List<SystemWeekDayModel>,
     onOpenCalendar: () -> Unit,
-    onSelectDay: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier,
-    title: String = "Твій тиждень",
-    actionLabel: String = "Відкрити"
+    modifier: Modifier = Modifier
 ) {
-    val colors = SystemTheme.colors
-    DarkGlassCard(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onOpenCalendar),
-        contentPadding = SystemCardPadding
+            .clip(RoundedCornerShape(SystemTheme.shapes.medium))
+            .clickable(onClick = onOpenCalendar)
+            .padding(vertical = 2.dp)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = colors.textPrimary,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(SystemRadiusPill))
-                        .clickable(onClick = onOpenCalendar)
-                        .padding(start = 10.dp, top = 6.dp, bottom = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = actionLabel,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            color = colors.accentPrimary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = colors.accentPrimary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(74.dp)
-                        .align(Alignment.BottomCenter)
-                ) {
-                    val y = size.height * 0.53f
-                    drawLine(
-                        color = colors.borderMuted,
-                        start = Offset(size.width * 0.04f, y),
-                        end = Offset(size.width * 0.96f, y),
-                        strokeWidth = 1.dp.toPx(),
-                        cap = StrokeCap.Round
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    days.forEach { day ->
-                        SystemWeekDayCell(
-                            day = day,
-                            onSelectDay = { onSelectDay(day.date) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-        }
+        SystemWeekTimeline(
+            days = days,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
 @Composable
-private fun SystemWeekDayCell(
-    day: SystemWeekDayModel,
-    onSelectDay: () -> Unit,
+private fun SystemWeekTimeline(
+    days: List<SystemWeekDayModel>,
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    val progressIndex = rememberWeekProgressIndex(days)
+    val activeAccent = colors.accentWarning
+
+    if (days.isEmpty()) {
+        Box(
+            modifier = modifier.height(58.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Тиждень ще формується",
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
+            )
+        }
+        return
+    }
+
     Column(
         modifier = modifier
-            .height(78.dp)
-            .clip(shape)
-            .background(if (day.isToday) colors.overlayMedium else colors.overlayLight.copy(alpha = 0.022f))
-            .border(1.dp, dayBorderColor(day, colors), shape)
-            .clickable(onClick = onSelectDay)
-            .padding(vertical = 7.dp, horizontal = 3.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+            .padding(vertical = 2.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(
-            text = day.label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = if (day.isToday) colors.accentPrimary else colors.textMuted,
-                fontWeight = FontWeight.Bold
-            ),
-            maxLines = 1
-        )
+        Row(modifier = Modifier.fillMaxWidth()) {
+            days.forEachIndexed { index, day ->
+                Text(
+                    text = day.date.ukrainianWeekLabel(),
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = if (index <= progressIndex) activeAccent else colors.textMuted,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(36.dp),
-            contentAlignment = Alignment.Center
+                .height(46.dp)
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val markerWidth = size.width * 0.72f
-                val markerHeight = 28.dp.toPx()
-                val markerTop = (size.height - markerHeight) / 2f
-                val markerLeft = (size.width - markerWidth) / 2f
-                val corner = 12.dp.toPx()
+                val nodeCount = days.size
+                val centerY = size.height / 2f
+                val nodeRadius = 11.dp.toPx()
+                val activeRadius = 13.dp.toPx()
+                val strokeWidth = 4.dp.toPx()
+                val lineInset = 1.dp.toPx()
+                fun nodeX(index: Int): Float =
+                    size.width * ((index + 0.5f) / nodeCount.toFloat())
+                fun nodeEdgeRadius(index: Int): Float =
+                    when {
+                        index <= progressIndex -> activeRadius
+                        else -> nodeRadius
+                    }
 
-                when (day.visualType) {
-                    SystemWeekDayVisualType.Work -> {
-                        drawRoundRect(
-                            color = colors.workDay.copy(alpha = if (day.status == SystemWeekDayStatus.NoData) 0.11f else 0.28f),
-                            topLeft = Offset(markerLeft, markerTop),
-                            size = Size(markerWidth, markerHeight),
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner)
-                        )
-                    }
-                    SystemWeekDayVisualType.Training -> {
-                        drawRoundRect(
-                            color = colors.trainingDay.copy(alpha = 0.22f),
-                            topLeft = Offset(markerLeft, markerTop),
-                            size = Size(markerWidth, markerHeight),
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner)
-                        )
-                    }
-                    SystemWeekDayVisualType.Mixed -> {
-                        drawRoundRect(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    colors.mixedDayStart.copy(alpha = 0.32f),
-                                    colors.mixedDayEnd.copy(alpha = 0.34f)
-                                ),
-                                start = Offset(markerLeft, markerTop),
-                                end = Offset(markerLeft + markerWidth, markerTop + markerHeight)
-                            ),
-                            topLeft = Offset(markerLeft, markerTop),
-                            size = Size(markerWidth, markerHeight),
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner)
-                        )
-                    }
-                    SystemWeekDayVisualType.Rest -> {
-                        drawRoundRect(
-                            color = colors.overlayLight.copy(alpha = 0.018f),
-                            topLeft = Offset(markerLeft, markerTop),
-                            size = Size(markerWidth, markerHeight),
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner)
+                repeat((nodeCount - 1).coerceAtLeast(0)) { index ->
+                    val startX = nodeX(index) + nodeEdgeRadius(index) + lineInset
+                    val endX = nodeX(index + 1) - nodeEdgeRadius(index + 1) - lineInset
+                    val completedSegment = index < progressIndex
+                    if (startX < endX) {
+                        drawLine(
+                            color = if (completedSegment) {
+                                activeAccent.copy(alpha = 0.76f)
+                            } else {
+                                colors.borderMuted.copy(alpha = 0.54f)
+                            },
+                            start = Offset(startX, centerY),
+                            end = Offset(endX, centerY),
+                            strokeWidth = strokeWidth,
+                            cap = StrokeCap.Round
                         )
                     }
                 }
 
-                drawRoundRect(
-                    color = markerStrokeColor(day, colors),
-                    topLeft = Offset(markerLeft, markerTop),
-                    size = Size(markerWidth, markerHeight),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner),
-                    style = Stroke(width = if (day.isToday) 1.6.dp.toPx() else 1.dp.toPx())
-                )
-
-                when (day.status) {
-                    SystemWeekDayStatus.Completed -> {
+                days.forEachIndexed { index, day ->
+                    val x = nodeX(index)
+                    val filled = index <= progressIndex
+                    val accent = activeAccent
+                    if (filled) {
                         drawCircle(
-                            color = colors.accentSuccess.copy(alpha = 0.16f),
-                            radius = 7.dp.toPx(),
-                            center = Offset(markerLeft + markerWidth - 4.dp.toPx(), markerTop + 5.dp.toPx())
+                            color = accent.copy(alpha = if (day.isToday) 0.92f else 0.86f),
+                            radius = activeRadius,
+                            center = Offset(x, centerY)
+                        )
+                    } else {
+                        drawCircle(
+                            color = colors.surfaceGlassSoft,
+                            radius = nodeRadius,
+                            center = Offset(x, centerY)
+                        )
+                        drawCircle(
+                            color = colors.borderMuted.copy(alpha = 0.88f),
+                            radius = nodeRadius,
+                            center = Offset(x, centerY),
+                            style = Stroke(width = 2.dp.toPx())
                         )
                     }
-                    SystemWeekDayStatus.Partial -> drawCircle(
-                        color = colors.accentWarning.copy(alpha = 0.9f),
-                        radius = 2.6.dp.toPx(),
-                        center = Offset(markerLeft + markerWidth - 5.dp.toPx(), markerTop + 5.dp.toPx())
-                    )
-                    SystemWeekDayStatus.Missed,
-                    SystemWeekDayStatus.Planned,
-                    SystemWeekDayStatus.NoData -> Unit
                 }
             }
-            Text(
-                text = day.dayNumber,
-                style = MaterialTheme.typography.labelMedium.copy(
-                    color = colors.textPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            if (day.status == SystemWeekDayStatus.Completed) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    tint = colors.accentSuccess,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(end = 5.dp, top = 1.dp)
-                        .size(11.dp)
+        }
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            days.forEachIndexed { index, day ->
+                Text(
+                    text = day.dayNumber,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        color = if (index <= progressIndex) activeAccent else colors.textMuted,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    ),
+                    maxLines = 1
                 )
             }
         }
     }
 }
 
-private fun dayBorderColor(day: SystemWeekDayModel, colors: SystemColorTokens): Color =
-    when {
-        day.isToday -> colors.borderActive
-        day.status == SystemWeekDayStatus.Missed -> colors.accentWarning.copy(alpha = 0.42f)
-        else -> colors.borderSubtle
-    }
+private fun rememberWeekProgressIndex(days: List<SystemWeekDayModel>): Int =
+    days.indexOfFirst { it.isToday }
+        .takeIf { it >= 0 }
+        ?: days.indexOfLast { !it.date.isAfter(LocalDate.now()) }
 
-private fun markerStrokeColor(day: SystemWeekDayModel, colors: SystemColorTokens): Color =
-    when {
-        day.isToday -> colors.accentPrimary.copy(alpha = 0.76f)
-        day.status == SystemWeekDayStatus.Missed -> colors.accentWarning.copy(alpha = 0.5f)
-        day.status == SystemWeekDayStatus.NoData -> colors.borderMuted
-        day.visualType == SystemWeekDayVisualType.Training -> colors.trainingDay.copy(alpha = 0.38f)
-        day.visualType == SystemWeekDayVisualType.Work -> colors.workDay.copy(alpha = 0.28f)
-        day.visualType == SystemWeekDayVisualType.Mixed -> colors.accentPrimary.copy(alpha = 0.3f)
-        else -> colors.borderSubtle
+private fun LocalDate.ukrainianWeekLabel(): String =
+    when (dayOfWeek) {
+        DayOfWeek.MONDAY -> "Пн"
+        DayOfWeek.TUESDAY -> "Вт"
+        DayOfWeek.WEDNESDAY -> "Ср"
+        DayOfWeek.THURSDAY -> "Чт"
+        DayOfWeek.FRIDAY -> "Пт"
+        DayOfWeek.SATURDAY -> "Сб"
+        DayOfWeek.SUNDAY -> "Нд"
     }
 
 @Composable

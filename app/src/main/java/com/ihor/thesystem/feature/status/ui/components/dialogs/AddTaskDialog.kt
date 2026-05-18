@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -158,9 +157,10 @@ fun AddTaskDialog(
                     ),
                     colors = systemOutlinedTextFieldColors(colors.accentPrimary),
                     shape = RoundedCornerShape(SystemTheme.shapes.medium),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { submit() })
+                    singleLine = false,
+                    minLines = 3,
+                    maxLines = 8,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default)
                 )
 
                 Row(

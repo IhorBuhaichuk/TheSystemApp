@@ -79,9 +79,8 @@ fun StatusScreen(
                     onAvatarSelected = { statusViewModel.updateAvatarUri(it) },
                     onEditNameTap = { statusViewModel.onEditNameTap() },
                     onStartWorkout = { navController.navigate(Routes.Cycle) },
-                    onOpenCalendar = { navController.navigate(Routes.Calendar) },
-                    onSelectWeekDay = { date ->
-                        statusViewModel.onWeekDaySelected(date)
+                    onOpenCalendar = {
+                        statusViewModel.onOpenCalendarTap()
                         navController.navigate(Routes.Calendar)
                     },
                     onOpenWorkoutSettings = { navController.navigate(Routes.Cycle) },

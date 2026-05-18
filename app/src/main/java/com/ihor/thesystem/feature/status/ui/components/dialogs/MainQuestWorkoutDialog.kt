@@ -37,7 +37,8 @@ fun MainQuestWorkoutDialog(
     onSetWeightChanged: (Int, Long, String) -> Unit,
     onSetRepsChanged: (Int, Long, String) -> Unit,
     onSetFocusLost: (Int, Long) -> Unit,
-    onSetCompleted: (Int, Long) -> Unit,
+    onSetCompletionChanged: (Int, Long, Boolean) -> Unit,
+    onAddSet: (Int, String) -> Unit,
     onOpenSetup: (MatrixEntryUiModel) -> Unit,
     onFinishWorkout: () -> Unit,
     onDismiss: () -> Unit
@@ -95,7 +96,8 @@ fun MainQuestWorkoutDialog(
                                 onSetWeightChanged = onSetWeightChanged,
                                 onSetRepsChanged = onSetRepsChanged,
                                 onSetFocusLost = onSetFocusLost,
-                                onSetCompleted = onSetCompleted,
+                                onSetCompletionChanged = onSetCompletionChanged,
+                                onAddSet = onAddSet,
                                 onOpenSetup = onOpenSetup
                             )
 

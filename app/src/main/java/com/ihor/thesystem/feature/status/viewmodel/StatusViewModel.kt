@@ -272,10 +272,12 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onAddTaskConfirmed(questId: Int, taskName: String) = launchCatching {
-        if (questId > 0) {
-            useCases.addTaskToQuest(questId, taskName)
-        } else {
-            useCases.addTodayTodo(taskName)
+        taskName.toTaskNames().forEach { taskName ->
+            if (questId > 0) {
+                useCases.addTaskToQuest(questId, taskName)
+            } else {
+                useCases.addTodayTodo(taskName)
+            }
         }
         onDismissDialog()
     }
@@ -285,7 +287,9 @@ class StatusViewModel @Inject constructor(
     }
 
     fun onAddMicrotaskConfirmed(parentTodoId: Int, taskName: String) = launchCatching {
-        useCases.addTodayMicrotask(parentTodoId, taskName)
+        taskName.toTaskNames().forEach { taskName ->
+            useCases.addTodayMicrotask(parentTodoId, taskName)
+        }
         onDismissDialog()
     }
 
@@ -336,8 +340,8 @@ class StatusViewModel @Inject constructor(
         onDismissDialog()
     }
 
-    fun onWeekDaySelected(date: LocalDate) {
-        useCases.selectViewingDate(date)
+    fun onOpenCalendarTap() {
+        useCases.selectViewingDate(todayDate())
     }
 
     private fun StatusData.toUiData(weekPreview: List<CalendarWeekDay> = emptyList()) = StatusUiData(
@@ -422,3 +426,14 @@ class StatusViewModel @Inject constructor(
         )
     }
 }
+
+internal fun String.toTaskNames(): List<String> =
+    lineSequence()
+        .map { line -> line.trim().removeTaskListPrefix().trim() }
+        .filter { line -> line.isNotEmpty() }
+        .toList()
+
+private fun String.removeTaskListPrefix(): String =
+    replace(taskListPrefixRegex, "")
+
+private val taskListPrefixRegex = Regex("""^([-*]|\d+[.)]|\[[ xX]\])\s+""")

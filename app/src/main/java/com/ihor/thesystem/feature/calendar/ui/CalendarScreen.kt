@@ -568,6 +568,11 @@ private fun dayBackground(
             listOf(colors.overlayLight.copy(alpha = 0.26f), colors.overlayLight.copy(alpha = 0.12f))
         )
     }
+    if (!model.isCycleStart) {
+        return Brush.verticalGradient(
+            listOf(colors.surfaceGlassSoft, colors.overlayLight)
+        )
+    }
 
     return when (model.visualType()) {
         CalendarDayVisualType.Work -> Brush.verticalGradient(

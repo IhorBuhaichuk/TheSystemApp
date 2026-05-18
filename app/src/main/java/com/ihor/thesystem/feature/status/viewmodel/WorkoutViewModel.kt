@@ -31,6 +31,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -132,7 +133,15 @@ class WorkoutViewModel @Inject constructor(
                                 gifUrl = ex.gifUrl,
                                 externalId = ex.externalId,
                                 trackingMode = trackingMode,
-                                sets = (1..(rec.sets ?: 1)).map { ActiveSetInput() }.toImmutableList()
+                                sets = (1..(rec.sets ?: 1)).map {
+                                    ActiveSetInput(
+                                        weight = if (trackingMode.usesWeightInput && rec.weight > 0.0) {
+                                            rec.weight.formatInputWeight()
+                                        } else {
+                                            ""
+                                        }
+                                    )
+                                }.toImmutableList()
                             )
                         }.toImmutableList()
 
@@ -195,6 +204,19 @@ class WorkoutViewModel @Inject constructor(
 
     fun onSetCompleted(exerciseId: Int, setId: Long) {
         updateSetEdit(exerciseId, setId) { it.copy(isCompleted = !it.isCompleted) }
+    }
+
+    fun onSetCompletionChanged(exerciseId: Int, setId: Long, completed: Boolean) {
+        updateSetEdit(exerciseId, setId) { it.copy(isCompleted = completed) }
+    }
+
+    fun onAddWorkoutSet(exerciseId: Int, weight: String) {
+        val currentWorkout = activeWorkoutState.value ?: return
+        val exercise = currentWorkout.exercises.find { it.exerciseId == exerciseId } ?: return
+        val currentSets = _userEdits.value[exerciseId] ?: exercise.sets
+        _userEdits.update {
+            it + (exerciseId to (currentSets + ActiveSetInput(weight = weight)))
+        }
     }
 
     fun onFinishWorkout() {
@@ -526,6 +548,13 @@ class WorkoutViewModel @Inject constructor(
             ExerciseTrackingMode.BODYWEIGHT_REPS -> "${sets}x${reps} повт."
             ExerciseTrackingMode.TIME_SECONDS -> "${sets}x${reps} сек"
             ExerciseTrackingMode.TIME_MINUTES -> "${sets}x${(reps / 60).coerceAtLeast(1)} хв"
+        }
+
+    private fun Double.formatInputWeight(): String =
+        if (this % 1.0 == 0.0) {
+            toInt().toString()
+        } else {
+            String.format(Locale.US, "%.1f", this)
         }
 
     fun onOpenSetup(entry: MatrixEntryUiModel, fromWorkout: Boolean = false) {
