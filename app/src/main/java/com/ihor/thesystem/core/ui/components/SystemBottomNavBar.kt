@@ -60,29 +60,29 @@ fun SystemBottomNavBar(navController: NavHostController) {
             .fillMaxWidth()
             .background(Color.Transparent)
             .navigationBarsPadding()
-            .padding(horizontal = 18.dp, vertical = 16.dp)
+            .padding(horizontal = 18.dp, vertical = 10.dp)
     ) {
         Surface(
-            color = colors.surfaceGlassStrong.copy(alpha = 0.94f),
+            color = colors.surfaceGlassStrong.copy(alpha = 0.9f),
             shape = RoundedCornerShape(shapes.extraLarge),
             border = BorderStroke(1.dp, colors.borderSubtle),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(78.dp)
+                .height(66.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .fillMaxWidth(0.66f)
-                        .height(26.dp)
-                        .blur(18.dp)
+                        .fillMaxWidth(0.5f)
+                        .height(16.dp)
+                        .blur(12.dp)
                         .background(
                             Brush.horizontalGradient(
                                 listOf(
                                     Color.Transparent,
-                                    colors.accentPrimary.copy(alpha = 0.18f),
-                                    colors.accentAi.copy(alpha = 0.12f),
+                                    colors.accentPrimary.copy(alpha = 0.09f),
+                                    colors.accentAi.copy(alpha = 0.06f),
                                     Color.Transparent
                                 )
                             )
@@ -90,7 +90,7 @@ fun SystemBottomNavBar(navController: NavHostController) {
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 7.dp),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 5.dp),
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -165,19 +165,19 @@ private fun NavIconButton(
     val shapes = SystemTheme.shapes
     val motion = SystemTheme.motion
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.08f else 1f,
+        targetValue = if (isSelected) 1.04f else 1f,
         animationSpec = tween(motion.quickStateMillis),
         label = "nav_item_scale"
     )
 
     Column(
         modifier = modifier
-            .height(64.dp)
+            .height(52.dp)
             .clip(RoundedCornerShape(shapes.large))
-            .background(if (isSelected) activeColor.copy(alpha = 0.055f) else Color.Transparent)
+            .background(if (isSelected) activeColor.copy(alpha = 0.032f) else Color.Transparent)
             .border(
                 width = 1.dp,
-                color = if (isSelected) activeColor.copy(alpha = 0.16f) else Color.Transparent,
+                color = if (isSelected) activeColor.copy(alpha = 0.085f) else Color.Transparent,
                 shape = RoundedCornerShape(shapes.large)
             )
             .clickable(onClick = onClick),
@@ -185,20 +185,20 @@ private fun NavIconButton(
         verticalArrangement = Arrangement.Center
     ) {
         Box(
-            modifier = Modifier.size(38.dp),
+            modifier = Modifier.size(31.dp),
             contentAlignment = Alignment.Center
         ) {
             if (isSelected) {
                 Box(
                     modifier = Modifier
-                        .size(38.dp)
-                        .background(activeColor.copy(alpha = 0.13f), CircleShape)
+                        .size(31.dp)
+                        .background(activeColor.copy(alpha = 0.085f), CircleShape)
                 )
                 Box(
                     modifier = Modifier
-                        .size(50.dp)
-                        .blur(12.dp)
-                        .background(activeColor.copy(alpha = 0.18f), CircleShape)
+                        .size(36.dp)
+                        .blur(8.dp)
+                        .background(activeColor.copy(alpha = 0.09f), CircleShape)
                 )
             }
 
@@ -207,7 +207,7 @@ private fun NavIconButton(
                 contentDescription = null,
                 tint = if (isSelected) activeColor else colors.textSecondary.copy(alpha = 0.76f),
                 modifier = Modifier
-                    .size(23.dp)
+                    .size(20.dp)
                     .graphicsLayer(scaleX = scale, scaleY = scale)
             )
         }
@@ -215,8 +215,8 @@ private fun NavIconButton(
         Text(
             text = label,
             color = if (isSelected) activeColor else colors.textSecondary.copy(alpha = 0.72f),
-            fontSize = 9.sp,
-            lineHeight = 11.sp,
+            fontSize = 8.sp,
+            lineHeight = 9.sp,
             fontWeight = if (isSelected) FontWeight.Black else FontWeight.SemiBold,
             maxLines = 1,
             textAlign = TextAlign.Center,
@@ -228,11 +228,11 @@ private fun NavIconButton(
             Box(
                 modifier = Modifier
                     .padding(top = 3.dp)
-                    .size(4.dp)
-                    .background(activeColor, CircleShape)
+                    .size(2.5.dp)
+                    .background(activeColor.copy(alpha = 0.92f), CircleShape)
             )
         } else {
-            Spacer(modifier = Modifier.padding(top = 3.dp).size(4.dp))
+            Spacer(modifier = Modifier.padding(top = 3.dp).size(2.5.dp))
         }
     }
 }

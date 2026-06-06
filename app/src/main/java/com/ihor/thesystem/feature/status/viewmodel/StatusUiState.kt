@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.status.viewmodel
 
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.Rank
+import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.time.LocalDate
@@ -31,6 +32,7 @@ data class StatusUiData(
     val maxStreak: Int = 0,
     val xpThisWeek: Int = 0,
     val avatarUri: String? = null,
+    val todayDecision: TodayTrainingDecision? = null,
     val weekPreview: ImmutableList<StatusWeekDayUiModel> = persistentListOf()
 )
 

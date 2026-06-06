@@ -22,5 +22,6 @@ data class StatusData(
     val currentStreak: Int = 0,
     val maxStreak: Int = 0,
     val xpThisWeek: Int = 0,
-    val avatarUri: String? = null
+    val avatarUri: String? = null,
+    val todayDecision: TodayTrainingDecision? = null
 )

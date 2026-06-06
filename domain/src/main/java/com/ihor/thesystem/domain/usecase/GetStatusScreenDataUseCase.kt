@@ -14,6 +14,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
     private val configRepo: SystemConfigRepository,
     private val todoRepository: TodoRepository,
     private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
+    private val decideTodayWorkout: DecideTodayWorkoutUseCase,
     private val clock: AppClock
 ) {
     private val progressionConfig = PlayerProgressionConfig()
@@ -91,6 +92,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 val xpPerLevel = progressionConfig.xpPerLevel
                 val derivedLevel = progressionConfig.levelForXp(player.xpTotal)
                 val xpProgress = (player.xpTotal % xpPerLevel).coerceIn(0, xpPerLevel)
+                val todayDecision = decideTodayWorkout(currentDate)
 
                 StatusData(
                     playerName             = player.name,
@@ -114,7 +116,8 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     currentStreak          = player.currentStreak,
                     maxStreak              = player.maxStreak,
                     xpThisWeek             = player.xpThisWeek,
-                    avatarUri              = player.avatarUri
+                    avatarUri              = player.avatarUri,
+                    todayDecision          = todayDecision
                 )
             }
         }

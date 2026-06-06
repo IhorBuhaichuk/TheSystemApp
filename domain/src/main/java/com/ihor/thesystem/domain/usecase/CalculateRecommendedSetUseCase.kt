@@ -10,7 +10,8 @@ data class SetRecommendation(
     val weight: Double,
     val reps: Int,
     val sets: Int = TARGET_SETS,
-    val isProgression: Boolean
+    val isProgression: Boolean,
+    val exerciseId: Int = 0
 )
 
 class CalculateRecommendedSetUseCase @Inject constructor(
@@ -40,7 +41,8 @@ class CalculateRecommendedSetUseCase @Inject constructor(
             return SetRecommendation(
                 weight = startWeight,
                 reps = TARGET_REPS,
-                isProgression = false
+                isProgression = false,
+                exerciseId = exerciseId
             )
         }
 
@@ -59,7 +61,8 @@ class CalculateRecommendedSetUseCase @Inject constructor(
                 weight = nextWeight,
                 reps = RESET_REPS,
                 sets = TARGET_SETS,
-                isProgression = true
+                isProgression = true,
+                exerciseId = exerciseId
             )
         } else {
             val nextReps = (workingSets.maxOfOrNull { it.reps } ?: RESET_REPS)
@@ -70,7 +73,8 @@ class CalculateRecommendedSetUseCase @Inject constructor(
                 weight = workingWeight,
                 reps = nextReps,
                 sets = TARGET_SETS,
-                isProgression = false
+                isProgression = false,
+                exerciseId = exerciseId
             )
         }
     }

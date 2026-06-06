@@ -367,6 +367,7 @@ class StatusViewModel @Inject constructor(
         maxStreak = maxStreak,
         xpThisWeek = xpThisWeek,
         avatarUri = avatarUri,
+        todayDecision = todayDecision,
         weekPreview = weekPreview.map { it.toUiModel() }.toImmutableList()
     )
 

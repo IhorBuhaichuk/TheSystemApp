@@ -31,6 +31,9 @@ abstract class RepositoryModule {
     abstract fun bindTodoRepository(impl: TodoRepositoryImpl): TodoRepository
 
     @Binds @Singleton
+    abstract fun bindReadinessRepository(impl: ReadinessRepositoryImpl): ReadinessRepository
+
+    @Binds @Singleton
     abstract fun bindScheduleRepository(impl: ScheduleRepositoryImpl): ScheduleRepository
 
     @Binds @Singleton

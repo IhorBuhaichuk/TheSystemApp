@@ -23,6 +23,7 @@ data class WorkoutUseCases @Inject constructor(
     val saveWorkoutForDay: SaveWorkoutForDayUseCase,
     val removeExerciseFromDay: RemoveExerciseFromDayUseCase,
     val getLastSetsForExercise: GetLastSetsForExerciseUseCase,
+    val decideTodayWorkout: DecideTodayWorkoutUseCase,
     private val getSelectedViewingDate: GetSelectedViewingDateUseCase,
     val selectToday: SelectTodayUseCase,
     val selectDate: SelectViewingDateUseCase

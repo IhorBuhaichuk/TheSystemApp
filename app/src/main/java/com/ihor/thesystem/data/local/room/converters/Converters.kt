@@ -5,6 +5,7 @@ import com.ihor.thesystem.data.local.room.entity.*
 import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.ExerciseCategory
+import com.ihor.thesystem.domain.model.ReadinessLevel
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -41,6 +42,9 @@ class Converters {
             }
         }
     }
+
+    @TypeConverter fun readinessLevelToString(v: ReadinessLevel?): String? = v?.name
+    @TypeConverter fun stringToReadinessLevel(v: String?): ReadinessLevel? = v?.let { ReadinessLevel.valueOf(it) }
 
     @TypeConverter
     fun fromDoubleMap(value: Map<String, Double>?): String? = value?.let { Json.encodeToString(it) }

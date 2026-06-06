@@ -74,6 +74,10 @@ fun ActiveDayCard(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
+        data.adjustmentReason?.let { reason ->
+            DecisionAdjustmentNotice(reason = reason)
+        }
+
         data.exercises.forEach { exercise ->
             key(exercise.exerciseId) {
                 val matrixEntry = data.matrixEntries.find { it.exerciseId == exercise.exerciseId }
@@ -110,6 +114,39 @@ fun ActiveDayCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun DecisionAdjustmentNotice(
+    reason: String,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .glassCard()
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Info,
+            contentDescription = null,
+            tint = colors.accentAi,
+            modifier = Modifier.size(18.dp)
+        )
+        Text(
+            text = reason,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = colors.textSecondary,
+                fontWeight = FontWeight.SemiBold
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

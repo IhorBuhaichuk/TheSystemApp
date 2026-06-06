@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Today
@@ -299,6 +300,9 @@ private fun DayOverviewCard(
                     )
                 }
             )
+            workout.adjustmentReason?.let { reason ->
+                AdjustmentReasonRow(reason = reason)
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SummaryMetric(
                     label = "Вправи",
@@ -312,6 +316,39 @@ private fun DayOverviewCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun AdjustmentReasonRow(reason: String) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(colors.overlayLight)
+            .border(1.dp, colors.borderSubtle, shape)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Info,
+            contentDescription = null,
+            tint = colors.accentAi,
+            modifier = Modifier.size(18.dp)
+        )
+        Text(
+            text = reason,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = colors.textSecondary,
+                fontWeight = FontWeight.SemiBold
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

@@ -75,5 +75,6 @@ abstract class DatabaseModule {
         @Provides @Singleton fun provideChatDao(db: AppDatabase)              = db.chatDao()
         @Provides @Singleton fun provideCalendarCycleDao(db: AppDatabase)     = db.calendarCycleDao()
         @Provides @Singleton fun provideTodoDao(db: AppDatabase)              = db.todoDao()
+        @Provides @Singleton fun provideReadinessDao(db: AppDatabase)         = db.readinessDao()
     }
 }

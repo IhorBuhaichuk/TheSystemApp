@@ -7,7 +7,7 @@ import com.ihor.thesystem.data.local.room.converters.Converters
 import com.ihor.thesystem.data.local.room.dao.*
 import com.ihor.thesystem.data.local.room.entity.*
 
-const val APP_DATABASE_VERSION = 46
+const val APP_DATABASE_VERSION = 47
 
 @Database(
     entities = [
@@ -35,7 +35,8 @@ const val APP_DATABASE_VERSION = 46
         ChatMessageEntity::class,
         CalendarCycleConfigEntity::class,
         CalendarCycleDayEntity::class,
-        TodoEntity::class
+        TodoEntity::class,
+        ReadinessEntryEntity::class
     ],
     version = APP_DATABASE_VERSION,
     exportSchema = true
@@ -56,4 +57,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun chatDao(): ChatDao
     abstract fun calendarCycleDao(): CalendarCycleDao
     abstract fun todoDao(): TodoDao
+    abstract fun readinessDao(): ReadinessDao
 }

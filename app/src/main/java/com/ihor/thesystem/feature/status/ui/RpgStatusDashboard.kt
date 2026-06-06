@@ -2,6 +2,7 @@
 
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,7 +49,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,6 +69,8 @@ import com.ihor.thesystem.core.ui.components.SystemWeekCalendarPreview
 import com.ihor.thesystem.core.ui.components.SystemWeekDayModel
 import com.ihor.thesystem.core.ui.components.SystemWeekDayStatus
 import com.ihor.thesystem.core.ui.components.SystemWeekDayVisualType
+import com.ihor.thesystem.domain.model.TodayTrainingDecision
+import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
 import com.ihor.thesystem.feature.status.viewmodel.QuestUiModel
 import com.ihor.thesystem.feature.status.viewmodel.StatusUiData
 import com.ihor.thesystem.feature.status.viewmodel.StatusWeekDayStatus
@@ -73,7 +80,7 @@ import com.ihor.thesystem.feature.status.viewmodel.TaskUiModel
 import com.ihor.thesystem.feature.status.viewmodel.TodoUiModel
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.LocalDate
-import java.time.format.TextStyle
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -101,19 +108,17 @@ fun RpgStatusDashboard(
             .padding(top = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
-        StatusHeader(
-            weekPreview = data.weekPreview,
-            isRecoveryDay = data.mainQuest == null,
-            onOpenCalendar = onOpenCalendar
+        TodayOrderBlock(
+            decision = data.todayDecision,
+            fallbackMainQuest = data.mainQuest,
+            onStartWorkout = onStartWorkout
         )
-        XpLevelBlock(data = data)
-        data.mainQuest?.let { mainQuest ->
-            MainFocusBlock(
-                mainQuest = mainQuest,
-                onStartWorkout = onStartWorkout,
-                onOpenWorkoutSettings = onOpenWorkoutSettings
-            )
-        }
+        WeekPreviewBlock(
+            days = data.weekPreview,
+            onOpenCalendar = onOpenCalendar,
+            modifier = Modifier.fillMaxWidth()
+        )
+        SystemLevelBlock(data = data)
         TodoBlock(
             todos = data.todos,
             onTaskToggled = onTaskToggled,
@@ -122,62 +127,200 @@ fun RpgStatusDashboard(
             onTodosReordered = onTodosReordered,
             onRemoveTask = onRemoveTask
         )
-        SystemInfoBlock(data = data)
     }
 }
 
 @Composable
+private fun TodayOrderBlock(
+    decision: TodayTrainingDecision?,
+    fallbackMainQuest: QuestUiModel?,
+    onStartWorkout: () -> Unit
+) {
+    val colors = SystemTheme.colors
+    val decisionType = decision?.decisionType
+    val accent = decision.orderAccent()
+    val readinessProgress = ((decision?.readinessScore ?: 0) / 100f).coerceIn(0f, 1f)
+    val actionEnabled = decisionType != null && decisionType != TodayTrainingDecisionType.REST
+    val actionText = when (decisionType) {
+        TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Почати відновлення"
+        TodayTrainingDecisionType.REST -> "День без тренування"
+        null -> "План формується"
+        else -> "Почати тренування"
+    }
+
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), active = true, contentPadding = SystemCardPadding) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SystemSectionHeader(
+                title = "Сьогоднішній наказ",
+                subtitle = "Поточна дія дня"
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FocusIcon(
+                    icon = Icons.Filled.FitnessCenter,
+                    tint = accent
+                )
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(
+                        text = "Сьогодні: ${decision.todayTitle(fallbackMainQuest)}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = colors.textPrimary,
+                            fontWeight = FontWeight.Black
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "Рішення системи: ${decision.shortDecisionLabel()}",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = accent,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SystemStateBadge(
+                        text = "Готовність: ${decision?.readinessScore ?: 0}%",
+                        accent = accent
+                    )
+                    SystemStateBadge(
+                        text = decision.shortDecisionLabel(),
+                        accent = accent
+                    )
+                }
+                SystemProgressBar(
+                    progress = readinessProgress,
+                    accent = accent,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                )
+            }
+
+            Text(
+                text = decision.displayReason(),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = colors.textSecondary,
+                    fontWeight = FontWeight.Medium
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            SystemButton(
+                text = actionText,
+                icon = Icons.Filled.FitnessCenter,
+                onClick = onStartWorkout,
+                enabled = actionEnabled,
+                accent = accent,
+                glow = actionEnabled,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodayTrainingDecision?.orderAccent(): Color {
+    val colors = SystemTheme.colors
+    return when (this?.decisionType) {
+        TodayTrainingDecisionType.PROGRESS_ALLOWED -> colors.accentSuccess
+        TodayTrainingDecisionType.STANDARD_TRAINING,
+        TodayTrainingDecisionType.NO_EXCUSE -> colors.accentPrimary
+        TodayTrainingDecisionType.REDUCED_LOAD -> colors.accentWarning
+        TodayTrainingDecisionType.ACTIVE_RECOVERY,
+        TodayTrainingDecisionType.DELOAD -> colors.accentAi
+        TodayTrainingDecisionType.REST -> colors.textMuted
+        null -> colors.textMuted
+    }
+}
+
+private fun TodayTrainingDecision?.todayTitle(fallbackMainQuest: QuestUiModel?): String =
+    when (this?.decisionType) {
+        TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Recovery Protocol"
+        TodayTrainingDecisionType.REST -> "День без тренування"
+        null -> fallbackMainQuest?.title ?: "Recovery Protocol"
+        else -> workoutName ?: fallbackMainQuest?.title ?: "Recovery Protocol"
+    }
+
+private fun TodayTrainingDecision?.shortDecisionLabel(): String =
+    when (this?.decisionType) {
+        TodayTrainingDecisionType.PROGRESS_ALLOWED -> "Прогрес дозволено"
+        TodayTrainingDecisionType.STANDARD_TRAINING -> "Планове тренування"
+        TodayTrainingDecisionType.REDUCED_LOAD -> "Зменшити навантаження"
+        TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Відновлення"
+        TodayTrainingDecisionType.NO_EXCUSE -> "План перераховано"
+        TodayTrainingDecisionType.DELOAD -> "Делоад"
+        TodayTrainingDecisionType.REST -> "Відпочинок"
+        null -> "План синхронізується"
+    }
+
+private fun TodayTrainingDecision?.displayReason(): String =
+    when (this?.decisionType) {
+        TodayTrainingDecisionType.PROGRESS_ALLOWED ->
+            "Готовність висока, борг відновлення низький."
+        TodayTrainingDecisionType.STANDARD_TRAINING ->
+            "План на сьогодні підходить під поточний стан."
+        TodayTrainingDecisionType.REDUCED_LOAD ->
+            "Сьогодні краще знизити вагу та обсяг."
+        TodayTrainingDecisionType.ACTIVE_RECOVERY ->
+            "Організму потрібне відновлення замість силового навантаження."
+        TodayTrainingDecisionType.NO_EXCUSE ->
+            "План перераховано. Наступна оптимальна дія: ${workoutName ?: "тренування за планом"}."
+        TodayTrainingDecisionType.DELOAD ->
+            "Навантаження накопичилось, сьогодні працюємо легше."
+        TodayTrainingDecisionType.REST ->
+            "Сьогодні день без тренування."
+        null ->
+            "Система готує сьогоднішній план."
+    }
+
+@Composable
 private fun StatusHeader(
     weekPreview: List<StatusWeekDayUiModel>,
-    isRecoveryDay: Boolean,
     onOpenCalendar: () -> Unit
 ) {
     val colors = SystemTheme.colors
-    val locale = Locale.getDefault()
     val today = LocalDate.now()
-    val weekDay = today.dayOfWeek.getDisplayName(TextStyle.FULL_STANDALONE, locale)
-        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
-    val month = today.month.getDisplayName(TextStyle.FULL_STANDALONE, locale)
-    val dateText = "$weekDay, ${today.dayOfMonth} $month"
+    val dateText = today.format(DateTimeFormatter.ofPattern("dd.MM.yy"))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+        Box(
+            modifier = Modifier
+                .width(124.dp)
+                .height(88.dp),
+            contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Статус",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    color = colors.textPrimary,
-                    fontWeight = FontWeight.Black
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (isRecoveryDay) {
-                Text(
-                    text = "Активне відновлення",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = colors.accentSuccess,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 8.sp,
-                        lineHeight = 9.sp
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Text(
                 text = dateText,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = colors.textSecondary,
-                    fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = colors.textPrimary.copy(alpha = 0.96f),
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 25.sp,
+                    lineHeight = 26.sp,
+                    textAlign = TextAlign.Center
                 ),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Clip,
+                modifier = Modifier.fillMaxWidth()
             )
         }
         WeekPreviewBlock(
@@ -189,49 +332,193 @@ private fun StatusHeader(
 }
 
 @Composable
-private fun XpLevelBlock(data: StatusUiData) {
+private fun SystemLevelBlock(data: StatusUiData) {
     val colors = SystemTheme.colors
     val progress = remember(data.xpTotal, data.xpMax) {
         if (data.xpMax > 0) (data.xpTotal.toFloat() / data.xpMax).coerceIn(0f, 1f) else 0f
     }
     val xpRemaining = (data.xpMax - data.xpTotal).coerceAtLeast(0)
+    val isRecoveryDay = data.mainQuest == null
+    val dayStatusText = remember(data.weekPreview, data.mainQuest) {
+        if (data.mainQuest == null) {
+            "Відновлення"
+        } else {
+            data.weekPreview
+                .firstOrNull { it.isToday }
+                ?.status
+                ?.toCompactDayStatus()
+                ?: if (data.mainQuest.isCompleted) "Виконано" else "Активний"
+        }
+    }
+    val priorityText = data.mainQuest?.title ?: "Без тренування"
 
-    DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 12.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(
+                    text = "Система · Рівень ${data.level}",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = colors.textPrimary,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SystemStateBadge(
+                        text = dayStatusText,
+                        accent = if (isRecoveryDay) colors.accentSuccess else colors.accentPrimary
+                    )
                     Text(
-                        text = "Рівень ${data.level}",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = colors.textPrimary,
+                        text = "${(progress * 100).roundToInt()}%",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            color = colors.accentPrimary,
                             fontWeight = FontWeight.Black
                         )
                     )
-                    Text(
-                        text = "${data.xpTotal} / ${data.xpMax} XP",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
-                    )
                 }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "${(progress * 100).roundToInt()}%",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = colors.accentPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
+                    text = "${data.xpTotal} / ${data.xpMax} XP",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = colors.textSecondary,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "До рівня ${data.level + 1}: $xpRemaining XP",
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            SystemProgressBar(progress = progress)
-            Text(
-                text = "До наступного рівня: $xpRemaining XP",
-                style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
+            SystemProgressBar(
+                progress = progress,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(5.dp)
             )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CompactStatusItem(
+                    icon = Icons.Filled.Whatshot,
+                    text = "${data.currentStreak} днів",
+                    accent = colors.accentWarning,
+                    modifier = Modifier.weight(1f)
+                )
+                CompactStatusItem(
+                    icon = Icons.Filled.FitnessCenter,
+                    text = priorityText,
+                    accent = colors.accentPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
+
+@Composable
+private fun SystemStateBadge(
+    text: String,
+    accent: Color
+) {
+    val colors = SystemTheme.colors
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(SystemTheme.shapes.pill))
+            .background(accent.copy(alpha = 0.09f))
+            .border(1.dp, accent.copy(alpha = 0.18f), RoundedCornerShape(SystemTheme.shapes.pill))
+            .padding(horizontal = 9.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(5.dp)
+                .clip(RoundedCornerShape(SystemTheme.shapes.pill))
+                .background(accent.copy(alpha = 0.88f))
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = colors.textPrimary.copy(alpha = 0.86f),
+                fontWeight = FontWeight.Bold,
+                fontSize = 10.sp,
+                lineHeight = 11.sp
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun CompactStatusItem(
+    icon: ImageVector,
+    text: String,
+    accent: Color,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(22.dp)
+                .clip(RoundedCornerShape(SystemTheme.shapes.small))
+                .background(accent.copy(alpha = 0.09f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(14.dp)
+            )
+        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = colors.textSecondary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                lineHeight = 12.sp
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+private fun StatusWeekDayStatus.toCompactDayStatus(): String =
+    when (this) {
+        StatusWeekDayStatus.COMPLETED -> "Виконано"
+        StatusWeekDayStatus.PARTIAL -> "Частково"
+        StatusWeekDayStatus.MISSED -> "Пропущено"
+        StatusWeekDayStatus.PLANNED -> "Активний"
+        StatusWeekDayStatus.NO_DATA -> "Немає даних"
+    }
 
 @Composable
 private fun MainFocusBlock(
@@ -336,25 +623,25 @@ private fun TodoBlock(
     val allTasks = remember(todos) { todos.flatMapWithMicrotasks() }
     val completed = allTasks.count { it.isCompleted }
 
-    DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 12.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SystemSectionHeader(
                 title = "To-do",
-                subtitle = if (allTasks.isNotEmpty()) "$completed/${allTasks.size} виконано" else "Список на сьогодні порожній",
+                subtitle = if (allTasks.isNotEmpty()) "$completed/${allTasks.size} виконано" else "Список порожній",
                 trailing = {
                     SystemButton(
                         text = "Додати",
                         icon = Icons.Filled.Add,
                         onClick = { onAddTask(0) },
-                        modifier = Modifier.height(38.dp)
+                        modifier = Modifier.height(34.dp)
                     )
                 }
             )
 
             if (todos.isEmpty()) {
                 Text(
-                    text = "Додай будь-яке завдання, яке має бути зроблене сьогодні.",
-                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
+                    text = "День чистий. Додай тільки те, що справді треба закрити.",
+                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted.copy(alpha = 0.86f))
                 )
             } else {
                 ReorderableTodoList(
@@ -563,78 +850,6 @@ private fun Modifier.dragAfterOneSecond(
             }
         }
     }
-
-@Composable
-private fun SystemInfoBlock(data: StatusUiData) {
-    val colors = SystemTheme.colors
-    val monthProgress = remember(data.monthWorkoutsCompleted, data.monthWorkoutsTotal) {
-        if (data.monthWorkoutsTotal > 0) {
-            data.monthWorkoutsCompleted.toFloat() / data.monthWorkoutsTotal
-        } else {
-            0f
-        }.coerceIn(0f, 1f)
-    }
-
-    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = SystemCardPadding) {
-        Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
-            SystemSectionHeader(title = "Система", subtitle = "Короткий стан")
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                SystemInfoMetric(
-                    label = "Серія",
-                    value = data.currentStreak.toString(),
-                    subtitle = "днів без пропуску",
-                    accent = colors.accentWarning,
-                    modifier = Modifier.weight(1f)
-                )
-                SystemInfoMetric(
-                    label = "Місяць",
-                    value = "${data.monthWorkoutsCompleted}/${data.monthWorkoutsTotal.coerceAtLeast(0)}",
-                    subtitle = "тренувальна ціль",
-                    accent = colors.accentPrimary,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            SystemProgressBar(progress = monthProgress, accent = colors.accentSuccess)
-        }
-    }
-}
-
-@Composable
-private fun SystemInfoMetric(
-    label: String,
-    value: String,
-    subtitle: String,
-    accent: Color,
-    modifier: Modifier = Modifier
-) {
-    val colors = SystemTheme.colors
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(SystemTheme.shapes.medium))
-            .background(colors.overlayLight)
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary, fontWeight = FontWeight.Bold),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge.copy(color = colors.textPrimary, fontWeight = FontWeight.Black),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodySmall.copy(color = accent.copy(alpha = 0.82f)),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
 
 @Composable
 private fun FocusIcon(icon: ImageVector, tint: Color) {

@@ -13,11 +13,14 @@ import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
+import com.ihor.thesystem.domain.model.TodayTrainingDecision
+import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
 import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.domain.model.toActiveSetInput
 import com.ihor.thesystem.domain.model.toExerciseSetOrNull
 import com.ihor.thesystem.domain.usecase.GetExerciseReferenceUseCase
 import com.ihor.thesystem.domain.usecase.GetSystemConfigUseCase
+import com.ihor.thesystem.domain.usecase.SetRecommendation
 import com.ihor.thesystem.domain.usecase.WorkoutUseCases
 import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
@@ -113,30 +116,54 @@ class WorkoutViewModel @Inject constructor(
                 .flatMapLatest { schedules ->
                     val schedule = schedules.firstOrNull() ?: return@flatMapLatest flowOf(null)
                     useCases.getActiveWorkoutQuest(schedule.id).map { activeWorkoutQuest ->
-            
-                        val exercisesWithRecs = schedule.exercises.map { ex ->
+                        val taskByExercise = activeWorkoutQuest?.tasks.orEmpty()
+                            .mapNotNull { task -> task.exerciseId?.let { exerciseId -> exerciseId to task } }
+                            .toMap()
+                        val questExerciseIds = taskByExercise.keys.takeIf { it.isNotEmpty() }
+                        val displayedExercises = questExerciseIds
+                            ?.mapNotNull { exerciseId -> schedule.exercises.firstOrNull { it.id == exerciseId } }
+                            ?: schedule.exercises
+                        val todayDecision = runCatching { useCases.decideTodayWorkout() }.getOrNull()
+
+                        val exercisesWithRecs = displayedExercises.map { ex ->
                             val trackingMode = resolveTrackingMode(ex)
-                            val rec = try {
+                            val fallbackRec = try {
                                 useCases.calculateRecommendation(ex.id, ex.name)
                             } catch (e: Exception) {
                                 if (e is CancellationException) throw e
-                                com.ihor.thesystem.domain.usecase.SetRecommendation(weight = 0.0, reps = 12, sets = 3, isProgression = false)
+                                SetRecommendation(
+                                    weight = 0.0,
+                                    reps = 12,
+                                    sets = 3,
+                                    isProgression = false,
+                                    exerciseId = ex.id
+                                )
                             }
+                            val questTarget = taskByExercise[ex.id]
+                            val targetWeight = questTarget?.recommendedWeight ?: fallbackRec.weight
+                            val targetReps = questTarget?.recommendedReps ?: fallbackRec.reps
+                            val targetSets = questTarget?.recommendedSets ?: fallbackRec.sets
+
                             ExerciseWorkoutUiModel(
                                 exerciseId = ex.id,
                                 name = ex.name,
                                 nameUk = ex.nameUk,
-                                recommendedWeight = rec.weight,
-                                recommendedReps = rec.reps,
-                                recommendedSets = rec.sets,
-                                recommendation = rec.formatRecommendation(trackingMode),
+                                recommendedWeight = targetWeight,
+                                recommendedReps = targetReps,
+                                recommendedSets = targetSets,
+                                recommendation = formatRecommendation(
+                                    weight = targetWeight,
+                                    reps = targetReps,
+                                    sets = targetSets,
+                                    trackingMode = trackingMode
+                                ),
                                 gifUrl = ex.gifUrl,
                                 externalId = ex.externalId,
                                 trackingMode = trackingMode,
-                                sets = (1..(rec.sets ?: 1)).map {
+                                sets = (1..targetSets.coerceAtLeast(1)).map {
                                     ActiveSetInput(
-                                        weight = if (trackingMode.usesWeightInput && rec.weight > 0.0) {
-                                            rec.weight.formatInputWeight()
+                                        weight = if (trackingMode.usesWeightInput && targetWeight > 0.0) {
+                                            targetWeight.formatInputWeight()
                                         } else {
                                             ""
                                         }
@@ -150,6 +177,11 @@ class WorkoutViewModel @Inject constructor(
                             dailyTasks = listOfNotNull(activeWorkoutQuest).toImmutableList(),
                             workoutName = schedule.workoutTemplateName,
                             exercises = exercisesWithRecs,
+                            adjustmentReason = if (activeWorkoutQuest != null) {
+                                todayDecision?.toWorkoutAdjustmentReason()
+                            } else {
+                                null
+                            },
                             matrixEntries = persistentListOf()
                         )
                     }
@@ -540,7 +572,10 @@ class WorkoutViewModel @Inject constructor(
         )
     }
 
-    private fun com.ihor.thesystem.domain.usecase.SetRecommendation.formatRecommendation(
+    private fun formatRecommendation(
+        weight: Double,
+        reps: Int,
+        sets: Int,
         trackingMode: ExerciseTrackingMode
     ): String =
         when (trackingMode) {
@@ -548,6 +583,17 @@ class WorkoutViewModel @Inject constructor(
             ExerciseTrackingMode.BODYWEIGHT_REPS -> "${sets}x${reps} повт."
             ExerciseTrackingMode.TIME_SECONDS -> "${sets}x${reps} сек"
             ExerciseTrackingMode.TIME_MINUTES -> "${sets}x${(reps / 60).coerceAtLeast(1)} хв"
+        }
+
+    private fun TodayTrainingDecision.toWorkoutAdjustmentReason(): String? =
+        when (decisionType) {
+            TodayTrainingDecisionType.REDUCED_LOAD,
+            TodayTrainingDecisionType.ACTIVE_RECOVERY,
+            TodayTrainingDecisionType.DELOAD ->
+                "Система знизила навантаження через readiness $readinessScore% і recovery debt ${recoveryDebt.level.name}."
+            TodayTrainingDecisionType.NO_EXCUSE ->
+                "План перераховано. Наступна оптимальна дія: коротке тренування."
+            else -> null
         }
 
     private fun Double.formatInputWeight(): String =
