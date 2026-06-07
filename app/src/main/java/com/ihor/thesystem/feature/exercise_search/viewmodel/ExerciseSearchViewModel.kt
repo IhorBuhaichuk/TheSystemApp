@@ -6,6 +6,8 @@ import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.usesExternalLoad
+import com.ihor.thesystem.domain.repository.EquipmentProfileRepository
+import com.ihor.thesystem.domain.usecase.FilterExercisesByEquipmentUseCase
 import com.ihor.thesystem.domain.usecase.SearchExercisesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,7 +22,8 @@ data class ExerciseFilterState(
     val selectedLevels: Set<String> = emptySet(),
     val selectedMechanics: Set<String> = emptySet(),
     val selectedForces: Set<String> = emptySet(),
-    val selectedCategories: Set<com.ihor.thesystem.domain.model.ExerciseCategory> = emptySet()
+    val selectedCategories: Set<com.ihor.thesystem.domain.model.ExerciseCategory> = emptySet(),
+    val systemCoreOnly: Boolean = false
 )
 
 data class ExercisePickerItemUiModel(
@@ -37,12 +40,15 @@ sealed interface ExerciseSearchEvent {
     data class ToggleMechanic(val mechanic: String) : ExerciseSearchEvent
     data class ToggleForce(val force: String) : ExerciseSearchEvent
     data class ToggleCategory(val category: com.ihor.thesystem.domain.model.ExerciseCategory) : ExerciseSearchEvent
+    object ToggleSystemCore : ExerciseSearchEvent
     object ClearFilters : ExerciseSearchEvent
 }
 
 @HiltViewModel
 class ExerciseSearchViewModel @Inject constructor(
     private val searchExercisesUseCase: SearchExercisesUseCase,
+    private val equipmentProfileRepository: EquipmentProfileRepository,
+    private val filterExercisesByEquipment: FilterExercisesByEquipmentUseCase,
     private val progressionMatrixRepository: ProgressionMatrixRepository
 ) : ViewModel() {
 
@@ -50,8 +56,11 @@ class ExerciseSearchViewModel @Inject constructor(
     val filterState: StateFlow<ExerciseFilterState> = _filterState.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val exercises: StateFlow<List<ExerciseDetails>> = _filterState
-        .flatMapLatest { state ->
+    val exercises: StateFlow<List<ExerciseDetails>> = combine(
+        _filterState,
+        equipmentProfileRepository.getProfile()
+    ) { state, profile -> state to profile }
+        .flatMapLatest { (state, profile) ->
             searchExercisesUseCase(
                 query = state.query.takeIf { it.isNotBlank() },
                 muscles = state.selectedMuscles.toList(),
@@ -60,8 +69,21 @@ class ExerciseSearchViewModel @Inject constructor(
                 mechanics = state.selectedMechanics.toList(),
                 forces = state.selectedForces.toList()
             ).map { list ->
-                if (state.selectedCategories.isEmpty()) list
-                else list.filter { it.category in state.selectedCategories }
+                val categoryFiltered = if (state.selectedCategories.isEmpty()) {
+                    list
+                } else {
+                    list.filter { it.category in state.selectedCategories }
+                }
+                val equipmentFiltered = filterExercisesByEquipment(categoryFiltered, profile)
+                val coreFiltered = if (state.systemCoreOnly) {
+                    equipmentFiltered.filter { it.isCoreSystemExercise }
+                } else {
+                    equipmentFiltered
+                }
+                coreFiltered.sortedWith(
+                    compareByDescending<ExerciseDetails> { it.isCoreSystemExercise }
+                        .thenBy { it.nameUk ?: it.name }
+                )
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -155,6 +177,9 @@ class ExerciseSearchViewModel @Inject constructor(
                     }
                     state.copy(selectedCategories = newSet)
                 }
+            }
+            ExerciseSearchEvent.ToggleSystemCore -> {
+                _filterState.update { state -> state.copy(systemCoreOnly = !state.systemCoreOnly) }
             }
             ExerciseSearchEvent.ClearFilters -> {
                 _filterState.value = ExerciseFilterState()

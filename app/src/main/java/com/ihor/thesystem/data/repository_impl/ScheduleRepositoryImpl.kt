@@ -76,43 +76,13 @@ class ScheduleRepositoryImpl @Inject constructor(
             workoutTemplateId   = ordered.schedule.workoutTemplateId,
             workoutTemplateName = ordered.workoutTemplate?.name,
             dailyTaskNames      = ordered.dailyTasks.map { it.name },
-            exercises           = ordered.exercises.map { 
-                ExerciseDetails(
-                    id = it.exercise.id, 
-                    name = it.exercise.name, 
-                    nameUk = it.exercise.nameUk,
-                    category = it.exercise.category,
-                    muscleGroups = it.exercise.muscleGroups,
-                    equipment = it.exercise.equipment,
-                    level = it.exercise.level,
-                    mechanic = it.exercise.mechanic,
-                    force = it.exercise.force,
-                    gifUrl = it.exercise.gifUrl,
-                    externalId = it.exercise.externalId,
-                    trackingMode = it.exercise.trackingMode
-                ) 
-            }
+            exercises           = ordered.exercises.map { it.exercise.toExerciseDetails() }
         )
     }
 
     override fun getAllExercises(): Flow<List<ExerciseDetails>> =
         workoutDao.getAllExercises().map { entities ->
-            entities.map { 
-                ExerciseDetails(
-                    id = it.id, 
-                    name = it.name, 
-                    nameUk = it.nameUk,
-                    category = it.category,
-                    muscleGroups = it.muscleGroups,
-                    equipment = it.equipment,
-                    level = it.level,
-                    mechanic = it.mechanic,
-                    force = it.force,
-                    gifUrl = it.gifUrl,
-                    externalId = it.externalId,
-                    trackingMode = it.trackingMode
-                ) 
-            }
+            entities.map { it.toExerciseDetails() }
         }
 
     override suspend fun createExercise(name: String): Int {

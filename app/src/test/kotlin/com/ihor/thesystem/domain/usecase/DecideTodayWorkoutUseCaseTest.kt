@@ -98,6 +98,44 @@ class DecideTodayWorkoutUseCaseTest {
     }
 
     @Test
+    fun `reduced readiness creates no excuse protocol instead of progression workout`() = runTest {
+        arrange(
+            schedule = workoutSchedule(),
+            readinessEntry = readinessEntry(
+                score = 58,
+                level = ReadinessLevel.REDUCED,
+                input = ReadinessInput(sleepHours = 5.5f, stress = 4)
+            ),
+            logs = emptyList()
+        )
+
+        val decision = useCase(TODAY)
+
+        assertEquals(TodayTrainingDecisionType.NO_EXCUSE, decision.decisionType)
+        assertTrue(decision.isTrainingAllowed)
+        assertEquals(0.0f, decision.loadMultiplier)
+        assertTrue(decision.reason.contains("short bodyweight protocol"))
+    }
+
+    @Test
+    fun `recovery readiness creates active recovery even when schedule has no workout`() = runTest {
+        arrange(
+            schedule = restSchedule(),
+            readinessEntry = readinessEntry(
+                score = 35,
+                level = ReadinessLevel.RECOVERY,
+                input = ReadinessInput(sleepHours = 4f, stress = 5, soreness = 5)
+            ),
+            logs = emptyList()
+        )
+
+        val decision = useCase(TODAY)
+
+        assertEquals(TodayTrainingDecisionType.ACTIVE_RECOVERY, decision.decisionType)
+        assertFalse(decision.isTrainingAllowed)
+    }
+
+    @Test
     fun `no workout in schedule returns rest`() = runTest {
         arrange(
             schedule = restSchedule(),

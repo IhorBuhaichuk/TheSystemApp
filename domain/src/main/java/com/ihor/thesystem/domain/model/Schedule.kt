@@ -23,7 +23,12 @@ data class ExerciseDetails(
     val force: String? = null,
     val gifUrl: String? = null,
     val externalId: String? = null,
-    val trackingMode: String? = null
+    val trackingMode: String? = null,
+    val isCoreSystemExercise: Boolean = false,
+    val movementPattern: String? = null,
+    val techniqueTips: List<String> = emptyList(),
+    val commonMistakes: List<String> = emptyList(),
+    val substitutionExternalIds: List<String> = emptyList()
 )
 
 data class ExerciseRecommendation(
@@ -34,3 +39,21 @@ data class ExerciseRecommendation(
     val sets: Int,
     val reps: Int
 )
+
+enum class SystemWorkoutTemplateType(
+    val questTitle: String,
+    val completionXp: Int
+) {
+    NO_EXCUSE(
+        questTitle = "NO EXCUSE PROTOCOL",
+        completionXp = 30
+    ),
+    ACTIVE_RECOVERY(
+        questTitle = "RECOVERY PROTOCOL",
+        completionXp = 40
+    ),
+    DELOAD(
+        questTitle = "DELOAD SESSION",
+        completionXp = 60
+    )
+}

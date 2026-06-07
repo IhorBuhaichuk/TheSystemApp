@@ -95,7 +95,12 @@ fun WorkoutDialogHost(
                 onDeleteExercise = { workoutViewModel.onDeleteExercise(it) },
                 onTrackingModeChanged = { exerciseId, trackingMode ->
                     workoutViewModel.onExerciseTrackingModeChanged(exerciseId, trackingMode)
-                }
+                },
+                onEquipmentLocationChanged = { workoutViewModel.onEquipmentLocationChanged(it) },
+                onEquipmentAvailabilityChanged = { type, available ->
+                    workoutViewModel.onEquipmentAvailabilityChanged(type, available)
+                },
+                onDumbbellMaxKgChanged = { workoutViewModel.onDumbbellMaxKgChanged(it) }
             )
         }
         is StatusDialogState.WorkoutReport -> WorkoutReportDialog(

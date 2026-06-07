@@ -242,6 +242,13 @@ private fun ActiveExerciseLoggerCard(
             }
         }
 
+        exercise.techniqueCheckText()?.let { text ->
+            TechniqueCheckNotice(
+                text = text,
+                emphasized = exercise.techniqueCheckEmphasized
+            )
+        }
+
         WorkoutSetInputBlock(
             exercise = exercise,
             onSetWeightChanged = onSetWeightChanged,
@@ -311,6 +318,44 @@ private fun ActiveExerciseLoggerCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun TechniqueCheckNotice(
+    text: String,
+    emphasized: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    val accent = if (emphasized) colors.accentWarning else colors.accentAi
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(accent.copy(alpha = if (emphasized) 0.14f else 0.08f))
+            .border(1.dp, accent.copy(alpha = if (emphasized) 0.42f else 0.22f), shape)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Info,
+            contentDescription = null,
+            tint = accent,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = colors.textPrimary,
+                fontWeight = FontWeight.SemiBold
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -699,6 +744,19 @@ private fun List<ActiveSetInput>.groupAdjacentByWeight(): List<WorkoutSetGroup> 
         groups += WorkoutSetGroup(currentWeight, currentSets.toList())
     }
     return groups
+}
+
+internal fun ExerciseWorkoutUiModel.techniqueCheckText(): String? {
+    if (!isCoreSystemExercise) return null
+
+    val tips = techniqueTips
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+        .take(3)
+
+    if (tips.isEmpty()) return null
+
+    return "Чек техніки: ${tips.joinToString(" · ")}"
 }
 
 private fun ActiveSetInput.isReadyForCompletion(

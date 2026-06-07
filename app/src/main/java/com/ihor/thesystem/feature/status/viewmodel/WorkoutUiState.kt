@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.status.viewmodel
 
 import androidx.compose.runtime.Immutable
 import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.EquipmentProfile
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 import com.ihor.thesystem.domain.model.ExerciseDetails
@@ -15,6 +16,8 @@ data class WorkoutScheduleSettingsUiState(
     val workoutNameDraft: String = "",
     val exercisesForSelectedDay: ImmutableList<ExerciseDetails> = persistentListOf(),
     val allExercises: ImmutableList<ExerciseDetails> = persistentListOf(),
+    val equipmentProfile: EquipmentProfile = EquipmentProfile(),
+    val dumbbellMaxKgDraft: String = "",
     val isLoading: Boolean = false
 )
 
@@ -40,6 +43,12 @@ data class ExerciseWorkoutUiModel(
     val gifUrl: String? = null,
     val externalId: String? = null,
     val trackingMode: ExerciseTrackingMode = ExerciseTrackingMode.WEIGHT_REPS,
+    val isCoreSystemExercise: Boolean = false,
+    val movementPattern: String? = null,
+    val techniqueTips: ImmutableList<String> = persistentListOf(),
+    val commonMistakes: ImmutableList<String> = persistentListOf(),
+    val substitutionExternalIds: ImmutableList<String> = persistentListOf(),
+    val techniqueCheckEmphasized: Boolean = false,
     val sets: ImmutableList<ActiveSetInput> = persistentListOf()
 )
 

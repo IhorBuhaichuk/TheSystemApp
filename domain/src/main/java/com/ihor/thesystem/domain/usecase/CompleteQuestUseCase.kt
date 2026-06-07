@@ -5,6 +5,7 @@ import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.DomainQuestStatus
 import com.ihor.thesystem.domain.model.DomainQuestType
 import com.ihor.thesystem.domain.model.PlayerProgressionPolicy
+import com.ihor.thesystem.domain.model.PlayerProgressionConfig
 import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.model.QuestCompletionPolicy
 import com.ihor.thesystem.domain.repository.PlayerRepository
@@ -120,9 +121,13 @@ class CompleteQuestUseCase @Inject constructor(
             ?: throw TransactionRollbackException(DataError.Local.NOT_FOUND)
 
         val progression = if (wasSuccessful) {
+            val progressionConfig = quest.systemTemplateType
+                ?.let { PlayerProgressionConfig(workoutCompletionXp = it.completionXp) }
+                ?: PlayerProgressionConfig()
             PlayerProgressionPolicy.applyMainQuestSuccess(
                 player = player,
-                reward = true
+                reward = true,
+                progressionConfig = progressionConfig
             )
         } else {
             PlayerProgressionPolicy.applyMainQuestFailure(player)

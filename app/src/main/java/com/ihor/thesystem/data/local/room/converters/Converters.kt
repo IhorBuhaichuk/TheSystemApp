@@ -70,4 +70,15 @@ class Converters {
             try { com.ihor.thesystem.domain.model.MuscleGroup.valueOf(it) } catch (e: Exception) { null }
         }
     }
+
+    @TypeConverter
+    fun fromStringList(value: List<String>?): String? =
+        value?.let { Json.encodeToString(it) }
+
+    @TypeConverter
+    fun toStringList(value: String?): List<String> =
+        value
+            ?.takeIf { it.isNotBlank() }
+            ?.let { raw -> runCatching { Json.decodeFromString<List<String>>(raw) }.getOrNull() }
+            ?: emptyList()
 }

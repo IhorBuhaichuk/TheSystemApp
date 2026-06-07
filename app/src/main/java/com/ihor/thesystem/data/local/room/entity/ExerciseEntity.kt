@@ -13,7 +13,8 @@ import com.ihor.thesystem.domain.model.MuscleGroup
         Index("equipment"),
         Index("level"),
         Index("mechanic"),
-        Index("force")
+        Index("force"),
+        Index("isCoreSystemExercise")
     ]
 )
 data class ExerciseEntity(
@@ -29,5 +30,10 @@ data class ExerciseEntity(
     val force: String? = null,
     val instructions: String? = null,
     val gifUrl: String? = null,
-    val trackingMode: String? = null
+    val trackingMode: String? = null,
+    val isCoreSystemExercise: Boolean = false,
+    val movementPattern: String? = null,
+    val techniqueTips: List<String> = emptyList(),
+    val commonMistakes: List<String> = emptyList(),
+    val substitutionExternalIds: List<String> = emptyList()
 )

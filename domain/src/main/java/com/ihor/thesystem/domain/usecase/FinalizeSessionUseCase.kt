@@ -35,11 +35,17 @@ class FinalizeSessionUseCase @Inject constructor(
     suspend operator fun invoke(
         session: WorkoutSession,
         sets: List<ExerciseSet>
-    ): Result<AiArchitectReport, DomainError> = try {
+    ): Result<AiArchitectReport, DomainError> {
+        return try {
         
         // 1. Гарантоване локальне збереження в БД
         val localData = try {
             transactionProvider.runInTransaction {
+                val activeMainQuest = session.questId
+                    .takeIf { it > 0 && it <= Int.MAX_VALUE }
+                    ?.let { questRepository.getQuestById(it.toInt()) }
+                    ?.takeIf { it.type == DomainQuestType.MAIN }
+                val systemTemplateType = activeMainQuest?.systemTemplateType
                 val sessionId = analyticsRepository.saveFullSessionLog(session, sets)
                 
                 val weightContext = getWeightContext()
@@ -47,14 +53,18 @@ class FinalizeSessionUseCase @Inject constructor(
                 val weight6MonthsAgo = weightContext.weightSixMonthsAgo
 
                 val matrix = progressionMatrixRepository.getAllEntries().first()
-                updateExerciseRanks(sets, matrix)
+                if (systemTemplateType == null) {
+                    updateExerciseRanks(sets, matrix)
+                }
 
                 val calculatedTonnage = sets.filter { it.isCompleted && it.weight > TECHNICAL_LOAD_WEIGHT }
                     .sumOf { it.weight * it.reps }
                 val finalTonnage = session.totalTonnage.takeIf { it > 0.0 } ?: calculatedTonnage
                 val recoveryHours = calculateRecovery(finalTonnage).toDouble(DurationUnit.HOURS)
 
-                recalculateGlobalRank()
+                if (systemTemplateType == null) {
+                    recalculateGlobalRank()
+                }
                 completeWorkoutQuestIfPossible(session.questId, sets)
                 
                 LocalSessionData(
@@ -62,7 +72,8 @@ class FinalizeSessionUseCase @Inject constructor(
                     playerWeight = playerWeight,
                     weight6MonthsAgo = weight6MonthsAgo,
                     matrix = matrix,
-                    recoveryHours = recoveryHours
+                    recoveryHours = recoveryHours,
+                    systemTemplateType = systemTemplateType
                 )
             }
         } catch (e: Exception) {
@@ -72,6 +83,21 @@ class FinalizeSessionUseCase @Inject constructor(
         }
 
         // 2. Асинхронний запит до AiArchitectRepository та оновлення матриці
+        if (localData.systemTemplateType != null) {
+            return Result.Success(
+                AiArchitectReport(
+                    architectFeedback = MessageText.DynamicString("${localData.systemTemplateType.questTitle} logged."),
+                    currentStageStatus = "[ SYSTEM_PROTOCOL ]",
+                    completedExercises = sets.map { it.exerciseId }.distinct(),
+                    pendingExercises = emptyList(),
+                    nextWorkoutDirectives = emptyList(),
+                    recoveryWindowHours = localData.recoveryHours,
+                    isFallback = true,
+                    sessionId = localData.sessionId
+                )
+            )
+        }
+
         val exerciseContexts = generateAiPrompt(
             sessionTimestamp = session.timestamp,
             sets = sets,
@@ -156,13 +182,15 @@ class FinalizeSessionUseCase @Inject constructor(
         logger.e(e, "Unexpected error in FinalizeSessionUseCase")
         Result.Error(DataError.Local.UNKNOWN)
     }
+    }
 
     private data class LocalSessionData(
         val sessionId: Long,
         val playerWeight: Double?,
         val weight6MonthsAgo: Float?,
         val matrix: List<ProgressionMatrixEntry>,
-        val recoveryHours: Double
+        val recoveryHours: Double,
+        val systemTemplateType: SystemWorkoutTemplateType?
     )
 
     private suspend fun generateAiPrompt(

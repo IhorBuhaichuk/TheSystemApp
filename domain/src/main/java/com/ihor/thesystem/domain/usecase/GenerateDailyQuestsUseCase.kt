@@ -5,6 +5,7 @@ import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseRecommendation
 import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
 import com.ihor.thesystem.domain.model.Quest
+import com.ihor.thesystem.domain.model.SystemWorkoutTemplateType
 import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
 import com.ihor.thesystem.domain.repository.PlayerRepository
@@ -12,6 +13,7 @@ import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
+import com.ihor.thesystem.domain.repository.EquipmentProfileRepository
 import com.ihor.thesystem.domain.util.AppClock
 import java.time.Instant
 import javax.inject.Inject
@@ -29,6 +31,8 @@ class GenerateDailyQuestsUseCase @Inject constructor(
     private val calculateRecommendation: CalculateRecommendedSetUseCase,
     private val adjustRecommendation: AdjustWorkoutRecommendationUseCase,
     private val decideTodayWorkout: DecideTodayWorkoutUseCase,
+    private val equipmentProfileRepository: EquipmentProfileRepository,
+    private val findExerciseSubstitutions: FindExerciseSubstitutionsUseCase,
     private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val clock: AppClock
 ) {
@@ -49,42 +53,40 @@ class GenerateDailyQuestsUseCase @Inject constructor(
 
         val todayQuests = questRepo.getDailyQuestsForDate(now).first()
         val todayDecision = decideTodayWorkout(todayDate)
-        val workoutTemplateName = schedule.workoutTemplateName
-        val recommendations = if (schedule.isWorkoutDay && workoutTemplateName != null && schedule.exercises.isNotEmpty()) {
-            schedule.exercises
-                .selectForDecision(todayDecision)
-                .map { exercise ->
-                    val trackingMode = ExerciseTrackingModeResolver.resolve(exercise)
-                    val baseRecommendation = calculateRecommendation(exercise.id, exercise.name)
-                    val adjustedRecommendation = adjustRecommendation(
-                        recommendation = baseRecommendation,
-                        trackingMode = trackingMode,
-                        decision = todayDecision
-                    )
-                    ExerciseRecommendation(
-                        exerciseId = exercise.id,
-                        exerciseName = exercise.name,
-                        exerciseNameUk = exercise.nameUk,
-                        weight = adjustedRecommendation.adjustedWeight,
-                        sets = adjustedRecommendation.adjustedSets,
-                        reps = adjustedRecommendation.adjustedReps
-                    )
+        val systemTemplateType = todayDecision.systemTemplateType()
+        val questTitle = systemTemplateType?.questTitle ?: schedule.workoutTemplateName?.uppercase()
+        val recommendations = when (systemTemplateType) {
+            SystemWorkoutTemplateType.NO_EXCUSE -> noExcuseProtocolRecommendations()
+            SystemWorkoutTemplateType.ACTIVE_RECOVERY -> activeRecoveryProtocolRecommendations()
+            SystemWorkoutTemplateType.DELOAD -> schedule.exercises
+                .takeIf { it.isNotEmpty() }
+                ?.resolveAvailableExercises()
+                ?.takeIf { it.isNotEmpty() }
+                ?.toAdjustedRecommendations(todayDecision)
+                ?: activeRecoveryProtocolRecommendations()
+            null -> {
+                if (schedule.isWorkoutDay && schedule.workoutTemplateName != null && schedule.exercises.isNotEmpty()) {
+                    schedule.exercises.resolveAvailableExercises().toAdjustedRecommendations(todayDecision)
+                } else {
+                    emptyList()
                 }
-        } else {
-            emptyList()
+            }
         }
+        val shouldCreateMainQuest = questTitle != null && recommendations.isNotEmpty() &&
+            (schedule.isWorkoutDay || systemTemplateType != null)
 
         val existingMainQuest = todayQuests.find { it.type == DomainQuestType.MAIN }
         if (existingMainQuest != null) {
             when {
-                schedule.workoutTemplateId == null ->
-                    questRepo.deleteQuestWithTasks(existingMainQuest.id)
+                !shouldCreateMainQuest -> questRepo.deleteQuestWithTasks(existingMainQuest.id)
                 existingMainQuest.scheduleId != schedule.id ->
+                    questRepo.deleteQuestWithTasks(existingMainQuest.id)
+                existingMainQuest.title != questTitle ->
                     questRepo.deleteQuestWithTasks(existingMainQuest.id)
                 !existingMainQuest.matchesRecommendations(recommendations) ->
                     questRepo.deleteQuestWithTasks(existingMainQuest.id)
             }
-        } else if (schedule.workoutTemplateId == null) {
+        } else if (!shouldCreateMainQuest) {
             todayQuests
                 .filter { it.type == DomainQuestType.MAIN }
                 .forEach { questRepo.deleteQuestWithTasks(it.id) }
@@ -93,9 +95,9 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         val updatedQuests = questRepo.getDailyQuestsForDate(now).first()
         val hasMain = updatedQuests.any { it.type == DomainQuestType.MAIN }
 
-        if (!hasMain && schedule.isWorkoutDay && workoutTemplateName != null && recommendations.isNotEmpty()) {
+        if (!hasMain && shouldCreateMainQuest) {
             questRepo.createMainQuest(
-                title = workoutTemplateName.uppercase(),
+                title = requireNotNull(questTitle),
                 exercises = recommendations,
                 scheduleId = schedule.id
             )
@@ -122,28 +124,115 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         }
     }
 
-    private fun List<ExerciseDetails>.selectForDecision(decision: TodayTrainingDecision): List<ExerciseDetails> =
-        when (decision.decisionType) {
-            TodayTrainingDecisionType.NO_EXCUSE -> {
-                val simpleExercises = filter { it.hasSimpleEquipment() }
-                simpleExercises.ifEmpty { this }.take(NO_EXCUSE_EXERCISE_LIMIT)
-            }
-            TodayTrainingDecisionType.ACTIVE_RECOVERY -> {
-                val lightExercises = filter { !ExerciseTrackingModeResolver.resolve(it).usesWeightInput }
-                lightExercises.ifEmpty { this }
-            }
-            else -> this
+    private suspend fun List<ExerciseDetails>.toAdjustedRecommendations(
+        decision: TodayTrainingDecision
+    ): List<ExerciseRecommendation> =
+        map { exercise ->
+            val trackingMode = ExerciseTrackingModeResolver.resolve(exercise)
+            val baseRecommendation = calculateRecommendation(exercise.id, exercise.name)
+            val adjustedRecommendation = adjustRecommendation(
+                recommendation = baseRecommendation,
+                trackingMode = trackingMode,
+                decision = decision
+            )
+            ExerciseRecommendation(
+                exerciseId = exercise.id,
+                exerciseName = exercise.name,
+                exerciseNameUk = exercise.nameUk,
+                weight = adjustedRecommendation.adjustedWeight,
+                sets = adjustedRecommendation.adjustedSets,
+                reps = adjustedRecommendation.adjustedReps
+            )
         }
 
-    private fun ExerciseDetails.hasSimpleEquipment(): Boolean {
-        val normalizedEquipment = equipment.orEmpty().lowercase()
-        val normalizedName = listOfNotNull(name, nameUk).joinToString(separator = " ").lowercase()
+    private suspend fun List<ExerciseDetails>.resolveAvailableExercises(): List<ExerciseDetails> {
+        val profile = equipmentProfileRepository.getProfileSnapshot()
+        val usedExerciseIds = mutableSetOf<Int>()
 
-        if (normalizedEquipment.isBlank()) return true
-        if (normalizedEquipment.contains("body") || normalizedEquipment.contains("none")) return true
-        if (normalizedName.contains("push") || normalizedName.contains("pull")) return true
-        return COMPLEX_EQUIPMENT.none { normalizedEquipment.contains(it) }
+        return mapNotNull { exercise ->
+            val resolved = if (profile.allows(exercise)) {
+                exercise
+            } else {
+                findExerciseSubstitutions(exercise.id).firstOrNull { substitution ->
+                    substitution.id !in usedExerciseIds && profile.allows(substitution)
+                }
+            }
+
+            resolved?.also { usedExerciseIds += it.id }
+        }
     }
+
+    private fun TodayTrainingDecision.systemTemplateType(): SystemWorkoutTemplateType? =
+        when (decisionType) {
+            TodayTrainingDecisionType.NO_EXCUSE -> SystemWorkoutTemplateType.NO_EXCUSE
+            TodayTrainingDecisionType.ACTIVE_RECOVERY -> SystemWorkoutTemplateType.ACTIVE_RECOVERY
+            TodayTrainingDecisionType.DELOAD -> SystemWorkoutTemplateType.DELOAD
+            else -> null
+        }
+
+    private fun noExcuseProtocolRecommendations(): List<ExerciseRecommendation> =
+        listOf(
+            ExerciseRecommendation(
+                exerciseId = SYSTEM_NO_EXCUSE_PUSH_UP_ID,
+                exerciseName = "Knee Push-up",
+                exerciseNameUk = "Knee Push-up",
+                weight = BODYWEIGHT_TARGET,
+                sets = 1,
+                reps = 8
+            ),
+            ExerciseRecommendation(
+                exerciseId = SYSTEM_NO_EXCUSE_SQUAT_ID,
+                exerciseName = "Bodyweight Squat",
+                exerciseNameUk = "Bodyweight Squat",
+                weight = BODYWEIGHT_TARGET,
+                sets = 1,
+                reps = 12
+            ),
+            ExerciseRecommendation(
+                exerciseId = SYSTEM_NO_EXCUSE_PLANK_ID,
+                exerciseName = "Plank Hold",
+                exerciseNameUk = "Plank Hold",
+                weight = BODYWEIGHT_TARGET,
+                sets = 1,
+                reps = 30
+            ),
+            ExerciseRecommendation(
+                exerciseId = SYSTEM_NO_EXCUSE_MOBILITY_ID,
+                exerciseName = "Mobility Hold",
+                exerciseNameUk = "Mobility Hold",
+                weight = BODYWEIGHT_TARGET,
+                sets = 1,
+                reps = 60
+            )
+        )
+
+    private fun activeRecoveryProtocolRecommendations(): List<ExerciseRecommendation> =
+        listOf(
+            ExerciseRecommendation(
+                exerciseId = SYSTEM_RECOVERY_WALK_ID,
+                exerciseName = "Walking",
+                exerciseNameUk = "Walking",
+                weight = BODYWEIGHT_TARGET,
+                sets = 1,
+                reps = 420
+            ),
+            ExerciseRecommendation(
+                exerciseId = SYSTEM_RECOVERY_MOBILITY_ID,
+                exerciseName = "Mobility Hold",
+                exerciseNameUk = "Mobility Hold",
+                weight = BODYWEIGHT_TARGET,
+                sets = 2,
+                reps = 45
+            ),
+            ExerciseRecommendation(
+                exerciseId = SYSTEM_RECOVERY_CORE_ID,
+                exerciseName = "Light Core Hold",
+                exerciseNameUk = "Light Core Hold",
+                weight = BODYWEIGHT_TARGET,
+                sets = 1,
+                reps = 30
+            )
+        )
 
     private fun Quest.matchesRecommendations(recommendations: List<ExerciseRecommendation>): Boolean {
         if (tasks.size != recommendations.size) return false
@@ -164,8 +253,14 @@ class GenerateDailyQuestsUseCase @Inject constructor(
         this != null && abs(this - other) < TARGET_EPSILON
 
     private companion object {
-        const val NO_EXCUSE_EXERCISE_LIMIT = 2
         const val TARGET_EPSILON = 0.001
-        val COMPLEX_EQUIPMENT = listOf("barbell", "machine", "cable", "smith")
+        const val BODYWEIGHT_TARGET = 0.0
+        const val SYSTEM_NO_EXCUSE_PUSH_UP_ID = -10_001
+        const val SYSTEM_NO_EXCUSE_SQUAT_ID = -10_002
+        const val SYSTEM_NO_EXCUSE_PLANK_ID = -10_003
+        const val SYSTEM_NO_EXCUSE_MOBILITY_ID = -10_004
+        const val SYSTEM_RECOVERY_WALK_ID = -20_001
+        const val SYSTEM_RECOVERY_MOBILITY_ID = -20_002
+        const val SYSTEM_RECOVERY_CORE_ID = -20_003
     }
 }

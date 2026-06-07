@@ -34,6 +34,9 @@ abstract class RepositoryModule {
     abstract fun bindReadinessRepository(impl: ReadinessRepositoryImpl): ReadinessRepository
 
     @Binds @Singleton
+    abstract fun bindEquipmentProfileRepository(impl: EquipmentProfileRepositoryImpl): EquipmentProfileRepository
+
+    @Binds @Singleton
     abstract fun bindScheduleRepository(impl: ScheduleRepositoryImpl): ScheduleRepository
 
     @Binds @Singleton

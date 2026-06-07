@@ -230,6 +230,12 @@ private fun ExercisePickerFilters(
 ) {
     DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = SystemCardPadding) {
         Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
+            PickerFilterChip(
+                text = "System Core",
+                selected = state.systemCoreOnly,
+                onClick = { onEvent(ExerciseSearchEvent.ToggleSystemCore) }
+            )
+
             FilterGroupTitle(text = "М'язова група")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(muscleFilters, key = { it.label }) { filter ->

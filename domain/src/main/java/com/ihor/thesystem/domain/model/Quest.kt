@@ -11,6 +11,13 @@ data class Quest(
     val targetExerciseId: Int? = null
 ) {
     val isCompleted: Boolean get() = status == DomainQuestStatus.COMPLETED
+
+    val systemTemplateType: SystemWorkoutTemplateType?
+        get() = SystemWorkoutTemplateType.values().firstOrNull { template ->
+            title.equals(template.questTitle, ignoreCase = true)
+        }
+
+    val isSystemWorkout: Boolean get() = systemTemplateType != null
 }
 
 data class QuestTask(

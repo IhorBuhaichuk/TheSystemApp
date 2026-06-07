@@ -142,7 +142,9 @@ private fun TodayOrderBlock(
     val readinessProgress = ((decision?.readinessScore ?: 0) / 100f).coerceIn(0f, 1f)
     val actionEnabled = decisionType != null && decisionType != TodayTrainingDecisionType.REST
     val actionText = when (decisionType) {
+        TodayTrainingDecisionType.NO_EXCUSE -> "Почати 7 хв"
         TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Почати відновлення"
+        TodayTrainingDecisionType.DELOAD -> "Почати deload"
         TodayTrainingDecisionType.REST -> "День без тренування"
         null -> "План формується"
         else -> "Почати тренування"
@@ -250,7 +252,9 @@ private fun TodayTrainingDecision?.orderAccent(): Color {
 
 private fun TodayTrainingDecision?.todayTitle(fallbackMainQuest: QuestUiModel?): String =
     when (this?.decisionType) {
+        TodayTrainingDecisionType.NO_EXCUSE -> "No Excuse Protocol"
         TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Recovery Protocol"
+        TodayTrainingDecisionType.DELOAD -> "Deload Session"
         TodayTrainingDecisionType.REST -> "День без тренування"
         null -> fallbackMainQuest?.title ?: "Recovery Protocol"
         else -> workoutName ?: fallbackMainQuest?.title ?: "Recovery Protocol"
@@ -279,7 +283,11 @@ private fun TodayTrainingDecision?.displayReason(): String =
         TodayTrainingDecisionType.ACTIVE_RECOVERY ->
             "Організму потрібне відновлення замість силового навантаження."
         TodayTrainingDecisionType.NO_EXCUSE ->
-            "План перераховано. Наступна оптимальна дія: ${workoutName ?: "тренування за планом"}."
+            if (reason.contains("missed", ignoreCase = true)) {
+                "Система зафіксувала пропуск. План перераховано. Наступна оптимальна дія: коротке тренування."
+            } else {
+                "Готовність нижча за планову. Наступна оптимальна дія: коротке тренування."
+            }
         TodayTrainingDecisionType.DELOAD ->
             "Навантаження накопичилось, сьогодні працюємо легше."
         TodayTrainingDecisionType.REST ->
@@ -576,7 +584,7 @@ private fun MainFocusBlock(
             }
 
             SystemButton(
-                text = if (mainQuest.isCompleted) "Тренування завершено" else "Почати тренування",
+                text = if (mainQuest.isCompleted) "Тренування завершено" else mainQuest.protocolActionText(),
                 icon = Icons.Filled.FitnessCenter,
                 onClick = onStartWorkout,
                 enabled = !mainQuest.isCompleted,
@@ -586,6 +594,14 @@ private fun MainFocusBlock(
         }
     }
 }
+
+private fun QuestUiModel.protocolActionText(): String =
+    when (title.uppercase()) {
+        "NO EXCUSE PROTOCOL" -> "Почати 7 хв"
+        "RECOVERY PROTOCOL" -> "Почати відновлення"
+        "DELOAD SESSION" -> "Почати deload"
+        else -> "Почати тренування"
+    }
 
 @Composable
 private fun WeekPreviewBlock(

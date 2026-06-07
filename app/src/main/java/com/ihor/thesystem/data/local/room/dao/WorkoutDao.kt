@@ -52,6 +52,35 @@ interface WorkoutDao {
     @Query("UPDATE exercises SET trackingMode = :trackingMode WHERE id = :id")
     suspend fun updateExerciseTrackingMode(id: Int, trackingMode: String?)
 
+    @Query("""
+        UPDATE exercises
+        SET
+            isCoreSystemExercise = 0,
+            movementPattern = NULL,
+            techniqueTips = '[]',
+            commonMistakes = '[]',
+            substitutionExternalIds = '[]'
+    """)
+    suspend fun clearCoreExerciseMetadata()
+
+    @Query("""
+        UPDATE exercises
+        SET
+            isCoreSystemExercise = 1,
+            movementPattern = :movementPattern,
+            techniqueTips = :techniqueTips,
+            commonMistakes = :commonMistakes,
+            substitutionExternalIds = :substitutionExternalIds
+        WHERE externalId = :externalId
+    """)
+    suspend fun updateCoreExerciseMetadata(
+        externalId: String,
+        movementPattern: String?,
+        techniqueTips: String,
+        commonMistakes: String,
+        substitutionExternalIds: String
+    )
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExercise(exercise: ExerciseEntity): Long
 

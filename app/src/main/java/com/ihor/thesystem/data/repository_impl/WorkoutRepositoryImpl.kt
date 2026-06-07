@@ -25,11 +25,11 @@ class WorkoutRepositoryImpl @Inject constructor(
 
     override fun getAllExercises(): Flow<List<ExerciseDetails>> =
         workoutDao.getAllExercises().map { entities ->
-            entities.map { it.toDomain() }
+            entities.map { it.toExerciseDetails() }
         }
 
     override suspend fun getAllExercisesSync(): List<ExerciseDetails> =
-        workoutDao.getAllExercisesSync().map { it.toDomain() }
+        workoutDao.getAllExercisesSync().map { it.toExerciseDetails() }
 
     override fun searchExercises(
         query: String?,
@@ -48,7 +48,7 @@ class WorkoutRepositoryImpl @Inject constructor(
                 mechanics = mechanics,
                 forces = forces
             )
-        ).map { entities -> entities.map { it.toDomain() } }
+        ).map { entities -> entities.map { it.toExerciseDetails() } }
 
     private fun buildSearchQuery(
         query: String?,
@@ -108,21 +108,6 @@ class WorkoutRepositoryImpl @Inject constructor(
         }
         append(")")
     }
-
-    private fun ExerciseEntity.toDomain() = ExerciseDetails(
-        id = id,
-        name = name,
-        nameUk = nameUk,
-        category = category,
-        muscleGroups = muscleGroups,
-        equipment = equipment,
-        level = level,
-        mechanic = mechanic,
-        force = force,
-        gifUrl = gifUrl,
-        externalId = externalId,
-        trackingMode = trackingMode
-    )
 
     override suspend fun getExerciseNameById(id: Int): String? =
         workoutDao.getExerciseNameById(id)

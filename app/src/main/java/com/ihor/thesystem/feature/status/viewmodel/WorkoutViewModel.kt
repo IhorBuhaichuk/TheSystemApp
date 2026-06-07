@@ -8,11 +8,14 @@ import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.core.util.DispatcherProvider
+import com.ihor.thesystem.domain.model.EquipmentProfile
+import com.ihor.thesystem.domain.model.EquipmentType
 import com.ihor.thesystem.domain.model.ExerciseCategory
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
+import com.ihor.thesystem.domain.model.QuestTask
 import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
 import com.ihor.thesystem.domain.model.WorkoutSession
@@ -61,6 +64,19 @@ class WorkoutViewModel @Inject constructor(
     private val _currentLogSets = MutableStateFlow<List<ActiveSetInput>>(emptyList())
     private val _userEdits = MutableStateFlow<Map<Int, List<ActiveSetInput>>>(emptyMap())
     private val _selectedCycleDayOverride = MutableStateFlow<Int?>(null)
+
+    init {
+        viewModelScope.launch {
+            useCases.getEquipmentProfile().collectLatest { profile ->
+                _settingsUiState.update {
+                    it.copy(
+                        equipmentProfile = profile,
+                        dumbbellMaxKgDraft = profile.dumbbellMaxKg?.formatEquipmentNumber().orEmpty()
+                    )
+                }
+            }
+        }
+    }
 
     private val cycleDay: Flow<Int> = combine(
         useCases.selectedDate.filterNotNull(),
@@ -119,9 +135,20 @@ class WorkoutViewModel @Inject constructor(
                         val taskByExercise = activeWorkoutQuest?.tasks.orEmpty()
                             .mapNotNull { task -> task.exerciseId?.let { exerciseId -> exerciseId to task } }
                             .toMap()
-                        val questExerciseIds = taskByExercise.keys.takeIf { it.isNotEmpty() }
-                        val displayedExercises = questExerciseIds
-                            ?.mapNotNull { exerciseId -> schedule.exercises.firstOrNull { it.id == exerciseId } }
+                        val scheduleExercisesById = schedule.exercises.associateBy { it.id }
+                        val missingTaskExerciseIds = taskByExercise.keys - scheduleExercisesById.keys
+                        val allExercisesById = if (missingTaskExerciseIds.isNotEmpty()) {
+                            useCases.getAllExercises().first().associateBy { it.id }
+                        } else {
+                            emptyMap()
+                        }
+                        val displayedExercises = activeWorkoutQuest?.tasks
+                            ?.takeIf { it.isNotEmpty() }
+                            ?.map { task ->
+                                task.exerciseId
+                                    ?.let { exerciseId -> scheduleExercisesById[exerciseId] ?: allExercisesById[exerciseId] }
+                                    ?: task.toSyntheticExerciseDetails()
+                            }
                             ?: schedule.exercises
                         val todayDecision = runCatching { useCases.decideTodayWorkout() }.getOrNull()
 
@@ -143,6 +170,11 @@ class WorkoutViewModel @Inject constructor(
                             val targetWeight = questTarget?.recommendedWeight ?: fallbackRec.weight
                             val targetReps = questTarget?.recommendedReps ?: fallbackRec.reps
                             val targetSets = questTarget?.recommendedSets ?: fallbackRec.sets
+                            val emphasizeTechniqueCheck = ex.isCoreSystemExercise &&
+                                (
+                                    todayDecision?.readinessScore?.let { it < 65 } == true ||
+                                        (trackingMode.usesWeightInput && targetWeight > 0.0)
+                                    )
 
                             ExerciseWorkoutUiModel(
                                 exerciseId = ex.id,
@@ -160,13 +192,20 @@ class WorkoutViewModel @Inject constructor(
                                 gifUrl = ex.gifUrl,
                                 externalId = ex.externalId,
                                 trackingMode = trackingMode,
+                                isCoreSystemExercise = ex.isCoreSystemExercise,
+                                movementPattern = ex.movementPattern,
+                                techniqueTips = ex.techniqueTips.toImmutableList(),
+                                commonMistakes = ex.commonMistakes.toImmutableList(),
+                                substitutionExternalIds = ex.substitutionExternalIds.toImmutableList(),
+                                techniqueCheckEmphasized = emphasizeTechniqueCheck,
                                 sets = (1..targetSets.coerceAtLeast(1)).map {
                                     ActiveSetInput(
                                         weight = if (trackingMode.usesWeightInput && targetWeight > 0.0) {
                                             targetWeight.formatInputWeight()
                                         } else {
                                             ""
-                                        }
+                                        },
+                                        reps = if (ex.id < 0) trackingMode.formatTargetInput(targetReps) else ""
                                     )
                                 }.toImmutableList()
                             )
@@ -499,6 +538,75 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    fun onEquipmentLocationChanged(trainsAtGym: Boolean) {
+        val current = _settingsUiState.value.equipmentProfile
+        val updated = if (trainsAtGym) {
+            current.copy(
+                trainsAtGym = true,
+                availableEquipment = current.availableEquipment + GYM_DEFAULT_EQUIPMENT,
+                barbellAvailable = true,
+                benchAvailable = true,
+                pullUpBarAvailable = true,
+                dipBarsAvailable = true,
+                bandsAvailable = true,
+                machinesAvailable = true
+            )
+        } else {
+            current.copy(trainsAtGym = false)
+        }
+        saveEquipmentProfile(updated)
+    }
+
+    fun onEquipmentTypeToggled(type: EquipmentType) {
+        val current = _settingsUiState.value.equipmentProfile
+        val updatedEquipment = if (type in current.availableEquipment) {
+            current.availableEquipment - type
+        } else {
+            current.availableEquipment + type
+        }
+        saveEquipmentProfile(current.copy(availableEquipment = updatedEquipment + EquipmentType.BODY_ONLY))
+    }
+
+    fun onEquipmentAvailabilityChanged(type: EquipmentType, available: Boolean) {
+        val current = _settingsUiState.value.equipmentProfile
+        val updated = when (type) {
+            EquipmentType.BARBELL -> current.copy(barbellAvailable = available)
+            EquipmentType.BENCH -> current.copy(benchAvailable = available)
+            EquipmentType.PULL_UP_BAR -> current.copy(pullUpBarAvailable = available)
+            EquipmentType.DIP_BARS -> current.copy(dipBarsAvailable = available)
+            EquipmentType.BANDS -> current.copy(bandsAvailable = available)
+            EquipmentType.MACHINE,
+            EquipmentType.CABLE -> current.copy(machinesAvailable = available)
+            else -> {
+                val updatedEquipment = if (available) {
+                    current.availableEquipment + type
+                } else {
+                    current.availableEquipment - type
+                }
+                current.copy(availableEquipment = updatedEquipment + EquipmentType.BODY_ONLY)
+            }
+        }
+        saveEquipmentProfile(updated)
+    }
+
+    fun onDumbbellMaxKgChanged(value: String) {
+        _settingsUiState.update { it.copy(dumbbellMaxKgDraft = value) }
+        val parsed = value.replace(",", ".").toFloatOrNull()
+        if (value.isBlank() || parsed != null) {
+            val current = _settingsUiState.value.equipmentProfile
+            saveEquipmentProfile(
+                current.copy(
+                    dumbbellMaxKg = parsed?.takeIf { it > 0f },
+                    availableEquipment = if (parsed != null && parsed > 0f) {
+                        current.availableEquipment + EquipmentType.DUMBBELL + EquipmentType.BODY_ONLY
+                    } else {
+                        current.availableEquipment
+                    }
+                )
+            )
+        }
+    }
+
     private fun loadSettingsForDay(day: Int) {
         settingsDayJob?.cancel()
         settingsDayJob = viewModelScope.launch {
@@ -542,11 +650,47 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    private fun saveEquipmentProfile(profile: EquipmentProfile) {
+        _settingsUiState.update {
+            it.copy(
+                equipmentProfile = profile,
+                dumbbellMaxKgDraft = profile.dumbbellMaxKg?.formatEquipmentNumber().orEmpty()
+            )
+        }
+        launchIoAction {
+            useCases.saveEquipmentProfile(profile)
+        }
+    }
+
     private suspend fun resolveTrackingMode(exercise: ExerciseDetails): ExerciseTrackingMode {
         val reference = runCatching {
             getExerciseReference(exercise.id)
         }.getOrNull()
         return ExerciseTrackingModeResolver.resolve(exercise, reference)
+    }
+
+    private fun QuestTask.toSyntheticExerciseDetails(): ExerciseDetails =
+        ExerciseDetails(
+            id = exerciseId ?: -id.coerceAtLeast(1),
+            name = name,
+            nameUk = nameUk,
+            category = ExerciseCategory.FLEXIBILITY,
+            equipment = SYSTEM_BODYWEIGHT_EQUIPMENT,
+            trackingMode = inferSystemTrackingMode(name)
+        )
+
+    private fun inferSystemTrackingMode(name: String): String {
+        val normalized = name.lowercase()
+        return when {
+            normalized.contains("walking") || normalized.contains("walk") ->
+                ExerciseTrackingMode.TIME_MINUTES.name
+            normalized.contains("hold") ||
+                normalized.contains("plank") ||
+                normalized.contains("mobility") ||
+                normalized.contains("stretch") ->
+                ExerciseTrackingMode.TIME_SECONDS.name
+            else -> ExerciseTrackingMode.BODYWEIGHT_REPS.name
+        }
     }
 
     private suspend fun resolveTrackingMode(
@@ -592,12 +736,29 @@ class WorkoutViewModel @Inject constructor(
             TodayTrainingDecisionType.DELOAD ->
                 "Система знизила навантаження через readiness $readinessScore% і recovery debt ${recoveryDebt.level.name}."
             TodayTrainingDecisionType.NO_EXCUSE ->
-                "План перераховано. Наступна оптимальна дія: коротке тренування."
+                if (reason.contains("missed", ignoreCase = true)) {
+                    "Система зафіксувала пропуск. План перераховано. Наступна оптимальна дія: коротке тренування."
+                } else {
+                    "Готовність нижча за планову. Наступна оптимальна дія: коротке тренування."
+                }
             else -> null
+        }
+
+    private fun ExerciseTrackingMode.formatTargetInput(targetReps: Int): String =
+        when (this) {
+            ExerciseTrackingMode.TIME_MINUTES -> fromStoredTimeSeconds(targetReps).coerceAtLeast(1).toString()
+            else -> targetReps.coerceAtLeast(1).toString()
         }
 
     private fun Double.formatInputWeight(): String =
         if (this % 1.0 == 0.0) {
+            toInt().toString()
+        } else {
+            String.format(Locale.US, "%.1f", this)
+        }
+
+    private fun Float.formatEquipmentNumber(): String =
+        if (this % 1f == 0f) {
             toInt().toString()
         } else {
             String.format(Locale.US, "%.1f", this)
@@ -671,3 +832,17 @@ class WorkoutViewModel @Inject constructor(
     }
 
 }
+
+private const val SYSTEM_BODYWEIGHT_EQUIPMENT = "body only"
+
+private val GYM_DEFAULT_EQUIPMENT = setOf(
+    EquipmentType.BODY_ONLY,
+    EquipmentType.DUMBBELL,
+    EquipmentType.BARBELL,
+    EquipmentType.BENCH,
+    EquipmentType.PULL_UP_BAR,
+    EquipmentType.DIP_BARS,
+    EquipmentType.BANDS,
+    EquipmentType.MACHINE,
+    EquipmentType.CABLE
+)

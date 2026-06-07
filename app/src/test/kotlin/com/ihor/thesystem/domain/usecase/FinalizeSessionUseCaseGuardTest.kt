@@ -91,6 +91,28 @@ class FinalizeSessionUseCaseGuardTest {
         )
     }
 
+    @Test
+    fun `system protocol sessions return before ai directives and target updates`() {
+        val source = sourceFile().readText()
+
+        val systemProtocolIndex = source.indexOf("if (localData.systemTemplateType != null)")
+        val aiRequestIndex = source.indexOf("sendArchitectAnalysis(exerciseContexts)")
+        val updateTargetIndex = source.indexOf("progressionMatrixRepository.updateTarget")
+
+        assertTrue(
+            "System protocol sessions must short-circuit before AI analysis.",
+            systemProtocolIndex >= 0 && aiRequestIndex > systemProtocolIndex
+        )
+        assertTrue(
+            "System protocol sessions must not emit next workout directives.",
+            "nextWorkoutDirectives = emptyList()" in source
+        )
+        assertTrue(
+            "Target persistence must stay after the system protocol short-circuit.",
+            updateTargetIndex > systemProtocolIndex
+        )
+    }
+
     private fun sourceFile(): File =
         requireNotNull(File(requireNotNull(System.getProperty("user.dir"))).absoluteFile.parentFile)
             .resolve("domain/src/main/java/com/ihor/thesystem/domain/usecase/FinalizeSessionUseCase.kt")

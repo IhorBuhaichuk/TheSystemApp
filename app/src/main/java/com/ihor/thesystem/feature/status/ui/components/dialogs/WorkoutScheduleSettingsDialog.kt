@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -46,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -57,6 +60,8 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
+import com.ihor.thesystem.domain.model.EquipmentProfile
+import com.ihor.thesystem.domain.model.EquipmentType
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
@@ -80,6 +85,9 @@ fun WorkoutScheduleSettingsScreen(
     onCreateNewExercise: (String) -> Unit,
     onDeleteExercise: (Int) -> Unit,
     onTrackingModeChanged: (Int, ExerciseTrackingMode) -> Unit,
+    onEquipmentLocationChanged: (Boolean) -> Unit,
+    onEquipmentAvailabilityChanged: (EquipmentType, Boolean) -> Unit,
+    onDumbbellMaxKgChanged: (String) -> Unit,
     exerciseSearchViewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
     val colors = SystemTheme.colors
@@ -156,6 +164,14 @@ fun WorkoutScheduleSettingsScreen(
                     onTrackingModeChanged = onTrackingModeChanged,
                     modifier = Modifier.weight(1f)
                 )
+                ScheduleSettingsPane.Equipment -> EquipmentSettingsPanel(
+                    profile = uiState.equipmentProfile,
+                    dumbbellMaxKgDraft = uiState.dumbbellMaxKgDraft,
+                    onLocationChanged = onEquipmentLocationChanged,
+                    onEquipmentAvailabilityChanged = onEquipmentAvailabilityChanged,
+                    onDumbbellMaxKgChanged = onDumbbellMaxKgChanged,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -174,6 +190,9 @@ fun WorkoutScheduleSettingsDialog(
     onCreateNewExercise: (String) -> Unit,
     onDeleteExercise: (Int) -> Unit,
     onTrackingModeChanged: (Int, ExerciseTrackingMode) -> Unit,
+    onEquipmentLocationChanged: (Boolean) -> Unit,
+    onEquipmentAvailabilityChanged: (EquipmentType, Boolean) -> Unit,
+    onDumbbellMaxKgChanged: (String) -> Unit,
     exerciseSearchViewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
     WorkoutScheduleSettingsScreen(
@@ -188,6 +207,9 @@ fun WorkoutScheduleSettingsDialog(
         onCreateNewExercise = onCreateNewExercise,
         onDeleteExercise = onDeleteExercise,
         onTrackingModeChanged = onTrackingModeChanged,
+        onEquipmentLocationChanged = onEquipmentLocationChanged,
+        onEquipmentAvailabilityChanged = onEquipmentAvailabilityChanged,
+        onDumbbellMaxKgChanged = onDumbbellMaxKgChanged,
         exerciseSearchViewModel = exerciseSearchViewModel
     )
 }
@@ -350,6 +372,12 @@ private fun ScheduleSettingsTabs(
             onClick = { onSelectPane(ScheduleSettingsPane.Library) },
             modifier = Modifier.weight(1f)
         )
+        ScheduleSettingsTab(
+            text = "Обладнання",
+            selected = selectedPane == ScheduleSettingsPane.Equipment,
+            onClick = { onSelectPane(ScheduleSettingsPane.Equipment) },
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -470,6 +498,108 @@ private fun ExerciseLibraryPanel(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun EquipmentSettingsPanel(
+    profile: EquipmentProfile,
+    dumbbellMaxKgDraft: String,
+    onLocationChanged: (Boolean) -> Unit,
+    onEquipmentAvailabilityChanged: (EquipmentType, Boolean) -> Unit,
+    onDumbbellMaxKgChanged: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    DarkGlassCard(modifier = modifier.fillMaxWidth(), contentPadding = 0.dp) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(SystemCardPadding),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                SystemSectionHeader(
+                    title = "Обладнання",
+                    subtitle = if (profile.trainsAtGym) "Зал або повний доступ" else "Домашній профіль"
+                )
+            }
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    ScheduleSettingsTab(
+                        text = "Дім",
+                        selected = !profile.trainsAtGym,
+                        onClick = { onLocationChanged(false) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    ScheduleSettingsTab(
+                        text = "Зал",
+                        selected = profile.trainsAtGym,
+                        onClick = { onLocationChanged(true) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            item {
+                OutlinedTextField(
+                    value = dumbbellMaxKgDraft,
+                    onValueChange = onDumbbellMaxKgChanged,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = {
+                        Text(
+                            text = "Макс. гантель, кг",
+                            style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
+                        )
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    shape = RoundedCornerShape(SystemTheme.shapes.medium),
+                    colors = systemOutlinedTextFieldColors(accent = colors.accentPrimary)
+                )
+            }
+            items(EQUIPMENT_OPTIONS, key = { it.type.name }) { option ->
+                EquipmentToggleRow(
+                    label = option.label,
+                    checked = profile.isEquipmentEnabled(option.type),
+                    onCheckedChange = { checked -> onEquipmentAvailabilityChanged(option.type, checked) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EquipmentToggleRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(colors.surfaceGlassSoft)
+            .border(1.dp, colors.borderSubtle, shape)
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = colors.textPrimary,
+                fontWeight = FontWeight.SemiBold
+            ),
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -716,8 +846,40 @@ private fun EmptyPanelText(
 
 private enum class ScheduleSettingsPane {
     Day,
-    Library
+    Library,
+    Equipment
 }
+
+private data class EquipmentOption(
+    val type: EquipmentType,
+    val label: String
+)
+
+private val EQUIPMENT_OPTIONS = listOf(
+    EquipmentOption(EquipmentType.DUMBBELL, "Гантелі"),
+    EquipmentOption(EquipmentType.BARBELL, "Штанга"),
+    EquipmentOption(EquipmentType.BENCH, "Лава"),
+    EquipmentOption(EquipmentType.PULL_UP_BAR, "Турнік"),
+    EquipmentOption(EquipmentType.DIP_BARS, "Бруси"),
+    EquipmentOption(EquipmentType.BANDS, "Резинки"),
+    EquipmentOption(EquipmentType.MACHINE, "Тренажери / кабелі"),
+    EquipmentOption(EquipmentType.KETTLEBELL, "Гиря"),
+    EquipmentOption(EquipmentType.EXERCISE_BALL, "Фітбол"),
+    EquipmentOption(EquipmentType.FOAM_ROLL, "Ролер")
+)
+
+private fun EquipmentProfile.isEquipmentEnabled(type: EquipmentType): Boolean =
+    when (type) {
+        EquipmentType.BODY_ONLY -> true
+        EquipmentType.BARBELL -> barbellAvailable || type in availableEquipment
+        EquipmentType.BENCH -> benchAvailable || type in availableEquipment
+        EquipmentType.PULL_UP_BAR -> pullUpBarAvailable || type in availableEquipment
+        EquipmentType.DIP_BARS -> dipBarsAvailable || type in availableEquipment
+        EquipmentType.BANDS -> bandsAvailable || type in availableEquipment
+        EquipmentType.MACHINE,
+        EquipmentType.CABLE -> machinesAvailable || type in availableEquipment
+        else -> type in availableEquipment
+    }
 
 private val USER_CONFIGURABLE_TRACKING_MODES = listOf(
     ExerciseTrackingMode.WEIGHT_REPS,

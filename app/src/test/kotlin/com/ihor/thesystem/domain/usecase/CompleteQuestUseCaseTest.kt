@@ -65,6 +65,24 @@ class CompleteQuestUseCaseTest {
     }
 
     @Test
+    fun `system protocol main quest grants reduced XP`() = runTest {
+        quest = activeMainQuest(
+            title = "NO EXCUSE PROTOCOL",
+            tasks = listOf(task(isCompleted = true, exerciseId = -10_001))
+        )
+        arrangeMutableQuestAndPlayer()
+        val useCase = useCase()
+
+        val result = useCase(quest.id, mode = QuestCompletionMode.TaskUpdate)
+
+        assertTrue(result is Result.Success)
+        assertTrue((result as Result.Success).data.rewardGranted)
+        assertEquals(DomainQuestStatus.COMPLETED, quest.status)
+        assertEquals(30, player.xpTotal)
+        assertEquals(1, player.currentStreak)
+    }
+
+    @Test
     fun `incomplete quest at day finalization fails without reward`() = runTest {
         quest = activeMainQuest(
             tasks = listOf(task(isCompleted = false, exerciseId = 10))
@@ -110,10 +128,13 @@ class CompleteQuestUseCaseTest {
     private fun completedMainQuest(): Quest =
         activeMainQuest(tasks = listOf(task(isCompleted = true, exerciseId = 10)))
 
-    private fun activeMainQuest(tasks: List<QuestTask>): Quest =
+    private fun activeMainQuest(
+        tasks: List<QuestTask>,
+        title: String = "Workout"
+    ): Quest =
         Quest(
             id = 42,
-            title = "Workout",
+            title = title,
             type = DomainQuestType.MAIN,
             date = 0L,
             status = DomainQuestStatus.ACTIVE,

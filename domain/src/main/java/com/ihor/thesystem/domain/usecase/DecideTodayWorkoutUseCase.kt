@@ -89,22 +89,6 @@ class DecideTodayWorkoutUseCase @Inject constructor(
             }
         }
 
-        if (schedule?.isWorkoutDay != true) {
-            return baseDecision(
-                dateEpochDay = dateEpochDay,
-                cycleDay = cycleDay,
-                schedule = schedule,
-                readiness = readinessContext.score,
-                recoveryDebt = recoveryDebt,
-                warnings = warnings,
-                decisionType = TodayTrainingDecisionType.REST,
-                loadMultiplier = 0f,
-                volumeMultiplier = 0f,
-                reason = "No workout is scheduled for this cycle day.",
-                isTrainingAllowed = false
-            )
-        }
-
         if (readinessContext.score.level == ReadinessLevel.RECOVERY ||
             recoveryDebt.level == RecoveryDebtLevel.CRITICAL
         ) {
@@ -119,6 +103,22 @@ class DecideTodayWorkoutUseCase @Inject constructor(
                 loadMultiplier = ACTIVE_RECOVERY_LOAD,
                 volumeMultiplier = ACTIVE_RECOVERY_VOLUME,
                 reason = "Recovery readiness or critical recovery debt blocks hard training.",
+                isTrainingAllowed = false
+            )
+        }
+
+        if (schedule?.isWorkoutDay != true) {
+            return baseDecision(
+                dateEpochDay = dateEpochDay,
+                cycleDay = cycleDay,
+                schedule = schedule,
+                readiness = readinessContext.score,
+                recoveryDebt = recoveryDebt,
+                warnings = warnings,
+                decisionType = TodayTrainingDecisionType.REST,
+                loadMultiplier = 0f,
+                volumeMultiplier = 0f,
+                reason = "No workout is scheduled for this cycle day.",
                 isTrainingAllowed = false
             )
         }
@@ -157,7 +157,7 @@ class DecideTodayWorkoutUseCase @Inject constructor(
                 decisionType = TodayTrainingDecisionType.NO_EXCUSE,
                 loadMultiplier = STANDARD_LOAD,
                 volumeMultiplier = STANDARD_VOLUME,
-                reason = "A planned workout was missed and recovery markers are acceptable.$questReason",
+                reason = "The system detected a missed workout. Plan recalculated. Next optimal action: short training.$questReason",
                 isTrainingAllowed = true
             )
         }
@@ -192,10 +192,10 @@ class DecideTodayWorkoutUseCase @Inject constructor(
                     readiness = readinessContext.score,
                     recoveryDebt = recoveryDebt,
                     warnings = warnings,
-                    decisionType = TodayTrainingDecisionType.REDUCED_LOAD,
-                    loadMultiplier = REDUCED_LOAD,
-                    volumeMultiplier = REDUCED_VOLUME,
-                    reason = "Readiness is reduced, so load and volume should come down.",
+                    decisionType = TodayTrainingDecisionType.NO_EXCUSE,
+                    loadMultiplier = NO_EXCUSE_LOAD,
+                    volumeMultiplier = NO_EXCUSE_VOLUME,
+                    reason = "Readiness is low but recovery is not blocked, so a short bodyweight protocol preserves rhythm.",
                     isTrainingAllowed = true
                 )
             ReadinessLevel.RECOVERY ->
@@ -401,6 +401,8 @@ class DecideTodayWorkoutUseCase @Inject constructor(
         const val STANDARD_VOLUME = 1.0f
         const val REDUCED_LOAD = 0.9f
         const val REDUCED_VOLUME = 0.7f
+        const val NO_EXCUSE_LOAD = 0.0f
+        const val NO_EXCUSE_VOLUME = 0.45f
         const val ACTIVE_RECOVERY_LOAD = 0.5f
         const val ACTIVE_RECOVERY_VOLUME = 0.4f
         const val DELOAD_LOAD = 0.8f
