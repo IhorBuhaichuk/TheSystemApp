@@ -29,9 +29,16 @@ class SourceEncodingGuardTest {
                 val bytes = file.readBytes()
                 val text = runCatching { decodeStrictUtf8(bytes) }
                     .getOrElse { return@mapNotNull "$relativePath is not valid UTF-8" }
-                val marker = mojibakeMarkers.firstOrNull { it in text }
+                val match = mojibakeRules.asSequence()
+                    .mapNotNull { rule ->
+                        rule.regex.find(text)?.let { result -> rule to result.value }
+                    }
+                    .firstOrNull()
                 when {
-                    marker != null -> "$relativePath contains mojibake marker '$marker'"
+                    match != null -> {
+                        val (rule, value) = match
+                        "$relativePath contains mojibake marker '$value' (${rule.description})"
+                    }
                     replacementCharacter in text -> "$relativePath contains Unicode replacement character"
                     else -> null
                 }
@@ -53,16 +60,37 @@ class SourceEncodingGuardTest {
 
     private companion object {
         private const val replacementCharacter = '\uFFFD'
-        private val mojibakeMarkers = listOf(
-            "Ð",
-            "Ñ",
-            "Â",
-            "Ã",
-            "â€",
-            "â„",
-            "â€¦",
-            "вЂ",
-            "вњ"
+
+        private data class MojibakeRule(
+            val description: String,
+            val regex: Regex
+        )
+
+        private val windows1251SecondByteChars =
+            "[ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—™љ›њќћџЎўЈ¤Ґ¦§Ё©Є«¬®Ї°±Ііґµ¶·ё№є»јЅѕї]"
+        private val windows1251MojibakeChunk = "[РС]$windows1251SecondByteChars"
+
+        private val mojibakeRules = listOf(
+            MojibakeRule(
+                description = "UTF-8 Cyrillic decoded as Windows-1252 or Latin-1",
+                regex = Regex("[ÐÑÂÃ]")
+            ),
+            MojibakeRule(
+                description = "UTF-8 punctuation decoded as Windows-1252 or Windows-1251",
+                regex = Regex("â€|â„|â€¦|вЂ|вњ")
+            ),
+            MojibakeRule(
+                description = "UTF-8 Cyrillic decoded as Windows-1251",
+                regex = Regex("Р[Ўџ†]|С[Њѓ]")
+            ),
+            MojibakeRule(
+                description = "ambiguous Рі marker next to another decoded UTF-8 chunk",
+                regex = Regex("(?:$windows1251MojibakeChunk)Рі|Рі(?:$windows1251MojibakeChunk)")
+            ),
+            MojibakeRule(
+                description = "double-decoded Cyrillic text",
+                regex = Regex("Гђ|Г‘|Г‚|Гѓ|Гўв‚¬|ГўвЂћ|Гўв‚¬В¦|РІР‚|РІСљ")
+            )
         )
     }
 }
