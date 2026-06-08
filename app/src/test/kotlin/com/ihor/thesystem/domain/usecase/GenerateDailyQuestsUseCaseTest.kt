@@ -117,6 +117,29 @@ class GenerateDailyQuestsUseCaseTest {
     }
 
     @Test
+    fun `unavailable scheduled exercise without substitution does not create main quest`() = runTest {
+        val unavailableExercise = exercise()
+        arrange(
+            schedule = workoutSchedule(exercises = listOf(unavailableExercise)),
+            decision = decision(
+                type = TodayTrainingDecisionType.STANDARD_TRAINING,
+                loadMultiplier = 1f,
+                volumeMultiplier = 1f
+            ),
+            equipmentProfile = EquipmentProfile(
+                trainsAtGym = false,
+                availableEquipment = setOf(EquipmentType.BODY_ONLY)
+            ),
+            allExercises = listOf(unavailableExercise)
+        )
+
+        useCase()()
+
+        assertNull(createdTitle)
+        assertNull(createdExercises)
+    }
+
+    @Test
     fun `pending matrix entry creates boss fight quest`() = runTest {
         arrange(
             schedule = restSchedule(),
@@ -143,7 +166,14 @@ class GenerateDailyQuestsUseCaseTest {
     private fun arrange(
         schedule: ScheduleDay,
         decision: TodayTrainingDecision,
-        matrixEntries: List<ProgressionMatrixEntry> = emptyList()
+        matrixEntries: List<ProgressionMatrixEntry> = emptyList(),
+        equipmentProfile: EquipmentProfile = EquipmentProfile(
+            trainsAtGym = true,
+            availableEquipment = setOf(EquipmentType.BODY_ONLY, EquipmentType.BARBELL, EquipmentType.BENCH),
+            barbellAvailable = true,
+            benchAvailable = true
+        ),
+        allExercises: List<ExerciseDetails> = schedule.exercises
     ) {
         createdTitle = null
         createdExercises = null
@@ -165,13 +195,8 @@ class GenerateDailyQuestsUseCaseTest {
         every { questRepository.getDailyQuestsForDate(any()) } returns flowOf(emptyList())
         every { matrixRepository.getAllEntries() } returns flowOf(matrixEntries)
         every { questRepository.getActiveQuests() } returns flowOf(emptyList())
-        coEvery { equipmentProfileRepository.getProfileSnapshot() } returns EquipmentProfile(
-            trainsAtGym = true,
-            availableEquipment = setOf(EquipmentType.BODY_ONLY, EquipmentType.BARBELL, EquipmentType.BENCH),
-            barbellAvailable = true,
-            benchAvailable = true
-        )
-        coEvery { workoutRepository.getAllExercisesSync() } returns schedule.exercises
+        coEvery { equipmentProfileRepository.getProfileSnapshot() } returns equipmentProfile
+        coEvery { workoutRepository.getAllExercisesSync() } returns allExercises
         coEvery { decideTodayWorkout(any()) } returns decision
         coEvery { questRepository.createMainQuest(any(), any(), any()) } answers {
             createdTitle = firstArg()

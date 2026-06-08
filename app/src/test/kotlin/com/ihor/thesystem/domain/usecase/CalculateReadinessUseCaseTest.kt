@@ -71,6 +71,14 @@ class CalculateReadinessUseCaseTest {
     }
 
     @Test
+    fun `readiness score boundaries resolve to expected levels`() {
+        assertEquals(ReadinessLevel.REDUCED, readinessLevelForScore(64))
+        assertEquals(ReadinessLevel.STANDARD, readinessLevelForScore(65))
+        assertEquals(ReadinessLevel.STANDARD, readinessLevelForScore(84))
+        assertEquals(ReadinessLevel.PROGRESS, readinessLevelForScore(85))
+    }
+
+    @Test
     fun `fresh health sleep improves readiness when manual sleep is missing`() {
         val result = useCase(
             input = ReadinessInput(),

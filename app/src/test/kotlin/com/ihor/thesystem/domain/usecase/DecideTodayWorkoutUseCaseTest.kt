@@ -9,6 +9,7 @@ import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.model.ReadinessEntry
 import com.ihor.thesystem.domain.model.ReadinessInput
 import com.ihor.thesystem.domain.model.ReadinessLevel
+import com.ihor.thesystem.domain.model.RecoveryDebtLevel
 import com.ihor.thesystem.domain.model.ScheduleDay
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
@@ -173,6 +174,54 @@ class DecideTodayWorkoutUseCaseTest {
     }
 
     @Test
+    fun `critical recovery debt blocks hard training even when readiness is only reduced`() = runTest {
+        arrange(
+            schedule = workoutSchedule(),
+            readinessEntry = readinessEntry(
+                score = 58,
+                level = ReadinessLevel.REDUCED,
+                input = ReadinessInput(stress = 5, soreness = 5)
+            ),
+            logs = listOf(
+                workoutLog(date = TODAY.minusDays(1), tonnage = 12_000.0),
+                workoutLog(date = TODAY.minusDays(2), tonnage = 12_000.0),
+                workoutLog(date = TODAY.minusDays(3), tonnage = 12_000.0),
+                workoutLog(date = TODAY.minusDays(4), tonnage = 12_000.0)
+            )
+        )
+
+        val decision = useCase(TODAY)
+
+        assertEquals(TodayTrainingDecisionType.ACTIVE_RECOVERY, decision.decisionType)
+        assertEquals(ReadinessLevel.REDUCED, decision.readinessLevel)
+        assertEquals(RecoveryDebtLevel.CRITICAL, decision.recoveryDebt.level)
+        assertFalse(decision.isTrainingAllowed)
+    }
+
+    @Test
+    fun `readiness score boundaries map to deterministic workout decisions`() = runTest {
+        val cases = listOf(
+            Triple(64, ReadinessLevel.REDUCED, TodayTrainingDecisionType.NO_EXCUSE),
+            Triple(65, ReadinessLevel.STANDARD, TodayTrainingDecisionType.STANDARD_TRAINING),
+            Triple(84, ReadinessLevel.STANDARD, TodayTrainingDecisionType.STANDARD_TRAINING),
+            Triple(85, ReadinessLevel.PROGRESS, TodayTrainingDecisionType.PROGRESS_ALLOWED)
+        )
+
+        cases.forEach { (score, level, expectedDecision) ->
+            arrange(
+                schedule = workoutSchedule(),
+                readinessEntry = readinessEntry(score = score, level = level),
+                logs = emptyList()
+            )
+
+            val decision = useCase(TODAY)
+
+            assertEquals("score $score", expectedDecision, decision.decisionType)
+            assertEquals("score $score", level, decision.readinessLevel)
+        }
+    }
+
+    @Test
     fun `missing readiness entry uses neutral fallback`() = runTest {
         arrange(
             schedule = workoutSchedule(),
@@ -187,6 +236,38 @@ class DecideTodayWorkoutUseCaseTest {
         assertEquals(70, decision.readinessScore)
         assertEquals(ReadinessLevel.STANDARD, decision.readinessLevel)
         assertTrue(decision.warnings.any { it.contains("neutral fallback") })
+    }
+
+    @Test
+    fun `calendar recovery day overrides workout schedule`() = runTest {
+        arrange(
+            schedule = workoutSchedule(),
+            readinessEntry = readinessEntry(score = 85, level = ReadinessLevel.PROGRESS),
+            logs = emptyList(),
+            calendarDayType = CalendarCycleDayType.RECOVERY
+        )
+
+        val decision = useCase(TODAY)
+
+        assertEquals(TodayTrainingDecisionType.ACTIVE_RECOVERY, decision.decisionType)
+        assertFalse(decision.isTrainingAllowed)
+        assertTrue(decision.warnings.any { it.contains("recovery") })
+    }
+
+    @Test
+    fun `calendar off day overrides workout schedule`() = runTest {
+        arrange(
+            schedule = workoutSchedule(),
+            readinessEntry = readinessEntry(score = 85, level = ReadinessLevel.PROGRESS),
+            logs = emptyList(),
+            calendarDayType = CalendarCycleDayType.OFF
+        )
+
+        val decision = useCase(TODAY)
+
+        assertEquals(TodayTrainingDecisionType.REST, decision.decisionType)
+        assertFalse(decision.isTrainingAllowed)
+        assertTrue(decision.warnings.any { it.contains("off") })
     }
 
     @Test
@@ -207,12 +288,50 @@ class DecideTodayWorkoutUseCaseTest {
         assertEquals(1.0f, decision.loadMultiplier)
     }
 
+    @Test
+    fun `rest day wins over missed workout debt`() = runTest {
+        arrange(
+            schedule = restSchedule(),
+            schedulesForDays = listOf(
+                restSchedule(cycleDay = 1),
+                workoutSchedule(cycleDay = 4)
+            ),
+            readinessEntry = readinessEntry(score = 75, level = ReadinessLevel.STANDARD),
+            logs = listOf(workoutLog(date = TODAY.minusDays(10), tonnage = 2_000.0)),
+            activeMainQuest = mainQuest()
+        )
+
+        val decision = useCase(TODAY)
+
+        assertEquals(TodayTrainingDecisionType.REST, decision.decisionType)
+        assertFalse(decision.isTrainingAllowed)
+        assertTrue(decision.recoveryDebt.reasons.any { it == "Missed planned workouts 2: +24" })
+    }
+
+    @Test
+    fun `missing active main quest warns but does not block standard workout`() = runTest {
+        arrange(
+            schedule = workoutSchedule(),
+            readinessEntry = readinessEntry(score = 75, level = ReadinessLevel.STANDARD),
+            logs = emptyList(),
+            activeMainQuest = null
+        )
+
+        val decision = useCase(TODAY)
+
+        assertEquals(TodayTrainingDecisionType.STANDARD_TRAINING, decision.decisionType)
+        assertTrue(decision.isTrainingAllowed)
+        assertTrue(decision.warnings.any { it.contains("No active main quest") })
+    }
+
     private fun arrange(
         schedule: ScheduleDay,
         readinessEntry: ReadinessEntry?,
         latestReadinessEntries: List<ReadinessEntry> = emptyList(),
         logs: List<WorkoutLog>,
-        activeMainQuest: Quest? = null
+        activeMainQuest: Quest? = null,
+        schedulesForDays: List<ScheduleDay> = listOf(schedule),
+        calendarDayType: CalendarCycleDayType = CalendarCycleDayType.WORK
     ) {
         every { configRepository.getConfigFlow() } returns flowOf(
             SystemConfig(
@@ -223,7 +342,7 @@ class DecideTodayWorkoutUseCaseTest {
         )
         every { playerRepository.getPlayer() } returns flowOf(null)
         every { scheduleRepository.getScheduleForDay(1) } returns flowOf(schedule)
-        every { scheduleRepository.getSchedulesForDays(any()) } returns flowOf(listOf(schedule))
+        every { scheduleRepository.getSchedulesForDays(any()) } returns flowOf(schedulesForDays)
         coEvery { readinessRepository.getEntryForDate(TODAY.toEpochDay()) } returns readinessEntry
         coEvery { readinessRepository.getEntriesBetween(any(), any()) } returns latestReadinessEntries
         every { workoutAnalyticsRepository.getAllLogs() } returns flowOf(logs)
@@ -232,25 +351,25 @@ class DecideTodayWorkoutUseCaseTest {
             CalendarCycle(
                 name = "Work cycle",
                 startEpochDay = TODAY.toEpochDay(),
-                days = listOf(CalendarCycleDay(index = 1, name = "Work", type = CalendarCycleDayType.WORK))
+                days = listOf(CalendarCycleDay(index = 1, name = "Work", type = calendarDayType))
             )
         )
     }
 
-    private fun workoutSchedule(): ScheduleDay =
+    private fun workoutSchedule(cycleDay: Int = 1): ScheduleDay =
         ScheduleDay(
-            id = 1,
-            cycleDay = 1,
+            id = cycleDay,
+            cycleDay = cycleDay,
             workoutTemplateId = 10,
             workoutTemplateName = "Upper Day",
             dailyTaskNames = emptyList(),
             exercises = emptyList()
         )
 
-    private fun restSchedule(): ScheduleDay =
+    private fun restSchedule(cycleDay: Int = 1): ScheduleDay =
         ScheduleDay(
-            id = 1,
-            cycleDay = 1,
+            id = cycleDay,
+            cycleDay = cycleDay,
             workoutTemplateId = null,
             workoutTemplateName = null,
             dailyTaskNames = emptyList(),

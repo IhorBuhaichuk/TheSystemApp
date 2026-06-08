@@ -111,6 +111,38 @@ class DecideTodayWorkoutUseCase @Inject constructor(
             )
         }
 
+        if (calendarDayType == CalendarCycleDayType.RECOVERY) {
+            return baseDecision(
+                dateEpochDay = dateEpochDay,
+                cycleDay = cycleDay,
+                schedule = schedule,
+                readiness = readinessContext.score,
+                recoveryDebt = recoveryDebt,
+                warnings = warnings,
+                decisionType = TodayTrainingDecisionType.ACTIVE_RECOVERY,
+                loadMultiplier = ACTIVE_RECOVERY_LOAD,
+                volumeMultiplier = ACTIVE_RECOVERY_VOLUME,
+                reason = "Calendar cycle marks today as recovery, so hard training is blocked.",
+                isTrainingAllowed = false
+            )
+        }
+
+        if (calendarDayType == CalendarCycleDayType.OFF) {
+            return baseDecision(
+                dateEpochDay = dateEpochDay,
+                cycleDay = cycleDay,
+                schedule = schedule,
+                readiness = readinessContext.score,
+                recoveryDebt = recoveryDebt,
+                warnings = warnings,
+                decisionType = TodayTrainingDecisionType.REST,
+                loadMultiplier = 0f,
+                volumeMultiplier = 0f,
+                reason = "Calendar cycle marks today as off.",
+                isTrainingAllowed = false
+            )
+        }
+
         if (schedule?.isWorkoutDay != true) {
             return baseDecision(
                 dateEpochDay = dateEpochDay,

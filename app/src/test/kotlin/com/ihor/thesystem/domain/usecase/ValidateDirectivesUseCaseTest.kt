@@ -83,6 +83,61 @@ class ValidateDirectivesUseCaseTest {
     }
 
     @Test
+    fun `AI directive over target cap is clamped with audit`() {
+        val cappedMatrix = listOf(matrix[0].copy(currentWeight = 98f, targetWeight = 100f, weeklyStep = 10f))
+        val directive = WorkoutDirective(exerciseId = 10, targetWeight = 120.0, targetSets = 3, targetReps = "8")
+
+        val result = useCase(listOf(directive), cappedMatrix, systemContext())
+
+        assertTrue(result is Result.Success)
+        val validation = (result as Result.Success).data
+        assertEquals(100.0, validation.validatedDirectives.single().targetWeight, 0.01)
+        assertEquals(DirectiveValidationStatus.CLAMPED, validation.audits.single().status)
+    }
+
+    @Test
+    fun `AI directives are blocked below standard readiness score boundary`() {
+        val directive = WorkoutDirective(exerciseId = 10, targetWeight = 62.5, targetSets = 3, targetReps = "8")
+        val belowStandard = useCase(
+            directives = listOf(directive),
+            matrix = matrix,
+            context = systemContext(readinessScore = 64)
+        )
+        val atStandard = useCase(
+            directives = listOf(directive),
+            matrix = matrix,
+            context = systemContext(readinessScore = 65)
+        )
+
+        assertEquals(
+            DirectiveValidationStatus.REJECTED,
+            (belowStandard as Result.Success).data.audits.single().status
+        )
+        assertEquals(
+            DirectiveValidationStatus.ACCEPTED,
+            (atStandard as Result.Success).data.audits.single().status
+        )
+    }
+
+    @Test
+    fun `AI directives are blocked by high and critical recovery debt`() {
+        val directive = WorkoutDirective(exerciseId = 10, targetWeight = 62.5, targetSets = 3, targetReps = "8")
+
+        listOf(RecoveryDebtLevel.HIGH, RecoveryDebtLevel.CRITICAL).forEach { debtLevel ->
+            val result = useCase(
+                directives = listOf(directive),
+                matrix = matrix,
+                context = systemContext(recoveryDebtLevel = debtLevel)
+            )
+
+            assertTrue(result is Result.Success)
+            val validation = (result as Result.Success).data
+            assertEquals("debt $debtLevel", emptyList<WorkoutDirective>(), validation.validatedDirectives)
+            assertEquals("debt $debtLevel", DirectiveValidationStatus.REJECTED, validation.audits.single().status)
+        }
+    }
+
+    @Test
     fun `bodyweight kg directive rejected with audit`() {
         val bodyweightMatrix = listOf(
             matrix[0].copy(
@@ -101,6 +156,36 @@ class ValidateDirectivesUseCaseTest {
         val validation = (result as Result.Success).data
         assertEquals(emptyList<WorkoutDirective>(), validation.validatedDirectives)
         assertEquals(DirectiveValidationStatus.REJECTED, validation.audits.single().status)
+    }
+
+    @Test
+    fun `bodyweight and time exercises reject kg directives with audits`() {
+        val nonKgModes = listOf(
+            ExerciseTrackingMode.BODYWEIGHT_REPS to "Push-up",
+            ExerciseTrackingMode.TIME_SECONDS to "Plank Hold",
+            ExerciseTrackingMode.TIME_MINUTES to "Walking"
+        )
+
+        nonKgModes.forEach { (mode, exerciseName) ->
+            val nonKgMatrix = listOf(
+                matrix[0].copy(
+                    exerciseName = exerciseName,
+                    exerciseTrackingMode = mode.name,
+                    startWeight = 0f,
+                    targetWeight = 0f,
+                    currentWeight = 0f
+                )
+            )
+            val directive = WorkoutDirective(exerciseId = 10, targetWeight = 10.0, targetSets = 3, targetReps = "30")
+
+            val result = useCase(listOf(directive), nonKgMatrix, systemContext())
+
+            assertTrue(result is Result.Success)
+            val validation = (result as Result.Success).data
+            assertEquals("mode $mode", emptyList<WorkoutDirective>(), validation.validatedDirectives)
+            assertEquals("mode $mode", DirectiveValidationStatus.REJECTED, validation.audits.single().status)
+            assertTrue("mode $mode", validation.audits.single().reason.contains("does not accept kg"))
+        }
     }
 
     @Test
@@ -185,6 +270,12 @@ class ValidateDirectivesUseCaseTest {
 
     private fun systemContext(
         readinessLevel: ReadinessLevel = ReadinessLevel.STANDARD,
+        readinessScore: Int = when (readinessLevel) {
+            ReadinessLevel.PROGRESS -> 90
+            ReadinessLevel.STANDARD -> 75
+            ReadinessLevel.REDUCED -> 55
+            ReadinessLevel.RECOVERY -> 35
+        },
         recoveryDebtLevel: RecoveryDebtLevel = RecoveryDebtLevel.LOW,
         decisionType: TodayTrainingDecisionType = TodayTrainingDecisionType.STANDARD_TRAINING,
         lastWorkoutFailed: Boolean = false
@@ -194,15 +285,15 @@ class ValidateDirectivesUseCaseTest {
                 dateEpochDay = 0L,
                 cycleDay = 1,
                 workoutName = "Workout",
-                readinessScore = when (readinessLevel) {
-                    ReadinessLevel.PROGRESS -> 90
-                    ReadinessLevel.STANDARD -> 75
-                    ReadinessLevel.REDUCED -> 55
-                    ReadinessLevel.RECOVERY -> 35
-                },
+                readinessScore = readinessScore,
                 readinessLevel = readinessLevel,
                 recoveryDebt = RecoveryDebt(
-                    value = 10,
+                    value = when (recoveryDebtLevel) {
+                        RecoveryDebtLevel.LOW -> 10
+                        RecoveryDebtLevel.MODERATE -> 35
+                        RecoveryDebtLevel.HIGH -> 60
+                        RecoveryDebtLevel.CRITICAL -> 85
+                    },
                     level = recoveryDebtLevel,
                     reasons = emptyList()
                 ),

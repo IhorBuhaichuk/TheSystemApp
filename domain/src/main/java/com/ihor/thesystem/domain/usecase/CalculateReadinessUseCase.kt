@@ -75,7 +75,7 @@ class CalculateReadinessUseCase @Inject constructor() {
         val clampedScore = score.coerceIn(MIN_SCORE, MAX_SCORE)
         return ReadinessScore(
             score = clampedScore,
-            level = resolveLevel(clampedScore),
+            level = readinessLevelForScore(clampedScore),
             reasons = reasons
         )
     }
@@ -85,14 +85,6 @@ class CalculateReadinessUseCase @Inject constructor() {
             4 -> HIGH_RATING_PENALTY
             5 -> VERY_HIGH_RATING_PENALTY
             else -> 0
-        }
-
-    private fun resolveLevel(score: Int): ReadinessLevel =
-        when (score) {
-            in 85..100 -> ReadinessLevel.PROGRESS
-            in 65..84 -> ReadinessLevel.STANDARD
-            in 45..64 -> ReadinessLevel.REDUCED
-            else -> ReadinessLevel.RECOVERY
         }
 
     private fun HealthSignals.freshSleepHours(): Float? =
@@ -130,3 +122,11 @@ class CalculateReadinessUseCase @Inject constructor() {
         const val LOW_MOTIVATION_PENALTY = -5
     }
 }
+
+fun readinessLevelForScore(score: Int): ReadinessLevel =
+    when (score.coerceIn(0, 100)) {
+        in 85..100 -> ReadinessLevel.PROGRESS
+        in 65..84 -> ReadinessLevel.STANDARD
+        in 45..64 -> ReadinessLevel.REDUCED
+        else -> ReadinessLevel.RECOVERY
+    }

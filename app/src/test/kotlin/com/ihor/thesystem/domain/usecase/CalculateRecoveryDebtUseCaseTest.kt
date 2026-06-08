@@ -89,6 +89,54 @@ class CalculateRecoveryDebtUseCaseTest {
     }
 
     @Test
+    fun `high debt starts at fifty and stays below critical`() {
+        val result = useCase(
+            RecoveryDebtInput(
+                recentWorkouts = listOf(
+                    RecoveryDebtWorkout(dateEpochDay = 1, tonnage = 6_000.0),
+                    RecoveryDebtWorkout(dateEpochDay = 2, tonnage = 6_000.0),
+                    RecoveryDebtWorkout(dateEpochDay = 3, tonnage = 6_000.0),
+                    RecoveryDebtWorkout(dateEpochDay = 4, tonnage = 6_000.0)
+                ),
+                readiness = ReadinessScore(
+                    score = 70,
+                    level = ReadinessLevel.STANDARD,
+                    reasons = emptyList()
+                ),
+                readinessInput = ReadinessInput(stress = 5, soreness = 4),
+                referenceEpochDay = 4
+            )
+        )
+
+        assertEquals(74, result.value)
+        assertEquals(RecoveryDebtLevel.HIGH, result.level)
+    }
+
+    @Test
+    fun `critical debt starts at seventy five`() {
+        val result = useCase(
+            RecoveryDebtInput(
+                recentWorkouts = listOf(
+                    RecoveryDebtWorkout(dateEpochDay = 1, tonnage = 6_000.0),
+                    RecoveryDebtWorkout(dateEpochDay = 2, tonnage = 6_000.0),
+                    RecoveryDebtWorkout(dateEpochDay = 3, tonnage = 6_000.0),
+                    RecoveryDebtWorkout(dateEpochDay = 4, tonnage = 6_000.0)
+                ),
+                readiness = ReadinessScore(
+                    score = 70,
+                    level = ReadinessLevel.STANDARD,
+                    reasons = emptyList()
+                ),
+                readinessInput = ReadinessInput(stress = 5, soreness = 5),
+                referenceEpochDay = 4
+            )
+        )
+
+        assertEquals(81, result.value)
+        assertEquals(RecoveryDebtLevel.CRITICAL, result.level)
+    }
+
+    @Test
     fun `negative tonnage does not create load debt`() {
         val result = useCase(
             RecoveryDebtInput(
