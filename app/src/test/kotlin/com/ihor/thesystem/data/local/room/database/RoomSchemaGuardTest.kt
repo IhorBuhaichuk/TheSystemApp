@@ -1,9 +1,13 @@
 package com.ihor.thesystem.data.local.room.database
 
+import com.ihor.thesystem.data.repository_impl.BackupImportPolicy
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
+import javax.xml.parsers.DocumentBuilderFactory
+import org.w3c.dom.Element
+import org.w3c.dom.Node
 
 class RoomSchemaGuardTest {
 
@@ -83,6 +87,43 @@ class RoomSchemaGuardTest {
     }
 
     @Test
+    fun `explicit json backup covers every room entity table`() {
+        val latestSchema = latestSchema().readText()
+        val roomTables = Regex("\"tableName\"\\s*:\\s*\"([^\"]+)\"")
+            .findAll(latestSchema)
+            .map { it.groupValues[1] }
+            .sorted()
+            .toList()
+
+        assertEquals(
+            "Explicit JSON backup must include every Room entity table so user data survives restore.",
+            roomTables,
+            BackupImportPolicy.includedTables.sorted()
+        )
+    }
+
+    @Test
+    fun `silent android backup excludes room database files`() {
+        val databaseFiles = setOf("the_system_db", "the_system_db-shm", "the_system_db-wal")
+
+        assertEquals(
+            "Cloud backup must not silently copy the Room database.",
+            databaseFiles,
+            databaseExclusions("data_extraction_rules.xml", "cloud-backup")
+        )
+        assertEquals(
+            "Device transfer must stay aligned with cloud backup for the Room database.",
+            databaseFiles,
+            databaseExclusions("data_extraction_rules.xml", "device-transfer")
+        )
+        assertEquals(
+            "Legacy full backup rules must exclude the Room database.",
+            databaseFiles,
+            databaseExclusions("full_backup_content.xml")
+        )
+    }
+
+    @Test
     fun `schedule cycle day is unique in entity and migration`() {
         val scheduleEntity = projectRoot()
             .resolve("src/main/java/com/ihor/thesystem/data/local/room/entity/ScheduleEntity.kt")
@@ -118,6 +159,33 @@ class RoomSchemaGuardTest {
             .resolve("schemas")
             .resolve(AppDatabase::class.java.name)
             .resolve("$APP_DATABASE_VERSION.json")
+    }
+
+    private fun databaseExclusions(
+        resourceName: String,
+        sectionName: String? = null
+    ): Set<String> {
+        val document = DocumentBuilderFactory.newInstance()
+            .newDocumentBuilder()
+            .parse(projectRoot().resolve("src/main/res/xml/$resourceName"))
+        val root = if (sectionName == null) {
+            document.documentElement
+        } else {
+            document.getElementsByTagName(sectionName).item(0) as Element
+        }
+
+        return buildSet {
+            val nodes = root.getElementsByTagName("exclude")
+            for (index in 0 until nodes.length) {
+                val element = nodes.item(index)
+                if (element.nodeType == Node.ELEMENT_NODE) {
+                    element as Element
+                    if (element.getAttribute("domain") == "database") {
+                        add(element.getAttribute("path"))
+                    }
+                }
+            }
+        }
     }
 
     private fun projectRoot(): File =

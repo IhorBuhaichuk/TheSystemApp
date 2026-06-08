@@ -13,7 +13,6 @@ import com.ihor.thesystem.domain.model.BackupPayload
 import com.ihor.thesystem.domain.model.BackupRow
 import com.ihor.thesystem.domain.model.BackupStatus
 import com.ihor.thesystem.domain.model.BackupTable
-import com.ihor.thesystem.domain.model.BackupValidationException
 import com.ihor.thesystem.domain.model.BackupValue
 import com.ihor.thesystem.domain.model.BackupValueType
 import com.ihor.thesystem.domain.repository.BackupRepository
@@ -37,7 +36,7 @@ class BackupRepositoryImpl @Inject constructor(
     override suspend fun exportBackup(): BackupPayload =
         withContext(dispatchers.io) {
             val sqlite = database.openHelper.readableDatabase
-            val tables = BACKUP_TABLES.map { tableName ->
+            val tables = BackupImportPolicy.includedTables.map { tableName ->
                 BackupTable(
                     name = tableName,
                     rows = sqlite.readTableRows(tableName)
@@ -123,12 +122,7 @@ class BackupRepositoryImpl @Inject constructor(
         }
 
     private fun validateTables(payload: BackupPayload) {
-        val supportedTables = BACKUP_TABLES.toSet()
-        payload.tables.forEach { table ->
-            if (table.name !in supportedTables) {
-                throw BackupValidationException("Unsupported backup table: ${table.name}")
-            }
-        }
+        BackupImportPolicy.validateTables(payload)
     }
 
     private fun validateRow(
@@ -136,15 +130,7 @@ class BackupRepositoryImpl @Inject constructor(
         row: BackupRow,
         allowedColumns: Set<String>
     ) {
-        if (row.values.isEmpty()) {
-            throw BackupValidationException("Backup row for $tableName must contain values.")
-        }
-        val unknownColumns = row.values.keys - allowedColumns
-        if (unknownColumns.isNotEmpty()) {
-            throw BackupValidationException(
-                "Backup table $tableName contains unknown columns: ${unknownColumns.joinToString()}"
-            )
-        }
+        BackupImportPolicy.validateRow(tableName, row, allowedColumns)
     }
 
     private fun SupportSQLiteDatabase.insertOrReplace(tableName: String, row: BackupRow) {
@@ -175,41 +161,14 @@ class BackupRepositoryImpl @Inject constructor(
         columnName: String,
         value: BackupValue
     ) {
-        when (value.type) {
-            BackupValueType.NULL -> bindNull(index)
-            BackupValueType.LONG -> bindLong(
-                index,
-                value.value?.toLongOrNull()
-                    ?: throw malformedValue(tableName, columnName, value.type)
-            )
-            BackupValueType.DOUBLE -> bindDouble(
-                index,
-                value.value?.toDoubleOrNull()
-                    ?: throw malformedValue(tableName, columnName, value.type)
-            )
-            BackupValueType.STRING -> bindString(
-                index,
-                value.value ?: throw malformedValue(tableName, columnName, value.type)
-            )
-            BackupValueType.BLOB -> bindBlob(
-                index,
-                runCatching {
-                    Base64.getDecoder().decode(
-                        value.value ?: throw malformedValue(tableName, columnName, value.type)
-                    )
-                }.getOrElse {
-                    throw malformedValue(tableName, columnName, value.type)
-                }
-            )
+        when (val bindable = BackupImportPolicy.bindableValue(tableName, columnName, value)) {
+            BoundBackupValue.Null -> bindNull(index)
+            is BoundBackupValue.LongValue -> bindLong(index, bindable.value)
+            is BoundBackupValue.DoubleValue -> bindDouble(index, bindable.value)
+            is BoundBackupValue.StringValue -> bindString(index, bindable.value)
+            is BoundBackupValue.BlobValue -> bindBlob(index, bindable.value)
         }
     }
-
-    private fun malformedValue(
-        tableName: String,
-        columnName: String,
-        type: BackupValueType
-    ): BackupValidationException =
-        BackupValidationException("Malformed $type value for $tableName.$columnName")
 
     private fun SupportSQLiteDatabase.columnNamesFor(tableName: String): Set<String> {
         val query = query("PRAGMA table_info(`${tableName}`)")
@@ -233,31 +192,5 @@ class BackupRepositoryImpl @Inject constructor(
         const val PREFERENCES_NAME = "backup_status"
         const val KEY_LAST_EXPORTED_AT = "last_exported_at"
         const val KEY_LAST_IMPORTED_AT = "last_imported_at"
-
-        val BACKUP_TABLES = listOf(
-            "exercises",
-            "daily_task_template",
-            "workout_templates",
-            "workout_exercise_cross_ref",
-            "schedule",
-            "schedule_task_cross_ref",
-            "player",
-            "weight_log",
-            "system_config",
-            "progression_matrix",
-            "quest",
-            "quest_task",
-            "quest_log",
-            "workout_sessions",
-            "exercise_sets",
-            "workout_session_logs",
-            "exercise_set_logs",
-            "readiness_entries",
-            "nutrition_entries",
-            "equipment_profile",
-            "calendar_cycle_config",
-            "calendar_cycle_day",
-            "todo"
-        )
     }
 }
