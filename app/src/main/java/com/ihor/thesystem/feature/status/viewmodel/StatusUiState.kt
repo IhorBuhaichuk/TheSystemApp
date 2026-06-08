@@ -1,6 +1,7 @@
 package com.ihor.thesystem.feature.status.viewmodel
 
 import com.ihor.thesystem.core.ui.UiText
+import com.ihor.thesystem.domain.model.BossFight
 import com.ihor.thesystem.domain.model.Rank
 import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import kotlinx.collections.immutable.ImmutableList
@@ -26,6 +27,7 @@ data class StatusUiData(
     val dailyQuest: QuestUiModel?     = null,
     val mainQuest: QuestUiModel?      = null,
     val promotionQuests: ImmutableList<QuestUiModel> = persistentListOf(),
+    val activeBossFight: BossFight?   = null,
     val globalRank: Rank              = Rank.E,
     val characterAttributes: Map<com.ihor.thesystem.domain.model.MuscleGroup, Float> = emptyMap(),
     val currentStreak: Int = 0,

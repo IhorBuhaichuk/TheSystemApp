@@ -70,7 +70,12 @@ import com.ihor.thesystem.feature.exercise_search.ui.toEquipmentUiText
 import com.ihor.thesystem.feature.exercise_search.ui.toUiText
 import com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseSearchViewModel
 import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
+import com.ihor.thesystem.feature.status.viewmodel.BackupUiState
+import com.ihor.thesystem.feature.status.viewmodel.HealthConnectUiState
 import com.ihor.thesystem.feature.status.viewmodel.WorkoutScheduleSettingsUiState
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun WorkoutScheduleSettingsScreen(
@@ -88,6 +93,9 @@ fun WorkoutScheduleSettingsScreen(
     onEquipmentLocationChanged: (Boolean) -> Unit,
     onEquipmentAvailabilityChanged: (EquipmentType, Boolean) -> Unit,
     onDumbbellMaxKgChanged: (String) -> Unit,
+    onConnectHealthConnect: () -> Unit = {},
+    onExportBackup: () -> Unit = {},
+    onImportBackup: () -> Unit = {},
     exerciseSearchViewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
     val colors = SystemTheme.colors
@@ -167,9 +175,14 @@ fun WorkoutScheduleSettingsScreen(
                 ScheduleSettingsPane.Equipment -> EquipmentSettingsPanel(
                     profile = uiState.equipmentProfile,
                     dumbbellMaxKgDraft = uiState.dumbbellMaxKgDraft,
+                    healthConnect = uiState.healthConnect,
+                    backup = uiState.backup,
                     onLocationChanged = onEquipmentLocationChanged,
                     onEquipmentAvailabilityChanged = onEquipmentAvailabilityChanged,
                     onDumbbellMaxKgChanged = onDumbbellMaxKgChanged,
+                    onConnectHealthConnect = onConnectHealthConnect,
+                    onExportBackup = onExportBackup,
+                    onImportBackup = onImportBackup,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -193,6 +206,9 @@ fun WorkoutScheduleSettingsDialog(
     onEquipmentLocationChanged: (Boolean) -> Unit,
     onEquipmentAvailabilityChanged: (EquipmentType, Boolean) -> Unit,
     onDumbbellMaxKgChanged: (String) -> Unit,
+    onConnectHealthConnect: () -> Unit = {},
+    onExportBackup: () -> Unit = {},
+    onImportBackup: () -> Unit = {},
     exerciseSearchViewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
     WorkoutScheduleSettingsScreen(
@@ -210,6 +226,9 @@ fun WorkoutScheduleSettingsDialog(
         onEquipmentLocationChanged = onEquipmentLocationChanged,
         onEquipmentAvailabilityChanged = onEquipmentAvailabilityChanged,
         onDumbbellMaxKgChanged = onDumbbellMaxKgChanged,
+        onConnectHealthConnect = onConnectHealthConnect,
+        onExportBackup = onExportBackup,
+        onImportBackup = onImportBackup,
         exerciseSearchViewModel = exerciseSearchViewModel
     )
 }
@@ -505,9 +524,14 @@ private fun ExerciseLibraryPanel(
 private fun EquipmentSettingsPanel(
     profile: EquipmentProfile,
     dumbbellMaxKgDraft: String,
+    healthConnect: HealthConnectUiState,
+    backup: BackupUiState,
     onLocationChanged: (Boolean) -> Unit,
     onEquipmentAvailabilityChanged: (EquipmentType, Boolean) -> Unit,
     onDumbbellMaxKgChanged: (String) -> Unit,
+    onConnectHealthConnect: () -> Unit,
+    onExportBackup: () -> Unit,
+    onImportBackup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
@@ -521,6 +545,19 @@ private fun EquipmentSettingsPanel(
                 SystemSectionHeader(
                     title = "Обладнання",
                     subtitle = if (profile.trainsAtGym) "Зал або повний доступ" else "Домашній профіль"
+                )
+            }
+            item {
+                HealthConnectSettingsBlock(
+                    state = healthConnect,
+                    onConnect = onConnectHealthConnect
+                )
+            }
+            item {
+                BackupSettingsBlock(
+                    state = backup,
+                    onExport = onExportBackup,
+                    onImport = onImportBackup
                 )
             }
             item {
@@ -566,6 +603,120 @@ private fun EquipmentSettingsPanel(
         }
     }
 }
+
+@Composable
+private fun HealthConnectSettingsBlock(
+    state: HealthConnectUiState,
+    onConnect: () -> Unit
+) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    val accent = when {
+        state.hasReadinessPermission -> colors.accentSuccess
+        state.isAvailable -> colors.accentPrimary
+        else -> colors.textMuted
+    }
+    val statusText = when {
+        state.isLoading -> "Перевірка статусу"
+        state.hasReadinessPermission -> "Підключено: сон може уточнювати readiness"
+        state.isAvailable -> "Доступно: потрібен дозвіл на сон"
+        else -> "Health Connect недоступний на цьому пристрої"
+    }
+    val buttonText = when {
+        state.hasReadinessPermission -> "Підключено"
+        state.isLoading -> "Перевірка"
+        else -> "Connect"
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(colors.surfaceGlassSoft)
+            .border(1.dp, colors.borderSubtle, shape)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        SystemSectionHeader(
+            title = "Health Connect",
+            subtitle = statusText
+        )
+        Text(
+            text = "Система використовує ці дані тільки як додатковий сигнал готовності. Дані здоров'я не відправляються в AI без окремої згоди.",
+            style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
+        )
+        SystemButton(
+            text = buttonText,
+            icon = Icons.Filled.FitnessCenter,
+            onClick = onConnect,
+            enabled = state.isAvailable && !state.hasReadinessPermission && !state.isLoading,
+            accent = accent,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun BackupSettingsBlock(
+    state: BackupUiState,
+    onExport: () -> Unit,
+    onImport: () -> Unit
+) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    val lastBackupText = state.lastExportedAtMillis
+        ?.let { "Останній backup: ${it.backupTimeLabel()}" }
+        ?: state.lastImportedAtMillis?.let { "Останній імпорт: ${it.backupTimeLabel()}" }
+        ?: "Останній backup: ще не створено"
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(colors.surfaceGlassSoft)
+            .border(1.dp, colors.borderSubtle, shape)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        SystemSectionHeader(
+            title = "Backup даних",
+            subtitle = lastBackupText
+        )
+        Text(
+            text = "Експортуються тренування, профіль, матриця прогресу, readiness, обладнання, календар, задачі та історія квестів.",
+            style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SystemButton(
+                text = if (state.isBusy) "Обробка" else "Експорт даних",
+                icon = Icons.Filled.Save,
+                onClick = onExport,
+                enabled = !state.isBusy,
+                accent = colors.accentPrimary,
+                modifier = Modifier.weight(1f)
+            )
+            SystemButton(
+                text = "Імпорт даних",
+                icon = Icons.Filled.Add,
+                onClick = onImport,
+                enabled = !state.isBusy,
+                accent = colors.accentWarning,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+private fun Long.backupTimeLabel(): String =
+    Instant.ofEpochMilli(this)
+        .atZone(ZoneId.systemDefault())
+        .format(BACKUP_TIME_FORMATTER)
+
+private val BACKUP_TIME_FORMATTER: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
 
 @Composable
 private fun EquipmentToggleRow(

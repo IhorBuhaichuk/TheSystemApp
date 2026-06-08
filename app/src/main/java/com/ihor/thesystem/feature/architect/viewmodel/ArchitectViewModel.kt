@@ -221,11 +221,15 @@ class ArchitectViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             
             try {
-                applyAiRecommendations(recs)
+                val applicationResult = applyAiRecommendations(recs)
                 
                 val systemMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
-                    text = MessageText.Resource(MessageTextKey.ARCHITECT_DIRECTIVES_APPLIED)
+                    text = if (applicationResult.hasSystemCorrections) {
+                        MessageText.DynamicString("Система скоригувала рекомендацію AI")
+                    } else {
+                        MessageText.Resource(MessageTextKey.ARCHITECT_DIRECTIVES_APPLIED)
+                    }
                 )
                 
                 _uiState.update { state ->

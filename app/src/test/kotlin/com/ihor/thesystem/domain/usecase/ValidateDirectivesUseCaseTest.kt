@@ -1,7 +1,14 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.util.Result
+import com.ihor.thesystem.domain.model.DirectiveValidationStatus
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
+import com.ihor.thesystem.domain.model.ReadinessLevel
+import com.ihor.thesystem.domain.model.RecoveryDebt
+import com.ihor.thesystem.domain.model.RecoveryDebtLevel
+import com.ihor.thesystem.domain.model.SystemDecisionValidationContext
+import com.ihor.thesystem.domain.model.TodayTrainingDecision
+import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
 import com.ihor.thesystem.domain.model.WorkoutDirective
 import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import org.junit.Assert.assertEquals
@@ -27,12 +34,12 @@ class ValidateDirectivesUseCaseTest {
     )
 
     @Test
-    fun `targetWeight within currentWeight and targetWeight unchanged`() {
+    fun `targetWeight above allowed step is clamped`() {
         val directive = WorkoutDirective(exerciseId = 10, targetWeight = 70.0, targetSets = 3, targetReps = "8-12")
         val result = useCase(listOf(directive), matrix)
         
         assertTrue(result is Result.Success)
-        assertEquals(70.0, (result as Result.Success).data[0].targetWeight, 0.01)
+        assertEquals(62.5, (result as Result.Success).data[0].targetWeight, 0.01)
     }
 
     @Test
@@ -45,12 +52,67 @@ class ValidateDirectivesUseCaseTest {
     }
 
     @Test
-    fun `targetWeight above targetWeight clamped to targetWeight`() {
-        // targetWeight is 100.0
+    fun `targetWeight above matrix target clamped to matrix target`() {
+        val cappedMatrix = listOf(matrix[0].copy(currentWeight = 95f, targetWeight = 100f, weeklyStep = 10f))
         val directive = WorkoutDirective(exerciseId = 10, targetWeight = 110.0, targetSets = 3, targetReps = "8-12")
-        val result = useCase(listOf(directive), matrix)
+        val result = useCase(listOf(directive), cappedMatrix)
         
         assertEquals(100.0, (result as Result.Success).data[0].targetWeight, 0.01)
+    }
+
+    @Test
+    fun `AI plus five kg rejected when readiness is recovery`() {
+        val directive = WorkoutDirective(exerciseId = 10, targetWeight = 65.0, targetSets = 3, targetReps = "8")
+        val result = useCase(listOf(directive), matrix, systemContext(readinessLevel = ReadinessLevel.RECOVERY))
+
+        assertTrue(result is Result.Success)
+        val validation = (result as Result.Success).data
+        assertEquals(emptyList<WorkoutDirective>(), validation.validatedDirectives)
+        assertEquals(DirectiveValidationStatus.REJECTED, validation.audits.single().status)
+    }
+
+    @Test
+    fun `AI target clamped by matrix and allowed step`() {
+        val directive = WorkoutDirective(exerciseId = 10, targetWeight = 90.0, targetSets = 3, targetReps = "8")
+        val result = useCase(listOf(directive), matrix, systemContext())
+
+        assertTrue(result is Result.Success)
+        val validation = (result as Result.Success).data
+        assertEquals(62.5, validation.validatedDirectives.single().targetWeight, 0.01)
+        assertEquals(DirectiveValidationStatus.CLAMPED, validation.audits.single().status)
+    }
+
+    @Test
+    fun `bodyweight kg directive rejected with audit`() {
+        val bodyweightMatrix = listOf(
+            matrix[0].copy(
+                exerciseName = "Push-up",
+                exerciseTrackingMode = ExerciseTrackingMode.BODYWEIGHT_REPS.name,
+                startWeight = 0f,
+                targetWeight = 0f,
+                currentWeight = 0f
+            )
+        )
+        val directive = WorkoutDirective(exerciseId = 10, targetWeight = 25.0, targetSets = 3, targetReps = "12")
+
+        val result = useCase(listOf(directive), bodyweightMatrix, systemContext())
+
+        assertTrue(result is Result.Success)
+        val validation = (result as Result.Success).data
+        assertEquals(emptyList<WorkoutDirective>(), validation.validatedDirectives)
+        assertEquals(DirectiveValidationStatus.REJECTED, validation.audits.single().status)
+    }
+
+    @Test
+    fun `valid standard recommendation accepted`() {
+        val directive = WorkoutDirective(exerciseId = 10, targetWeight = 62.5, targetSets = 3, targetReps = "8-12")
+
+        val result = useCase(listOf(directive), matrix, systemContext())
+
+        assertTrue(result is Result.Success)
+        val validation = (result as Result.Success).data
+        assertEquals(directive, validation.validatedDirectives.single())
+        assertEquals(DirectiveValidationStatus.ACCEPTED, validation.audits.single().status)
     }
 
     @Test
@@ -120,4 +182,38 @@ class ValidateDirectivesUseCaseTest {
         assertTrue(result is Result.Success)
         assertEquals(emptyList<WorkoutDirective>(), (result as Result.Success).data)
     }
+
+    private fun systemContext(
+        readinessLevel: ReadinessLevel = ReadinessLevel.STANDARD,
+        recoveryDebtLevel: RecoveryDebtLevel = RecoveryDebtLevel.LOW,
+        decisionType: TodayTrainingDecisionType = TodayTrainingDecisionType.STANDARD_TRAINING,
+        lastWorkoutFailed: Boolean = false
+    ): SystemDecisionValidationContext =
+        SystemDecisionValidationContext(
+            todayDecision = TodayTrainingDecision(
+                dateEpochDay = 0L,
+                cycleDay = 1,
+                workoutName = "Workout",
+                readinessScore = when (readinessLevel) {
+                    ReadinessLevel.PROGRESS -> 90
+                    ReadinessLevel.STANDARD -> 75
+                    ReadinessLevel.REDUCED -> 55
+                    ReadinessLevel.RECOVERY -> 35
+                },
+                readinessLevel = readinessLevel,
+                recoveryDebt = RecoveryDebt(
+                    value = 10,
+                    level = recoveryDebtLevel,
+                    reasons = emptyList()
+                ),
+                decisionType = decisionType,
+                loadMultiplier = 1f,
+                volumeMultiplier = 1f,
+                reason = "Test",
+                warnings = emptyList(),
+                selectedWorkoutTemplateId = 1,
+                isTrainingAllowed = true
+            ),
+            lastWorkoutFailed = lastWorkoutFailed
+        )
 }

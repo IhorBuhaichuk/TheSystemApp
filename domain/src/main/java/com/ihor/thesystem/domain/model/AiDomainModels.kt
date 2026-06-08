@@ -95,6 +95,38 @@ data class WorkoutDirective(
     val targetReps: String
 )
 
+enum class SystemWorkoutGrade {
+    S,
+    A,
+    B,
+    C,
+    D
+}
+
+enum class WorkoutPerformanceStatus {
+    EXCEEDED,
+    COMPLETED_WITH_RESERVE,
+    COMPLETED_HARD,
+    PARTIAL,
+    FAILED
+}
+
+enum class WorkoutProgressionDecision {
+    INCREASE_ALLOWED,
+    HOLD,
+    REDUCE,
+    DELOAD_RECOMMENDED
+}
+
+data class SystemWorkoutJudgment(
+    val grade: SystemWorkoutGrade,
+    val completionPercent: Int,
+    val performanceStatus: WorkoutPerformanceStatus,
+    val progressionDecision: WorkoutProgressionDecision,
+    val reason: String,
+    val nextAction: String
+)
+
 /**
  * Комплексний звіт від AI Архітектора після аналізу тренування.
  * (Зберігаємо для сумісності під час рефакторингу)
@@ -107,5 +139,6 @@ data class AiArchitectReport(
     val nextWorkoutDirectives: List<WorkoutDirective>,
     val recoveryWindowHours: Double,
     val isFallback: Boolean,
-    val sessionId: Long = 0L
+    val sessionId: Long = 0L,
+    val judgment: SystemWorkoutJudgment? = null
 )

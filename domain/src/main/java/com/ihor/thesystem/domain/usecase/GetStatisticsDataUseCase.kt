@@ -23,7 +23,10 @@ class GetStatisticsDataUseCase @Inject constructor(
     private val viewingDateRepo: ViewingDateRepository,
     private val configRepo: SystemConfigRepository,
     private val scheduleRepo: ScheduleRepository,
+    private val readinessRepo: ReadinessRepository,
     private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
+    private val buildProgressProofs: BuildProgressProofsUseCase,
+    private val getNutritionFloorStatus: GetNutritionFloorStatusUseCase,
     private val clock: AppClock,
     private val logger: AppLogger
 ) {
@@ -101,6 +104,18 @@ class GetStatisticsDataUseCase @Inject constructor(
                 val derivedLevel = progressionConfig.levelForXp(player.xpTotal)
                 val xpProgress = (player.xpTotal % xpPerLevel).coerceIn(0, xpPerLevel)
                 val weeklySummary = buildWeeklySummary(workoutLogs)
+                val progressProofs = buildProgressProofs(
+                    workoutLogs = workoutLogs,
+                    matrixEntries = matrix,
+                    bodyWeightHistory = weightHistory
+                )
+                val weeklySystemReport = buildWeeklySystemReport(
+                    weeklySummary = weeklySummary,
+                    matrixEntries = updatedEntries,
+                    progressProofs = progressProofs,
+                    readinessEntries = loadWeeklyReadinessEntries()
+                )
+                val nutritionFloorStatus = getNutritionFloorStatus()
 
                 StatisticsData(
                     playerName      = player.name,
@@ -124,6 +139,9 @@ class GetStatisticsDataUseCase @Inject constructor(
                     maxStreak       = player.maxStreak,
                     xpThisWeek      = player.xpThisWeek,
                     weeklySummary   = weeklySummary,
+                    progressProofs  = progressProofs,
+                    weeklySystemReport = weeklySystemReport,
+                    nutritionFloorStatus = nutritionFloorStatus,
                     systemInsight   = buildSystemInsight(
                         matrixEntries = updatedEntries,
                         weeklySummary = weeklySummary,
@@ -138,6 +156,15 @@ class GetStatisticsDataUseCase @Inject constructor(
             logger.e(e, "Failed to build statistics data")
             emit(StatisticsData())
         }.flowOn(Dispatchers.Default)
+    }
+
+    private suspend fun loadWeeklyReadinessEntries(): List<ReadinessEntry> {
+        val today = Instant.ofEpochMilli(clock.now()).atZone(clock.zoneId()).toLocalDate()
+        val weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        return readinessRepo.getEntriesBetween(
+            startEpochDay = weekStart.toEpochDay(),
+            endEpochDay = today.toEpochDay()
+        )
     }
 
     private fun buildWeeklySummary(logs: List<WorkoutLog>): WeeklyTrainingSummary {
@@ -159,6 +186,71 @@ class GetStatisticsDataUseCase @Inject constructor(
             days = daySummaries,
             workoutCount = daySummaries.sumOf { it.workoutCount },
             totalTonnage = daySummaries.sumOf { it.totalTonnage }
+        )
+    }
+
+    private fun buildWeeklySystemReport(
+        weeklySummary: WeeklyTrainingSummary,
+        matrixEntries: List<MatrixEntryData>,
+        progressProofs: List<ProgressProof>,
+        readinessEntries: List<ReadinessEntry>
+    ): WeeklySystemReport {
+        val bestDay = weeklySummary.days
+            .filter { it.workoutCount > 0 }
+            .maxWithOrNull(compareBy<WeeklyTrainingDaySummary> { it.totalTonnage }.thenBy { it.workoutCount })
+        val weakestEntry = matrixEntries
+            .filter { it.entry.targetWeight > 0f }
+            .minByOrNull { it.entry.progressPercent }
+        val biggestProof = progressProofs.firstOrNull { it.proofType != ProgressProofType.BODY_WEIGHT }
+            ?: progressProofs.firstOrNull()
+        val lowestReadiness = readinessEntries.minByOrNull { it.score }
+
+        val bestTrainingDay = bestDay?.let { day ->
+            "${day.date.shortDayName()}: ${day.workoutCount} трен., ${day.totalTonnage.formatTonnage()}"
+        } ?: "Немає зафіксованого тренувального дня."
+
+        val weakestPattern = when {
+            weeklySummary.workoutCount == 0 -> "Ритм тижня ще не зібрано."
+            weakestEntry != null && weakestEntry.entry.progressPercent < 0.75f -> {
+                val percent = (weakestEntry.entry.progressPercent.coerceIn(0f, 1f) * 100f).roundToInt()
+                "${weakestEntry.entry.exerciseName}: нижче плану ($percent%)."
+            }
+            else -> "Критичного просідання по матриці не видно."
+        }
+
+        val biggestProgress = biggestProof?.let { proof ->
+            "${proof.exerciseName}: ${proof.previousLabel} -> ${proof.currentLabel} (${proof.deltaText})."
+        } ?: "Поки недостатньо логів для короткого доказу."
+
+        val recoveryIssue = when {
+            lowestReadiness != null && lowestReadiness.score < 45 ->
+                "Readiness падала до ${lowestReadiness.score}%. Наступний тиждень почати легше."
+            lowestReadiness != null && lowestReadiness.score < 65 ->
+                "Readiness нижче стандарту: мінімум ${lowestReadiness.score}%."
+            weeklySummary.totalTonnage > HIGH_WEEKLY_TONNAGE ->
+                "Тоннаж високий. Контролюй сон і відновлення."
+            else -> "Критичних сигналів відновлення не видно."
+        }
+
+        val nextWeekDecision = when {
+            weeklySummary.workoutCount == 0 ->
+                "Повернути ритм: одне коротке тренування на старті тижня."
+            lowestReadiness != null && lowestReadiness.score < 65 ->
+                "Почати тиждень зі стандартного або зниженого навантаження."
+            weakestEntry != null && weakestEntry.entry.progressPercent < 0.75f ->
+                "Тримати фокус на ${weakestEntry.entry.exerciseName}, без різкого підвищення."
+            biggestProof != null ->
+                "Закріпити прогрес і не піднімати обсяг різко."
+            else ->
+                "Підтримати поточний план і збирати логи після кожного тренування."
+        }
+
+        return WeeklySystemReport(
+            bestTrainingDay = bestTrainingDay,
+            weakestPattern = weakestPattern,
+            biggestProgress = biggestProgress,
+            recoveryIssue = recoveryIssue,
+            nextWeekDecision = nextWeekDecision
         )
     }
 
@@ -211,10 +303,32 @@ class GetStatisticsDataUseCase @Inject constructor(
     private fun Long.toLocalDate(): LocalDate =
         Instant.ofEpochMilli(this).atZone(clock.zoneId()).toLocalDate()
 
+    private fun LocalDate.shortDayName(): String =
+        when (dayOfWeek) {
+            DayOfWeek.MONDAY -> "Пн"
+            DayOfWeek.TUESDAY -> "Вт"
+            DayOfWeek.WEDNESDAY -> "Ср"
+            DayOfWeek.THURSDAY -> "Чт"
+            DayOfWeek.FRIDAY -> "Пт"
+            DayOfWeek.SATURDAY -> "Сб"
+            DayOfWeek.SUNDAY -> "Нд"
+        }
+
     private fun Float.formatWeight(): String =
         if (this % 1f == 0f) {
             this.toInt().toString()
         } else {
             String.format(Locale.US, "%.1f", this)
         }
+
+    private fun Double.formatTonnage(): String =
+        if (this >= 1000.0) {
+            String.format(Locale.US, "%.1f т", this / 1000.0)
+        } else {
+            "${roundToInt()} кг"
+        }
+
+    private companion object {
+        const val HIGH_WEEKLY_TONNAGE = 20_000.0
+    }
 }

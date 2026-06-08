@@ -12,6 +12,7 @@ import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
 import com.ihor.thesystem.domain.model.formatForTrackingMode
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
+import java.time.Instant
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
@@ -29,12 +30,15 @@ class FinalizeSessionUseCase @Inject constructor(
     private val questRepository: QuestRepository,
     private val completeQuest: CompleteQuestUseCase,
     private val calculateProgressRank: CalculateProgressRankUseCase,
+    private val calculateWorkoutJudgment: CalculateWorkoutJudgmentUseCase,
+    private val decideTodayWorkout: DecideTodayWorkoutUseCase,
     private val clock: AppClock,
     private val logger: AppLogger
 ) {
     suspend operator fun invoke(
         session: WorkoutSession,
-        sets: List<ExerciseSet>
+        sets: List<ExerciseSet>,
+        plannedRecommendations: List<SetRecommendation> = emptyList()
     ): Result<AiArchitectReport, DomainError> {
         return try {
         
@@ -83,17 +87,35 @@ class FinalizeSessionUseCase @Inject constructor(
         }
 
         // 2. Асинхронний запит до AiArchitectRepository та оновлення матриці
+        val todayDecision = runCatching {
+            decideTodayWorkout(session.localDate(clock))
+        }.onFailure { error ->
+            logger.w("Today decision unavailable for workout judgment: ${error.message}")
+        }.getOrNull()
+        val judgment = calculateWorkoutJudgment(
+            plannedRecommendations = plannedRecommendations.ifEmpty {
+                sets.toPlannedRecommendations(localData.matrix)
+            },
+            actualSets = sets,
+            todayDecision = todayDecision
+        )
+        val completedExerciseIds = sets
+            .filter { it.isCompleted }
+            .map { it.exerciseId }
+            .distinct()
+
         if (localData.systemTemplateType != null) {
             return Result.Success(
                 AiArchitectReport(
                     architectFeedback = MessageText.DynamicString("${localData.systemTemplateType.questTitle} logged."),
                     currentStageStatus = "[ SYSTEM_PROTOCOL ]",
-                    completedExercises = sets.map { it.exerciseId }.distinct(),
+                    completedExercises = completedExerciseIds,
                     pendingExercises = emptyList(),
                     nextWorkoutDirectives = emptyList(),
                     recoveryWindowHours = localData.recoveryHours,
                     isFallback = true,
-                    sessionId = localData.sessionId
+                    sessionId = localData.sessionId,
+                    judgment = judgment
                 )
             )
         }
@@ -126,28 +148,41 @@ class FinalizeSessionUseCase @Inject constructor(
             AiArchitectReport(
                 architectFeedback = chatMsg.text,
                 currentStageStatus = "[ LOGGED ]",
-                completedExercises = sets.map { it.exerciseId }.distinct(),
+                completedExercises = completedExerciseIds,
                 pendingExercises = emptyList(),
                 nextWorkoutDirectives = weightedRecommendations.map {
                     WorkoutDirective(it.exerciseId, it.weight.toDouble(), it.sets, it.reps)
                 },
                 recoveryWindowHours = localData.recoveryHours,
                 isFallback = false,
-                sessionId = localData.sessionId
+                sessionId = localData.sessionId,
+                judgment = judgment
             )
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             logger.e(e, "Architect analysis failed")
-            generateFallbackReport(sets, localData.matrix, localData.recoveryHours, localData.sessionId)
+            generateFallbackReport(
+                sets = sets,
+                matrix = localData.matrix,
+                recoveryHours = localData.recoveryHours,
+                sessionId = localData.sessionId,
+                judgment = judgment
+            )
         }
 
         // 3. Валідація та збереження фінальних директив
+        val validationContext = SystemDecisionValidationContext(
+            todayDecision = todayDecision,
+            lastWorkoutFailed = judgment.performanceStatus == WorkoutPerformanceStatus.FAILED ||
+                judgment.progressionDecision == WorkoutProgressionDecision.REDUCE ||
+                judgment.progressionDecision == WorkoutProgressionDecision.DELOAD_RECOMMENDED
+        )
         val validatedDirectives = when (
-            val validation = validateDirectives(report.nextWorkoutDirectives, localData.matrix)
+            val validation = validateDirectives(report.nextWorkoutDirectives, localData.matrix, validationContext)
         ) {
             is Result.Success -> {
                 logDirectiveAdjustments(report.nextWorkoutDirectives, validation.data)
-                validation.data
+                validation.data.validatedDirectives
             }
             is Result.Error -> {
                 logger.e(message = "Workout directives rejected by validation: ${validation.error.message}")
@@ -174,7 +209,8 @@ class FinalizeSessionUseCase @Inject constructor(
         Result.Success(
             report.copy(
                 nextWorkoutDirectives = validatedDirectives,
-                recoveryWindowHours = localData.recoveryHours
+                recoveryWindowHours = localData.recoveryHours,
+                judgment = judgment
             )
         )
     } catch (e: Exception) {
@@ -279,7 +315,8 @@ class FinalizeSessionUseCase @Inject constructor(
         sets: List<ExerciseSet>,
         matrix: List<ProgressionMatrixEntry>,
         recoveryHours: Double,
-        sessionId: Long
+        sessionId: Long,
+        judgment: SystemWorkoutJudgment
     ): AiArchitectReport {
         val matrixMap = matrix.associateBy { it.exerciseId }
         val fallbackDirectives = sets
@@ -303,27 +340,30 @@ class FinalizeSessionUseCase @Inject constructor(
         return AiArchitectReport(
             architectFeedback = MessageText.Resource(MessageTextKey.AI_FALLBACK_ACTIVATED),
             currentStageStatus = "[ FALLBACK ]",
-            completedExercises = sets.map { it.exerciseId }.distinct(),
+            completedExercises = sets.filter { it.isCompleted }.map { it.exerciseId }.distinct(),
             pendingExercises = emptyList(),
             nextWorkoutDirectives = fallbackDirectives,
             recoveryWindowHours = recoveryHours,
             isFallback = true,
-            sessionId = sessionId
+            sessionId = sessionId,
+            judgment = judgment
         )
     }
 
     private fun logDirectiveAdjustments(
         rawDirectives: List<WorkoutDirective>,
-        validatedDirectives: List<WorkoutDirective>
+        validationResult: DirectiveValidationResult
     ) {
-        val validatedByExercise = validatedDirectives.associateBy { it.exerciseId }
+        val auditsByExercise = validationResult.audits.associateBy { it.exerciseId }
         rawDirectives.forEach { raw ->
-            val validated = validatedByExercise[raw.exerciseId]
+            val audit = auditsByExercise[raw.exerciseId]
             when {
-                validated == null ->
-                    logger.w("Workout directive rejected for exercise ${raw.exerciseId}: missing after validation")
-                validated != raw ->
-                    logger.w("Workout directive clamped for exercise ${raw.exerciseId}: $raw -> $validated")
+                audit == null ->
+                    logger.w("Workout directive rejected for exercise ${raw.exerciseId}: missing validation audit")
+                audit.status == DirectiveValidationStatus.REJECTED ->
+                    logger.w("Workout directive rejected for exercise ${raw.exerciseId}: ${audit.reason}")
+                audit.status == DirectiveValidationStatus.CLAMPED ->
+                    logger.w("Workout directive clamped for exercise ${raw.exerciseId}: ${audit.original} -> ${audit.validated}. ${audit.reason}")
             }
         }
     }
@@ -342,9 +382,43 @@ class FinalizeSessionUseCase @Inject constructor(
 
     private fun ExerciseSet.hasRealExternalLoad(): Boolean =
         weight > TECHNICAL_LOAD_WEIGHT
+
+    private fun List<ExerciseSet>.toPlannedRecommendations(
+        matrix: List<ProgressionMatrixEntry>
+    ): List<SetRecommendation> {
+        val matrixByExercise = matrix.associateBy { it.exerciseId }
+        return groupBy { it.exerciseId }.map { (exerciseId, exerciseSets) ->
+            val entry = matrixByExercise[exerciseId]
+            SetRecommendation(
+                weight = entry?.nextRecommendedWeight
+                    ?: entry?.currentWeight?.toDouble()
+                    ?: exerciseSets.maxOfOrNull { it.weight }
+                    ?: 0.0,
+                reps = entry?.nextRecommendedReps.toTargetReps()
+                    ?: exerciseSets.maxOfOrNull { it.reps }
+                    ?: DEFAULT_JUDGMENT_REPS,
+                sets = entry?.nextRecommendedSets
+                    ?: exerciseSets.count { it.isCompleted }.coerceAtLeast(DEFAULT_JUDGMENT_SETS),
+                isProgression = false,
+                exerciseId = exerciseId
+            )
+        }
+    }
 }
 
 private const val TECHNICAL_LOAD_WEIGHT = 1.0
+private const val DEFAULT_JUDGMENT_SETS = 3
+private const val DEFAULT_JUDGMENT_REPS = 10
+
+private fun WorkoutSession.localDate(clock: AppClock) =
+    Instant.ofEpochMilli(timestamp)
+        .atZone(clock.zoneId())
+        .toLocalDate()
+
+private fun String?.toTargetReps(): Int? =
+    this
+        ?.split("-", " ")
+        ?.firstNotNullOfOrNull { token -> token.trim().toIntOrNull() }
 
 private fun ProgressionMatrixEntry.annualGoalSummary(): String? {
     val parsedPlan = AnnualProgressionPlanNoteParser.parse(targetWeightNote)

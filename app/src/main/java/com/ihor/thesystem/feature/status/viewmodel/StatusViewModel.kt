@@ -361,6 +361,7 @@ class StatusViewModel @Inject constructor(
         dailyQuest = dailyQuest?.toUiModel(),
         mainQuest = mainQuest?.toUiModel(),
         promotionQuests = promotionQuests.map { it.toUiModel() }.toImmutableList(),
+        activeBossFight = activeBossFight,
         globalRank = globalRank,
         characterAttributes = characterAttributes,
         currentStreak = currentStreak,

@@ -1,0 +1,194 @@
+{
+  "patternDefaults": {
+    "squat": {
+      "techniqueTips": ["Корпус зібраний", "Коліна по лінії стоп", "Контроль вниз"],
+      "commonMistakes": ["Коліна провалюються всередину", "П'яти відриваються", "Спина втрачає нейтраль"]
+    },
+    "hinge": {
+      "techniqueTips": ["Спина нейтральна", "Штанга близько до тіла", "Тисни підлогу ногами"],
+      "commonMistakes": ["Округлення попереку", "Ривок зі спини", "Вага далеко від тіла"]
+    },
+    "hip_extension": {
+      "techniqueTips": ["Ребра вниз", "Пауза у верхній точці", "Таз рухається контрольовано"],
+      "commonMistakes": ["Перерозгинання попереку", "Штовхання шиєю", "Втрата контролю колін"]
+    },
+    "horizontal_push": {
+      "techniqueTips": ["Лопатки зведені", "Ноги стабільні", "Контроль вниз"],
+      "commonMistakes": ["Плечі їдуть вперед", "Втрата опори ногами", "Відбивання ваги"]
+    },
+    "vertical_push": {
+      "techniqueTips": ["Сідниці напружені", "Ребра не розкривай", "Траєкторія близько до голови"],
+      "commonMistakes": ["Прогин у попереку", "Лікті надто широко", "Вага йде вперед"]
+    },
+    "horizontal_pull": {
+      "techniqueTips": ["Лопатки назад", "Шия нейтральна", "Тягни ліктями"],
+      "commonMistakes": ["Ривок корпусом", "Плечі до вух", "Втрата контролю вниз"]
+    },
+    "vertical_pull": {
+      "techniqueTips": ["Плечі вниз", "Груди до перекладини", "Контроль ексцентрики"],
+      "commonMistakes": ["Ривок ногами", "Плечі до вух", "Половинна амплітуда"]
+    },
+    "lunge": {
+      "techniqueTips": ["Корпус високий", "Коліно над стопою", "Крок стабільний"],
+      "commonMistakes": ["Падіння вперед", "Коліно всередину", "Поспіх між повторами"]
+    },
+    "core_anti_extension": {
+      "techniqueTips": ["Ребра вниз", "Сідниці напружені", "Дихай рівно"],
+      "commonMistakes": ["Провисання таза", "Затримка дихання", "Голова падає вниз"]
+    },
+    "core_flexion": {
+      "techniqueTips": ["Рух від преса", "Поперек контрольований", "Не тягни шию"],
+      "commonMistakes": ["Ривок головою", "Інерція замість преса", "Занадто швидкий темп"]
+    },
+    "knee_extension": {
+      "techniqueTips": ["Коліно по осі", "Пауза у верхній точці", "Контроль вниз"],
+      "commonMistakes": ["Ривок вагою", "Неповна амплітуда", "Стегна відриваються"]
+    },
+    "knee_flexion": {
+      "techniqueTips": ["Таз стабільний", "Повільний негатив", "Не кидай вагу"],
+      "commonMistakes": ["Підйом таза", "Ривок стопами", "Неповне згинання"]
+    },
+    "calf_raise": {
+      "techniqueTips": ["Повна амплітуда", "Пауза зверху", "Контроль розтягнення"],
+      "commonMistakes": ["Пружинення", "Завал стоп", "Коротка амплітуда"]
+    },
+    "shoulder_isolation": {
+      "techniqueTips": ["Плечі вниз", "Лікті м'які", "Рух контрольований"],
+      "commonMistakes": ["Мах корпусом", "Плечі до вух", "Занадто велика вага"]
+    },
+    "arm_curl": {
+      "techniqueTips": ["Лікті стабільні", "Зап'ястя нейтральні", "Контроль вниз"],
+      "commonMistakes": ["Розгойдування", "Лікті йдуть вперед", "Залом зап'ястя"]
+    },
+    "triceps_extension": {
+      "techniqueTips": ["Лікті стабільні", "Плечі вниз", "Повне розгинання"],
+      "commonMistakes": ["Лікті роз'їжджаються", "Ривок корпусом", "Неповна амплітуда"]
+    },
+    "chest_fly": {
+      "techniqueTips": ["Лікті м'які", "Плечі назад", "Розтягнення контрольоване"],
+      "commonMistakes": ["Занадто глибоко", "Лікті випрямлені", "Вага летить вниз"]
+    }
+  },
+  "exercises": [
+    {"externalId":"Barbell_Squat","movementPattern":"squat","substitutionExternalIds":["Bodyweight_Squat","Goblet_Squat","Dumbbell_Squat","Leg_Press"]},
+    {"externalId":"Barbell_Full_Squat","movementPattern":"squat","substitutionExternalIds":["Barbell_Squat","Goblet_Squat","Dumbbell_Squat","Smith_Machine_Squat"]},
+    {"externalId":"Front_Squat_Clean_Grip","movementPattern":"squat","substitutionExternalIds":["Front_Barbell_Squat","Goblet_Squat","Dumbbell_Squat","Leg_Press"]},
+    {"externalId":"Front_Barbell_Squat","movementPattern":"squat","substitutionExternalIds":["Front_Squat_Clean_Grip","Goblet_Squat","Dumbbell_Squat","Leg_Press"]},
+    {"externalId":"Box_Squat","movementPattern":"squat","substitutionExternalIds":["Barbell_Squat","Dumbbell_Squat_To_A_Bench","Chair_Squat","Smith_Machine_Squat"]},
+    {"externalId":"Goblet_Squat","movementPattern":"squat","substitutionExternalIds":["Dumbbell_Squat","Bodyweight_Squat","Leg_Press","Barbell_Squat"]},
+    {"externalId":"Dumbbell_Squat","movementPattern":"squat","substitutionExternalIds":["Goblet_Squat","Bodyweight_Squat","Dumbbell_Squat_To_A_Bench","Leg_Press"]},
+    {"externalId":"Bodyweight_Squat","movementPattern":"squat","substitutionExternalIds":["Chair_Squat","Dumbbell_Squat","Goblet_Squat","Leg_Press"]},
+    {"externalId":"Chair_Squat","movementPattern":"squat","substitutionExternalIds":["Bodyweight_Squat","Dumbbell_Squat_To_A_Bench","Goblet_Squat","Leg_Press"]},
+    {"externalId":"Hack_Squat","movementPattern":"squat","substitutionExternalIds":["Leg_Press","Smith_Machine_Squat","Barbell_Squat","Dumbbell_Squat"]},
+    {"externalId":"Leg_Press","movementPattern":"squat","substitutionExternalIds":["Hack_Squat","Smith_Machine_Squat","Dumbbell_Squat","Bodyweight_Squat"]},
+    {"externalId":"Smith_Machine_Squat","movementPattern":"squat","substitutionExternalIds":["Barbell_Squat","Leg_Press","Hack_Squat","Dumbbell_Squat"]},
+    {"externalId":"Dumbbell_Squat_To_A_Bench","movementPattern":"squat","substitutionExternalIds":["Chair_Squat","Dumbbell_Squat","Bodyweight_Squat","Box_Squat"]},
+    {"externalId":"Barbell_Deadlift","movementPattern":"hinge","substitutionExternalIds":["Romanian_Deadlift","Trap_Bar_Deadlift","Cable_Deadlifts","Good_Morning"]},
+    {"externalId":"Romanian_Deadlift","movementPattern":"hinge","substitutionExternalIds":["Barbell_Deadlift","Good_Morning","Kettlebell_One-Legged_Deadlift","Smith_Machine_Stiff-Legged_Deadlift"]},
+    {"externalId":"Deficit_Deadlift","movementPattern":"hinge","substitutionExternalIds":["Barbell_Deadlift","Romanian_Deadlift","Trap_Bar_Deadlift","Cable_Deadlifts"]},
+    {"externalId":"Trap_Bar_Deadlift","movementPattern":"hinge","substitutionExternalIds":["Barbell_Deadlift","Romanian_Deadlift","Cable_Deadlifts","Leg_Press"]},
+    {"externalId":"Cable_Deadlifts","movementPattern":"hinge","substitutionExternalIds":["Romanian_Deadlift","Barbell_Deadlift","Good_Morning","Band_Good_Morning"]},
+    {"externalId":"Good_Morning","movementPattern":"hinge","substitutionExternalIds":["Romanian_Deadlift","Band_Good_Morning","Barbell_Deadlift","Cable_Deadlifts"]},
+    {"externalId":"Band_Good_Morning","movementPattern":"hinge","substitutionExternalIds":["Good_Morning","Romanian_Deadlift","Cable_Deadlifts","Kettlebell_One-Legged_Deadlift"]},
+    {"externalId":"Kettlebell_One-Legged_Deadlift","movementPattern":"hinge","substitutionExternalIds":["Romanian_Deadlift","Good_Morning","Cable_Deadlifts","Single_Leg_Glute_Bridge"]},
+    {"externalId":"Smith_Machine_Stiff-Legged_Deadlift","movementPattern":"hinge","substitutionExternalIds":["Romanian_Deadlift","Barbell_Deadlift","Good_Morning","Cable_Deadlifts"]},
+    {"externalId":"Barbell_Hip_Thrust","movementPattern":"hip_extension","substitutionExternalIds":["Barbell_Glute_Bridge","Butt_Lift_Bridge","Single_Leg_Glute_Bridge","Romanian_Deadlift"]},
+    {"externalId":"Barbell_Glute_Bridge","movementPattern":"hip_extension","substitutionExternalIds":["Barbell_Hip_Thrust","Butt_Lift_Bridge","Single_Leg_Glute_Bridge","Romanian_Deadlift"]},
+    {"externalId":"Butt_Lift_Bridge","movementPattern":"hip_extension","substitutionExternalIds":["Single_Leg_Glute_Bridge","Barbell_Glute_Bridge","Barbell_Hip_Thrust","Bodyweight_Squat"]},
+    {"externalId":"Single_Leg_Glute_Bridge","movementPattern":"hip_extension","substitutionExternalIds":["Butt_Lift_Bridge","Barbell_Glute_Bridge","Barbell_Hip_Thrust","Kettlebell_One-Legged_Deadlift"]},
+    {"externalId":"Barbell_Bench_Press_-_Medium_Grip","movementPattern":"horizontal_push","substitutionExternalIds":["Dumbbell_Bench_Press","Machine_Bench_Press","Push-Up_Wide","Smith_Machine_Bench_Press"]},
+    {"externalId":"Bench_Press_-_Powerlifting","movementPattern":"horizontal_push","substitutionExternalIds":["Barbell_Bench_Press_-_Medium_Grip","Dumbbell_Bench_Press","Machine_Bench_Press","Push-Up_Wide"]},
+    {"externalId":"Barbell_Incline_Bench_Press_-_Medium_Grip","movementPattern":"horizontal_push","substitutionExternalIds":["Dumbbell_Bench_Press","Machine_Bench_Press","Incline_Push-Up","Cable_Chest_Press"]},
+    {"externalId":"Decline_Barbell_Bench_Press","movementPattern":"horizontal_push","substitutionExternalIds":["Barbell_Bench_Press_-_Medium_Grip","Decline_Dumbbell_Bench_Press","Push-Up_Wide","Machine_Bench_Press"]},
+    {"externalId":"Dumbbell_Bench_Press","movementPattern":"horizontal_push","substitutionExternalIds":["Barbell_Bench_Press_-_Medium_Grip","Dumbbell_Bench_Press_with_Neutral_Grip","Push-Up_Wide","Machine_Bench_Press"]},
+    {"externalId":"Dumbbell_Bench_Press_with_Neutral_Grip","movementPattern":"horizontal_push","substitutionExternalIds":["Dumbbell_Bench_Press","Push-Up_Wide","Machine_Bench_Press","Cable_Chest_Press"]},
+    {"externalId":"Decline_Dumbbell_Bench_Press","movementPattern":"horizontal_push","substitutionExternalIds":["Decline_Barbell_Bench_Press","Dumbbell_Bench_Press","Push-Up_Wide","Machine_Bench_Press"]},
+    {"externalId":"Machine_Bench_Press","movementPattern":"horizontal_push","substitutionExternalIds":["Smith_Machine_Bench_Press","Barbell_Bench_Press_-_Medium_Grip","Dumbbell_Bench_Press","Cable_Chest_Press"]},
+    {"externalId":"Smith_Machine_Bench_Press","movementPattern":"horizontal_push","substitutionExternalIds":["Machine_Bench_Press","Barbell_Bench_Press_-_Medium_Grip","Dumbbell_Bench_Press","Push-Up_Wide"]},
+    {"externalId":"Cable_Chest_Press","movementPattern":"horizontal_push","substitutionExternalIds":["Machine_Bench_Press","Dumbbell_Bench_Press","Push-Up_Wide","Barbell_Bench_Press_-_Medium_Grip"]},
+    {"externalId":"Push-Up_Wide","movementPattern":"horizontal_push","substitutionExternalIds":["Incline_Push-Up","Push-Ups_With_Feet_Elevated","Dumbbell_Bench_Press","Machine_Bench_Press"]},
+    {"externalId":"Push-Ups_With_Feet_Elevated","movementPattern":"horizontal_push","substitutionExternalIds":["Push-Up_Wide","Incline_Push-Up","Dumbbell_Bench_Press","Machine_Bench_Press"]},
+    {"externalId":"Incline_Push-Up","movementPattern":"horizontal_push","substitutionExternalIds":["Push-Up_Wide","Dumbbell_Bench_Press","Machine_Bench_Press","Cable_Chest_Press"]},
+    {"externalId":"Dips_-_Triceps_Version","movementPattern":"horizontal_push","substitutionExternalIds":["Bench_Dips","Push-Up_Wide","Close-Grip_Barbell_Bench_Press","Triceps_Pushdown"]},
+    {"externalId":"Bench_Dips","movementPattern":"horizontal_push","substitutionExternalIds":["Dips_-_Triceps_Version","Push-Up_Wide","Triceps_Pushdown","Dumbbell_One-Arm_Triceps_Extension"]},
+    {"externalId":"Barbell_Shoulder_Press","movementPattern":"vertical_push","substitutionExternalIds":["Dumbbell_Shoulder_Press","Cable_Shoulder_Press","Smith_Machine_Overhead_Shoulder_Press","Shoulder_Press_-_With_Bands"]},
+    {"externalId":"Dumbbell_Shoulder_Press","movementPattern":"vertical_push","substitutionExternalIds":["Barbell_Shoulder_Press","Dumbbell_One-Arm_Shoulder_Press","Cable_Shoulder_Press","Shoulder_Press_-_With_Bands"]},
+    {"externalId":"Dumbbell_One-Arm_Shoulder_Press","movementPattern":"vertical_push","substitutionExternalIds":["Dumbbell_Shoulder_Press","Arnold_Dumbbell_Press","Cable_Shoulder_Press","Shoulder_Press_-_With_Bands"]},
+    {"externalId":"Arnold_Dumbbell_Press","movementPattern":"vertical_push","substitutionExternalIds":["Dumbbell_Shoulder_Press","Dumbbell_One-Arm_Shoulder_Press","Cable_Shoulder_Press","Barbell_Shoulder_Press"]},
+    {"externalId":"Cable_Shoulder_Press","movementPattern":"vertical_push","substitutionExternalIds":["Seated_Cable_Shoulder_Press","Dumbbell_Shoulder_Press","Barbell_Shoulder_Press","Shoulder_Press_-_With_Bands"]},
+    {"externalId":"Seated_Cable_Shoulder_Press","movementPattern":"vertical_push","substitutionExternalIds":["Cable_Shoulder_Press","Dumbbell_Shoulder_Press","Smith_Machine_Overhead_Shoulder_Press","Shoulder_Press_-_With_Bands"]},
+    {"externalId":"Smith_Machine_Overhead_Shoulder_Press","movementPattern":"vertical_push","substitutionExternalIds":["Barbell_Shoulder_Press","Dumbbell_Shoulder_Press","Cable_Shoulder_Press","Shoulder_Press_-_With_Bands"]},
+    {"externalId":"Shoulder_Press_-_With_Bands","movementPattern":"vertical_push","substitutionExternalIds":["Dumbbell_Shoulder_Press","Cable_Shoulder_Press","Barbell_Shoulder_Press","Smith_Machine_Overhead_Shoulder_Press"]},
+    {"externalId":"Bent_Over_Barbell_Row","movementPattern":"horizontal_pull","substitutionExternalIds":["Bent_Over_Two-Dumbbell_Row","One-Arm_Dumbbell_Row","Seated_Cable_Rows","T-Bar_Row_with_Handle"]},
+    {"externalId":"Bent_Over_Two-Dumbbell_Row","movementPattern":"horizontal_pull","substitutionExternalIds":["Bent_Over_Barbell_Row","One-Arm_Dumbbell_Row","Seated_Cable_Rows","Inverted_Row"]},
+    {"externalId":"One-Arm_Dumbbell_Row","movementPattern":"horizontal_pull","substitutionExternalIds":["Bent_Over_Two-Dumbbell_Row","Bent_Over_Barbell_Row","Seated_Cable_Rows","Inverted_Row"]},
+    {"externalId":"Seated_Cable_Rows","movementPattern":"horizontal_pull","substitutionExternalIds":["Bent_Over_Barbell_Row","One-Arm_Dumbbell_Row","T-Bar_Row_with_Handle","Leverage_Iso_Row"]},
+    {"externalId":"T-Bar_Row_with_Handle","movementPattern":"horizontal_pull","substitutionExternalIds":["Bent_Over_Barbell_Row","Seated_Cable_Rows","One-Arm_Dumbbell_Row","Leverage_Iso_Row"]},
+    {"externalId":"Leverage_Iso_Row","movementPattern":"horizontal_pull","substitutionExternalIds":["Seated_Cable_Rows","T-Bar_Row_with_Handle","One-Arm_Dumbbell_Row","Bent_Over_Barbell_Row"]},
+    {"externalId":"Smith_Machine_Bent_Over_Row","movementPattern":"horizontal_pull","substitutionExternalIds":["Bent_Over_Barbell_Row","Seated_Cable_Rows","One-Arm_Dumbbell_Row","T-Bar_Row_with_Handle"]},
+    {"externalId":"Inverted_Row","movementPattern":"horizontal_pull","substitutionExternalIds":["Suspended_Row","One-Arm_Dumbbell_Row","Seated_Cable_Rows","Bent_Over_Two-Dumbbell_Row"]},
+    {"externalId":"Suspended_Row","movementPattern":"horizontal_pull","substitutionExternalIds":["Inverted_Row","One-Arm_Dumbbell_Row","Seated_Cable_Rows","Bent_Over_Two-Dumbbell_Row"]},
+    {"externalId":"Band_Assisted_Pull-Up","movementPattern":"vertical_pull","substitutionExternalIds":["Close-Grip_Front_Lat_Pulldown","Full_Range-Of-Motion_Lat_Pulldown","Scapular_Pull-Up","Underhand_Cable_Pulldowns"]},
+    {"externalId":"Close-Grip_Front_Lat_Pulldown","movementPattern":"vertical_pull","substitutionExternalIds":["Full_Range-Of-Motion_Lat_Pulldown","Underhand_Cable_Pulldowns","Band_Assisted_Pull-Up","One_Arm_Lat_Pulldown"]},
+    {"externalId":"Full_Range-Of-Motion_Lat_Pulldown","movementPattern":"vertical_pull","substitutionExternalIds":["Close-Grip_Front_Lat_Pulldown","Underhand_Cable_Pulldowns","Band_Assisted_Pull-Up","One_Arm_Lat_Pulldown"]},
+    {"externalId":"Underhand_Cable_Pulldowns","movementPattern":"vertical_pull","substitutionExternalIds":["Close-Grip_Front_Lat_Pulldown","Full_Range-Of-Motion_Lat_Pulldown","One_Arm_Lat_Pulldown","Band_Assisted_Pull-Up"]},
+    {"externalId":"One_Arm_Lat_Pulldown","movementPattern":"vertical_pull","substitutionExternalIds":["Close-Grip_Front_Lat_Pulldown","Full_Range-Of-Motion_Lat_Pulldown","Underhand_Cable_Pulldowns","Band_Assisted_Pull-Up"]},
+    {"externalId":"Scapular_Pull-Up","movementPattern":"vertical_pull","substitutionExternalIds":["Band_Assisted_Pull-Up","Close-Grip_Front_Lat_Pulldown","Full_Range-Of-Motion_Lat_Pulldown","Rocky_Pull-Ups_Pulldowns"]},
+    {"externalId":"Rocky_Pull-Ups_Pulldowns","movementPattern":"vertical_pull","substitutionExternalIds":["Band_Assisted_Pull-Up","Close-Grip_Front_Lat_Pulldown","Full_Range-Of-Motion_Lat_Pulldown","Scapular_Pull-Up"]},
+    {"externalId":"Barbell_Lunge","movementPattern":"lunge","substitutionExternalIds":["Dumbbell_Lunges","Bodyweight_Walking_Lunge","Barbell_Walking_Lunge","Dumbbell_Rear_Lunge"]},
+    {"externalId":"Barbell_Walking_Lunge","movementPattern":"lunge","substitutionExternalIds":["Dumbbell_Lunges","Bodyweight_Walking_Lunge","Barbell_Lunge","Dumbbell_Rear_Lunge"]},
+    {"externalId":"Dumbbell_Lunges","movementPattern":"lunge","substitutionExternalIds":["Bodyweight_Walking_Lunge","Dumbbell_Rear_Lunge","Barbell_Lunge","Barbell_Walking_Lunge"]},
+    {"externalId":"Dumbbell_Rear_Lunge","movementPattern":"lunge","substitutionExternalIds":["Dumbbell_Lunges","Bodyweight_Walking_Lunge","Elevated_Back_Lunge","Smith_Single-Leg_Split_Squat"]},
+    {"externalId":"Bodyweight_Walking_Lunge","movementPattern":"lunge","substitutionExternalIds":["Dumbbell_Lunges","Dumbbell_Rear_Lunge","Barbell_Walking_Lunge","Suspended_Split_Squat"]},
+    {"externalId":"Elevated_Back_Lunge","movementPattern":"lunge","substitutionExternalIds":["Dumbbell_Rear_Lunge","Dumbbell_Lunges","Bodyweight_Walking_Lunge","Smith_Single-Leg_Split_Squat"]},
+    {"externalId":"Smith_Single-Leg_Split_Squat","movementPattern":"lunge","substitutionExternalIds":["Dumbbell_Rear_Lunge","Elevated_Back_Lunge","Bodyweight_Walking_Lunge","Suspended_Split_Squat"]},
+    {"externalId":"Suspended_Split_Squat","movementPattern":"lunge","substitutionExternalIds":["Bodyweight_Walking_Lunge","Dumbbell_Rear_Lunge","Elevated_Back_Lunge","Smith_Single-Leg_Split_Squat"]},
+    {"externalId":"Plank","movementPattern":"core_anti_extension","substitutionExternalIds":["Push_Up_to_Side_Plank","Tuck_Crunch","Reverse_Crunch","Flat_Bench_Lying_Leg_Raise"]},
+    {"externalId":"Push_Up_to_Side_Plank","movementPattern":"core_anti_extension","substitutionExternalIds":["Plank","Reverse_Crunch","Tuck_Crunch","Flat_Bench_Lying_Leg_Raise"]},
+    {"externalId":"Crunches","movementPattern":"core_flexion","substitutionExternalIds":["Reverse_Crunch","Tuck_Crunch","Cross-Body_Crunch","Cable_Crunch"]},
+    {"externalId":"Reverse_Crunch","movementPattern":"core_flexion","substitutionExternalIds":["Crunches","Tuck_Crunch","Flat_Bench_Lying_Leg_Raise","Hanging_Leg_Raise"]},
+    {"externalId":"Hanging_Leg_Raise","movementPattern":"core_flexion","substitutionExternalIds":["Flat_Bench_Lying_Leg_Raise","Reverse_Crunch","Tuck_Crunch","Cable_Crunch"]},
+    {"externalId":"Flat_Bench_Lying_Leg_Raise","movementPattern":"core_flexion","substitutionExternalIds":["Reverse_Crunch","Hanging_Leg_Raise","Tuck_Crunch","Crunches"]},
+    {"externalId":"Cable_Crunch","movementPattern":"core_flexion","substitutionExternalIds":["Rope_Crunch","Crunches","Reverse_Crunch","Tuck_Crunch"]},
+    {"externalId":"Rope_Crunch","movementPattern":"core_flexion","substitutionExternalIds":["Cable_Crunch","Crunches","Reverse_Crunch","Tuck_Crunch"]},
+    {"externalId":"Tuck_Crunch","movementPattern":"core_flexion","substitutionExternalIds":["Crunches","Reverse_Crunch","Cross-Body_Crunch","Plank"]},
+    {"externalId":"Cross-Body_Crunch","movementPattern":"core_flexion","substitutionExternalIds":["Crunches","Tuck_Crunch","Reverse_Crunch","Cable_Crunch"]},
+    {"externalId":"Leg_Extensions","movementPattern":"knee_extension","substitutionExternalIds":["Single-Leg_Leg_Extension","Leg_Press","Bodyweight_Squat","Dumbbell_Squat"]},
+    {"externalId":"Single-Leg_Leg_Extension","movementPattern":"knee_extension","substitutionExternalIds":["Leg_Extensions","Leg_Press","Bodyweight_Squat","Dumbbell_Squat"]},
+    {"externalId":"Lying_Leg_Curls","movementPattern":"knee_flexion","substitutionExternalIds":["Seated_Leg_Curl","Ball_Leg_Curl","Romanian_Deadlift","Band_Good_Morning"]},
+    {"externalId":"Seated_Leg_Curl","movementPattern":"knee_flexion","substitutionExternalIds":["Lying_Leg_Curls","Ball_Leg_Curl","Romanian_Deadlift","Band_Good_Morning"]},
+    {"externalId":"Ball_Leg_Curl","movementPattern":"knee_flexion","substitutionExternalIds":["Lying_Leg_Curls","Seated_Leg_Curl","Romanian_Deadlift","Single_Leg_Glute_Bridge"]},
+    {"externalId":"Rocking_Standing_Calf_Raise","movementPattern":"calf_raise","substitutionExternalIds":["Smith_Machine_Calf_Raise","Seated_Calf_Raise","Calf_Raise_On_A_Dumbbell","Calf_Raises_-_With_Bands"]},
+    {"externalId":"Smith_Machine_Calf_Raise","movementPattern":"calf_raise","substitutionExternalIds":["Rocking_Standing_Calf_Raise","Seated_Calf_Raise","Calf_Press_On_The_Leg_Press_Machine","Calf_Raise_On_A_Dumbbell"]},
+    {"externalId":"Seated_Calf_Raise","movementPattern":"calf_raise","substitutionExternalIds":["Smith_Machine_Calf_Raise","Rocking_Standing_Calf_Raise","Calf_Raise_On_A_Dumbbell","Calf_Raises_-_With_Bands"]},
+    {"externalId":"Calf_Press_On_The_Leg_Press_Machine","movementPattern":"calf_raise","substitutionExternalIds":["Smith_Machine_Calf_Raise","Seated_Calf_Raise","Rocking_Standing_Calf_Raise","Calf_Raise_On_A_Dumbbell"]},
+    {"externalId":"Calf_Raise_On_A_Dumbbell","movementPattern":"calf_raise","substitutionExternalIds":["Rocking_Standing_Calf_Raise","Seated_Calf_Raise","Calf_Raises_-_With_Bands","Smith_Machine_Calf_Raise"]},
+    {"externalId":"Calf_Raises_-_With_Bands","movementPattern":"calf_raise","substitutionExternalIds":["Calf_Raise_On_A_Dumbbell","Rocking_Standing_Calf_Raise","Seated_Calf_Raise","Smith_Machine_Calf_Raise"]},
+    {"externalId":"Side_Lateral_Raise","movementPattern":"shoulder_isolation","substitutionExternalIds":["Seated_Side_Lateral_Raise","Lateral_Raise_-_With_Bands","Cable_Seated_Lateral_Raise","Dumbbell_Lying_Rear_Lateral_Raise"]},
+    {"externalId":"Seated_Side_Lateral_Raise","movementPattern":"shoulder_isolation","substitutionExternalIds":["Side_Lateral_Raise","Lateral_Raise_-_With_Bands","Cable_Seated_Lateral_Raise","Dumbbell_Lying_Rear_Lateral_Raise"]},
+    {"externalId":"Lateral_Raise_-_With_Bands","movementPattern":"shoulder_isolation","substitutionExternalIds":["Side_Lateral_Raise","Seated_Side_Lateral_Raise","Cable_Seated_Lateral_Raise","Dumbbell_Lying_Rear_Lateral_Raise"]},
+    {"externalId":"Dumbbell_Lying_Rear_Lateral_Raise","movementPattern":"shoulder_isolation","substitutionExternalIds":["Reverse_Flyes","Cable_Rear_Delt_Fly","Reverse_Machine_Flyes","Face_Pull"]},
+    {"externalId":"Face_Pull","movementPattern":"shoulder_isolation","substitutionExternalIds":["Cable_Rear_Delt_Fly","Reverse_Flyes","Reverse_Machine_Flyes","Dumbbell_Lying_Rear_Lateral_Raise"]},
+    {"externalId":"Reverse_Flyes","movementPattern":"shoulder_isolation","substitutionExternalIds":["Cable_Rear_Delt_Fly","Reverse_Machine_Flyes","Dumbbell_Lying_Rear_Lateral_Raise","Face_Pull"]},
+    {"externalId":"Reverse_Machine_Flyes","movementPattern":"shoulder_isolation","substitutionExternalIds":["Cable_Rear_Delt_Fly","Reverse_Flyes","Dumbbell_Lying_Rear_Lateral_Raise","Face_Pull"]},
+    {"externalId":"Cable_Rear_Delt_Fly","movementPattern":"shoulder_isolation","substitutionExternalIds":["Reverse_Flyes","Reverse_Machine_Flyes","Dumbbell_Lying_Rear_Lateral_Raise","Face_Pull"]},
+    {"externalId":"Dumbbell_Bicep_Curl","movementPattern":"arm_curl","substitutionExternalIds":["Hammer_Curls","Barbell_Curl","EZ-Bar_Curl","Concentration_Curls"]},
+    {"externalId":"Hammer_Curls","movementPattern":"arm_curl","substitutionExternalIds":["Dumbbell_Bicep_Curl","Concentration_Curls","Cable_Hammer_Curls_-_Rope_Attachment","Barbell_Curl"]},
+    {"externalId":"Barbell_Curl","movementPattern":"arm_curl","substitutionExternalIds":["EZ-Bar_Curl","Dumbbell_Bicep_Curl","Hammer_Curls","Cable_Hammer_Curls_-_Rope_Attachment"]},
+    {"externalId":"EZ-Bar_Curl","movementPattern":"arm_curl","substitutionExternalIds":["Barbell_Curl","Dumbbell_Bicep_Curl","Hammer_Curls","Concentration_Curls"]},
+    {"externalId":"Concentration_Curls","movementPattern":"arm_curl","substitutionExternalIds":["Dumbbell_Bicep_Curl","Hammer_Curls","Cable_Hammer_Curls_-_Rope_Attachment","EZ-Bar_Curl"]},
+    {"externalId":"Cable_Hammer_Curls_-_Rope_Attachment","movementPattern":"arm_curl","substitutionExternalIds":["Hammer_Curls","Dumbbell_Bicep_Curl","Barbell_Curl","EZ-Bar_Curl"]},
+    {"externalId":"Triceps_Pushdown","movementPattern":"triceps_extension","substitutionExternalIds":["Triceps_Pushdown_-_Rope_Attachment","Cable_Rope_Overhead_Triceps_Extension","Dumbbell_One-Arm_Triceps_Extension","Machine_Triceps_Extension"]},
+    {"externalId":"Triceps_Pushdown_-_Rope_Attachment","movementPattern":"triceps_extension","substitutionExternalIds":["Triceps_Pushdown","Cable_Rope_Overhead_Triceps_Extension","Dumbbell_One-Arm_Triceps_Extension","Machine_Triceps_Extension"]},
+    {"externalId":"Cable_Rope_Overhead_Triceps_Extension","movementPattern":"triceps_extension","substitutionExternalIds":["Triceps_Pushdown","Triceps_Pushdown_-_Rope_Attachment","Dumbbell_One-Arm_Triceps_Extension","Lying_Triceps_Press"]},
+    {"externalId":"Dumbbell_One-Arm_Triceps_Extension","movementPattern":"triceps_extension","substitutionExternalIds":["Cable_Rope_Overhead_Triceps_Extension","Triceps_Pushdown","Lying_Triceps_Press","Machine_Triceps_Extension"]},
+    {"externalId":"Lying_Triceps_Press","movementPattern":"triceps_extension","substitutionExternalIds":["Dumbbell_One-Arm_Triceps_Extension","Cable_Rope_Overhead_Triceps_Extension","Triceps_Pushdown","Machine_Triceps_Extension"]},
+    {"externalId":"Machine_Triceps_Extension","movementPattern":"triceps_extension","substitutionExternalIds":["Triceps_Pushdown","Triceps_Pushdown_-_Rope_Attachment","Dumbbell_One-Arm_Triceps_Extension","Lying_Triceps_Press"]},
+    {"externalId":"Dumbbell_Flyes","movementPattern":"chest_fly","substitutionExternalIds":["Incline_Dumbbell_Flyes","Butterfly","Flat_Bench_Cable_Flyes","One-Arm_Flat_Bench_Dumbbell_Flye"]},
+    {"externalId":"Incline_Dumbbell_Flyes","movementPattern":"chest_fly","substitutionExternalIds":["Dumbbell_Flyes","Incline_Cable_Flye","Butterfly","Flat_Bench_Cable_Flyes"]},
+    {"externalId":"Butterfly","movementPattern":"chest_fly","substitutionExternalIds":["Dumbbell_Flyes","Flat_Bench_Cable_Flyes","Incline_Dumbbell_Flyes","Incline_Cable_Flye"]},
+    {"externalId":"Flat_Bench_Cable_Flyes","movementPattern":"chest_fly","substitutionExternalIds":["Dumbbell_Flyes","Butterfly","Incline_Cable_Flye","Incline_Dumbbell_Flyes"]},
+    {"externalId":"Incline_Cable_Flye","movementPattern":"chest_fly","substitutionExternalIds":["Incline_Dumbbell_Flyes","Flat_Bench_Cable_Flyes","Butterfly","Dumbbell_Flyes"]},
+    {"externalId":"One-Arm_Flat_Bench_Dumbbell_Flye","movementPattern":"chest_fly","substitutionExternalIds":["Dumbbell_Flyes","Incline_Dumbbell_Flyes","Flat_Bench_Cable_Flyes","Butterfly"]}
+  ]
+}

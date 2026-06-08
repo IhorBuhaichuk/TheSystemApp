@@ -3,25 +3,34 @@ package com.ihor.thesystem.domain.usecase
 import com.ihor.thesystem.domain.model.ReadinessInput
 import com.ihor.thesystem.domain.model.ReadinessLevel
 import com.ihor.thesystem.domain.model.ReadinessScore
+import com.ihor.thesystem.domain.model.HealthSignals
+import com.ihor.thesystem.domain.model.HealthSignalsFreshness
+import com.ihor.thesystem.domain.model.NutritionFloorStatus
+import com.ihor.thesystem.domain.model.NutritionFloorTargetStatus
 import javax.inject.Inject
 
 class CalculateReadinessUseCase @Inject constructor() {
 
-    operator fun invoke(input: ReadinessInput): ReadinessScore {
+    operator fun invoke(
+        input: ReadinessInput,
+        healthSignals: HealthSignals? = null,
+        nutritionStatus: NutritionFloorStatus? = null
+    ): ReadinessScore {
         var score = BASE_SCORE
         val reasons = mutableListOf("Baseline score: $BASE_SCORE")
 
-        input.sleepHours?.let { sleep ->
+        val sleepHours = input.sleepHours ?: healthSignals?.freshSleepHours()
+        sleepHours?.let { sleep ->
             when {
                 sleep >= GOOD_SLEEP_HOURS -> {
                     score += GOOD_SLEEP_BONUS
-                    reasons += "Sleep >= 7h: +$GOOD_SLEEP_BONUS"
+                    reasons += "${sleepReasonPrefix(input)} >= 7h: +$GOOD_SLEEP_BONUS"
                 }
                 sleep < POOR_SLEEP_HOURS -> {
                     score += POOR_SLEEP_PENALTY
-                    reasons += "Sleep < 5h: $POOR_SLEEP_PENALTY"
+                    reasons += "${sleepReasonPrefix(input)} < 5h: $POOR_SLEEP_PENALTY"
                 }
-                else -> reasons += "Sleep 5-6.9h: +0"
+                else -> reasons += "${sleepReasonPrefix(input)} 5-6.9h: +0"
             }
         }
 
@@ -61,6 +70,8 @@ class CalculateReadinessUseCase @Inject constructor() {
             }
         }
 
+        nutritionStatus?.readinessReasons()?.let { reasons += it }
+
         val clampedScore = score.coerceIn(MIN_SCORE, MAX_SCORE)
         return ReadinessScore(
             score = clampedScore,
@@ -84,10 +95,29 @@ class CalculateReadinessUseCase @Inject constructor() {
             else -> ReadinessLevel.RECOVERY
         }
 
+    private fun HealthSignals.freshSleepHours(): Float? =
+        sleepDurationMinutes
+            ?.takeIf { sourceFreshness == HealthSignalsFreshness.TODAY && it > 0 }
+            ?.let { it / MINUTES_PER_HOUR }
+
+    private fun sleepReasonPrefix(input: ReadinessInput): String =
+        if (input.sleepHours != null) "Sleep" else "Health sleep"
+
+    private fun NutritionFloorStatus.readinessReasons(): List<String> =
+        buildList {
+            if (proteinStatus == NutritionFloorTargetStatus.MISSED) {
+                add("Nutrition floor: protein missed several days.")
+            }
+            if (hydrationStatus == NutritionFloorTargetStatus.MISSED) {
+                add("Nutrition floor: water missed several days.")
+            }
+        }
+
     private companion object {
         const val BASE_SCORE = 70
         const val MIN_SCORE = 0
         const val MAX_SCORE = 100
+        const val MINUTES_PER_HOUR = 60f
         const val GOOD_SLEEP_HOURS = 7f
         const val POOR_SLEEP_HOURS = 5f
         const val GOOD_SLEEP_BONUS = 10

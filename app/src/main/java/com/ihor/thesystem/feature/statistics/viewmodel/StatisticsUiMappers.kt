@@ -36,6 +36,24 @@ fun StatisticsData.toStatisticsUiData() = StatisticsUiData(
         workoutCount = weeklySummary.workoutCount,
         totalTonnage = weeklySummary.totalTonnage
     ),
+    progressProofs = progressProofs.map { proof ->
+        ProgressProofUiModel(
+            exerciseName = proof.exerciseName,
+            previousLabel = proof.previousLabel,
+            currentLabel = proof.currentLabel,
+            deltaText = proof.deltaText,
+            percentageChange = proof.percentageChange,
+            proofType = proof.proofType
+        )
+    }.toImmutableList(),
+    weeklySystemReport = WeeklySystemReportUiModel(
+        bestTrainingDay = weeklySystemReport.bestTrainingDay,
+        weakestPattern = weeklySystemReport.weakestPattern,
+        biggestProgress = weeklySystemReport.biggestProgress,
+        recoveryIssue = weeklySystemReport.recoveryIssue,
+        nextWeekDecision = weeklySystemReport.nextWeekDecision
+    ),
+    nutritionFloorStatus = nutritionFloorStatus,
     systemInsight = SystemInsightUiModel(
         improved = systemInsight.improved,
         weakPoint = systemInsight.weakPoint,

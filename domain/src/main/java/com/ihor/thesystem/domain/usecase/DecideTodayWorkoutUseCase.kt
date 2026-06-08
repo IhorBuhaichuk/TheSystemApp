@@ -2,6 +2,7 @@ package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.CalendarCycleDayType
 import com.ihor.thesystem.domain.model.DomainQuestType
+import com.ihor.thesystem.domain.model.HealthSignalsFreshness
 import com.ihor.thesystem.domain.model.ReadinessInput
 import com.ihor.thesystem.domain.model.ReadinessLevel
 import com.ihor.thesystem.domain.model.ReadinessScore
@@ -15,6 +16,8 @@ import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
 import com.ihor.thesystem.domain.model.WorkoutLog
 import com.ihor.thesystem.domain.repository.CalendarCycleRepository
+import com.ihor.thesystem.domain.repository.HealthSignalsRepository
+import com.ihor.thesystem.domain.repository.NoHealthSignalsRepository
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
 import com.ihor.thesystem.domain.repository.ReadinessRepository
@@ -38,6 +41,7 @@ class DecideTodayWorkoutUseCase @Inject constructor(
     private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val calculateReadiness: CalculateReadinessUseCase,
     private val calculateRecoveryDebt: CalculateRecoveryDebtUseCase,
+    private val healthSignalsRepository: HealthSignalsRepository = NoHealthSignalsRepository,
     private val clock: AppClock
 ) {
 
@@ -245,12 +249,28 @@ class DecideTodayWorkoutUseCase @Inject constructor(
         }
 
         val fallbackInput = ReadinessInput()
+        val healthSignals = todayHealthSignalsOrNull()
+        val healthSignalsUsed = healthSignals?.sourceFreshness == HealthSignalsFreshness.TODAY &&
+            healthSignals.sleepDurationMinutes != null
         return ReadinessContext(
-            score = calculateReadiness(fallbackInput),
+            score = calculateReadiness(fallbackInput, healthSignals),
             input = fallbackInput,
-            warnings = listOf("No readiness entry found; using neutral fallback readiness.")
+            warnings = if (healthSignalsUsed) {
+                listOf("No readiness entry found; using Health Connect sleep signal with neutral manual fallback.")
+            } else {
+                listOf("No readiness entry found; using neutral fallback readiness.")
+            }
         )
     }
+
+    private suspend fun todayHealthSignalsOrNull() =
+        runCatching {
+            if (healthSignalsRepository.isAvailable() && healthSignalsRepository.hasPermissions()) {
+                healthSignalsRepository.getTodaySignals()
+            } else {
+                null
+            }
+        }.getOrNull()
 
     private suspend fun plannedWorkoutEpochDays(
         targetDate: LocalDate,

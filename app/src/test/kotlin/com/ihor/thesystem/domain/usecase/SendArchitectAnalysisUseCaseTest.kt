@@ -86,4 +86,20 @@ class SendArchitectAnalysisUseCaseTest {
         assertTrue("НЕ додавай цю вправу до next_workout_targets" in prompt.captured)
         assertTrue("НЕ пропонуй кг" in prompt.captured)
     }
+
+    @Test
+    fun `architect prompt says system makes final decision`() = runTest {
+        val prompt = slot<String>()
+        coEvery { aiArchitectRepository.getChatResponse(capture(prompt)) } returns ChatMessage(
+            role = ChatRole.AI,
+            text = MessageText.DynamicString("analysis ready"),
+            recommendations = emptyList()
+        )
+
+        useCase("workout context")
+
+        assertTrue("AI НЕ є джерелом істини" in prompt.captured)
+        assertTrue("Фінальне рішення завжди приймає deterministic System validator" in prompt.captured)
+        assertTrue("Відповідь має бути тільки JSON" in prompt.captured)
+    }
 }

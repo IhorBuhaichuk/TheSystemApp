@@ -18,7 +18,23 @@ data class WorkoutScheduleSettingsUiState(
     val allExercises: ImmutableList<ExerciseDetails> = persistentListOf(),
     val equipmentProfile: EquipmentProfile = EquipmentProfile(),
     val dumbbellMaxKgDraft: String = "",
+    val healthConnect: HealthConnectUiState = HealthConnectUiState(),
+    val backup: BackupUiState = BackupUiState(),
     val isLoading: Boolean = false
+)
+
+@Immutable
+data class HealthConnectUiState(
+    val isAvailable: Boolean = false,
+    val hasReadinessPermission: Boolean = false,
+    val isLoading: Boolean = false
+)
+
+@Immutable
+data class BackupUiState(
+    val lastExportedAtMillis: Long? = null,
+    val lastImportedAtMillis: Long? = null,
+    val isBusy: Boolean = false
 )
 
 @Immutable

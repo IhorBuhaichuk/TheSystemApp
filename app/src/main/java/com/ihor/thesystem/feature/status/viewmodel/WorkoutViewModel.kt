@@ -15,6 +15,7 @@ import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
+import com.ihor.thesystem.domain.model.HealthPermissionRequest
 import com.ihor.thesystem.domain.model.QuestTask
 import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
@@ -22,9 +23,13 @@ import com.ihor.thesystem.domain.model.WorkoutSession
 import com.ihor.thesystem.domain.model.toActiveSetInput
 import com.ihor.thesystem.domain.model.toExerciseSetOrNull
 import com.ihor.thesystem.domain.usecase.GetExerciseReferenceUseCase
+import com.ihor.thesystem.domain.usecase.GetBackupStatusUseCase
 import com.ihor.thesystem.domain.usecase.GetSystemConfigUseCase
+import com.ihor.thesystem.domain.usecase.ExportBackupUseCase
+import com.ihor.thesystem.domain.usecase.ImportBackupUseCase
 import com.ihor.thesystem.domain.usecase.SetRecommendation
 import com.ihor.thesystem.domain.usecase.WorkoutUseCases
+import com.ihor.thesystem.domain.repository.HealthSignalsRepository
 import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 import com.ihor.thesystem.presentation.common.model.toMatrixEntryUiModel
@@ -36,9 +41,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.util.Locale
 import javax.inject.Inject
+import com.ihor.thesystem.domain.model.BackupPayload
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -46,6 +55,10 @@ class WorkoutViewModel @Inject constructor(
     private val useCases: WorkoutUseCases,
     private val getSystemConfig: GetSystemConfigUseCase,
     private val getExerciseReference: GetExerciseReferenceUseCase,
+    private val healthSignalsRepository: HealthSignalsRepository,
+    private val exportBackup: ExportBackupUseCase,
+    private val importBackup: ImportBackupUseCase,
+    private val getBackupStatus: GetBackupStatusUseCase,
     private val dispatchers: DispatcherProvider,
     private val clock: AppClock
 ) : ViewModel() {
@@ -60,6 +73,10 @@ class WorkoutViewModel @Inject constructor(
     val settingsUiState: StateFlow<WorkoutScheduleSettingsUiState> = _settingsUiState.asStateFlow()
 
     private var settingsDayJob: Job? = null
+    private val backupJson = Json {
+        ignoreUnknownKeys = true
+        prettyPrint = true
+    }
 
     private val _currentLogSets = MutableStateFlow<List<ActiveSetInput>>(emptyList())
     private val _userEdits = MutableStateFlow<Map<Int, List<ActiveSetInput>>>(emptyMap())
@@ -76,6 +93,8 @@ class WorkoutViewModel @Inject constructor(
                 }
             }
         }
+        refreshHealthConnectStatus()
+        refreshBackupStatus()
     }
 
     private val cycleDay: Flow<Int> = combine(
@@ -296,19 +315,29 @@ class WorkoutViewModel @Inject constructor(
         
         viewModelScope.launch {
             val allSessionSets = currentWorkout.exercises.flatMap { exercise ->
-                exercise.sets.filter { it.isCompleted }.mapNotNull { setInput ->
+                exercise.sets.mapNotNull { setInput ->
                     setInput.toExerciseSetOrNull(
                         exerciseId = exercise.exerciseId,
                         trackingMode = exercise.trackingMode
-                    )?.copy(isCompleted = true)
+                    )?.copy(isCompleted = setInput.isCompleted)
                 }
+            }
+            val completedSessionSets = allSessionSets.filter { it.isCompleted }
+            val plannedRecommendations = currentWorkout.exercises.map { exercise ->
+                SetRecommendation(
+                    weight = exercise.recommendedWeight ?: 0.0,
+                    reps = exercise.recommendedReps ?: 10,
+                    sets = exercise.recommendedSets ?: exercise.sets.size.coerceAtLeast(1),
+                    isProgression = false,
+                    exerciseId = exercise.exerciseId
+                )
             }
             val weightedExerciseIds = currentWorkout.exercises
                 .filter { it.trackingMode.usesWeightInput }
                 .map { it.exerciseId }
                 .toSet()
 
-            if (allSessionSets.isEmpty()) {
+            if (completedSessionSets.isEmpty()) {
                 _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_no_completed_exercises)))
                 return@launch
             }
@@ -316,7 +345,7 @@ class WorkoutViewModel @Inject constructor(
             val session = WorkoutSession(
                 questId = questId,
                 timestamp = clock.now(),
-                totalTonnage = allSessionSets
+                totalTonnage = completedSessionSets
                     .filter { it.exerciseId in weightedExerciseIds }
                     .sumOf { it.weight * it.reps },
                 cycleDay = currentWorkout.dayNumber
@@ -324,7 +353,7 @@ class WorkoutViewModel @Inject constructor(
 
             _dialogState.value = StatusDialogState.None // Close workout dialog show loading?
             
-            when (val result = useCases.finalizeSession(session, allSessionSets)) {
+            when (val result = useCases.finalizeSession(session, allSessionSets, plannedRecommendations)) {
                 is Result.Success -> {
                     _dialogState.value = StatusDialogState.WorkoutReport(result.data)
                 }
@@ -433,7 +462,94 @@ class WorkoutViewModel @Inject constructor(
                 )
             }
             _dialogState.value = StatusDialogState.WorkoutScheduleSettings
+            refreshHealthConnectStatus()
+            refreshBackupStatus()
             loadSettingsForDay(selectedDay)
+        }
+    }
+
+    fun healthConnectPermissionRequest(): HealthPermissionRequest =
+        healthSignalsRepository.requestPermissions()
+
+    fun onHealthConnectPermissionsChanged() {
+        refreshHealthConnectStatus()
+    }
+
+    private fun refreshHealthConnectStatus() {
+        _settingsUiState.update { it.copy(healthConnect = it.healthConnect.copy(isLoading = true)) }
+        viewModelScope.launch(dispatchers.io) {
+            val status = runCatching {
+                val available = healthSignalsRepository.isAvailable()
+                val hasReadinessPermission = if (available) {
+                    healthSignalsRepository.hasPermissions()
+                } else {
+                    false
+                }
+                HealthConnectUiState(
+                    isAvailable = available,
+                    hasReadinessPermission = hasReadinessPermission,
+                    isLoading = false
+                )
+            }.getOrElse {
+                HealthConnectUiState(isLoading = false)
+            }
+            _settingsUiState.update { it.copy(healthConnect = status) }
+        }
+    }
+
+    fun exportBackupJson(onReady: (String) -> Unit) {
+        _settingsUiState.update { it.copy(backup = it.backup.copy(isBusy = true)) }
+        viewModelScope.launch {
+            try {
+                val json = kotlinx.coroutines.withContext(dispatchers.io) {
+                    backupJson.encodeToString(exportBackup())
+                }
+                onReady(json)
+                refreshBackupStatus()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                _settingsUiState.update { it.copy(backup = it.backup.copy(isBusy = false)) }
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+            }
+        }
+    }
+
+    fun importBackupJson(rawJson: String) {
+        _settingsUiState.update { it.copy(backup = it.backup.copy(isBusy = true)) }
+        viewModelScope.launch {
+            try {
+                val payload = backupJson.decodeFromString<BackupPayload>(rawJson)
+                kotlinx.coroutines.withContext(dispatchers.io) {
+                    importBackup(payload)
+                }
+                refreshBackupStatus()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                _settingsUiState.update { it.copy(backup = it.backup.copy(isBusy = false)) }
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+            }
+        }
+    }
+
+    fun onBackupFileOperationFailed() {
+        viewModelScope.launch {
+            _settingsUiState.update { it.copy(backup = it.backup.copy(isBusy = false)) }
+            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+        }
+    }
+
+    private fun refreshBackupStatus() {
+        viewModelScope.launch(dispatchers.io) {
+            val status = runCatching { getBackupStatus() }.getOrNull()
+            _settingsUiState.update {
+                it.copy(
+                    backup = it.backup.copy(
+                        lastExportedAtMillis = status?.lastExportedAtMillis,
+                        lastImportedAtMillis = status?.lastImportedAtMillis,
+                        isBusy = false
+                    )
+                )
+            }
         }
     }
 

@@ -13,6 +13,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
     private val scheduleRepo: ScheduleRepository,
     private val configRepo: SystemConfigRepository,
     private val todoRepository: TodoRepository,
+    private val matrixRepo: ProgressionMatrixRepository,
     private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val decideTodayWorkout: DecideTodayWorkoutUseCase,
     private val clock: AppClock
@@ -24,13 +25,15 @@ class GetStatusScreenDataUseCase @Inject constructor(
         combine(
             playerRepo.getPlayer(),
             configRepo.getConfigFlow(),
-            questRepo.getActiveQuests()
-        ) { player, config, activeQuests ->
-            DataContainer(player, config ?: SystemConfig(), activeQuests)
+            questRepo.getActiveQuests(),
+            matrixRepo.getAllEntries()
+        ) { player, config, activeQuests, matrixEntries ->
+            DataContainer(player, config ?: SystemConfig(), activeQuests, matrixEntries)
         }.flatMapLatest { container ->
             val player = container.player
             val config = container.config
             val activeQuests = container.activeQuests
+            val matrixEntries = container.matrixEntries
 
             if (player == null) return@flatMapLatest flowOf(StatusData())
 
@@ -85,6 +88,15 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 val daily = dailyQuestsForDate.find { it.type == DomainQuestType.DAILY }
                 val main = dailyQuestsForDate.find { it.type == DomainQuestType.MAIN }
                 val promotions = activeQuests.filter { it.type == DomainQuestType.PROMOTION }
+                val matrixEntriesByExercise = matrixEntries.associateBy { it.exerciseId }
+                val activeBossFight = promotions.firstNotNullOfOrNull { quest ->
+                    val exerciseId = quest.targetExerciseId
+                    if (exerciseId == null) {
+                        null
+                    } else {
+                        matrixEntriesByExercise[exerciseId]?.toBossFight(quest.status.toBossFightStatus())
+                    }
+                }
 
                 val trainingDaysPerCycle = schedules.count { it.workoutTemplateName != null }
                 val monthWorkoutsTotal = trainingDaysPerCycle * config.microCyclesPerMonth
@@ -111,6 +123,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     dailyQuest             = daily,
                     mainQuest              = main,
                     promotionQuests        = promotions,
+                    activeBossFight        = activeBossFight,
                     globalRank             = player.globalRank,
                     characterAttributes    = muscleMap,
                     currentStreak          = player.currentStreak,
@@ -126,5 +139,6 @@ class GetStatusScreenDataUseCase @Inject constructor(
 private data class DataContainer(
     val player: Player?,
     val config: SystemConfig,
-    val activeQuests: List<Quest>
+    val activeQuests: List<Quest>,
+    val matrixEntries: List<ProgressionMatrixEntry>
 )

@@ -1,6 +1,7 @@
 package com.ihor.thesystem.feature.status.ui.components.dialogs
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,6 +34,10 @@ import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemGhostButton
 import com.ihor.thesystem.core.ui.components.SystemIconButton
 import com.ihor.thesystem.domain.model.AiArchitectReport
+import com.ihor.thesystem.domain.model.SystemWorkoutGrade
+import com.ihor.thesystem.domain.model.SystemWorkoutJudgment
+import com.ihor.thesystem.domain.model.WorkoutPerformanceStatus
+import com.ihor.thesystem.domain.model.WorkoutProgressionDecision
 
 @Composable
 fun WorkoutReportDialog(
@@ -84,6 +90,10 @@ fun WorkoutReportDialog(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    report.judgment?.let { judgment ->
+                        SystemJudgmentBlock(judgment = judgment)
+                    }
+
                     Text(
                         text = report.architectFeedback.asString(context),
                         style = MaterialTheme.typography.bodyLarge.copy(
@@ -134,3 +144,89 @@ fun WorkoutReportDialog(
         }
     }
 }
+
+@Composable
+private fun SystemJudgmentBlock(
+    judgment: SystemWorkoutJudgment,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(SystemTheme.shapes.medium)
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(colors.overlayLight)
+            .border(1.dp, colors.borderActive, shape)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Оцінка тренування: ${judgment.displayGrade()}",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            )
+            Text(
+                text = "${judgment.completionPercent}%",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = judgment.grade.gradeColor(),
+                    fontWeight = FontWeight.Black
+                )
+            )
+        }
+
+        Text(
+            text = "Рішення системи: ${judgment.progressionDecision.label()}",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = colors.accentPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        )
+
+        Text(
+            text = judgment.reason,
+            style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
+        )
+
+        Text(
+            text = judgment.nextAction,
+            style = MaterialTheme.typography.labelMedium.copy(
+                color = colors.textPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+        )
+    }
+}
+
+@Composable
+private fun SystemWorkoutGrade.gradeColor() =
+    when (this) {
+        SystemWorkoutGrade.S,
+        SystemWorkoutGrade.A -> SystemTheme.colors.accentSuccess
+        SystemWorkoutGrade.B -> SystemTheme.colors.accentPrimary
+        SystemWorkoutGrade.C -> SystemTheme.colors.accentWarning
+        SystemWorkoutGrade.D -> SystemTheme.colors.accentAi
+    }
+
+private fun SystemWorkoutJudgment.displayGrade(): String =
+    if (grade == SystemWorkoutGrade.A && performanceStatus == WorkoutPerformanceStatus.COMPLETED_HARD) {
+        "A-"
+    } else {
+        grade.name
+    }
+
+private fun WorkoutProgressionDecision.label(): String =
+    when (this) {
+        WorkoutProgressionDecision.INCREASE_ALLOWED -> "можна підвищувати"
+        WorkoutProgressionDecision.HOLD -> "вага не підвищується"
+        WorkoutProgressionDecision.REDUCE -> "знизити навантаження"
+        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "deload рекомендовано"
+    }

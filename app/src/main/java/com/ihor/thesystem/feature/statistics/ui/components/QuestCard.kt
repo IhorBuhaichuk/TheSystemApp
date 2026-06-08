@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -45,7 +44,7 @@ fun QuestCard(
     val accentColor = when (type) {
         DomainQuestType.DAILY -> colors.accentPrimary
         DomainQuestType.MAIN -> colors.accentWarning
-        DomainQuestType.PROMOTION -> colors.accentError
+        DomainQuestType.PROMOTION -> colors.accentWarning
     }
 
     // ФІКС: Картка завжди активна і має світіння, якщо вона не завершена
@@ -79,7 +78,7 @@ fun QuestCard(
                     .padding(horizontal = 8.dp, vertical = 2.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.text_exam),
+                    text = "Контрольний норматив",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = accentColor,
                         fontWeight = FontWeight.Black
@@ -96,11 +95,7 @@ fun QuestCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = quest.title,
-                    style = (if (isPromotion) {
-                        MaterialTheme.typography.displayLarge
-                    } else {
-                        MaterialTheme.typography.titleMedium
-                    }).copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         color = if (quest.isCompleted) colors.textSecondary else if (isPromotion) accentColor else colors.textPrimary,
                         fontWeight = FontWeight.Bold
                     ),
@@ -118,11 +113,11 @@ fun QuestCard(
                 )
             }
             Icon(
-                imageVector = if (isPromotion) Icons.Filled.Star else Icons.AutoMirrored.Filled.Assignment,
+                imageVector = Icons.AutoMirrored.Filled.Assignment,
                 contentDescription = null,
                 tint = if (quest.isCompleted) colors.textMuted.copy(alpha = 0.5f) else accentColor.copy(alpha = 0.8f),
                 modifier = Modifier
-                    .size(if (isPromotion) 32.dp else 24.dp)
+                    .size(if (isPromotion) 28.dp else 24.dp)
                     .then(
                         if (!quest.isCompleted && isPromotion) Modifier.neonGlow(accentColor, 12.dp)
                         else Modifier

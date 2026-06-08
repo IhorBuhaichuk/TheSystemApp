@@ -101,6 +101,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+    implementation(libs.androidx.health.connect.client)
     
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)

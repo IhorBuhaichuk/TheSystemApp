@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
     <cloud-backup>
+        <!-- Keep sensitive fitness data out of silent cloud backup; use explicit JSON export/import. -->
         <exclude domain="database" path="the_system_db"/>
         <exclude domain="database" path="the_system_db-shm"/>
         <exclude domain="database" path="the_system_db-wal"/>
     </cloud-backup>
     <device-transfer>
+        <!-- Keep transfer behavior aligned with cloud backup for the Room database. -->
         <exclude domain="database" path="the_system_db"/>
         <exclude domain="database" path="the_system_db-shm"/>
         <exclude domain="database" path="the_system_db-wal"/>

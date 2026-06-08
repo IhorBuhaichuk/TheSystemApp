@@ -37,6 +37,15 @@ abstract class RepositoryModule {
     abstract fun bindEquipmentProfileRepository(impl: EquipmentProfileRepositoryImpl): EquipmentProfileRepository
 
     @Binds @Singleton
+    abstract fun bindHealthSignalsRepository(impl: HealthConnectSignalsRepositoryImpl): HealthSignalsRepository
+
+    @Binds @Singleton
+    abstract fun bindBackupRepository(impl: BackupRepositoryImpl): BackupRepository
+
+    @Binds @Singleton
+    abstract fun bindNutritionRepository(impl: NutritionRepositoryImpl): NutritionRepository
+
+    @Binds @Singleton
     abstract fun bindScheduleRepository(impl: ScheduleRepositoryImpl): ScheduleRepository
 
     @Binds @Singleton

@@ -1,7 +1,13 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.domain.model.HealthPermissionRequest
+import com.ihor.thesystem.domain.model.HealthSignalPermission
+import com.ihor.thesystem.domain.model.HealthSignals
+import com.ihor.thesystem.domain.model.HealthSignalsFreshness
 import com.ihor.thesystem.domain.model.ReadinessInput
 import com.ihor.thesystem.domain.model.ReadinessLevel
+import com.ihor.thesystem.domain.repository.HealthSignalsRepository
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -62,5 +68,67 @@ class CalculateReadinessUseCaseTest {
 
         assertEquals(50, result.score)
         assertEquals(ReadinessLevel.REDUCED, result.level)
+    }
+
+    @Test
+    fun `fresh health sleep improves readiness when manual sleep is missing`() {
+        val result = useCase(
+            input = ReadinessInput(),
+            healthSignals = HealthSignals(
+                sleepDurationMinutes = 8 * 60,
+                sourceFreshness = HealthSignalsFreshness.TODAY
+            )
+        )
+
+        assertEquals(80, result.score)
+        assertEquals(ReadinessLevel.STANDARD, result.level)
+        assertTrue(result.reasons.any { it == "Health sleep >= 7h: +10" })
+    }
+
+    @Test
+    fun `fresh health sleep lowers readiness when sleep is very poor`() {
+        val result = useCase(
+            input = ReadinessInput(),
+            healthSignals = HealthSignals(
+                sleepDurationMinutes = 4 * 60,
+                sourceFreshness = HealthSignalsFreshness.TODAY
+            )
+        )
+
+        assertEquals(55, result.score)
+        assertEquals(ReadinessLevel.REDUCED, result.level)
+        assertTrue(result.reasons.any { it == "Health sleep < 5h: -15" })
+    }
+
+    @Test
+    fun `unavailable health repository falls back to manual readiness`() = runTest {
+        val repository = UnavailableHealthSignalsRepository
+        val signals = if (repository.isAvailable() && repository.hasPermissions()) {
+            repository.getTodaySignals()
+        } else {
+            null
+        }
+
+        val result = useCase(ReadinessInput(), signals)
+
+        assertEquals(70, result.score)
+        assertEquals(ReadinessLevel.STANDARD, result.level)
+    }
+
+    private object UnavailableHealthSignalsRepository : HealthSignalsRepository {
+        override suspend fun isAvailable(): Boolean = false
+
+        override suspend fun hasPermissions(required: Set<HealthSignalPermission>): Boolean = false
+
+        override fun requestPermissions(required: Set<HealthSignalPermission>): HealthPermissionRequest =
+            HealthPermissionRequest(required)
+
+        override suspend fun getTodaySignals(): HealthSignals =
+            HealthSignals(
+                sleepDurationMinutes = 2 * 60,
+                sourceFreshness = HealthSignalsFreshness.TODAY
+            )
+
+        override suspend fun getRecentSignals(days: Int): List<HealthSignals> = emptyList()
     }
 }

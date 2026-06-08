@@ -31,6 +31,9 @@ data class StatisticsUiData(
     val maxStreak: Int                          = 0,
     val xpThisWeek: Int                         = 0,
     val weeklySummary: WeeklyTrainingSummaryUiModel = WeeklyTrainingSummaryUiModel(),
+    val progressProofs: ImmutableList<ProgressProofUiModel> = persistentListOf(),
+    val weeklySystemReport: WeeklySystemReportUiModel = WeeklySystemReportUiModel(),
+    val nutritionFloorStatus: NutritionFloorStatus = NutritionFloorStatus(),
     val systemInsight: SystemInsightUiModel = SystemInsightUiModel(),
     val avatarUri: String? = null
 )
@@ -45,6 +48,23 @@ data class WeeklyTrainingDayUiModel(
     val label: String,
     val workoutCount: Int,
     val totalTonnage: Double
+)
+
+data class ProgressProofUiModel(
+    val exerciseName: String,
+    val previousLabel: String,
+    val currentLabel: String,
+    val deltaText: String,
+    val percentageChange: Float,
+    val proofType: ProgressProofType
+)
+
+data class WeeklySystemReportUiModel(
+    val bestTrainingDay: String = "",
+    val weakestPattern: String = "",
+    val biggestProgress: String = "",
+    val recoveryIssue: String = "",
+    val nextWeekDecision: String = ""
 )
 
 data class SystemInsightUiModel(

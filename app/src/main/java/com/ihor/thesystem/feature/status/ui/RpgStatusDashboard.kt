@@ -69,6 +69,9 @@ import com.ihor.thesystem.core.ui.components.SystemWeekCalendarPreview
 import com.ihor.thesystem.core.ui.components.SystemWeekDayModel
 import com.ihor.thesystem.core.ui.components.SystemWeekDayStatus
 import com.ihor.thesystem.core.ui.components.SystemWeekDayVisualType
+import com.ihor.thesystem.domain.model.BossFight
+import com.ihor.thesystem.domain.model.BossFightStatus
+import com.ihor.thesystem.domain.model.BossFightTargetMetric
 import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
 import com.ihor.thesystem.feature.status.viewmodel.QuestUiModel
@@ -113,6 +116,13 @@ fun RpgStatusDashboard(
             fallbackMainQuest = data.mainQuest,
             onStartWorkout = onStartWorkout
         )
+        data.activeBossFight?.let { bossFight ->
+            BossFightBlock(
+                bossFight = bossFight,
+                onOpen = onStartWorkout,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
         WeekPreviewBlock(
             days = data.weekPreview,
             onOpenCalendar = onOpenCalendar,
@@ -127,6 +137,79 @@ fun RpgStatusDashboard(
             onTodosReordered = onTodosReordered,
             onRemoveTask = onRemoveTask
         )
+    }
+}
+
+@Composable
+private fun BossFightBlock(
+    bossFight: BossFight,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    val accent = colors.accentWarning
+    val isActive = bossFight.status == BossFightStatus.ACTIVE
+
+    DarkGlassCard(modifier = modifier, contentPadding = 12.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            SystemSectionHeader(
+                title = "Контрольний норматив",
+                subtitle = "Ранг ${bossFight.rankFrom.name} -> ${bossFight.rankTo.name}"
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FocusIcon(
+                    icon = Icons.Filled.FitnessCenter,
+                    tint = accent
+                )
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(
+                        text = bossFight.title.removePrefix("Контрольний норматив: ").ifBlank { bossFight.title },
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = colors.textPrimary,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = bossFight.rulesText,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = colors.textSecondary,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SystemStateBadge(
+                    text = bossFight.targetLabel(),
+                    accent = accent
+                )
+                SystemStateBadge(
+                    text = "Нагорода: ${bossFight.rankTo.name}",
+                    accent = colors.accentSuccess
+                )
+            }
+            SystemButton(
+                text = if (isActive) "Почати" else "Відкрити норматив",
+                icon = Icons.Filled.FitnessCenter,
+                onClick = onOpen,
+                enabled = isActive,
+                accent = accent,
+                glow = isActive,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -294,6 +377,28 @@ private fun TodayTrainingDecision?.displayReason(): String =
             "Сьогодні день без тренування."
         null ->
             "Система готує сьогоднішній план."
+    }
+
+private fun BossFight.targetLabel(): String =
+    when (targetMetric) {
+        BossFightTargetMetric.WEIGHT -> "Ціль: ${targetValue.formatCompactTarget()} кг"
+        BossFightTargetMetric.REPS -> "Ціль: ${targetValue.roundToInt()} повт."
+        BossFightTargetMetric.TIME_SECONDS -> "Ціль: ${targetValue.roundToInt().formatTimeTarget()}"
+        BossFightTargetMetric.DISTANCE_METERS -> "Ціль: ${targetValue.formatCompactTarget()} м"
+    }
+
+private fun Double.formatCompactTarget(): String =
+    if (this % 1.0 == 0.0) {
+        toInt().toString()
+    } else {
+        String.format(Locale.US, "%.1f", this)
+    }
+
+private fun Int.formatTimeTarget(): String =
+    if (this >= 60 && this % 60 == 0) {
+        "${this / 60} хв"
+    } else {
+        "$this сек"
     }
 
 @Composable

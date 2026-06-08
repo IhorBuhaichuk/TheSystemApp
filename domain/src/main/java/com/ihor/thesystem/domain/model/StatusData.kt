@@ -17,6 +17,7 @@ data class StatusData(
     val dailyQuest: Quest? = null,
     val mainQuest: Quest? = null,
     val promotionQuests: List<Quest> = emptyList(),
+    val activeBossFight: BossFight? = null,
     val globalRank: Rank = Rank.E,
     val characterAttributes: Map<MuscleGroup, Float> = emptyMap(),
     val currentStreak: Int = 0,

@@ -4,10 +4,13 @@ import com.ihor.thesystem.domain.model.DomainQuestType
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseRecommendation
 import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
+import com.ihor.thesystem.domain.model.BossFight
+import com.ihor.thesystem.domain.model.BossFightTargetMetric
 import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.model.SystemWorkoutTemplateType
 import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
+import com.ihor.thesystem.domain.model.toBossFight
 import com.ihor.thesystem.domain.repository.PlayerRepository
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.QuestRepository
@@ -18,7 +21,6 @@ import com.ihor.thesystem.domain.util.AppClock
 import java.time.Instant
 import javax.inject.Inject
 import kotlin.math.abs
-import kotlin.math.round
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 
@@ -103,22 +105,22 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             )
         }
 
-        generatePromotionQuests()
+        generateBossFightQuests()
     }
 
-    private suspend fun generatePromotionQuests() {
+    private suspend fun generateBossFightQuests() {
         val matrixEntries = matrixRepo.getAllEntries().firstOrNull() ?: emptyList()
+        val active = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
         matrixEntries.filter { it.isPromotionPending }.forEach { pending ->
-            val active = questRepo.getActiveQuests().firstOrNull() ?: emptyList()
             if (active.none { it.type == DomainQuestType.PROMOTION && it.targetExerciseId == pending.exerciseId }) {
-                val examWeight = (round((pending.targetWeight * 1.025f) / 2.5f) * 2.5f).toDouble()
+                val bossFight = pending.toBossFight()
                 questRepo.createPromotionQuest(
                     exerciseId = pending.exerciseId,
-                    title = "ЕКЗАМЕН: ${(pending.exerciseNameUk ?: pending.exerciseName).uppercase()}",
-                    description = "Тест 1RM",
-                    targetWeight = examWeight,
-                    targetReps = 1,
-                    exerciseNameUk = pending.exerciseNameUk
+                    title = bossFight.title,
+                    description = bossFight.rulesText,
+                    targetWeight = bossFight.targetWeightOrNull(),
+                    targetReps = bossFight.targetRepsOrNull(),
+                    exerciseNameUk = null
                 )
             }
         }
@@ -251,6 +253,15 @@ class GenerateDailyQuestsUseCase @Inject constructor(
 
     private fun Double?.isSameTarget(other: Double): Boolean =
         this != null && abs(this - other) < TARGET_EPSILON
+
+    private fun BossFight.targetWeightOrNull(): Double? =
+        targetValue.takeIf { targetMetric == BossFightTargetMetric.WEIGHT }
+
+    private fun BossFight.targetRepsOrNull(): Int? =
+        targetValue.toInt().takeIf {
+            targetMetric == BossFightTargetMetric.REPS ||
+                targetMetric == BossFightTargetMetric.TIME_SECONDS
+        }
 
     private companion object {
         const val TARGET_EPSILON = 0.001

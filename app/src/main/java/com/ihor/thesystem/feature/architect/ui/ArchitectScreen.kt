@@ -71,6 +71,7 @@ import com.ihor.thesystem.core.ui.components.SystemStatusChip
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
+import com.ihor.thesystem.domain.model.MessageText
 import com.ihor.thesystem.feature.architect.viewmodel.AiDashboardUiState
 import com.ihor.thesystem.feature.architect.viewmodel.AiRecommendationUiModel
 import com.ihor.thesystem.feature.architect.viewmodel.ArchitectUiState
@@ -623,6 +624,13 @@ private fun ArchitectChatBubble(
                         fontWeight = FontWeight.Medium
                     )
                 )
+                if (message.isSystemCorrectionNotice()) {
+                    SystemStatusChip(
+                        text = "Скориговано системою",
+                        accent = colors.accentWarning,
+                        active = true
+                    )
+                }
                 if (message.recommendations.isNotEmpty()) {
                     RecommendationList(recommendations = message.recommendations)
                 }
@@ -650,6 +658,10 @@ private fun ArchitectChatBubble(
         }
     }
 }
+
+private fun ChatMessage.isSystemCorrectionNotice(): Boolean =
+    role == ChatRole.SYSTEM &&
+        (text as? MessageText.DynamicString)?.value == SYSTEM_AI_CORRECTION_TEXT
 
 @Composable
 private fun RecommendationList(recommendations: List<AiWorkoutRecommendation>) {
@@ -792,3 +804,5 @@ private fun formatWeight(value: Float): String {
         String.format(Locale.US, "%.1f", value)
     }
 }
+
+private const val SYSTEM_AI_CORRECTION_TEXT = "Система скоригувала рекомендацію AI"

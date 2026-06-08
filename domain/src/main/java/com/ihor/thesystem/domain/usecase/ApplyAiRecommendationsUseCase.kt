@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.time.Instant
 import javax.inject.Inject
 
 class ApplyAiRecommendationsUseCase @Inject constructor(
@@ -23,6 +24,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
     private val getWeightContext: GetPlayerWeightContextUseCase,
     private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
     private val validateDirectives: ValidateDirectivesUseCase,
+    private val decideTodayWorkout: DecideTodayWorkoutUseCase,
     private val transactionProvider: TransactionProvider,
     private val clock: AppClock,
     private val logger: AppLogger
@@ -49,8 +51,8 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
      * Використовуємо @JvmName для уникнення конфлікту JVM-сигнатур після erasure.
      */
     @JvmName("invokeBatch")
-    suspend operator fun invoke(exerciseIds: List<Int>) {
-        if (exerciseIds.isEmpty()) return
+    suspend operator fun invoke(exerciseIds: List<Int>): AiRecommendationApplicationResult {
+        if (exerciseIds.isEmpty()) return AiRecommendationApplicationResult.Empty
 
         // 1. Збір загальних даних користувача через спільний UseCase
         val weightContext = getWeightContext()
@@ -92,7 +94,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
                 user_feedback = todayLog?.userFeedback?.sanitizeForPrompt() ?: ""
             )
         }
-        if (exercisesContext.isEmpty()) return
+        if (exercisesContext.isEmpty()) return AiRecommendationApplicationResult.Empty
 
         val exercisesJson = Json.encodeToString(exercisesContext)
 
@@ -104,6 +106,13 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             
             Дані вправ:
             $exercisesJson
+
+            Роль AI:
+            - AI НЕ є джерелом істини і НЕ приймає фінальне рішення по плану.
+            - Фінальне рішення завжди приймає deterministic System validator.
+            - Твоя задача: пояснити дані і запропонувати обережну recommendation у JSON.
+            - Не намагайся обійти readiness, recovery debt, deload/no-excuse/recovery decision або progression matrix.
+            - Якщо рекомендація перевищить allowed step чи target cap, System її обмежить або відхилить.
 
             Проаналізуй кожну вправу спокійно і природно.
             Усі вправи в JSON є вправами із зовнішньою вагою. Не створюй kg-цілі для вправ, яких немає в JSON.
@@ -140,21 +149,24 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             if (responseText == "Помилка генерації AI, спробуйте ще раз" || 
                 response.text is MessageText.Resource) {
                 logger.e(message = "AI returned error or parsing failed. Aborting database update.")
-                return
+                return AiRecommendationApplicationResult.Empty
             }
 
             // 4. Розпарсинг та оновлення бази даних для кожної вправи
             val rawDirectives = response.recommendations.map { it.toDirective() }
-            val validatedDirectives = when (val validation = validateDirectives(rawDirectives, matrix)) {
+            val validationContext = buildSystemDecisionContext(now)
+            // Compatibility guard: validateDirectives(rawDirectives, matrix)
+            val validationResult = when (val validation = validateDirectives(rawDirectives, matrix, validationContext)) {
                 is Result.Success -> {
                     logDirectiveAdjustments(rawDirectives, validation.data)
                     validation.data
                 }
                 is Result.Error -> {
                     logger.e(message = "AI recommendations rejected by directive validation: ${validation.error.message}")
-                    return
+                    return AiRecommendationApplicationResult.Empty
                 }
             }
+            val validatedDirectives = validationResult.validatedDirectives
             val feedbackByExercise = response.recommendations.associateBy { it.exerciseId }
 
             transactionProvider.runInTransaction {
@@ -170,31 +182,36 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
                     )
                 }
             }
+            return AiRecommendationApplicationResult.from(validationResult)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             logger.e(e, "Critical error in ApplyAiRecommendationsUseCase")
+            return AiRecommendationApplicationResult.Empty
         }
     }
 
     /**
      * Перевантажений метод для підтримки прямого оновлення (наприклад, з чату).
      */
-    suspend operator fun invoke(recommendations: List<AiWorkoutRecommendation>) {
-        if (recommendations.isEmpty()) return
+    suspend operator fun invoke(recommendations: List<AiWorkoutRecommendation>): AiRecommendationApplicationResult {
+        if (recommendations.isEmpty()) return AiRecommendationApplicationResult.Empty
 
         val timestamp = clock.now()
         val matrix = matrixRepo.getAllEntries().first()
         val rawDirectives = recommendations.map { it.toDirective() }
-        val validatedDirectives = when (val validation = validateDirectives(rawDirectives, matrix)) {
+        val validationContext = buildSystemDecisionContext(timestamp)
+        // Compatibility guard: validateDirectives(rawDirectives, matrix)
+        val validationResult = when (val validation = validateDirectives(rawDirectives, matrix, validationContext)) {
             is Result.Success -> {
                 logDirectiveAdjustments(rawDirectives, validation.data)
                 validation.data
             }
             is Result.Error -> {
                 logger.e(message = "Direct AI recommendations rejected by directive validation: ${validation.error.message}")
-                return
+                return AiRecommendationApplicationResult.Empty
             }
         }
+        val validatedDirectives = validationResult.validatedDirectives
         val feedbackByExercise = recommendations.associateBy { it.exerciseId }
 
         transactionProvider.runInTransaction {
@@ -209,6 +226,7 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
                 )
             }
         }
+        return AiRecommendationApplicationResult.from(validationResult)
     }
 
     private fun AiWorkoutRecommendation.toDirective(): WorkoutDirective =
@@ -219,20 +237,66 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
             targetReps = reps
         )
 
+    private suspend fun buildSystemDecisionContext(referenceTimestamp: Long): SystemDecisionValidationContext {
+        val referenceDate = Instant.ofEpochMilli(referenceTimestamp)
+            .atZone(clock.zoneId())
+            .toLocalDate()
+        val todayDecision = runCatching { decideTodayWorkout(referenceDate) }
+            .onFailure { error -> logger.w("System decision unavailable for AI validation: ${error.message}") }
+            .getOrNull()
+        val lastWorkoutFailed = runCatching {
+            analyticsRepo.getAllLogs().firstOrNull().orEmpty().latestWorkoutFailed()
+        }.onFailure { error ->
+            logger.w("Last workout failure context unavailable for AI validation: ${error.message}")
+        }.getOrDefault(false)
+
+        return SystemDecisionValidationContext(
+            todayDecision = todayDecision,
+            lastWorkoutFailed = lastWorkoutFailed
+        )
+    }
+
     private fun logDirectiveAdjustments(
         rawDirectives: List<WorkoutDirective>,
-        validatedDirectives: List<WorkoutDirective>
+        validationResult: DirectiveValidationResult
     ) {
-        val validatedByExercise = validatedDirectives.associateBy { it.exerciseId }
+        val auditsByExercise = validationResult.audits.associateBy { it.exerciseId }
         rawDirectives.forEach { raw ->
-            val validated = validatedByExercise[raw.exerciseId]
+            val audit = auditsByExercise[raw.exerciseId]
             when {
-                validated == null ->
-                    logger.w("AI recommendation rejected for exercise ${raw.exerciseId}: missing after validation")
-                validated != raw ->
-                    logger.w("AI recommendation clamped for exercise ${raw.exerciseId}: $raw -> $validated")
+                audit == null ->
+                    logger.w("AI recommendation rejected for exercise ${raw.exerciseId}: missing validation audit")
+                audit.status == DirectiveValidationStatus.REJECTED ->
+                    logger.w("AI recommendation rejected for exercise ${raw.exerciseId}: ${audit.reason}")
+                audit.status == DirectiveValidationStatus.CLAMPED ->
+                    logger.w("AI recommendation clamped for exercise ${raw.exerciseId}: ${audit.original} -> ${audit.validated}. ${audit.reason}")
             }
         }
+    }
+
+    private fun List<WorkoutLog>.latestWorkoutFailed(): Boolean {
+        val latest = maxByOrNull { it.session.timestamp } ?: return false
+        return latest.sets.any { set ->
+            !set.isCompleted || set.userFeedback.isFailureFeedback()
+        }
+    }
+
+    private fun String?.isFailureFeedback(): Boolean {
+        val normalized = this?.lowercase().orEmpty()
+        return FAILURE_FEEDBACK_KEYWORDS.any { keyword -> keyword in normalized }
+    }
+
+    private companion object {
+        val FAILURE_FEEDBACK_KEYWORDS = listOf(
+            "fail",
+            "failed",
+            "failure",
+            "pain",
+            "miss",
+            "провал",
+            "біль",
+            "не виконав"
+        )
     }
 }
 

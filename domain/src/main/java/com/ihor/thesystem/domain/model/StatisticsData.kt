@@ -25,6 +25,9 @@ data class StatisticsData(
     val maxStreak: Int = 0,
     val xpThisWeek: Int = 0,
     val weeklySummary: WeeklyTrainingSummary = WeeklyTrainingSummary(),
+    val progressProofs: List<ProgressProof> = emptyList(),
+    val weeklySystemReport: WeeklySystemReport = WeeklySystemReport(),
+    val nutritionFloorStatus: NutritionFloorStatus = NutritionFloorStatus(),
     val systemInsight: SystemInsight = SystemInsight(),
     val avatarUri: String? = null
 )
@@ -46,6 +49,30 @@ data class WeeklyTrainingDaySummary(
     val date: LocalDate,
     val workoutCount: Int,
     val totalTonnage: Double
+)
+
+enum class ProgressProofType {
+    STRENGTH,
+    REPS,
+    CONSISTENCY,
+    BODY_WEIGHT
+}
+
+data class ProgressProof(
+    val exerciseName: String,
+    val previousLabel: String,
+    val currentLabel: String,
+    val deltaText: String,
+    val percentageChange: Float,
+    val proofType: ProgressProofType
+)
+
+data class WeeklySystemReport(
+    val bestTrainingDay: String = "",
+    val weakestPattern: String = "",
+    val biggestProgress: String = "",
+    val recoveryIssue: String = "",
+    val nextWeekDecision: String = ""
 )
 
 data class SystemInsight(
