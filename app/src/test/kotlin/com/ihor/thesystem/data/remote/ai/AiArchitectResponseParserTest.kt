@@ -102,4 +102,59 @@ class AiArchitectResponseParserTest {
             parser.parse("plain text response")
         }
     }
+
+    @Test
+    fun `throws when json object is incomplete`() {
+        assertThrows(AiMalformedResponseException::class.java) {
+            parser.parse("""{"feedback_text":"Done","next_workout_targets":[""")
+        }
+    }
+
+    @Test
+    fun `malformed json cannot become actionable recommendations`() {
+        assertThrows(AiMalformedResponseException::class.java) {
+            parser.parse(
+                """
+                {
+                  "feedback_text": "Done",
+                  "next_workout_targets": [
+                    {
+                      "exercise_id": 7,
+                      "nextWeight": "heavy",
+                      "nextSets": 3,
+                      "nextReps": "8"
+                    }
+                  ]
+                }
+                """.trimIndent()
+            )
+        }
+    }
+
+    @Test
+    fun `drops negative weights and blank reps`() {
+        val response = """
+            {
+              "feedback_text": "Done",
+              "next_workout_targets": [
+                {
+                  "exercise_id": 7,
+                  "nextWeight": -5,
+                  "nextSets": 3,
+                  "nextReps": "8"
+                },
+                {
+                  "exercise_id": 8,
+                  "nextWeight": 20,
+                  "nextSets": 3,
+                  "nextReps": " "
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val result = parser.parse(response)
+
+        assertEquals(emptyList<Any>(), result.recommendations)
+    }
 }

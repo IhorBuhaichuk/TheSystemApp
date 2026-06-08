@@ -47,6 +47,7 @@ fun MessageText.asString(): String =
 @StringRes
 private fun MessageTextKey.stringResId(): Int =
     when (this) {
+        MessageTextKey.ERROR_AI_UNCONFIGURED -> R.string.error_ai_unconfigured
         MessageTextKey.ERROR_AI_GENERIC -> R.string.error_ai_generic
         MessageTextKey.ERROR_AI_PARSING -> R.string.error_ai_parsing
         MessageTextKey.ERROR_AI_RATE_LIMIT -> R.string.error_ai_rate_limit

@@ -20,7 +20,11 @@ if (localPropertiesFile.exists()) {
 fun String.toBuildConfigString(): String =
     "\"${replace("\\", "\\\\").replace("\"", "\\\"")}\""
 
+fun String.isConfiguredGeminiApiKey(): Boolean =
+    isNotBlank() && this != "null"
+
 val debugGeminiApiKey = properties.getProperty("GEMINI_API_KEY").orEmpty()
+val debugGeminiClientAiEnabled = debugGeminiApiKey.isConfiguredGeminiApiKey()
 
 android {
     namespace = "com.ihor.thesystem"
@@ -35,15 +39,18 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GEMINI_API_KEY", "\"\"")
+        buildConfigField("boolean", "GEMINI_CLIENT_AI_ENABLED", "false")
     }
 
     buildTypes {
         debug {
             buildConfigField("String", "GEMINI_API_KEY", debugGeminiApiKey.toBuildConfigString())
+            buildConfigField("boolean", "GEMINI_CLIENT_AI_ENABLED", debugGeminiClientAiEnabled.toString())
         }
 
         release {
             buildConfigField("String", "GEMINI_API_KEY", "\"\"")
+            buildConfigField("boolean", "GEMINI_CLIENT_AI_ENABLED", "false")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

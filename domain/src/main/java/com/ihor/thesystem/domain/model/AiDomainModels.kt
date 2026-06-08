@@ -12,6 +12,7 @@ data class AiConversationMessage(
 )
 
 enum class MessageTextKey {
+    ERROR_AI_UNCONFIGURED,
     ERROR_AI_GENERIC,
     ERROR_AI_PARSING,
     ERROR_AI_RATE_LIMIT,

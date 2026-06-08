@@ -1,12 +1,14 @@
 package com.ihor.thesystem.data.repository_impl
 
 import com.google.ai.client.generativeai.GenerativeModel
-import com.ihor.thesystem.BuildConfig
 import com.ihor.thesystem.core.util.DispatcherProvider
+import com.ihor.thesystem.data.remote.ai.AiAvailabilityProvider
+import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
 import com.ihor.thesystem.data.remote.ai.AiArchitectResponseParser
 import com.ihor.thesystem.data.remote.ai.AiErrorClassifier
 import com.ihor.thesystem.data.remote.ai.AiFailureType
 import com.ihor.thesystem.data.remote.ai.AiMalformedResponseException
+import com.ihor.thesystem.data.remote.ai.toAvailabilityState
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
 import com.ihor.thesystem.domain.model.MessageText
@@ -22,19 +24,17 @@ import timber.log.Timber
 
 class AiArchitectRepositoryImpl @Inject constructor(
     @param:Named("ArchitectModel") private val generativeModel: GenerativeModel,
+    private val availabilityProvider: AiAvailabilityProvider,
     private val dispatchers: DispatcherProvider
 ) : AiArchitectRepository {
 
     private val parser = AiArchitectResponseParser()
 
     override suspend fun getChatResponse(prompt: String): ChatMessage = withContext(dispatchers.io) {
-        if (!isApiKeyConfigured()) {
-            Timber.e("Gemini API key is not configured.")
-            return@withContext ChatMessage(
-                role = ChatRole.AI,
-                text = MessageText.Resource(MessageTextKey.ERROR_AI_GENERIC),
-                isActionable = false
-            )
+        val availability = availabilityProvider.current()
+        if (availability != AiAvailabilityState.CONFIGURED) {
+            Timber.w("AI architect unavailable: $availability")
+            return@withContext availability.toChatMessage()
         }
 
         try {
@@ -47,11 +47,7 @@ class AiArchitectRepositoryImpl @Inject constructor(
                         parser.parse(responseText)
                     } catch (error: AiMalformedResponseException) {
                         Timber.e(error, "Malformed AI architect response")
-                        return@withTimeout ChatMessage(
-                            role = ChatRole.AI,
-                            text = MessageText.Resource(MessageTextKey.ERROR_AI_PARSING),
-                            isActionable = false
-                        )
+                        return@withTimeout AiAvailabilityState.MALFORMED.toChatMessage()
                     }
 
                     ChatMessage(
@@ -70,18 +66,17 @@ class AiArchitectRepositoryImpl @Inject constructor(
         } catch (error: Exception) {
             if (error is CancellationException) throw error
 
-            Timber.e(error, "AI architect request failed after retries")
-            ChatMessage(
-                role = ChatRole.AI,
-                text = error.toMessageText(),
-                isActionable = false
+            val failureType = AiErrorClassifier.classify(error)
+            val failureState = failureType.toAvailabilityState()
+            Timber.e(error, "AI architect request failed after retries: $failureState")
+            failureState.toChatMessage(
+                fallbackText = if (failureState == AiAvailabilityState.CONFIGURED) {
+                    error.toMessageText()
+                } else {
+                    failureState.toMessageText()
+                }
             )
         }
-    }
-
-    private fun isApiKeyConfigured(): Boolean {
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        return apiKey.isNotBlank() && apiKey != "null"
     }
 
     private fun Throwable.toMessageText(): MessageText =
@@ -91,6 +86,24 @@ class AiArchitectRepositoryImpl @Inject constructor(
             AiFailureType.Timeout,
             AiFailureType.MalformedResponse,
             AiFailureType.Unknown -> MessageText.Resource(MessageTextKey.ERROR_AI_GENERIC)
+        }
+
+    private fun AiAvailabilityState.toChatMessage(
+        fallbackText: MessageText = toMessageText()
+    ): ChatMessage =
+        ChatMessage(
+            role = ChatRole.AI,
+            text = fallbackText,
+            isActionable = false
+        )
+
+    private fun AiAvailabilityState.toMessageText(): MessageText =
+        when (this) {
+            AiAvailabilityState.CONFIGURED -> MessageText.Resource(MessageTextKey.ERROR_AI_GENERIC)
+            AiAvailabilityState.UNCONFIGURED -> MessageText.Resource(MessageTextKey.ERROR_AI_UNCONFIGURED)
+            AiAvailabilityState.RATE_LIMITED -> MessageText.Resource(MessageTextKey.ERROR_AI_RATE_LIMIT)
+            AiAvailabilityState.OVERLOADED -> MessageText.Resource(MessageTextKey.ERROR_AI_OVERLOADED)
+            AiAvailabilityState.MALFORMED -> MessageText.Resource(MessageTextKey.ERROR_AI_PARSING)
         }
 
     private suspend fun <T> retry(

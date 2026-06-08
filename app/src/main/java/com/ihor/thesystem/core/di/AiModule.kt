@@ -45,30 +45,42 @@ abstract class AiModule {
     companion object {
 
         private val defaultSafetySettings = listOf(
-            // Помірний фільтр для дотримання етики спілкування
             SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.MEDIUM_AND_ABOVE),
-            // Захист від мови ворожнечі
             SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.MEDIUM_AND_ABOVE),
-            // Низький поріг блокування, щоб дозволити обговорення анатомії, але без вульгарності
             SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.LOW_AND_ABOVE),
-            // Низький поріг, щоб назви вправ (напр. "мертва тяга") не тригерили помилкові блокування
             SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.LOW_AND_ABOVE)
         )
 
         @Provides
         @Singleton
+        @Named("GeminiApiKey")
+        fun provideGeminiApiKey(): String = BuildConfig.GEMINI_API_KEY
+
+        @Provides
+        @Singleton
+        @Named("GeminiClientAiEnabled")
+        fun provideGeminiClientAiEnabled(): Boolean = BuildConfig.GEMINI_CLIENT_AI_ENABLED
+
+        @Provides
+        @Singleton
         @Named("ArchitectModel")
-        fun provideArchitectGenerativeModel(): GenerativeModel {
+        fun provideArchitectGenerativeModel(
+            @Named("GeminiApiKey") geminiApiKey: String
+        ): GenerativeModel {
             return GenerativeModel(
                 modelName = "gemini-2.5-flash",
-                apiKey = BuildConfig.GEMINI_API_KEY,
+                apiKey = geminiApiKey,
                 requestOptions = RequestOptions(timeout = 60.seconds),
                 safetySettings = defaultSafetySettings,
                 generationConfig = generationConfig {
                     responseMimeType = "application/json"
                 },
                 systemInstruction = content {
-                    text("Ти елітний ШІ-Аналітик фітнес-системи. Відповідай ВИКЛЮЧНО валідним JSON об'єктом. Форматування (наприклад, маркдаун блоки) не потрібне, повертай чистий JSON.")
+                    text(
+                        "Ти AI-аналітик тренувальної системи. " +
+                            "Відповідай виключно валідним JSON-об'єктом без markdown. " +
+                            "Не приймай фінальних рішень щодо плану: системний валідатор обмежить або відхилить цілі."
+                    )
                 }
             )
         }
@@ -76,14 +88,20 @@ abstract class AiModule {
         @Provides
         @Singleton
         @Named("LiveCoachModel")
-        fun provideLiveCoachGenerativeModel(): GenerativeModel {
+        fun provideLiveCoachGenerativeModel(
+            @Named("GeminiApiKey") geminiApiKey: String
+        ): GenerativeModel {
             return GenerativeModel(
                 modelName = "gemini-2.5-flash",
-                apiKey = BuildConfig.GEMINI_API_KEY,
+                apiKey = geminiApiKey,
                 requestOptions = RequestOptions(timeout = 60.seconds),
                 safetySettings = defaultSafetySettings,
                 systemInstruction = content {
-                    text("Ти 'ТРЕНЕР' - елітний живий ШІ-наставник. Спілкуйся природно, як людина. Відповідай коротко і по суті на питання гравця щодо поточного тренування, техніки чи болю. НЕ використовуй JSON та маркдаун. ЗАВЖДИ відповідай УКРАЇНСЬКОЮ мовою.")
+                    text(
+                        "Ти живий AI-наставник з тренувань. " +
+                            "Відповідай коротко, природно й українською. " +
+                            "Не використовуй JSON або markdown. Не змінюй план і не призначай ваги як фінальне рішення."
+                    )
                 }
             )
         }

@@ -2,10 +2,12 @@ package com.ihor.thesystem.data.repository_impl
 
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
-import com.ihor.thesystem.BuildConfig
 import com.ihor.thesystem.core.util.DispatcherProvider
+import com.ihor.thesystem.data.remote.ai.AiAvailabilityProvider
+import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
 import com.ihor.thesystem.data.remote.ai.AiErrorClassifier
 import com.ihor.thesystem.data.remote.ai.AiFailureType
+import com.ihor.thesystem.data.remote.ai.toAvailabilityState
 import com.ihor.thesystem.domain.model.AiConversationMessage
 import com.ihor.thesystem.domain.model.AiConversationRole
 import com.ihor.thesystem.domain.repository.LiveCoachRepository
@@ -20,14 +22,16 @@ import timber.log.Timber
 
 class LiveCoachRepositoryImpl @Inject constructor(
     @param:Named("LiveCoachModel") private val generativeModel: GenerativeModel,
+    private val availabilityProvider: AiAvailabilityProvider,
     private val dispatchers: DispatcherProvider
 ) : LiveCoachRepository {
 
     override suspend fun sendMessage(history: List<AiConversationMessage>, newMessage: String): String =
         withContext(dispatchers.io) {
-            if (!isApiKeyConfigured()) {
-                Timber.e("Gemini API key is not configured for LiveCoach.")
-                return@withContext CONFIGURATION_ERROR_MESSAGE
+            val availability = availabilityProvider.current()
+            if (availability != AiAvailabilityState.CONFIGURED) {
+                Timber.w("LiveCoach unavailable: $availability")
+                return@withContext availability.toUserMessage()
             }
 
             try {
@@ -42,15 +46,11 @@ class LiveCoachRepositoryImpl @Inject constructor(
                 if (error is CancellationException && error !is TimeoutCancellationException) throw error
 
                 val failureType = AiErrorClassifier.classify(error)
-                Timber.e(error, "LiveCoach request failed: $failureType")
-                failureType.toUserMessage()
+                val failureState = failureType.toAvailabilityState()
+                Timber.e(error, "LiveCoach request failed: $failureState")
+                failureState.toUserMessage(fallback = failureType.toUserMessage())
             }
         }
-
-    private fun isApiKeyConfigured(): Boolean {
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        return apiKey.isNotBlank() && apiKey != "null"
-    }
 
     private suspend fun <T> retry(
         maxAttempts: Int,
@@ -86,8 +86,19 @@ class LiveCoachRepositoryImpl @Inject constructor(
             AiFailureType.Timeout -> TIMEOUT_ERROR_MESSAGE
             AiFailureType.RateLimit -> RATE_LIMIT_ERROR_MESSAGE
             AiFailureType.Overloaded -> OVERLOADED_ERROR_MESSAGE
-            AiFailureType.MalformedResponse,
+            AiFailureType.MalformedResponse -> MALFORMED_ERROR_MESSAGE
             AiFailureType.Unknown -> DEFAULT_ERROR_MESSAGE
+        }
+
+    private fun AiAvailabilityState.toUserMessage(
+        fallback: String = DEFAULT_ERROR_MESSAGE
+    ): String =
+        when (this) {
+            AiAvailabilityState.CONFIGURED -> fallback
+            AiAvailabilityState.UNCONFIGURED -> CONFIGURATION_ERROR_MESSAGE
+            AiAvailabilityState.RATE_LIMITED -> RATE_LIMIT_ERROR_MESSAGE
+            AiAvailabilityState.OVERLOADED -> OVERLOADED_ERROR_MESSAGE
+            AiAvailabilityState.MALFORMED -> MALFORMED_ERROR_MESSAGE
         }
 
     private fun List<AiConversationMessage>.toGeminiContent() =
@@ -105,13 +116,15 @@ class LiveCoachRepositoryImpl @Inject constructor(
 
     companion object {
         private const val CONFIGURATION_ERROR_MESSAGE =
-            "AI-наставник не налаштований. Перевірте конфігурацію."
+            "AI-наставник не налаштований у цій збірці. Без серверного proxy або ключа розробника він недоступний."
         private const val TIMEOUT_ERROR_MESSAGE =
-            "Час очікування вичерпано. Спробуйте пізніше."
+            "Час очікування AI вичерпано. Спробуйте пізніше."
         private const val RATE_LIMIT_ERROR_MESSAGE =
-            "Забагато запитів. Будь ласка, зачекайте."
+            "Забагато запитів до AI. Спробуйте пізніше."
         private const val OVERLOADED_ERROR_MESSAGE =
             "Сервери AI тимчасово перевантажені. Спробуйте пізніше."
+        private const val MALFORMED_ERROR_MESSAGE =
+            "AI повернув некоректну відповідь. План не змінено."
         private const val DEFAULT_ERROR_MESSAGE =
             "Помилка зв'язку з тренером."
     }

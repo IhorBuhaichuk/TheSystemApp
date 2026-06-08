@@ -115,6 +115,7 @@
     <string name="calendar_error_save_failed">Не вдалося зберегти календарний цикл.</string>
     <string name="error_no_completed_exercises">Завершіть хоча б один підхід</string>
     <string name="error_ai_generic">Критична помилка AI. Перевірте конфігурацію.</string>
+    <string name="error_ai_unconfigured">AI-функції не налаштовані в цій збірці. Без серверного proxy або ключа розробника вони недоступні.</string>
     <string name="ai_analysis_complete">Аналіз завершено.</string>
     <string name="ai_fallback_activated">AI зараз недоступний, тому система зберегла тренування і виставила обережні цілі на наступний раз.</string>
 

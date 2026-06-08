@@ -140,15 +140,9 @@ class ApplyAiRecommendationsUseCase @Inject constructor(
         // 3. Виконання єдиного пакетного запиту до ШІ
         try {
             val response = aiRepository.getChatResponse(prompt)
-            
-            // Якщо текст відповіді містить ключову фразу помилки парсингу
-            val responseText = when(val t = response.text) {
-                is MessageText.DynamicString -> t.value
-                is MessageText.Resource -> ""
-            }
-            if (responseText == "Помилка генерації AI, спробуйте ще раз" || 
-                response.text is MessageText.Resource) {
-                logger.e(message = "AI returned error or parsing failed. Aborting database update.")
+
+            if (!response.isActionable || response.recommendations.isEmpty()) {
+                logger.e(message = "AI returned non-actionable response. Aborting database update.")
                 return AiRecommendationApplicationResult.Empty
             }
 
