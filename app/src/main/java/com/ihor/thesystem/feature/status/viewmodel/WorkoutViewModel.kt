@@ -45,7 +45,6 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import timber.log.Timber
-import java.util.Locale
 import javax.inject.Inject
 import com.ihor.thesystem.domain.model.BackupPayload
 
@@ -785,30 +784,6 @@ class WorkoutViewModel @Inject constructor(
         return ExerciseTrackingModeResolver.resolve(exercise, reference)
     }
 
-    private fun QuestTask.toSyntheticExerciseDetails(): ExerciseDetails =
-        ExerciseDetails(
-            id = exerciseId ?: -id.coerceAtLeast(1),
-            name = name,
-            nameUk = nameUk,
-            category = ExerciseCategory.FLEXIBILITY,
-            equipment = SYSTEM_BODYWEIGHT_EQUIPMENT,
-            trackingMode = inferSystemTrackingMode(name)
-        )
-
-    private fun inferSystemTrackingMode(name: String): String {
-        val normalized = name.lowercase()
-        return when {
-            normalized.contains("walking") || normalized.contains("walk") ->
-                ExerciseTrackingMode.TIME_MINUTES.name
-            normalized.contains("hold") ||
-                normalized.contains("plank") ||
-                normalized.contains("mobility") ||
-                normalized.contains("stretch") ->
-                ExerciseTrackingMode.TIME_SECONDS.name
-            else -> ExerciseTrackingMode.BODYWEIGHT_REPS.name
-        }
-    }
-
     private suspend fun resolveTrackingMode(
         exerciseId: Int,
         trackingModeOverride: String?,
@@ -831,54 +806,6 @@ class WorkoutViewModel @Inject constructor(
             referenceWeightType = reference?.weightType
         )
     }
-
-    private fun formatRecommendation(
-        weight: Double,
-        reps: Int,
-        sets: Int,
-        trackingMode: ExerciseTrackingMode
-    ): String =
-        when (trackingMode) {
-            ExerciseTrackingMode.WEIGHT_REPS -> "${sets}x${reps} @ ${weight}kg"
-            ExerciseTrackingMode.BODYWEIGHT_REPS -> "${sets}x${reps} повт."
-            ExerciseTrackingMode.TIME_SECONDS -> "${sets}x${reps} сек"
-            ExerciseTrackingMode.TIME_MINUTES -> "${sets}x${(reps / 60).coerceAtLeast(1)} хв"
-        }
-
-    private fun TodayTrainingDecision.toWorkoutAdjustmentReason(): String? =
-        when (decisionType) {
-            TodayTrainingDecisionType.REDUCED_LOAD,
-            TodayTrainingDecisionType.ACTIVE_RECOVERY,
-            TodayTrainingDecisionType.DELOAD ->
-                "Система знизила навантаження через readiness $readinessScore% і recovery debt ${recoveryDebt.level.name}."
-            TodayTrainingDecisionType.NO_EXCUSE ->
-                if (reason.contains("missed", ignoreCase = true)) {
-                    "Система зафіксувала пропуск. План перераховано. Наступна оптимальна дія: коротке тренування."
-                } else {
-                    "Готовність нижча за планову. Наступна оптимальна дія: коротке тренування."
-                }
-            else -> null
-        }
-
-    private fun ExerciseTrackingMode.formatTargetInput(targetReps: Int): String =
-        when (this) {
-            ExerciseTrackingMode.TIME_MINUTES -> fromStoredTimeSeconds(targetReps).coerceAtLeast(1).toString()
-            else -> targetReps.coerceAtLeast(1).toString()
-        }
-
-    private fun Double.formatInputWeight(): String =
-        if (this % 1.0 == 0.0) {
-            toInt().toString()
-        } else {
-            String.format(Locale.US, "%.1f", this)
-        }
-
-    private fun Float.formatEquipmentNumber(): String =
-        if (this % 1f == 0f) {
-            toInt().toString()
-        } else {
-            String.format(Locale.US, "%.1f", this)
-        }
 
     fun onOpenSetup(entry: MatrixEntryUiModel, fromWorkout: Boolean = false) {
         _dialogState.value = StatusDialogState.SetupMatrix(
@@ -948,17 +875,3 @@ class WorkoutViewModel @Inject constructor(
     }
 
 }
-
-private const val SYSTEM_BODYWEIGHT_EQUIPMENT = "body only"
-
-private val GYM_DEFAULT_EQUIPMENT = setOf(
-    EquipmentType.BODY_ONLY,
-    EquipmentType.DUMBBELL,
-    EquipmentType.BARBELL,
-    EquipmentType.BENCH,
-    EquipmentType.PULL_UP_BAR,
-    EquipmentType.DIP_BARS,
-    EquipmentType.BANDS,
-    EquipmentType.MACHINE,
-    EquipmentType.CABLE
-)
