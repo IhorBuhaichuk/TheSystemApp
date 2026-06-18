@@ -68,6 +68,7 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
+import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
@@ -129,6 +130,7 @@ fun ArchitectScreen(
             AiHeader()
             AiModulesBlock(
                 hasWorkoutContext = uiState.lastWorkoutContext != null,
+                aiAvailable = uiState.aiAvailability == AiAvailabilityState.CONFIGURED,
                 isLoading = uiState.isLoading,
                 onOpenAnnualProgression = onOpenAnnualProgression,
                 onAnalyzeWorkout = onOpenWorkoutAnalysis
@@ -142,7 +144,8 @@ fun ArchitectScreen(
                 onModeSelected = { selectedChatMode = it },
                 onAnalyzeClick = viewModel::sendForAnalysis,
                 onApplyClick = viewModel::applyRecommendations,
-                onSendMessage = { message -> viewModel.sendMessage(0L, message) }
+                onSendMessage = { message -> viewModel.sendMessage(0L, message) },
+                aiAvailable = uiState.aiAvailability == AiAvailabilityState.CONFIGURED
             )
         }
     }
@@ -169,6 +172,7 @@ private fun AiHeader() {
 @Composable
 private fun AiModulesBlock(
     hasWorkoutContext: Boolean,
+    aiAvailable: Boolean,
     isLoading: Boolean,
     onOpenAnnualProgression: () -> Unit,
     onAnalyzeWorkout: () -> Unit
@@ -186,15 +190,19 @@ private fun AiModulesBlock(
             title = "Аналіз тренування",
             description = "Фідбек, рекомендації ваги та повторень",
             icon = Icons.Filled.Psychology,
-            status = if (hasWorkoutContext) "Готово" else "Немає логу",
-            enabled = hasWorkoutContext && !isLoading,
+            status = when {
+                !aiAvailable -> "AI недоступний"
+                hasWorkoutContext -> "Готово"
+                else -> "Немає логу"
+            },
+            enabled = aiAvailable && hasWorkoutContext && !isLoading,
             onClick = onAnalyzeWorkout
         )
         AiModuleCard(
             title = "Корекція циклу",
             description = "Перебудова навантаження після пропусків",
             icon = Icons.Filled.Loop,
-            status = "Не підключено",
+            status = "Потрібен backend",
             enabled = false,
             onClick = {}
         )
@@ -202,7 +210,7 @@ private fun AiModulesBlock(
             title = "План на завтра",
             description = "Рекомендований фокус на наступний день",
             icon = Icons.Filled.CalendarMonth,
-            status = "Не підключено",
+            status = "Потрібен backend",
             enabled = false,
             onClick = {}
         )
@@ -399,15 +407,19 @@ private fun ChatPanel(
     onModeSelected: (Int) -> Unit,
     onAnalyzeClick: () -> Unit,
     onApplyClick: (List<AiWorkoutRecommendation>) -> Unit,
-    onSendMessage: (String) -> Unit
+    onSendMessage: (String) -> Unit,
+    aiAvailable: Boolean
 ) {
     val colors = SystemTheme.colors
     DarkGlassCard(contentPadding = SystemCardPadding) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Чат",
-                subtitle = "Додатковий канал"
+                subtitle = if (aiAvailable) "Додатковий канал" else "AI недоступний у цій збірці"
             )
+            if (!aiAvailable) {
+                EmptyAiBlock(text = "AI недоступний. Працюють локальні графіки та ручне логування.")
+            }
             ChatModeSwitch(
                 selectedMode = selectedMode,
                 onModeSelected = onModeSelected
@@ -423,6 +435,7 @@ private fun ChatPanel(
                 if (selectedMode == 0) {
                     ArchitectThreadView(
                         uiState = uiState,
+                        aiAvailable = aiAvailable,
                         onAnalyzeClick = onAnalyzeClick,
                         onApplyClick = onApplyClick
                     )
@@ -431,6 +444,8 @@ private fun ChatPanel(
                         history = chatHistory,
                         sessionId = 0L,
                         onSendMessage = { _, text -> onSendMessage(text) },
+                        enabled = aiAvailable,
+                        disabledReason = "AI недоступний у цій збірці.",
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -507,6 +522,7 @@ private fun ChatModeButton(
 @Composable
 private fun ArchitectThreadView(
     uiState: ArchitectUiState,
+    aiAvailable: Boolean,
     onAnalyzeClick: () -> Unit,
     onApplyClick: (List<AiWorkoutRecommendation>) -> Unit
 ) {
@@ -533,7 +549,7 @@ private fun ArchitectThreadView(
                 message = message,
                 onAnalyzeClick = onAnalyzeClick,
                 onApplyClick = onApplyClick,
-                isAnalyzeEnabled = !uiState.analysisAlreadySent && !uiState.isLoading
+                isAnalyzeEnabled = aiAvailable && !uiState.analysisAlreadySent && !uiState.isLoading
             )
         }
 

@@ -103,7 +103,8 @@ fun StatisticsScreen(
             is UiState.Content -> {
                 AnalyticsDashboard(
                     data = state.data,
-                    onOpenAnnualProgression = { navController.navigate(Routes.AnnualProgressionDetails) }
+                    onOpenAnnualProgression = { navController.navigate(Routes.AnnualProgressionDetails) },
+                    onLogWorkout = { navController.navigate(Routes.Cycle) }
                 )
             }
 
@@ -135,6 +136,11 @@ fun StatisticsScreen(
                                     textAlign = TextAlign.Center
                                 )
                             )
+                            SystemButton(
+                                text = "Повторити",
+                                onClick = viewModel::refreshForCurrentDay,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
                 }
@@ -146,7 +152,8 @@ fun StatisticsScreen(
 @Composable
 private fun AnalyticsDashboard(
     data: StatisticsUiData,
-    onOpenAnnualProgression: () -> Unit
+    onOpenAnnualProgression: () -> Unit,
+    onLogWorkout: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -162,7 +169,11 @@ private fun AnalyticsDashboard(
         NutritionFloorBlock(status = data.nutritionFloorStatus)
         ProgressProofsBlock(proofs = data.progressProofs)
         WeeklySystemReportBlock(report = data.weeklySystemReport)
-        WeeklySummaryBlock(days = data.weeklySummary.days, totalTonnage = data.weeklySummary.totalTonnage)
+        WeeklySummaryBlock(
+            days = data.weeklySummary.days,
+            totalTonnage = data.weeklySummary.totalTonnage,
+            onLogWorkout = onLogWorkout
+        )
         AnnualProgressionBlock(
             data = data,
             onOpenAnnualProgression = onOpenAnnualProgression
@@ -543,7 +554,8 @@ private fun Float.formatWeightAverage(): String =
 @Composable
 private fun WeeklySummaryBlock(
     days: List<WeeklyTrainingDayUiModel>,
-    totalTonnage: Double
+    totalTonnage: Double,
+    onLogWorkout: () -> Unit
 ) {
     val colors = SystemTheme.colors
     DarkGlassCard {
@@ -561,6 +573,12 @@ private fun WeeklySummaryBlock(
                     Text(
                         text = "Немає зафіксованих тренувань цього тижня",
                         style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
+                    )
+                    SystemButton(
+                        text = "Записати тренування",
+                        icon = Icons.Filled.FitnessCenter,
+                        onClick = onLogWorkout,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

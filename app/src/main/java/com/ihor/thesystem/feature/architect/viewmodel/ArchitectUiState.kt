@@ -1,5 +1,6 @@
 package com.ihor.thesystem.feature.architect.viewmodel
 
+import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
 import com.ihor.thesystem.domain.model.ChatMessage
 
 /**
@@ -9,7 +10,8 @@ data class ArchitectUiState(
     val messages: List<ChatMessage> = emptyList(),
     val isLoading: Boolean = false,
     val lastWorkoutContext: String? = null,
-    val analysisAlreadySent: Boolean = false
+    val analysisAlreadySent: Boolean = false,
+    val aiAvailability: AiAvailabilityState = AiAvailabilityState.UNCONFIGURED
 )
 
 data class AiDashboardUiState(

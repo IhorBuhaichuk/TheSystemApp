@@ -450,7 +450,7 @@ private fun DayExercisesPanel(
             )
             if (exercises.isEmpty()) {
                 EmptyPanelText(
-                    text = "Вправи ще не додані",
+                    text = "Вправи ще не додані. Натисніть +.",
                     modifier = Modifier.weight(1f)
                 )
             } else {
@@ -495,7 +495,7 @@ private fun ExerciseLibraryPanel(
             )
             if (exercises.isEmpty()) {
                 EmptyPanelText(
-                    text = "База вправ порожня",
+                    text = "База вправ порожня. Додайте свою вправу.",
                     modifier = Modifier.weight(1f)
                 )
             } else {
@@ -642,7 +642,7 @@ private fun HealthConnectSettingsBlock(
             subtitle = statusText
         )
         Text(
-            text = "Система використовує ці дані тільки як додатковий сигнал готовності. Дані здоров'я не відправляються в AI без окремої згоди.",
+            text = "Дані здоров'я лишаються локальним сигналом readiness.",
             style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
         )
         SystemButton(

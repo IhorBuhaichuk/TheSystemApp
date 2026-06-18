@@ -28,7 +28,6 @@
     <string name="text_db_init_failed">Ініціалізація бази даних не вдалася:</string>
     <string name="text_restart">ПЕРЕЗАПУСТИТИ</string>
 
-    <string name="text_matrix_in_development">МАТРИЦЯ: В розробці</string>
     <string name="text_ai_recommendation_note">Рекомендація AI (%1$d підходів, %2$s повторень)</string>
     <string name="text_label_weight">ВАГА</string>
     <string name="text_label_height">ЗРІСТ</string>

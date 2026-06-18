@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiText
+import com.ihor.thesystem.data.remote.ai.AiAvailabilityProvider
+import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
@@ -32,6 +34,7 @@ class ArchitectViewModel @Inject constructor(
     private val applyAiRecommendations: ApplyAiRecommendationsUseCase,
     private val sendArchitectAnalysis: SendArchitectAnalysisUseCase,
     private val sendLiveCoachMessage: SendLiveCoachMessageUseCase,
+    private val aiAvailabilityProvider: AiAvailabilityProvider,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
@@ -48,13 +51,19 @@ class ArchitectViewModel @Inject constructor(
     val uiEvents = _uiEvents.asSharedFlow()
 
     init {
+        refreshAiAvailability()
         loadInitialContext()
         observeDashboardData()
     }
 
     fun refreshForCurrentData() {
+        refreshAiAvailability()
         loadInitialContext()
         loadChatHistory(0L)
+    }
+
+    private fun refreshAiAvailability() {
+        _uiState.update { it.copy(aiAvailability = aiAvailabilityProvider.current()) }
     }
 
     private fun observeDashboardData() {
@@ -137,6 +146,10 @@ class ArchitectViewModel @Inject constructor(
      */
     fun sendMessage(sessionId: Long, text: String) {
         if (text.isBlank() || _uiState.value.isLoading) return
+        if (!isAiConfigured()) {
+            emitAiUnavailable()
+            return
+        }
         
         viewModelScope.launch {
             // Встановлюємо стан завантаження, щоб заблокувати повторні натискання кнопки
@@ -162,6 +175,10 @@ class ArchitectViewModel @Inject constructor(
      */
     fun sendForAnalysis() {
         if (_uiState.value.isLoading) return
+        if (!isAiConfigured()) {
+            emitAiUnavailable()
+            return
+        }
         
         viewModelScope.launch {
             // 1. Отримуємо актуальний контекст
@@ -249,6 +266,17 @@ class ArchitectViewModel @Inject constructor(
                 ))
                 _uiState.update { it.copy(isLoading = false) }
             }
+        }
+    }
+
+    private fun isAiConfigured(): Boolean {
+        refreshAiAvailability()
+        return _uiState.value.aiAvailability == AiAvailabilityState.CONFIGURED
+    }
+
+    private fun emitAiUnavailable() {
+        viewModelScope.launch {
+            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_ai_unconfigured)))
         }
     }
 }

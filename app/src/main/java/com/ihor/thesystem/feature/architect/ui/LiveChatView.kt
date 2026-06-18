@@ -51,6 +51,8 @@ fun LiveChatView(
     history: List<ChatMessage>,
     sessionId: Long,
     onSendMessage: (Long, String) -> Unit,
+    enabled: Boolean = true,
+    disabledReason: String? = null,
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
@@ -78,7 +80,7 @@ fun LiveChatView(
         ) {
             if (history.isEmpty()) {
                 item {
-                    EmptyChatMessage()
+                    EmptyChatMessage(disabledReason = disabledReason.takeUnless { enabled })
                 }
             } else {
                 items(history, key = { it.id }) { message ->
@@ -97,10 +99,11 @@ fun LiveChatView(
             OutlinedTextField(
                 value = messageText,
                 onValueChange = { messageText = it },
+                enabled = enabled,
                 modifier = Modifier.weight(1f),
                 placeholder = {
                     Text(
-                        text = "Запит до тренера",
+                        text = if (enabled) "Запит до тренера" else "AI недоступний",
                         style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
                     )
                 },
@@ -117,23 +120,23 @@ fun LiveChatView(
                         messageText = ""
                     }
                 },
-                enabled = messageText.isNotBlank(),
+                enabled = enabled && messageText.isNotBlank(),
                 modifier = Modifier
                     .size(SystemControlHeight)
                     .clip(CircleShape)
                     .background(
-                        if (messageText.isNotBlank()) colors.accentPrimary.copy(alpha = 0.11f) else colors.overlayLight
+                        if (enabled && messageText.isNotBlank()) colors.accentPrimary.copy(alpha = 0.11f) else colors.overlayLight
                     )
                     .border(
                         1.dp,
-                        if (messageText.isNotBlank()) colors.accentPrimary.copy(alpha = 0.32f) else colors.borderSubtle,
+                        if (enabled && messageText.isNotBlank()) colors.accentPrimary.copy(alpha = 0.32f) else colors.borderSubtle,
                         CircleShape
                     )
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = null,
-                    tint = if (messageText.isNotBlank()) colors.accentPrimary else colors.textMuted,
+                    tint = if (enabled && messageText.isNotBlank()) colors.accentPrimary else colors.textMuted,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -193,11 +196,11 @@ private fun LiveChatBubble(message: ChatMessage) {
 }
 
 @Composable
-private fun EmptyChatMessage() {
+private fun EmptyChatMessage(disabledReason: String? = null) {
     val colors = SystemTheme.colors
     val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Text(
-        text = "Чат порожній",
+        text = disabledReason ?: "Чат порожній",
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)

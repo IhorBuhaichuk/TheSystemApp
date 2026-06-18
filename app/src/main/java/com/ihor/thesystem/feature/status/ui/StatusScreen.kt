@@ -91,7 +91,10 @@ fun StatusScreen(
                     onRemoveTask = { todoId -> statusViewModel.onRemoveTodo(todoId) }
                 )
             }
-            is UiState.Error -> DatabaseErrorScreen(state.message)
+            is UiState.Error -> DatabaseErrorScreen(
+                message = state.message,
+                onRetry = statusViewModel::refreshForCurrentDay
+            )
         }
 
         levelUpEvent?.let { event ->
@@ -151,7 +154,10 @@ private fun StatusDialogs(
 }
 
 @Composable
-private fun DatabaseErrorScreen(message: UiText) {
+private fun DatabaseErrorScreen(
+    message: UiText,
+    onRetry: () -> Unit
+) {
     val context = LocalContext.current
     val colors = SystemTheme.colors
     Box(
@@ -177,9 +183,8 @@ private fun DatabaseErrorScreen(message: UiText) {
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 SystemButton(
-                    text = "Повторіть запуск",
-                    onClick = { },
-                    enabled = false
+                    text = "Повторити",
+                    onClick = onRetry
                 )
             }
         }

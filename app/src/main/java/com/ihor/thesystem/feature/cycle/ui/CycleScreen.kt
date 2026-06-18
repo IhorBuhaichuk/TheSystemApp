@@ -527,17 +527,17 @@ private fun EmptyCycleBlock(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = selectedDay?.let { "День $it без вправ" } ?: "Тренування не заплановано",
-                subtitle = "Для цього тренувального дня ще немає вправ"
+                subtitle = "Додайте вправу або змініть профіль обладнання"
             )
             Text(
-                text = "Додай вправу або відкрий редагування дня. Календарний цикл при цьому не змінюється.",
+                text = "Наступна дія: додати вправу до цього дня.",
                 style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
             )
             SystemButton(
-                text = "Почати тренування",
-                icon = Icons.Filled.PlayArrow,
-                onClick = {},
-                enabled = false,
+                text = "Додати вправу",
+                icon = Icons.Filled.Add,
+                onClick = onAddExercise,
+                glow = true,
                 modifier = Modifier.fillMaxWidth()
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -548,9 +548,9 @@ private fun EmptyCycleBlock(
                     modifier = Modifier.weight(1f)
                 )
                 SystemButton(
-                    text = "Додати вправу",
-                    icon = Icons.Filled.Add,
-                    onClick = onAddExercise,
+                    text = "Обладнання",
+                    icon = Icons.Filled.FitnessCenter,
+                    onClick = onEditDay,
                     modifier = Modifier.weight(1f)
                 )
             }
