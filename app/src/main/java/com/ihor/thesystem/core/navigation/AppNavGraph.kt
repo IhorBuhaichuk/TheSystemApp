@@ -1,12 +1,25 @@
 ﻿package com.ihor.thesystem.core.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.toRoute
@@ -22,10 +35,12 @@ import com.ihor.thesystem.feature.calendar.ui.CalendarSettingsScreen
 import com.ihor.thesystem.feature.calendar.ui.CalendarScreen
 import com.ihor.thesystem.feature.cycle.ui.CycleScreen
 import com.ihor.thesystem.feature.exercise_search.ui.ExercisePickerScreen
+import com.ihor.thesystem.feature.profile.ui.ProfileScreen
 import com.ihor.thesystem.feature.statistics.ui.AnnualProgressionDetailsScreen
 import com.ihor.thesystem.feature.statistics.ui.StatisticsScreen
 import com.ihor.thesystem.feature.status.ui.StatusScreen
 import com.ihor.thesystem.feature.status.viewmodel.WorkoutViewModel
+import kotlin.math.abs
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -33,9 +48,10 @@ fun AppNavGraph(navController: NavHostController) {
     val destination = backStackEntry?.destination
     val showBottomNav =
         destination?.hasRoute<Routes.Status>() == true ||
+            destination?.hasRoute<Routes.Calendar>() == true ||
             destination?.hasRoute<Routes.Cycle>() == true ||
             destination?.hasRoute<Routes.Statistics>() == true ||
-            destination?.hasRoute<Routes.Architect>() == true
+            destination?.hasRoute<Routes.Profile>() == true
 
     Scaffold(
         containerColor = SystemTheme.colors.background,
@@ -48,7 +64,17 @@ fun AppNavGraph(navController: NavHostController) {
         NavHost(
             navController    = navController,
             startDestination = Routes.Status,
-            modifier         = Modifier.padding(paddingValues)
+            modifier         = Modifier
+                .padding(paddingValues)
+                .topLevelSwipeNavigation(
+                    enabled = showBottomNav,
+                    destination = destination,
+                    navController = navController
+                ),
+            enterTransition = { topLevelEnterTransition() },
+            exitTransition = { topLevelExitTransition() },
+            popEnterTransition = { topLevelEnterTransition() },
+            popExitTransition = { topLevelExitTransition() }
         ) {
             composable<Routes.Status> {
                 StatusScreen(navController = navController)
@@ -66,6 +92,9 @@ fun AppNavGraph(navController: NavHostController) {
             }
             composable<Routes.Statistics> {
                 StatisticsScreen(navController = navController)
+            }
+            composable<Routes.Profile> {
+                ProfileScreen(navController = navController)
             }
             composable<Routes.Architect> {
                 ArchitectScreen(
@@ -146,5 +175,122 @@ fun AppNavGraph(navController: NavHostController) {
                 )
             }
         }
+    }
+}
+
+private val topLevelRoutes = listOf(
+    Routes.Status,
+    Routes.Calendar,
+    Routes.Cycle,
+    Routes.Statistics,
+    Routes.Profile
+)
+
+private const val TOP_LEVEL_SLIDE_MILLIS = 260
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.topLevelEnterTransition(): EnterTransition {
+    val initialIndex = initialState.destination.topLevelIndex()
+    val targetIndex = targetState.destination.topLevelIndex()
+    if (initialIndex == -1 || targetIndex == -1 || initialIndex == targetIndex) {
+        return fadeIn(animationSpec = tween(durationMillis = 120))
+    }
+    val direction = if (targetIndex > initialIndex) {
+        AnimatedContentTransitionScope.SlideDirection.Left
+    } else {
+        AnimatedContentTransitionScope.SlideDirection.Right
+    }
+    return slideIntoContainer(
+        towards = direction,
+        animationSpec = tween(durationMillis = TOP_LEVEL_SLIDE_MILLIS)
+    ) + fadeIn(animationSpec = tween(durationMillis = 120))
+}
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.topLevelExitTransition(): ExitTransition {
+    val initialIndex = initialState.destination.topLevelIndex()
+    val targetIndex = targetState.destination.topLevelIndex()
+    if (initialIndex == -1 || targetIndex == -1 || initialIndex == targetIndex) {
+        return fadeOut(animationSpec = tween(durationMillis = 90))
+    }
+    val direction = if (targetIndex > initialIndex) {
+        AnimatedContentTransitionScope.SlideDirection.Left
+    } else {
+        AnimatedContentTransitionScope.SlideDirection.Right
+    }
+    return slideOutOfContainer(
+        towards = direction,
+        animationSpec = tween(durationMillis = TOP_LEVEL_SLIDE_MILLIS)
+    ) + fadeOut(animationSpec = tween(durationMillis = 120))
+}
+
+private fun Modifier.topLevelSwipeNavigation(
+    enabled: Boolean,
+    destination: NavDestination?,
+    navController: NavHostController
+): Modifier {
+    if (!enabled) return this
+    val currentIndex = destination.topLevelIndex()
+    if (currentIndex == -1) return this
+
+    return pointerInput(currentIndex) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            var totalX = 0f
+            var totalY = 0f
+            var navigated = false
+            val threshold = 88.dp.toPx()
+            val verticalCancelThreshold = 42.dp.toPx()
+
+            while (true) {
+                val event = awaitPointerEvent()
+                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                val delta = change.positionChange()
+                totalX += delta.x
+                totalY += delta.y
+
+                if (!navigated &&
+                    abs(totalY) > verticalCancelThreshold &&
+                    abs(totalY) > abs(totalX) * 1.15f
+                ) {
+                    break
+                }
+
+                if (!navigated &&
+                    abs(totalX) > threshold &&
+                    abs(totalX) > abs(totalY) * 1.35f
+                ) {
+                    val nextIndex = if (totalX < 0f) currentIndex + 1 else currentIndex - 1
+                    topLevelRoutes.getOrNull(nextIndex)?.let { route ->
+                        navigated = true
+                        change.consume()
+                        navController.navigateTopLevel(route)
+                    }
+                } else if (navigated) {
+                    change.consume()
+                }
+
+                if (!change.pressed) break
+            }
+        }
+    }
+}
+
+private fun NavDestination?.topLevelIndex(): Int =
+    when {
+        this?.hasRoute<Routes.Status>() == true -> 0
+        this?.hasRoute<Routes.Calendar>() == true -> 1
+        this?.hasRoute<Routes.Cycle>() == true -> 2
+        this?.hasRoute<Routes.Statistics>() == true -> 3
+        this?.hasRoute<Routes.Profile>() == true -> 4
+        else -> -1
+    }
+
+private fun NavHostController.navigateTopLevel(route: Routes) {
+    navigate(route) {
+        popUpTo<Routes.Status> {
+            inclusive = false
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }

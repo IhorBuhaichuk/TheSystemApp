@@ -80,45 +80,12 @@ fun SystemCard(
     contentPadding: Dp = SystemCardPadding,
     content: @Composable () -> Unit
 ) {
-    val colors = SystemTheme.colors
-    val shapes = SystemTheme.shapes
-    val glow = SystemTheme.glow
-    val shape = RoundedCornerShape(shapes.medium)
-    Box(
-        modifier = modifier
-            .shadow(
-                elevation = if (active) glow.activeElevation else glow.restingElevation,
-                shape = shape,
-                ambientColor = if (active) glow.activeAmbient else glow.shadowAmbient,
-                spotColor = glow.shadowSpot
-            )
-            .clip(shape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        colors.surfaceGlassStrong,
-                        colors.surfaceGlass,
-                        colors.surfaceGlassSoft
-                    )
-                )
-            )
-            .border(
-                BorderStroke(
-                    1.dp,
-                    Brush.linearGradient(
-                        listOf(
-                            if (active) colors.overlayStrong else colors.overlayMedium,
-                            if (active) colors.borderActive else colors.borderSubtle,
-                            colors.borderMuted
-                        )
-                    )
-                ),
-                shape
-            )
-            .padding(contentPadding)
-    ) {
-        content()
-    }
+    SystemPanel(
+        modifier = modifier,
+        active = active,
+        contentPadding = contentPadding,
+        content = content
+    )
 }
 
 @Composable
@@ -132,15 +99,17 @@ fun SystemButton(
     glow: Boolean = false
 ) {
     val colors = SystemTheme.colors
-    val shapes = SystemTheme.shapes
     val glowTokens = SystemTheme.glow
-    val shape = RoundedCornerShape(shapes.medium)
+    val shape = SystemCutCornerShape(12.dp)
     val backgroundBrush = if (enabled) {
-        Brush.verticalGradient(
+        Brush.linearGradient(
             listOf(
-                accent.copy(alpha = 0.18f),
-                colors.overlayLight.copy(alpha = colors.overlayLight.alpha)
-            )
+                accent.copy(alpha = 0.46f),
+                accent.copy(alpha = 0.20f),
+                colors.backgroundElevated.copy(alpha = 0.82f)
+            ),
+            start = Offset.Zero,
+            end = Offset.Infinite
         )
     } else {
         Brush.verticalGradient(
@@ -150,13 +119,13 @@ fun SystemButton(
             )
         )
     }
-    val borderColor = if (enabled) accent.copy(alpha = 0.52f) else colors.borderMuted
+    val borderColor = if (enabled) accent.copy(alpha = 0.78f) else colors.borderMuted
     val iconTint = if (enabled) accent else colors.textMuted
     val contentColor = if (enabled) colors.textPrimary else colors.textMuted
 
     Row(
         modifier = modifier
-            .height(SystemControlHeight)
+            .height(52.dp)
             .shadow(
                 elevation = when {
                     !enabled -> 0.dp
@@ -175,7 +144,7 @@ fun SystemButton(
             .background(backgroundBrush)
             .border(1.dp, borderColor, shape)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 18.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -187,7 +156,7 @@ fun SystemButton(
             text = text,
             style = MaterialTheme.typography.labelLarge.copy(
                 color = contentColor,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Black
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -392,7 +361,7 @@ fun SystemTodoItem(
 ) {
     val colors = SystemTheme.colors
     val shapes = SystemTheme.shapes
-    val shape = RoundedCornerShape(if (compact) shapes.small else shapes.medium)
+    val shape = SystemCutCornerShape(if (compact) 8.dp else 10.dp)
     val numberShape = RoundedCornerShape(shapes.extraSmall)
     val borderColor = when {
         isDragging -> colors.accentPrimary.copy(alpha = 0.72f)
@@ -406,9 +375,9 @@ fun SystemTodoItem(
             .clip(shape)
             .background(
                 if (isDragging) {
-                    colors.accentPrimary.copy(alpha = 0.1f)
+                    colors.accentPrimary.copy(alpha = 0.13f)
                 } else {
-                    if (isCompleted) colors.overlayLight.copy(alpha = 0.026f) else colors.overlayLight
+                    if (isCompleted) colors.overlayLight.copy(alpha = 0.026f) else colors.surfaceGlassSoft.copy(alpha = 0.62f)
                 }
             )
             .border(1.dp, borderColor, shape)
@@ -442,16 +411,20 @@ fun SystemTodoItem(
 
         Box(
             modifier = Modifier
-                .size(if (compact) 22.dp else 24.dp)
-                .clip(CircleShape)
-                .background(if (isCompleted) colors.accentSuccess.copy(alpha = 0.14f) else Color.Transparent)
-                .border(1.dp, if (isCompleted) colors.accentSuccess.copy(alpha = 0.52f) else colors.borderSubtle, CircleShape),
+                .size(if (compact) 22.dp else 25.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(if (isCompleted) colors.accentPrimary.copy(alpha = 0.24f) else Color.Transparent)
+                .border(
+                    1.4.dp,
+                    if (isCompleted) colors.accentPrimary.copy(alpha = 0.92f) else colors.textSecondary.copy(alpha = 0.62f),
+                    RoundedCornerShape(3.dp)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = if (isCompleted) Icons.Filled.Check else Icons.Filled.RadioButtonUnchecked,
                 contentDescription = null,
-                tint = if (isCompleted) colors.accentSuccess else colors.textMuted,
+                tint = if (isCompleted) colors.accentPrimary else Color.Transparent,
                 modifier = Modifier.size(if (compact) 14.dp else 15.dp)
             )
         }

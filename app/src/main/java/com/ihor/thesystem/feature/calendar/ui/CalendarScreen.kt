@@ -24,6 +24,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Settings
@@ -60,8 +62,12 @@ import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.SystemAvatarBadge
+import com.ihor.thesystem.core.ui.components.SystemCutCornerShape
+import com.ihor.thesystem.core.ui.components.SystemInlineStat
 import com.ihor.thesystem.core.ui.components.SystemMetricCard
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
+import com.ihor.thesystem.core.ui.components.SystemSectionTitle
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
 import com.ihor.thesystem.domain.model.CalendarCycleDayType
 import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus
@@ -115,8 +121,7 @@ fun CalendarScreen(
             verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
         ) {
             CalendarHeader(
-                currentMonth = uiState.currentMonth,
-                onBack = { navController.popBackStack() },
+                uiState = uiState,
                 onPreviousMonth = { viewModel.onMonthChange(uiState.currentMonth.minusMonths(1)) },
                 onNextMonth = { viewModel.onMonthChange(uiState.currentMonth.plusMonths(1)) },
                 onOpenSettings = { navController.navigate(Routes.CalendarSettings) }
@@ -130,6 +135,7 @@ fun CalendarScreen(
                     onDateSelected = viewModel::onDateSelected
                 )
                 SelectedDayDetailsPanel(
+                    uiState = uiState,
                     day = selectedDay,
                     onOpenDay = {
                         selectedDay?.let { day ->
@@ -149,25 +155,32 @@ fun CalendarScreen(
 
 @Composable
 private fun CalendarHeader(
-    currentMonth: YearMonth,
-    onBack: () -> Unit,
+    uiState: CalendarUiState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
     val colors = SystemTheme.colors
+    val activeDays = uiState.days.count {
+        it.completionStatus == CalendarDayCompletionStatus.COMPLETED ||
+            it.completionStatus == CalendarDayCompletionStatus.PARTIAL
+    }
+    val plannedTrainings = uiState.days.count { it.hasTrainingPlan }
+    val missedDays = uiState.days.count { it.completionStatus == CalendarDayCompletionStatus.MISSED }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        GlassIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            onClick = onBack
+        SystemAvatarBadge(
+            avatarUri = uiState.avatarUri,
+            modifier = Modifier.size(78.dp)
         )
         Column(modifier = Modifier.weight(1f)) {
+            SystemSectionTitle(title = "Календар")
             Text(
-                text = "Календар",
+                text = "КАЛЕНДАР",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Black
@@ -175,12 +188,11 @@ private fun CalendarHeader(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(
-                text = currentMonth.toLocalizedMonthYear(),
-                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                SystemInlineStat(label = "активних днів", value = activeDays.toString())
+                SystemInlineStat(label = "тренувань", value = plannedTrainings.toString(), accent = colors.accentPrimary)
+                SystemInlineStat(label = "пропуски", value = missedDays.toString(), accent = colors.accentWarning)
+            }
         }
         GlassIconButton(
             icon = Icons.AutoMirrored.Filled.ArrowBack,
@@ -296,7 +308,7 @@ private fun CalendarDayCell(
 ) {
     val colors = SystemTheme.colors
     val enabled = isInCurrentMonth && model != null
-    val shape = RoundedCornerShape(SystemTheme.shapes.small)
+    val shape = SystemCutCornerShape(8.dp)
     val isToday = model?.isToday == true
 
     Box(
@@ -305,7 +317,7 @@ private fun CalendarDayCell(
             .clip(shape)
             .background(dayBackground(model, colors))
             .border(
-                width = if (isSelected || isToday) 1.4.dp else 1.dp,
+                width = if (isSelected || isToday || model?.completionStatus == CalendarDayCompletionStatus.MISSED) 1.4.dp else 0.dp,
                 color = dayBorderColor(model, isSelected, isToday, colors),
                 shape = shape
             )
@@ -314,15 +326,17 @@ private fun CalendarDayCell(
     ) {
         Text(
             text = date.dayOfMonth.toString(),
-            style = MaterialTheme.typography.labelMedium.copy(
+            style = MaterialTheme.typography.titleMedium.copy(
                 color = when {
                     !isInCurrentMonth -> colors.textMuted.copy(alpha = 0.32f)
                     isSelected || isToday -> colors.accentPrimary
+                    model?.completionStatus == CalendarDayCompletionStatus.MISSED -> colors.textPrimary
                     else -> colors.textPrimary
                 },
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.Center
             ),
-            modifier = Modifier.align(Alignment.TopStart)
+            modifier = Modifier.align(Alignment.Center)
         )
 
         model?.let { day ->
@@ -425,6 +439,7 @@ private fun LegendItem(color: Color, text: String) {
 
 @Composable
 private fun SelectedDayDetailsPanel(
+    uiState: CalendarUiState,
     day: CalendarDayUiModel?,
     onOpenDay: () -> Unit
 ) {
@@ -482,44 +497,33 @@ private fun SelectedDayDetailsPanel(
                 )
             }
 
-            DarkGlassCard(contentPadding = SystemItemSpacing) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(3.dp)
-                    ) {
-                        Text(
-                            text = day.plannedWorkoutName ?: "Тренування не заплановано",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                color = colors.textPrimary,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = if (day.hasTrainingPlan) {
-                                "${day.plannedExerciseCount} вправ у плані"
-                            } else {
-                                "Календарний день без тренувального блоку"
-                            },
-                            style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    if (day.hasCompletedWorkout) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            tint = colors.accentSuccess,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CalendarEventRow(
+                    title = day.plannedWorkoutName ?: "Тренування не заплановано",
+                    subtitle = if (day.hasTrainingPlan) {
+                        "${day.plannedExerciseCount} вправ у плані"
+                    } else {
+                        "Календарний день без тренувального блоку"
+                    },
+                    meta = if (day.hasTrainingPlan) "Цикл ${day.cycleDay}" else day.label,
+                    icon = Icons.Filled.FitnessCenter,
+                    accent = colors.accentAi
+                )
+                CalendarEventRow(
+                    title = "To-do",
+                    subtitle = "${day.completedTasks}/${day.totalTasks} виконано",
+                    meta = day.completionStatus.toDisplayText(),
+                    icon = Icons.AutoMirrored.Filled.ListAlt,
+                    accent = colors.accentSuccess
+                )
+                if (uiState.dailyLogs.isNotEmpty() || uiState.workoutResults.isNotEmpty()) {
+                    CalendarEventRow(
+                        title = "Логи дня",
+                        subtitle = "${uiState.workoutResults.size} результатів · ${uiState.dailyLogs.size} записів",
+                        meta = "Факт",
+                        icon = Icons.AutoMirrored.Filled.Notes,
+                        accent = colors.accentPrimary
+                    )
                 }
             }
 
@@ -531,6 +535,62 @@ private fun SelectedDayDetailsPanel(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+    }
+}
+
+@Composable
+private fun CalendarEventRow(
+    title: String,
+    subtitle: String,
+    meta: String,
+    icon: ImageVector,
+    accent: Color
+) {
+    val colors = SystemTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(SystemCutCornerShape(10.dp))
+            .background(colors.overlayLight)
+            .border(1.dp, accent.copy(alpha = 0.22f), SystemCutCornerShape(10.dp))
+            .padding(horizontal = 12.dp, vertical = 11.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        com.ihor.thesystem.core.ui.components.SystemHexIcon(
+            icon = icon,
+            accent = accent,
+            modifier = Modifier.size(48.dp)
+        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.Black
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = colors.textSecondary,
+                    fontWeight = FontWeight.Medium
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Text(
+            text = meta,
+            style = MaterialTheme.typography.labelLarge.copy(
+                color = accent,
+                fontWeight = FontWeight.Black
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -565,32 +625,37 @@ private fun dayBackground(
 ): Brush {
     if (model == null) {
         return Brush.verticalGradient(
-            listOf(colors.overlayLight.copy(alpha = 0.26f), colors.overlayLight.copy(alpha = 0.12f))
+            listOf(Color.Transparent, Color.Transparent)
+        )
+    }
+    if (model.completionStatus == CalendarDayCompletionStatus.MISSED) {
+        return Brush.verticalGradient(
+            listOf(colors.accentError.copy(alpha = 0.05f), Color.Transparent)
         )
     }
     if (!model.isCycleStart) {
         return Brush.verticalGradient(
-            listOf(colors.surfaceGlassSoft, colors.overlayLight)
+            listOf(Color.Transparent, Color.Transparent)
         )
     }
 
     return when (model.visualType()) {
         CalendarDayVisualType.Work -> Brush.verticalGradient(
-            listOf(colors.workDay.copy(alpha = 0.20f), colors.overlayLight.copy(alpha = 0.20f))
+            listOf(colors.workDay.copy(alpha = 0.08f), Color.Transparent)
         )
         CalendarDayVisualType.Training -> Brush.verticalGradient(
-            listOf(colors.trainingDay.copy(alpha = 0.18f), colors.overlayLight.copy(alpha = 0.20f))
+            listOf(colors.trainingDay.copy(alpha = 0.09f), Color.Transparent)
         )
         CalendarDayVisualType.Mixed -> Brush.linearGradient(
             colors = listOf(
-                colors.mixedDayStart.copy(alpha = 0.26f),
-                colors.mixedDayEnd.copy(alpha = 0.24f)
+                colors.mixedDayStart.copy(alpha = 0.10f),
+                colors.mixedDayEnd.copy(alpha = 0.10f)
             ),
             start = Offset.Zero,
             end = Offset.Infinite
         )
         CalendarDayVisualType.Rest -> Brush.verticalGradient(
-            listOf(colors.surfaceGlassSoft, colors.overlayLight)
+            listOf(Color.Transparent, Color.Transparent)
         )
     }
 }
@@ -604,8 +669,8 @@ private fun dayBorderColor(
     when {
         isSelected -> colors.borderActive
         isToday -> colors.accentPrimary.copy(alpha = 0.56f)
-        model?.completionStatus == CalendarDayCompletionStatus.MISSED -> colors.accentWarning.copy(alpha = 0.42f)
-        else -> colors.borderSubtle
+        model?.completionStatus == CalendarDayCompletionStatus.MISSED -> colors.accentError.copy(alpha = 0.82f)
+        else -> Color.Transparent
     }
 
 private fun CalendarDayUiModel.visualType(): CalendarDayVisualType {

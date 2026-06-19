@@ -127,10 +127,8 @@ private fun AnalyticsDashboard(
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
         AnalyticsHeader()
-        AnalyticsSummaryBlock(data)
-        NutritionFloorBlock(status = data.nutritionFloorStatus)
-        ProgressProofsBlock(proofs = data.progressProofs)
         WeeklySystemReportBlock(report = data.weeklySystemReport)
+        AnalyticsSummaryBlock(data)
         WeeklySummaryBlock(
             days = data.weeklySummary.days,
             totalTonnage = data.weeklySummary.totalTonnage,
@@ -149,7 +147,7 @@ private fun AnalyticsHeader() {
     val colors = SystemTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(
-            text = "Аналітика",
+            text = "4. STATISTICS",
             style = MaterialTheme.typography.headlineMedium.copy(
                 color = colors.textPrimary,
                 fontWeight = FontWeight.Black

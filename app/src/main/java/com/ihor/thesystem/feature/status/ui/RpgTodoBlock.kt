@@ -1,14 +1,22 @@
 package com.ihor.thesystem.feature.status.ui
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,22 +26,27 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.ui.components.SystemCutCornerShape
+import com.ihor.thesystem.core.ui.components.SystemPanel
 import com.ihor.thesystem.core.theme.SystemTheme
-import com.ihor.thesystem.core.ui.components.DarkGlassCard
-import com.ihor.thesystem.core.ui.components.SystemButton
-import com.ihor.thesystem.core.ui.components.SystemSectionHeader
-import com.ihor.thesystem.core.ui.components.SystemTodoItem
 import com.ihor.thesystem.feature.status.viewmodel.TodoUiModel
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -47,34 +60,51 @@ internal fun TodoBlock(
     onRemoveTask: (Int) -> Unit
 ) {
     val colors = SystemTheme.colors
-    val allTasks = remember(todos) { todos.flatMapWithMicrotasks() }
-    val completed = allTasks.count { it.isCompleted }
-
-    DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = 12.dp) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            SystemSectionHeader(
-                title = "To-do",
-                subtitle = if (allTasks.isNotEmpty()) "$completed/${allTasks.size} виконано" else "Список порожній",
-                trailing = {
-                    SystemButton(
-                        text = "Додати",
-                        icon = Icons.Filled.Add,
-                        onClick = { onAddTask(0) },
-                        modifier = Modifier.height(34.dp)
-                    )
-                }
-            )
-
+    SystemPanel(
+        modifier = Modifier.fillMaxWidth(),
+        accent = colors.accentPrimary,
+        contentPadding = 0.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = 15.dp, end = 16.dp, bottom = 17.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "TODO",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = colors.accentPrimary,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        lineHeight = 17.sp,
+                        letterSpacing = 2.5.sp
+                    ),
+                    maxLines = 1
+                )
+                TodoAddButton(onClick = { onAddTask(0) })
+            }
+            Spacer(modifier = Modifier.height(12.dp))
             if (todos.isEmpty()) {
                 Text(
-                    text = "День чистий. Додай тільки те, що справді треба закрити.",
-                    style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted.copy(alpha = 0.86f))
+                    text = "Список порожній",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = colors.textSecondary,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        lineHeight = 20.sp
+                    )
                 )
             } else {
                 ReorderableTodoList(
                     todos = todos,
                     onTaskToggled = onTaskToggled,
-                    onAddMicrotask = onAddMicrotask,
                     onTodosReordered = onTodosReordered,
                     onRemoveTask = onRemoveTask
                 )
@@ -87,7 +117,6 @@ internal fun TodoBlock(
 private fun ReorderableTodoList(
     todos: List<TodoUiModel>,
     onTaskToggled: (TodoUiModel) -> Unit,
-    onAddMicrotask: (TodoUiModel) -> Unit,
     onTodosReordered: (List<Int>) -> Unit,
     onRemoveTask: (Int) -> Unit
 ) {
@@ -96,7 +125,7 @@ private fun ReorderableTodoList(
     var draggedCenterY by remember { mutableStateOf<Float?>(null) }
     val itemBounds = remember { mutableStateMapOf<Int, Rect>() }
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column {
         visibleTodos.forEachIndexed { index, task ->
             key(task.id) {
                 val isDragging = draggingTodoId == task.id
@@ -111,19 +140,18 @@ private fun ReorderableTodoList(
                 } else {
                     0f
                 }
-                TodoTreeItem(
+                TodoListItem(
                     task = task,
-                    number = "${index + 1}.",
+                    isLast = index == visibleTodos.lastIndex,
                     onTaskToggled = onTaskToggled,
-                    onAddMicrotask = onAddMicrotask,
                     onRemoveTask = onRemoveTask,
                     modifier = Modifier
                         .zIndex(if (isDragging) 1f else 0f)
                         .graphicsLayer {
                             translationY = dragTranslationY
-                            shadowElevation = if (isDragging) 18f else 0f
-                            scaleX = if (isDragging) 1.015f else 1f
-                            scaleY = if (isDragging) 1.015f else 1f
+                            shadowElevation = if (isDragging) 14f else 0f
+                            scaleX = if (isDragging) 1.01f else 1f
+                            scaleY = if (isDragging) 1.01f else 1f
                         }
                         .onGloballyPositioned { coordinates ->
                             itemBounds[task.id] = coordinates.boundsInParent()
@@ -163,8 +191,7 @@ private fun ReorderableTodoList(
                                     onTodosReordered(orderedIds)
                                 }
                             }
-                        ),
-                    isDragging = isDragging
+                        )
                 )
             }
         }
@@ -172,41 +199,174 @@ private fun ReorderableTodoList(
 }
 
 @Composable
-private fun TodoTreeItem(
+private fun TodoListItem(
     task: TodoUiModel,
-    number: String,
+    isLast: Boolean,
     onTaskToggled: (TodoUiModel) -> Unit,
-    onAddMicrotask: (TodoUiModel) -> Unit,
     onRemoveTask: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-    isDragging: Boolean = false
+    modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        SystemTodoItem(
-            title = task.title,
-            numberLabel = number,
-            isCompleted = task.isCompleted,
-            onToggle = { onTaskToggled(task) },
-            onAddMicrotask = { onAddMicrotask(task) },
-            onRemove = { onRemoveTask(task.id) },
-            isDragging = isDragging
-        )
-        if (task.microtasks.isNotEmpty()) {
-            Column(
-                modifier = Modifier.padding(start = 18.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                task.microtasks.forEachIndexed { index, microtask ->
-                    SystemTodoItem(
-                        title = microtask.title,
-                        numberLabel = "$number${index + 1}",
-                        isCompleted = microtask.isCompleted,
-                        onToggle = { onTaskToggled(microtask) },
-                        onRemove = { onRemoveTask(microtask.id) },
-                        compact = true
-                    )
-                }
+    val colors = SystemTheme.colors
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(44.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(13.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TodoCheckBox(
+                checked = task.isCompleted,
+                onClick = { onTaskToggled(task) }
+            )
+            Text(
+                text = task.title,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = colors.textSecondary,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 17.sp,
+                    lineHeight = 21.sp
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            TodoDeleteButton(onClick = { onRemoveTask(task.id) })
+            TodoDragHandle(modifier = Modifier.size(width = 29.dp, height = 24.dp))
+        }
+        if (!isLast) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 43.dp, end = 42.dp)
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(colors.overlayStrong.copy(alpha = 0.32f))
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodoAddButton(onClick: () -> Unit) {
+    val colors = SystemTheme.colors
+    val shape = SystemCutCornerShape(7.dp)
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(shape)
+            .background(colors.accentPrimary.copy(alpha = 0.10f))
+            .border(1.dp, colors.accentPrimary.copy(alpha = 0.58f), shape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.size(17.dp)) {
+            drawLine(
+                color = colors.accentPrimary,
+                start = Offset(size.width * 0.50f, size.height * 0.14f),
+                end = Offset(size.width * 0.50f, size.height * 0.86f),
+                strokeWidth = 2.dp.toPx(),
+                cap = StrokeCap.Square
+            )
+            drawLine(
+                color = colors.accentPrimary,
+                start = Offset(size.width * 0.14f, size.height * 0.50f),
+                end = Offset(size.width * 0.86f, size.height * 0.50f),
+                strokeWidth = 2.dp.toPx(),
+                cap = StrokeCap.Square
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodoDeleteButton(onClick: () -> Unit) {
+    val colors = SystemTheme.colors
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .clip(SystemCutCornerShape(6.dp))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.size(16.dp)) {
+            val deleteColor = colors.accentError.copy(alpha = 0.72f)
+            drawLine(
+                color = deleteColor,
+                start = Offset(size.width * 0.20f, size.height * 0.20f),
+                end = Offset(size.width * 0.80f, size.height * 0.80f),
+                strokeWidth = 1.9.dp.toPx(),
+                cap = StrokeCap.Square
+            )
+            drawLine(
+                color = deleteColor,
+                start = Offset(size.width * 0.80f, size.height * 0.20f),
+                end = Offset(size.width * 0.20f, size.height * 0.80f),
+                strokeWidth = 1.9.dp.toPx(),
+                cap = StrokeCap.Square
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodoCheckBox(
+    checked: Boolean,
+    onClick: () -> Unit
+) {
+    val colors = SystemTheme.colors
+    val shape = SystemCutCornerShape(3.dp)
+    Box(
+        modifier = Modifier
+            .size(27.dp)
+            .clip(shape)
+            .background(if (checked) colors.accentPrimary.copy(alpha = 0.16f) else Color.Transparent)
+            .border(
+                width = 1.5.dp,
+                color = if (checked) colors.accentPrimary else colors.textSecondary.copy(alpha = 0.72f),
+                shape = shape
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        if (checked) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawLine(
+                    color = colors.accentPrimary,
+                    start = Offset(size.width * 0.22f, size.height * 0.53f),
+                    end = Offset(size.width * 0.42f, size.height * 0.73f),
+                    strokeWidth = 3.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = colors.accentPrimary,
+                    start = Offset(size.width * 0.42f, size.height * 0.73f),
+                    end = Offset(size.width * 0.80f, size.height * 0.27f),
+                    strokeWidth = 3.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun TodoDragHandle(modifier: Modifier = Modifier) {
+    val colors = SystemTheme.colors
+    Canvas(modifier = modifier) {
+        val startX = size.width * 0.18f
+        val endX = size.width * 0.86f
+        repeat(3) { index ->
+            val y = size.height * (0.30f + index * 0.22f)
+            drawLine(
+                color = colors.textSecondary.copy(alpha = 0.70f),
+                start = Offset(startX, y),
+                end = Offset(endX, y),
+                strokeWidth = 1.8.dp.toPx(),
+                cap = StrokeCap.Square
+            )
         }
     }
 }
@@ -229,9 +389,6 @@ private fun List<TodoUiModel>.reorderedByDrop(
         add(insertionIndex.coerceIn(0, size), dragged)
     }
 }
-
-private fun List<TodoUiModel>.flatMapWithMicrotasks(): List<TodoUiModel> =
-    flatMap { task -> listOf(task) + task.microtasks }
 
 private fun Modifier.dragAfterOneSecond(
     enabled: Boolean,

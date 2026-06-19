@@ -67,14 +67,17 @@ data class QuestUiModel(
     val title: String,
     val subtitle: UiText,
     val tasks: ImmutableList<TaskUiModel> = persistentListOf(),
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    val estimatedDurationMinutes: Int? = null,
+    val rewardXp: Int? = null
 )
 
 data class TaskUiModel(
     val id: Int,
     val name: String,
     val nameUk: String? = null,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
+    val recommendedSets: Int? = null
 )
 
 data class TodoUiModel(

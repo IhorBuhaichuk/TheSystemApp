@@ -2,41 +2,35 @@ package com.ihor.thesystem.core.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,186 +47,381 @@ fun SystemBottomNavBar(navController: NavHostController) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
     val colors = SystemTheme.colors
-    val shapes = SystemTheme.shapes
+    val items = listOf(
+        NavBarItem(Routes.Status, NavGlyph.Status, "STATUS", destination?.hasRoute<Routes.Status>() == true),
+        NavBarItem(Routes.Calendar, NavGlyph.Calendar, "CALENDAR", destination?.hasRoute<Routes.Calendar>() == true),
+        NavBarItem(Routes.Cycle, NavGlyph.System, "SYSTEM", destination?.hasRoute<Routes.Cycle>() == true),
+        NavBarItem(Routes.Statistics, NavGlyph.Statistics, "STATISTICS", destination?.hasRoute<Routes.Statistics>() == true),
+        NavBarItem(Routes.Profile, NavGlyph.Profile, "PROFILE", destination?.hasRoute<Routes.Profile>() == true)
+    )
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.Transparent)
             .navigationBarsPadding()
-            .padding(horizontal = 18.dp, vertical = 10.dp)
+            .padding(horizontal = 8.dp, vertical = 5.dp)
+            .height(101.dp)
     ) {
-        Surface(
-            color = colors.surfaceGlassStrong.copy(alpha = 0.9f),
-            shape = RoundedCornerShape(shapes.extraLarge),
-            border = BorderStroke(1.dp, colors.borderSubtle),
+        val navShape = SystemCutCornerShape(17.dp)
+        Box(
             modifier = Modifier
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(66.dp)
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .fillMaxWidth(0.5f)
-                        .height(16.dp)
-                        .blur(12.dp)
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color.Transparent,
-                                    colors.accentPrimary.copy(alpha = 0.09f),
-                                    colors.accentAi.copy(alpha = 0.06f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
+                .height(82.dp)
+                .clip(navShape)
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xF403060A),
+                            Color(0xF20B121C),
+                            Color(0xF405080D)
+                        ),
+                        start = Offset.Zero,
+                        end = Offset.Infinite
+                    )
                 )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        listOf(
+                            colors.overlayStrong.copy(alpha = 0.60f),
+                            colors.borderSubtle.copy(alpha = 0.78f),
+                            Color.Black.copy(alpha = 0.80f)
+                        )
+                    ),
+                    shape = navShape
+                )
+        ) {
+            NavPanelTexture(modifier = Modifier.matchParentSize())
+        }
 
-                Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 5.dp),
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    NavIconButton(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Filled.Dashboard,
-                        label = "Статус",
-                        isSelected = destination?.hasRoute<Routes.Status>() == true,
-                        activeColor = colors.accentPrimary,
-                        onClick = {
-                            navController.navigate(Routes.Status) {
-                                popUpTo<Routes.Status> { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        }
-                    )
-                    NavIconButton(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Filled.FitnessCenter,
-                        label = "Цикл",
-                        isSelected = destination?.hasRoute<Routes.Cycle>() == true,
-                        activeColor = colors.accentPrimary,
-                        onClick = {
-                            navController.navigate(Routes.Cycle) {
-                                popUpTo<Routes.Status> { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        }
-                    )
-                    NavIconButton(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Filled.BarChart,
-                        label = "Аналітика",
-                        isSelected = destination?.hasRoute<Routes.Statistics>() == true,
-                        activeColor = colors.accentPrimary,
-                        onClick = {
-                            navController.navigate(Routes.Statistics) {
-                                popUpTo<Routes.Status> { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        }
-                    )
-                    NavIconButton(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Filled.AutoAwesome,
-                        label = "ШІ",
-                        isSelected = destination?.hasRoute<Routes.Architect>() == true,
-                        activeColor = colors.accentAi,
-                        onClick = {
-                            navController.navigate(Routes.Architect) {
-                                popUpTo<Routes.Status> { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        }
-                    )
-                }
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(98.dp)
+                .padding(horizontal = 5.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            items.forEach { item ->
+                NavIconButton(
+                    modifier = Modifier.weight(1f),
+                    item = item,
+                    activeColor = colors.accentPrimary,
+                    onClick = { navController.navigateTopLevel(item.route) }
+                )
             }
         }
     }
 }
 
 @Composable
+private fun NavPanelTexture(modifier: Modifier = Modifier) {
+    val colors = SystemTheme.colors
+    Canvas(modifier = modifier) {
+        drawRect(
+            brush = Brush.radialGradient(
+                colors = listOf(colors.accentPrimary.copy(alpha = 0.09f), Color.Transparent),
+                center = Offset(size.width * 0.50f, size.height * 0.02f),
+                radius = size.width * 0.45f
+            )
+        )
+        drawRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.035f),
+                    Color.Transparent,
+                    Color.Black.copy(alpha = 0.20f)
+                )
+            )
+        )
+    }
+}
+
+@Composable
 private fun NavIconButton(
     modifier: Modifier = Modifier,
-    icon: ImageVector,
-    label: String,
-    isSelected: Boolean,
+    item: NavBarItem,
     activeColor: Color,
     onClick: () -> Unit
 ) {
     val colors = SystemTheme.colors
-    val shapes = SystemTheme.shapes
     val motion = SystemTheme.motion
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.04f else 1f,
-        animationSpec = tween(motion.quickStateMillis),
-        label = "nav_item_scale"
+    val selection by animateFloatAsState(
+        targetValue = if (item.isSelected) 1f else 0f,
+        animationSpec = tween(durationMillis = motion.quickStateMillis),
+        label = "bottom_nav_selection"
     )
+    val iconScale by animateFloatAsState(
+        targetValue = if (item.isSelected) 1.18f else 1f,
+        animationSpec = tween(durationMillis = motion.progressMillis),
+        label = "bottom_nav_icon_scale"
+    )
+    val itemHeight by animateFloatAsState(
+        targetValue = if (item.isSelected) 96f else 76f,
+        animationSpec = tween(durationMillis = motion.progressMillis),
+        label = "bottom_nav_item_height"
+    )
+    val iconColor = if (item.isSelected) activeColor else Color(0xFFA3A7AE).copy(alpha = 0.78f)
+    val labelColor = if (item.isSelected) activeColor else Color(0xFF9B9EA5).copy(alpha = 0.72f)
+    val activeShape = SystemCutCornerShape(13.dp)
 
-    Column(
+    Box(
         modifier = modifier
-            .height(52.dp)
-            .clip(RoundedCornerShape(shapes.large))
-            .background(if (isSelected) activeColor.copy(alpha = 0.032f) else Color.Transparent)
-            .border(
-                width = 1.dp,
-                color = if (isSelected) activeColor.copy(alpha = 0.085f) else Color.Transparent,
-                shape = RoundedCornerShape(shapes.large)
-            )
+            .height(itemHeight.dp)
+            .padding(start = 1.dp, top = 0.dp, end = 1.dp, bottom = if (item.isSelected) 0.dp else 7.dp)
             .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier.size(31.dp),
-            contentAlignment = Alignment.Center
+        if (selection > 0.01f) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .padding(start = 2.dp, top = 2.dp, end = 2.dp, bottom = 1.dp)
+                    .blur(13.dp)
+                    .background(activeColor.copy(alpha = 0.20f * selection), activeShape)
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .padding(start = 3.dp, top = 0.dp, end = 3.dp, bottom = 1.dp)
+                    .clip(activeShape)
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                activeColor.copy(alpha = 0.13f * selection),
+                                Color(0xFF07111B).copy(alpha = 0.95f * selection),
+                                Color(0xFF02050A).copy(alpha = 0.98f * selection)
+                            ),
+                            start = Offset.Zero,
+                            end = Offset.Infinite
+                        )
+                    )
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.linearGradient(
+                            listOf(
+                                activeColor.copy(alpha = 0.80f * selection),
+                                Color.White.copy(alpha = 0.18f * selection),
+                                Color.Black.copy(alpha = 0.55f * selection),
+                                activeColor.copy(alpha = 0.50f * selection)
+                            )
+                        ),
+                        shape = activeShape
+                    )
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = if (item.isSelected) 10.dp else 7.dp, bottom = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            if (isSelected) {
-                Box(
+            Box(
+                modifier = Modifier.size(if (item.isSelected) 47.dp else 40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                if (selection > 0.01f) {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .blur(10.dp)
+                            .background(activeColor.copy(alpha = 0.30f * selection), SystemHexagonShape())
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .background(activeColor.copy(alpha = 0.12f * selection), SystemHexagonShape())
+                    )
+                }
+                SystemNavGlyph(
+                    glyph = item.glyph,
+                    color = iconColor,
+                    glow = selection,
                     modifier = Modifier
-                        .size(31.dp)
-                        .background(activeColor.copy(alpha = 0.085f), CircleShape)
-                )
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .blur(8.dp)
-                        .background(activeColor.copy(alpha = 0.09f), CircleShape)
+                        .size(if (item.isSelected) 34.dp else 27.dp)
+                        .graphicsLayer {
+                            scaleX = iconScale
+                            scaleY = iconScale
+                        }
                 )
             }
 
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isSelected) activeColor else colors.textSecondary.copy(alpha = 0.76f),
-                modifier = Modifier
-                    .size(20.dp)
-                    .graphicsLayer(scaleX = scale, scaleY = scale)
+            Text(
+                text = item.label,
+                color = labelColor,
+                fontFamily = FontFamily.SansSerif,
+                fontSize = if (item.isSelected) 11.sp else 10.sp,
+                lineHeight = 12.sp,
+                letterSpacing = 0.5.sp,
+                fontWeight = if (item.isSelected) FontWeight.Black else FontWeight.SemiBold,
+                maxLines = 1,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                overflow = TextOverflow.Ellipsis
             )
         }
+    }
+}
 
-        Text(
-            text = label,
-            color = if (isSelected) activeColor else colors.textSecondary.copy(alpha = 0.72f),
-            fontSize = 8.sp,
-            lineHeight = 9.sp,
-            fontWeight = if (isSelected) FontWeight.Black else FontWeight.SemiBold,
-            maxLines = 1,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-            overflow = TextOverflow.Ellipsis
-        )
+private data class NavBarItem(
+    val route: Routes,
+    val glyph: NavGlyph,
+    val label: String,
+    val isSelected: Boolean
+)
 
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .padding(top = 3.dp)
-                    .size(2.5.dp)
-                    .background(activeColor.copy(alpha = 0.92f), CircleShape)
+private enum class NavGlyph {
+    Status,
+    Calendar,
+    System,
+    Statistics,
+    Profile
+}
+
+@Composable
+private fun SystemNavGlyph(
+    glyph: NavGlyph,
+    color: Color,
+    glow: Float,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val stroke = 2.3.dp.toPx()
+        val thinStroke = 1.6.dp.toPx()
+        val glowColor = Color(0xFF19D7FF).copy(alpha = 0.22f * glow)
+        if (glow > 0.01f) {
+            drawCircle(
+                color = glowColor,
+                radius = size.minDimension * 0.62f,
+                center = center
             )
-        } else {
-            Spacer(modifier = Modifier.padding(top = 3.dp).size(2.5.dp))
         }
+        when (glyph) {
+            NavGlyph.Status -> {
+                val path = Path().apply {
+                    moveTo(size.width * 0.50f, size.height * 0.05f)
+                    lineTo(size.width * 0.90f, size.height * 0.88f)
+                    lineTo(size.width * 0.10f, size.height * 0.88f)
+                    close()
+                }
+                drawPath(path, color.copy(alpha = 0.18f))
+                drawPath(path, color, style = Stroke(width = stroke))
+                drawLine(
+                    color = color,
+                    start = Offset(size.width * 0.34f, size.height * 0.67f),
+                    end = Offset(size.width * 0.66f, size.height * 0.67f),
+                    strokeWidth = thinStroke
+                )
+            }
+            NavGlyph.Calendar -> {
+                val x0 = size.width * 0.14f
+                val y0 = size.height * 0.20f
+                val x1 = size.width * 0.86f
+                val y1 = size.height * 0.84f
+                drawRect(
+                    color = color.copy(alpha = 0.18f),
+                    topLeft = Offset(x0, y0),
+                    size = Size(x1 - x0, y1 - y0)
+                )
+                drawRect(
+                    color = color,
+                    topLeft = Offset(x0, y0),
+                    size = Size(x1 - x0, y1 - y0),
+                    style = Stroke(width = stroke)
+                )
+                drawLine(color, Offset(x0, size.height * 0.38f), Offset(x1, size.height * 0.38f), thinStroke)
+                listOf(0.34f, 0.50f, 0.66f).forEach { x ->
+                    listOf(0.55f, 0.71f).forEach { y ->
+                        drawCircle(
+                            color = color,
+                            radius = 1.35.dp.toPx(),
+                            center = Offset(size.width * x, size.height * y)
+                        )
+                    }
+                }
+                drawLine(color, Offset(size.width * 0.31f, size.height * 0.10f), Offset(size.width * 0.31f, size.height * 0.26f), thinStroke)
+                drawLine(color, Offset(size.width * 0.69f, size.height * 0.10f), Offset(size.width * 0.69f, size.height * 0.26f), thinStroke)
+            }
+            NavGlyph.System -> {
+                val outer = Path().apply {
+                    moveTo(size.width * 0.50f, size.height * 0.03f)
+                    lineTo(size.width * 0.88f, size.height * 0.25f)
+                    lineTo(size.width * 0.88f, size.height * 0.74f)
+                    lineTo(size.width * 0.50f, size.height * 0.97f)
+                    lineTo(size.width * 0.12f, size.height * 0.74f)
+                    lineTo(size.width * 0.12f, size.height * 0.25f)
+                    close()
+                }
+                val inner = Path().apply {
+                    moveTo(size.width * 0.50f, size.height * 0.28f)
+                    lineTo(size.width * 0.68f, size.height * 0.39f)
+                    lineTo(size.width * 0.68f, size.height * 0.61f)
+                    lineTo(size.width * 0.50f, size.height * 0.72f)
+                    lineTo(size.width * 0.32f, size.height * 0.61f)
+                    lineTo(size.width * 0.32f, size.height * 0.39f)
+                    close()
+                }
+                drawPath(outer, color.copy(alpha = 0.18f))
+                drawPath(outer, color, style = Stroke(width = stroke))
+                drawPath(inner, color.copy(alpha = 0.12f))
+                drawPath(inner, color, style = Stroke(width = thinStroke))
+            }
+            NavGlyph.Statistics -> {
+                val base = size.height * 0.86f
+                listOf(0.22f to 0.42f, 0.40f to 0.64f, 0.58f to 0.30f, 0.76f to 0.74f).forEach { (x, h) ->
+                    val barW = size.width * 0.10f
+                    val top = base - size.height * h
+                    drawRect(
+                        color = color.copy(alpha = 0.22f),
+                        topLeft = Offset(size.width * x - barW / 2f, top),
+                        size = Size(barW, base - top)
+                    )
+                    drawRect(
+                        color = color,
+                        topLeft = Offset(size.width * x - barW / 2f, top),
+                        size = Size(barW, base - top),
+                        style = Stroke(width = thinStroke)
+                    )
+                }
+            }
+            NavGlyph.Profile -> {
+                drawCircle(
+                    color = color.copy(alpha = 0.14f),
+                    radius = size.minDimension * 0.18f,
+                    center = Offset(size.width * 0.50f, size.height * 0.30f)
+                )
+                drawCircle(
+                    color = color,
+                    radius = size.minDimension * 0.18f,
+                    center = Offset(size.width * 0.50f, size.height * 0.30f),
+                    style = Stroke(width = stroke)
+                )
+                drawArc(
+                    color = color,
+                    startAngle = 205f,
+                    sweepAngle = 130f,
+                    useCenter = false,
+                    topLeft = Offset(size.width * 0.18f, size.height * 0.52f),
+                    size = Size(size.width * 0.64f, size.height * 0.48f),
+                    style = Stroke(width = stroke)
+                )
+            }
+        }
+    }
+}
+
+private fun NavHostController.navigateTopLevel(route: Routes) {
+    navigate(route) {
+        popUpTo<Routes.Status> {
+            inclusive = false
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }

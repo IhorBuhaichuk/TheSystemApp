@@ -18,6 +18,7 @@ import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus
 import com.ihor.thesystem.domain.model.CalendarWeekDay
 import com.ihor.thesystem.domain.model.DomainError
 import com.ihor.thesystem.domain.model.Player
+import com.ihor.thesystem.domain.model.PlayerProgressionConfig
 import com.ihor.thesystem.domain.model.Quest
 import com.ihor.thesystem.domain.model.StatusData
 import com.ihor.thesystem.domain.model.SystemConfig
@@ -38,6 +39,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+
+private const val MINUTES_PER_WORKOUT_SET = 3
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -396,10 +399,31 @@ class StatusViewModel @Inject constructor(
                 UiText.StringResource(R.string.quest_reward_promotion)
         },
         tasks = tasks.map { task ->
-            TaskUiModel(task.id, task.name, task.nameUk, task.isCompleted)
+            TaskUiModel(
+                id = task.id,
+                name = task.name,
+                nameUk = task.nameUk,
+                isCompleted = task.isCompleted,
+                recommendedSets = task.recommendedSets
+            )
         }.toImmutableList(),
-        isCompleted = status == DomainQuestStatus.COMPLETED
+        isCompleted = status == DomainQuestStatus.COMPLETED,
+        estimatedDurationMinutes = estimatedDurationMinutes(),
+        rewardXp = rewardXp()
     )
+
+    private fun Quest.estimatedDurationMinutes(): Int? {
+        if (type != DomainQuestType.MAIN) return null
+        val totalSets = tasks.sumOf { task -> task.recommendedSets?.coerceAtLeast(0) ?: 0 }
+        return totalSets.takeIf { it > 0 }?.times(MINUTES_PER_WORKOUT_SET)
+    }
+
+    private fun Quest.rewardXp(): Int? =
+        if (type == DomainQuestType.MAIN) {
+            systemTemplateType?.completionXp ?: PlayerProgressionConfig().workoutCompletionXp
+        } else {
+            null
+        }
 
     private fun CalendarWeekDay.toUiModel(): StatusWeekDayUiModel {
         val visualType = when {

@@ -36,55 +36,85 @@ val TheSystemTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = TekoFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 32.sp,
+        fontSize = 42.sp,
+        lineHeight = 44.sp,
+        color = TextPrimary
+    ),
+    headlineMedium = TextStyle(
+        fontFamily = TekoFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 34.sp,
+        lineHeight = 36.sp,
+        color = TextPrimary
+    ),
+    headlineSmall = TextStyle(
+        fontFamily = TekoFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 28.sp,
+        lineHeight = 30.sp,
         color = TextPrimary
     ),
     titleLarge = TextStyle(
-        fontFamily = RajdhaniFamily,
+        fontFamily = TekoFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 20.sp,
+        fontSize = 26.sp,
+        lineHeight = 28.sp,
         color = TextPrimary
     ),
     titleMedium = TextStyle(
         fontFamily = RajdhaniFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
+        lineHeight = 20.sp,
+        color = TextPrimary
+    ),
+    titleSmall = TextStyle(
+        fontFamily = RajdhaniFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 14.sp,
+        lineHeight = 18.sp,
         color = TextPrimary
     ),
     bodyLarge = TextStyle(
         fontFamily = RajdhaniFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
+        lineHeight = 20.sp,
         color = TextPrimary
     ),
     bodyMedium = TextStyle(
         fontFamily = RajdhaniFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
+        lineHeight = 18.sp,
         color = TextSecondary
     ),
     bodySmall = TextStyle(
         fontFamily = RajdhaniFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 11.sp,
+        lineHeight = 16.sp,
         color = TextMuted
     ),
     labelLarge = TextStyle(
         fontFamily = RajdhaniFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 13.sp,
+        lineHeight = 16.sp,
         color = TextSecondary
     ),
     labelMedium = TextStyle(
         fontFamily = RajdhaniFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
+        lineHeight = 14.sp,
         color = TextSecondary
     ),
     labelSmall = TextStyle(
         fontFamily = RajdhaniFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 10.sp,
+        lineHeight = 12.sp,
         color = TextSecondary
     )
 )

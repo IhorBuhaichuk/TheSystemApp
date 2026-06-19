@@ -39,8 +39,11 @@ private fun systemShapes(tokens: SystemThemeTokens): Shapes =
 private fun systemTypography(tokens: SystemThemeTokens): Typography =
     TheSystemTypography.copy(
         displayLarge = TheSystemTypography.displayLarge.copy(color = tokens.colors.textPrimary),
+        headlineMedium = TheSystemTypography.headlineMedium.copy(color = tokens.colors.textPrimary),
+        headlineSmall = TheSystemTypography.headlineSmall.copy(color = tokens.colors.textPrimary),
         titleLarge = TheSystemTypography.titleLarge.copy(color = tokens.colors.textPrimary),
         titleMedium = TheSystemTypography.titleMedium.copy(color = tokens.colors.textPrimary),
+        titleSmall = TheSystemTypography.titleSmall.copy(color = tokens.colors.textPrimary),
         bodyLarge = TheSystemTypography.bodyLarge.copy(color = tokens.colors.textPrimary),
         bodyMedium = TheSystemTypography.bodyMedium.copy(color = tokens.colors.textSecondary),
         bodySmall = TheSystemTypography.bodySmall.copy(color = tokens.colors.textMuted),
