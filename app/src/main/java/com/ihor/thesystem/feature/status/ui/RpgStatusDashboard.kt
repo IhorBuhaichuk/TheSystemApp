@@ -49,7 +49,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,8 +60,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
@@ -79,17 +81,17 @@ import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
-import com.ihor.thesystem.core.ui.components.SystemAvatarBadge
 import com.ihor.thesystem.core.ui.components.SystemButton
-import com.ihor.thesystem.core.ui.components.SystemHexIcon
+import com.ihor.thesystem.core.ui.components.SystemHoodBadge
 import com.ihor.thesystem.core.ui.components.SystemHexagonShape
-import com.ihor.thesystem.core.ui.components.SystemPanel
 import com.ihor.thesystem.core.ui.components.SystemProgressBar
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
-import com.ihor.thesystem.core.ui.components.SystemWeekCalendarPreview
 import com.ihor.thesystem.core.ui.components.SystemWeekDayModel
 import com.ihor.thesystem.core.ui.components.SystemWeekDayStatus
 import com.ihor.thesystem.core.ui.components.SystemWeekDayVisualType
+import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemLargePanelShape
+import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.BossFight
 import com.ihor.thesystem.domain.model.BossFightStatus
 import com.ihor.thesystem.domain.model.BossFightTargetMetric
@@ -127,25 +129,24 @@ fun RpgStatusDashboard(
     onRemoveTask: (Int) -> Unit
 ) {
     val colors = SystemTheme.colors
-    val pinnedWeekHeight = 92.dp
+    val pinnedWeekHeight = 132.dp
     val transitionOffsetPx = with(LocalDensity.current) { 24.dp.roundToPx() }
-    var dashboardState by rememberSaveable { mutableStateOf(StatusDashboardState.ACTIONS) }
+    var dashboardState by remember { mutableStateOf(StatusDashboardState.ACTIONS) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
             .navigationBarsPadding()
+            .statusDashboardSwipe(
+                state = dashboardState,
+                onStateChange = { dashboardState = it }
+            )
     ) {
         AnimatedContent(
             targetState = dashboardState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = pinnedWeekHeight + 16.dp, bottom = 24.dp)
-                .statusDashboardSwipe(
-                    state = dashboardState,
-                    onStateChange = { dashboardState = it }
-                ),
+                .padding(top = pinnedWeekHeight + 8.dp, bottom = 20.dp),
             transitionSpec = {
                 val enteringStatus = targetState == StatusDashboardState.STATUS
                 (
@@ -189,17 +190,8 @@ fun RpgStatusDashboard(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .height(pinnedWeekHeight)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color(0xFF010204),
-                            colors.background.copy(alpha = 0.98f),
-                            Color(0xFF010204)
-                        )
-                    )
-                )
                 .padding(horizontal = SystemScreenPadding)
-                .padding(top = 8.dp, bottom = 10.dp),
+                .padding(top = 12.dp, bottom = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             WeekPreviewBlock(
@@ -241,6 +233,7 @@ private fun StatusActionsContent(
             onTodosReordered = onTodosReordered,
             onRemoveTask = onRemoveTask
         )
+        ActionsSwipeHint()
     }
 }
 
@@ -264,8 +257,9 @@ private fun StatusInfoContent(
             onEditNameTap = onEditNameTap,
             onOpenCalendar = onOpenCalendar
         )
-        RecommendationPanel(decision = data.todayDecision)
         TodayProgressBlock(data = data)
+        RecommendationPanel(decision = data.todayDecision)
+        StatusSwipeHint()
     }
 }
 
@@ -279,11 +273,11 @@ private fun Modifier.statusDashboardSwipe(
             var totalX = 0f
             var totalY = 0f
             var switched = false
-            val threshold = 108.dp.toPx()
+            val threshold = 72.dp.toPx()
             val maxGestureMillis = 650L
 
             while (true) {
-                val event = awaitPointerEvent()
+                val event = awaitPointerEvent(PointerEventPass.Initial)
                 val change = event.changes.firstOrNull { it.id == down.id } ?: break
                 val delta = change.positionChange()
                 totalX += delta.x
@@ -339,49 +333,67 @@ private fun StatusHeroPanel(
     val progress = remember(data.xpTotal, data.xpMax) {
         if (data.xpMax > 0) (data.xpTotal.toFloat() / data.xpMax).coerceIn(0f, 1f) else 0f
     }
+    val shape = systemLargePanelShape()
+    val displayName = data.playerName.asPlayerDisplayName()
 
-    BoxWithConstraints(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(176.dp)
+            .height(172.dp)
+            .techSurface(
+                shape = shape,
+                active = true,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Panel
+            )
+            .padding(start = 18.dp, top = 24.dp, end = 22.dp, bottom = 13.dp)
     ) {
-        HeroHeaderBackdrop(
-            modifier = Modifier.matchParentSize(),
-            progress = progress
-        )
+        Canvas(modifier = Modifier.matchParentSize()) {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(colors.accentPrimary.copy(alpha = 0.14f), Color.Transparent),
+                    center = Offset(size.width * 0.12f, size.height * 0.54f),
+                    radius = size.width * 0.34f
+                ),
+                radius = size.width * 0.34f,
+                center = Offset(size.width * 0.12f, size.height * 0.54f)
+            )
+        }
 
         Box(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 18.dp, top = 17.dp)
-                .size(112.dp)
+                .align(Alignment.CenterStart)
+                .padding(start = 5.dp)
+                .size(92.dp)
         ) {
-            SystemAvatarBadge(
-                avatarUri = data.avatarUri,
-                modifier = Modifier.fillMaxSize(),
-                onClick = {
-                    photoPickerLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                    )
-                }
-            )
+            SystemHoodBadge(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                photoPickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
         }
 
         Column(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(start = 150.dp, top = 35.dp, end = 90.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
+                .padding(start = 121.dp, top = 20.dp)
+                .width(96.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             Text(
-                text = data.playerName.uppercase(),
+                text = displayName,
                 modifier = Modifier.clickable(onClick = onEditNameTap),
                 style = MaterialTheme.typography.displayLarge.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Black,
-                    fontSize = 39.sp,
-                    lineHeight = 39.sp
-                )
+                    fontSize = 31.sp,
+                    lineHeight = 34.sp
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
@@ -390,20 +402,33 @@ private fun StatusHeroPanel(
             percentText = "${(progress * 100).roundToInt()}%",
             progress = progress,
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 132.dp, top = 108.dp, end = 14.dp)
+                .align(Alignment.BottomStart)
+                .padding(start = 116.dp)
                 .fillMaxWidth()
         )
 
-        Column(
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(end = 11.dp, top = 19.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp)
+                .padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             HeroRankPlate(label = "Ранг", value = data.globalRank.name, onClick = onOpenCalendar)
             HeroRankPlate(label = "Рівень", value = data.level.toString(), onClick = onOpenCalendar)
         }
+    }
+}
+
+private fun String.asPlayerDisplayName(): String {
+    val locale = Locale.forLanguageTag("uk-UA")
+    val cleaned = trim().ifEmpty { "Ігор" }
+    val isAllCaps = cleaned.any { it.isLetter() } && cleaned == cleaned.uppercase(locale)
+    return if (isAllCaps) {
+        cleaned.lowercase(locale).replaceFirstChar { first ->
+            if (first.isLowerCase()) first.titlecase(locale) else first.toString()
+        }
+    } else {
+        cleaned
     }
 }
 
@@ -459,24 +484,28 @@ private fun HeroRankPlate(
     onClick: () -> Unit
 ) {
     val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(8.dp)
     Box(
         modifier = Modifier
-            .width(72.dp)
-            .height(45.dp)
-            .clip(HeroSlantShape())
-            .background(Color(0x66101620))
-            .border(1.dp, Color.White.copy(alpha = 0.13f), HeroSlantShape())
+            .width(56.dp)
+            .height(50.dp)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Plate
+            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy((-2).dp)) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = label.uppercase(),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 11.sp,
-                    lineHeight = 12.sp
+                    lineHeight = 13.sp
                 ),
                 maxLines = 1
             )
@@ -485,8 +514,8 @@ private fun HeroRankPlate(
                 style = MaterialTheme.typography.headlineSmall.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Black,
-                    fontSize = 25.sp,
-                    lineHeight = 27.sp
+                    fontSize = 23.sp,
+                    lineHeight = 25.sp
                 ),
                 maxLines = 1
             )
@@ -520,31 +549,21 @@ private fun HeroXpPanel(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    Box(modifier = modifier.height(50.dp)) {
-        Canvas(modifier = Modifier.matchParentSize()) {
-            val cut = 12.dp.toPx()
-            val path = Path().apply {
-                moveTo(cut, 0f)
-                lineTo(size.width, 0f)
-                lineTo(size.width, size.height)
-                lineTo(0f, size.height)
-                lineTo(size.width * 0.08f, 0f)
-                close()
-            }
-            drawPath(
-                path = path,
-                color = Color(0xAA070B10)
+    val shape = RoundedCornerShape(10.dp)
+    Box(
+        modifier = modifier
+            .height(54.dp)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Plate
             )
-            drawPath(
-                path = path,
-                color = colors.accentPrimary.copy(alpha = 0.28f),
-                style = Stroke(width = 1.dp.toPx())
-            )
-        }
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 35.dp, top = 8.dp, end = 7.dp),
+                .padding(start = 17.dp, top = 9.dp, end = 16.dp, bottom = 9.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Row(
@@ -587,38 +606,109 @@ private fun RecommendationPanel(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    SystemPanel(
+    val purple = Color(0xFFB76CFF)
+    val shape = systemLargePanelShape()
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(86.dp),
-        accent = colors.accentPrimary,
-        contentPadding = 0.dp
+            .height(116.dp)
+            .techSurface(
+                shape = shape,
+                active = true,
+                accent = purple,
+                role = TechSurfaceRole.Panel
+            )
     ) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(purple.copy(alpha = 0.20f), Color.Transparent),
+                    center = Offset(size.width * 0.14f, size.height * 0.55f),
+                    radius = size.width * 0.24f
+                ),
+                radius = size.width * 0.24f,
+                center = Offset(size.width * 0.14f, size.height * 0.55f)
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 12.dp, top = 10.dp, end = 16.dp, bottom = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(start = 26.dp, top = 23.dp, end = 24.dp, bottom = 22.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SystemHexIcon(
-                icon = Icons.Filled.Star,
-                accent = colors.accentPrimary,
-                modifier = Modifier.size(58.dp)
-            )
-            Text(
-                text = "Рекомендація: ${decision.displayReason()}",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = colors.textSecondary,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp,
-                    lineHeight = 19.sp
-                ),
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
+            RecommendationStarBadge(accent = purple, modifier = Modifier.size(64.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Рекомендація системи".uppercase(),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = purple,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 14.sp,
+                        lineHeight = 16.sp,
+                        letterSpacing = 1.7.sp
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = decision.displayReason(),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = colors.textPrimary.copy(alpha = 0.92f),
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 16.sp,
+                        lineHeight = 22.sp
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun RecommendationStarBadge(
+    accent: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val hex = Path().apply {
+            moveTo(size.width * 0.50f, size.height * 0.04f)
+            lineTo(size.width * 0.90f, size.height * 0.27f)
+            lineTo(size.width * 0.90f, size.height * 0.73f)
+            lineTo(size.width * 0.50f, size.height * 0.96f)
+            lineTo(size.width * 0.10f, size.height * 0.73f)
+            lineTo(size.width * 0.10f, size.height * 0.27f)
+            close()
+        }
+        drawPath(hex, color = accent.copy(alpha = 0.12f))
+        drawPath(hex, color = accent.copy(alpha = 0.84f), style = Stroke(width = 1.5.dp.toPx()))
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(accent.copy(alpha = 0.40f), Color.Transparent),
+                radius = size.minDimension * 0.36f
+            ),
+            radius = size.minDimension * 0.36f,
+            center = center
+        )
+        val star = Path().apply {
+            val c = center
+            val r1 = size.minDimension * 0.24f
+            val r2 = size.minDimension * 0.10f
+            repeat(10) { i ->
+                val angle = Math.toRadians((i * 36f - 90f).toDouble())
+                val r = if (i % 2 == 0) r1 else r2
+                val x = c.x + kotlin.math.cos(angle).toFloat() * r
+                val y = c.y + kotlin.math.sin(angle).toFloat() * r
+                if (i == 0) moveTo(x, y) else lineTo(x, y)
+            }
+            close()
+        }
+        drawPath(star, color = accent.copy(alpha = 0.95f))
     }
 }
 
@@ -628,16 +718,22 @@ private fun TodayProgressBlock(data: StatusUiData) {
     val flatTodos = remember(data.todos) { data.todos.flatMap { listOf(it) + it.microtasks } }
     val completedTodos = flatTodos.count { it.isCompleted }
 
-    SystemPanel(
+    val shape = systemLargePanelShape()
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(112.dp),
-        contentPadding = 0.dp
+            .height(142.dp)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Panel
+            )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 15.dp, top = 13.dp, end = 15.dp, bottom = 12.dp)
+                .padding(start = 24.dp, top = 22.dp, end = 24.dp, bottom = 18.dp)
         ) {
             Text(
                 text = "Сьогоднішній прогрес".uppercase(),
@@ -645,21 +741,21 @@ private fun TodayProgressBlock(data: StatusUiData) {
                     color = colors.accentPrimary,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    lineHeight = 17.sp,
-                    letterSpacing = 2.3.sp
+                    fontSize = 14.sp,
+                    lineHeight = 16.sp,
+                    letterSpacing = 2.7.sp
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Spacer(modifier = Modifier.height(13.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
             ) {
                 ProgressMetric(
                     label = "XP сьогодні",
-                    value = data.xpThisWeek.toString(),
+                    value = "0",
                     accent = colors.accentPrimary,
                     icon = { ProgressXpBadge() },
                     modifier = Modifier.weight(1f)
@@ -668,7 +764,6 @@ private fun TodayProgressBlock(data: StatusUiData) {
                 ProgressMetric(
                     label = "Серія",
                     value = data.currentStreak.toString(),
-                    subtitle = "днів",
                     accent = colors.accentPrimary,
                     icon = {
                         Icon(
@@ -683,7 +778,7 @@ private fun TodayProgressBlock(data: StatusUiData) {
                 ProgressDivider()
                 ProgressMetric(
                     label = "Квести",
-                    value = "$completedTodos/${flatTodos.size.coerceAtLeast(1)}",
+                    value = "$completedTodos/${flatTodos.size.coerceAtLeast(2)}",
                     accent = colors.textSecondary,
                     icon = {
                         Icon(
@@ -1209,21 +1304,228 @@ private fun WeekPreviewBlock(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
+    val cardShape = systemLargePanelShape()
     if (days.isEmpty()) {
-        Box(modifier = modifier.height(58.dp), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = modifier
+                .height(112.dp)
+                .techSurface(
+                    shape = cardShape,
+                    active = false,
+                    accent = colors.accentPrimary,
+                    role = TechSurfaceRole.Panel
+                ),
+            contentAlignment = Alignment.Center
+        ) {
             Text(
                 text = "Календарний цикл синхронізується.",
                 style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
             )
         }
     } else {
-        SystemWeekCalendarPreview(
-            days = days.map { it.toSystemWeekDayModel() },
-            onOpenCalendar = onOpenCalendar,
+        val models = days.map { it.toSystemWeekDayModel() }
+        val progressIndex = remember(models) {
+            models.indexOfFirst { it.isToday }
+                .takeIf { it >= 0 }
+                ?: models.indexOfLast { !it.date.isAfter(LocalDate.now()) }
+        }
+        Column(
             modifier = modifier
+                .fillMaxWidth()
+                .height(112.dp)
+                .techSurface(
+                    shape = cardShape,
+                    active = false,
+                    accent = colors.accentPrimary,
+                    role = TechSurfaceRole.Panel
+                )
+                .clickable(onClick = onOpenCalendar)
+                .padding(start = 13.dp, top = 19.dp, end = 13.dp, bottom = 15.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                models.forEachIndexed { index, day ->
+                    val active = index <= progressIndex
+                    Text(
+                        text = day.date.ukrainianWeekLabelReadable(),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            color = if (active) colors.accentWarning else colors.textMuted,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            lineHeight = 15.sp,
+                            textAlign = TextAlign.Center
+                        ),
+                        maxLines = 1
+                    )
+                }
+            }
+
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) {
+                val nodeCount = models.size.coerceAtLeast(1)
+                val circleY = size.height * 0.50f
+                val radius = 17.5.dp.toPx()
+                fun nodeX(index: Int): Float = size.width * ((index + 0.5f) / nodeCount.toFloat())
+
+                if (nodeCount > 1) {
+                    repeat(nodeCount - 1) { index ->
+                        val startX = nodeX(index) + radius
+                        val endX = nodeX(index + 1) - radius
+                        val segmentColor = if (index < progressIndex) colors.accentWarning else colors.accentPrimary
+                        drawLine(
+                            color = segmentColor.copy(alpha = 0.78f),
+                            start = Offset(startX, circleY),
+                            end = Offset(endX, circleY),
+                            strokeWidth = 1.1.dp.toPx(),
+                            cap = StrokeCap.Round
+                        )
+                    }
+                }
+
+                models.forEachIndexed { index, day ->
+                    val x = nodeX(index)
+                    val isPastOrToday = index <= progressIndex
+                    val isFuture = index > progressIndex
+                    val circleColor = when {
+                        day.isToday -> colors.accentWarning
+                        isPastOrToday -> colors.accentWarning
+                        isFuture -> colors.accentPrimary
+                        else -> colors.borderMuted
+                    }
+                    if (day.isToday) {
+                        drawCircle(
+                            color = colors.accentWarning.copy(alpha = 0.16f),
+                            radius = radius * 1.55f,
+                            center = Offset(x, circleY)
+                        )
+                    }
+                    drawCircle(
+                        color = Color.Black.copy(alpha = 0.20f),
+                        radius = radius,
+                        center = Offset(x, circleY)
+                    )
+                    drawCircle(
+                        color = circleColor,
+                        radius = radius,
+                        center = Offset(x, circleY),
+                        style = Stroke(width = if (day.isToday) 1.35.dp.toPx() else 1.dp.toPx())
+                    )
+                    drawContext.canvas.nativeCanvas.apply {
+                        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                            color = if (day.isToday) {
+                                android.graphics.Color.rgb(242, 184, 79)
+                            } else {
+                                android.graphics.Color.WHITE
+                            }
+                            textAlign = android.graphics.Paint.Align.CENTER
+                            textSize = 20.sp.toPx()
+                            typeface = android.graphics.Typeface.create(android.graphics.Typeface.SANS_SERIF, android.graphics.Typeface.BOLD)
+                            alpha = if (isFuture && !day.isToday) 230 else 255
+                        }
+                        drawText(day.dayNumber, x, circleY + 7.dp.toPx(), paint)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionsSwipeHint() {
+    val colors = SystemTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 3.dp, bottom = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        Canvas(modifier = Modifier.size(width = 24.dp, height = 15.dp)) {
+            val stroke = 2.1.dp.toPx()
+            drawLine(
+                color = colors.textMuted.copy(alpha = 0.72f),
+                start = Offset(size.width * 0.18f, size.height * 0.74f),
+                end = Offset(size.width * 0.50f, size.height * 0.28f),
+                strokeWidth = stroke,
+                cap = StrokeCap.Round
+            )
+            drawLine(
+                color = colors.textMuted.copy(alpha = 0.72f),
+                start = Offset(size.width * 0.50f, size.height * 0.28f),
+                end = Offset(size.width * 0.82f, size.height * 0.74f),
+                strokeWidth = stroke,
+                cap = StrokeCap.Round
+            )
+        }
+        Text(
+            text = "Проведіть вгору — показати прогрес",
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = colors.textMuted.copy(alpha = 0.88f),
+                fontSize = 14.sp,
+                lineHeight = 16.sp,
+                textAlign = TextAlign.Center
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
+
+@Composable
+private fun StatusSwipeHint() {
+    val colors = SystemTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 2.dp, bottom = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
+        Canvas(modifier = Modifier.size(width = 24.dp, height = 15.dp)) {
+            val stroke = 2.1.dp.toPx()
+            drawLine(
+                color = colors.accentPrimary.copy(alpha = 0.88f),
+                start = Offset(size.width * 0.18f, size.height * 0.26f),
+                end = Offset(size.width * 0.50f, size.height * 0.72f),
+                strokeWidth = stroke,
+                cap = StrokeCap.Round
+            )
+            drawLine(
+                color = colors.accentPrimary.copy(alpha = 0.88f),
+                start = Offset(size.width * 0.50f, size.height * 0.72f),
+                end = Offset(size.width * 0.82f, size.height * 0.26f),
+                strokeWidth = stroke,
+                cap = StrokeCap.Round
+            )
+        }
+        Text(
+            text = "Проведіть вниз — повернутись до завдань",
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = colors.textMuted.copy(alpha = 0.88f),
+                fontSize = 14.sp,
+                lineHeight = 16.sp,
+                textAlign = TextAlign.Center
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+private fun LocalDate.ukrainianWeekLabelReadable(): String =
+    when (dayOfWeek) {
+        java.time.DayOfWeek.MONDAY -> "Пн"
+        java.time.DayOfWeek.TUESDAY -> "Вт"
+        java.time.DayOfWeek.WEDNESDAY -> "Ср"
+        java.time.DayOfWeek.THURSDAY -> "Чт"
+        java.time.DayOfWeek.FRIDAY -> "Пт"
+        java.time.DayOfWeek.SATURDAY -> "Сб"
+        java.time.DayOfWeek.SUNDAY -> "Нд"
+    }
 
 @Composable
 internal fun FocusIcon(icon: ImageVector, tint: Color) {

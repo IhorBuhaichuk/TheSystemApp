@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,10 +31,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
@@ -45,7 +52,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.ihor.thesystem.core.ui.components.SystemCutCornerShape
-import com.ihor.thesystem.core.ui.components.SystemPanel
+import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemLargePanelShape
+import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.feature.status.viewmodel.TodoUiModel
 import kotlinx.coroutines.withTimeoutOrNull
@@ -60,15 +69,21 @@ internal fun TodoBlock(
     onRemoveTask: (Int) -> Unit
 ) {
     val colors = SystemTheme.colors
-    SystemPanel(
-        modifier = Modifier.fillMaxWidth(),
-        accent = colors.accentPrimary,
-        contentPadding = 0.dp
+    val cardShape = systemLargePanelShape()
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .techSurface(
+                shape = cardShape,
+                active = false,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Panel
+            )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, top = 15.dp, end = 16.dp, bottom = 17.dp)
+                .padding(start = 22.dp, top = 20.dp, end = 22.dp, bottom = 22.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -76,39 +91,31 @@ internal fun TodoBlock(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "TODO",
+                    text = "TO-DO",
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.labelLarge.copy(
                         color = colors.accentPrimary,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        lineHeight = 17.sp,
-                        letterSpacing = 2.5.sp
+                        fontSize = 16.sp,
+                        lineHeight = 18.sp,
+                        letterSpacing = 3.0.sp
                     ),
                     maxLines = 1
                 )
                 TodoAddButton(onClick = { onAddTask(0) })
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            if (todos.isEmpty()) {
-                Text(
-                    text = "Список порожній",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = colors.textSecondary,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp,
-                        lineHeight = 20.sp
-                    )
-                )
-            } else {
+            Spacer(modifier = Modifier.height(14.dp))
+            if (todos.isNotEmpty()) {
                 ReorderableTodoList(
                     todos = todos,
                     onTaskToggled = onTaskToggled,
                     onTodosReordered = onTodosReordered,
                     onRemoveTask = onRemoveTask
                 )
+                Spacer(modifier = Modifier.height(13.dp))
             }
+            TodoAddTaskRow(onClick = { onAddTask(todos.size) })
         }
     }
 }
@@ -252,13 +259,15 @@ private fun TodoListItem(
 @Composable
 private fun TodoAddButton(onClick: () -> Unit) {
     val colors = SystemTheme.colors
-    val shape = SystemCutCornerShape(7.dp)
     Box(
         modifier = Modifier
             .size(40.dp)
-            .clip(shape)
-            .background(colors.accentPrimary.copy(alpha = 0.10f))
-            .border(1.dp, colors.accentPrimary.copy(alpha = 0.58f), shape)
+            .techSurface(
+                shape = CircleShape,
+                active = true,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Button
+            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -278,6 +287,63 @@ private fun TodoAddButton(onClick: () -> Unit) {
                 cap = StrokeCap.Square
             )
         }
+    }
+}
+
+@Composable
+private fun TodoAddTaskRow(onClick: () -> Unit) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(14.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .clip(shape)
+            .drawBehind {
+                val stroke = Stroke(
+                    width = 1.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 8.dp.toPx()))
+                )
+                drawRoundRect(
+                    color = colors.accentPrimary.copy(alpha = 0.28f),
+                    topLeft = Offset(0.5.dp.toPx(), 0.5.dp.toPx()),
+                    size = Size(size.width - 1.dp.toPx(), size.height - 1.dp.toPx()),
+                    cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
+                    style = stroke
+                )
+            }
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Canvas(modifier = Modifier.size(20.dp)) {
+            drawLine(
+                color = colors.accentPrimary,
+                start = Offset(size.width * 0.50f, size.height * 0.08f),
+                end = Offset(size.width * 0.50f, size.height * 0.92f),
+                strokeWidth = 2.dp.toPx(),
+                cap = StrokeCap.Square
+            )
+            drawLine(
+                color = colors.accentPrimary,
+                start = Offset(size.width * 0.08f, size.height * 0.50f),
+                end = Offset(size.width * 0.92f, size.height * 0.50f),
+                strokeWidth = 2.dp.toPx(),
+                cap = StrokeCap.Square
+            )
+        }
+        Text(
+            text = "Додати завдання",
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = colors.accentPrimary,
+                fontWeight = FontWeight.Medium,
+                fontSize = 18.sp,
+                lineHeight = 22.sp
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

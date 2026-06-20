@@ -42,6 +42,7 @@ import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.OneRepMaxText
 import com.ihor.thesystem.core.ui.components.RankBadge
+import com.ihor.thesystem.core.ui.components.systemLargePanelShape
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 @Composable
@@ -57,7 +58,7 @@ fun MatrixEntryCardPremium(
         entry.progressPercent >= 0.5f -> colors.accentPrimary
         else -> colors.accentInfo
     }
-    val shape = RoundedCornerShape(SystemTheme.shapes.extraLarge)
+    val shape = systemLargePanelShape()
     val cardAlpha by animateFloatAsState(
         targetValue = if (entry.isActive) 1f else 0.4f,
         label = "matrix-card-alpha"

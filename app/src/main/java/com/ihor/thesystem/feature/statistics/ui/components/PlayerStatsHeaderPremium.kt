@@ -25,6 +25,7 @@ import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.asUiText
+import com.ihor.thesystem.core.ui.components.systemLargePanelShape
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 
 @Composable
@@ -34,7 +35,7 @@ fun PlayerStatsHeaderPremium(
 ) {
     val context = LocalContext.current
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.extraLarge)
+    val shape = systemLargePanelShape()
     Box(
         modifier = modifier
             .fillMaxWidth()

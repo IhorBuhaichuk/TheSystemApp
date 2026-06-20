@@ -38,7 +38,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -99,50 +98,20 @@ fun SystemButton(
     glow: Boolean = false
 ) {
     val colors = SystemTheme.colors
-    val glowTokens = SystemTheme.glow
     val shape = SystemCutCornerShape(12.dp)
-    val backgroundBrush = if (enabled) {
-        Brush.linearGradient(
-            listOf(
-                accent.copy(alpha = 0.46f),
-                accent.copy(alpha = 0.20f),
-                colors.backgroundElevated.copy(alpha = 0.82f)
-            ),
-            start = Offset.Zero,
-            end = Offset.Infinite
-        )
-    } else {
-        Brush.verticalGradient(
-            listOf(
-                colors.overlayLight.copy(alpha = 0.035f),
-                colors.overlayLight.copy(alpha = 0.018f)
-            )
-        )
-    }
-    val borderColor = if (enabled) accent.copy(alpha = 0.78f) else colors.borderMuted
     val iconTint = if (enabled) accent else colors.textMuted
     val contentColor = if (enabled) colors.textPrimary else colors.textMuted
 
     Row(
         modifier = modifier
             .height(52.dp)
-            .shadow(
-                elevation = when {
-                    !enabled -> 0.dp
-                    glow -> glowTokens.buttonActiveElevation
-                    else -> glowTokens.buttonElevation
-                },
+            .techSurface(
                 shape = shape,
-                ambientColor = if (enabled) {
-                    accent.copy(alpha = if (glow) 0.28f else 0.06f)
-                } else {
-                    Color.Transparent
-                },
-                spotColor = if (enabled) glowTokens.shadowSpot else Color.Transparent
+                active = glow && enabled,
+                accent = accent,
+                role = TechSurfaceRole.Button,
+                enabled = enabled
             )
-            .clip(shape)
-            .background(backgroundBrush)
-            .border(1.dp, borderColor, shape)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 18.dp),
         horizontalArrangement = Arrangement.Center,
@@ -731,7 +700,7 @@ fun SystemBottomNav(
     content: @Composable RowScope.() -> Unit
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.extraLarge)
+    val shape = systemLargePanelShape()
     Row(
         modifier = modifier
             .fillMaxWidth()

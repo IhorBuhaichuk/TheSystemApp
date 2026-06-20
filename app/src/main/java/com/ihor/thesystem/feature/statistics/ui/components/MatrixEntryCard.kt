@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.outlined.Flag
@@ -33,6 +32,7 @@ import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.OneRepMaxText
 import com.ihor.thesystem.core.ui.components.RankBadge
+import com.ihor.thesystem.core.ui.components.systemLargePanelShape
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 @Composable
@@ -48,7 +48,7 @@ fun MatrixEntryCard(
         entry.progressPercent >= 0.5f -> colors.accentPrimary
         else -> colors.accentInfo
     }
-    val shape = RoundedCornerShape(SystemTheme.shapes.extraLarge)
+    val shape = systemLargePanelShape()
 
     Column(
         modifier = modifier

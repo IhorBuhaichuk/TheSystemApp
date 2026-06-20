@@ -18,6 +18,7 @@ data class SystemThemeTokens(
     val colors: SystemColorTokens,
     val shapes: SystemShapeTokens,
     val glow: SystemGlowTokens,
+    val material: SystemMaterialTokens,
     val motion: SystemMotionTokens
 )
 
@@ -85,6 +86,32 @@ data class SystemGlowTokens(
 )
 
 @Immutable
+data class SystemMaterialTokens(
+    val panelTop: Color,
+    val panelMid: Color,
+    val panelBottom: Color,
+    val plateTop: Color,
+    val plateMid: Color,
+    val plateBottom: Color,
+    val buttonTop: Color,
+    val buttonBottom: Color,
+    val edgeHighlight: Color,
+    val edgeShade: Color,
+    val innerHighlight: Color,
+    val innerShade: Color,
+    val reflectedPrimary: Color,
+    val reflectedAi: Color,
+    val ambientShadow: Color,
+    val contactShadow: Color,
+    val raisedElevation: Dp,
+    val activeElevation: Dp,
+    val plateElevation: Dp,
+    val buttonElevation: Dp,
+    val buttonActiveElevation: Dp,
+    val contactElevation: Dp
+)
+
+@Immutable
 data class SystemMotionTokens(
     val progressMillis: Int,
     val quickStateMillis: Int,
@@ -99,18 +126,18 @@ val AiOrganismThemeTokens = SystemThemeTokens(
         background = Color(0xFF020407),
         backgroundSecondary = Color(0xFF071018),
         backgroundElevated = Color(0xFF0A121C),
-        surfaceGlass = Color(0xA4121720),
-        surfaceGlassStrong = Color(0xD3161D29),
-        surfaceGlassSoft = Color(0x6B111824),
-        surfaceRaised = Color(0xF20B1320),
-        overlayLight = Color.White.copy(alpha = 0.045f),
-        overlayMedium = Color.White.copy(alpha = 0.075f),
-        overlayStrong = Color.White.copy(alpha = 0.12f),
-        borderSubtle = Color.White.copy(alpha = 0.10f),
-        borderMuted = Color.White.copy(alpha = 0.055f),
-        borderActive = Color(0x7A20E8FF),
-        accentPrimary = Color(0xFF25E6FF),
-        accentPrimarySoft = Color(0x2E25E6FF),
+        surfaceGlass = Color(0xB2101721),
+        surfaceGlassStrong = Color(0xE00D151F),
+        surfaceGlassSoft = Color(0x74101824),
+        surfaceRaised = Color(0xF308111A),
+        overlayLight = Color.White.copy(alpha = 0.055f),
+        overlayMedium = Color.White.copy(alpha = 0.082f),
+        overlayStrong = Color.White.copy(alpha = 0.135f),
+        borderSubtle = Color.White.copy(alpha = 0.13f),
+        borderMuted = Color.White.copy(alpha = 0.075f),
+        borderActive = Color(0x8A20E8FF),
+        accentPrimary = Color(0xFF1FE1FF),
+        accentPrimarySoft = Color(0x3025E6FF),
         accentAi = Color(0xFF9B6DFF),
         accentAiSoft = Color(0x339B6DFF),
         accentInfo = Color(0xFF5CC8FF),
@@ -152,6 +179,30 @@ val AiOrganismThemeTokens = SystemThemeTokens(
         aiGlow = Color(0xFF9B6DFF).copy(alpha = 0.24f),
         successGlow = Color(0xFF35E6A8).copy(alpha = 0.22f)
     ),
+    material = SystemMaterialTokens(
+        panelTop = Color(0xF40B141C),
+        panelMid = Color(0xF00E1822),
+        panelBottom = Color(0xEA03070C),
+        plateTop = Color(0xE80A121A),
+        plateMid = Color(0xE10B151E),
+        plateBottom = Color(0xDA03070B),
+        buttonTop = Color(0xF0062434),
+        buttonBottom = Color(0xF003111A),
+        edgeHighlight = Color.White.copy(alpha = 0.22f),
+        edgeShade = Color.Black.copy(alpha = 0.58f),
+        innerHighlight = Color.White.copy(alpha = 0.045f),
+        innerShade = Color.Black.copy(alpha = 0.22f),
+        reflectedPrimary = Color(0xFF1FE1FF).copy(alpha = 0.105f),
+        reflectedAi = Color(0xFF9B6DFF).copy(alpha = 0.085f),
+        ambientShadow = Color.Black.copy(alpha = 0.46f),
+        contactShadow = Color.Black.copy(alpha = 0.68f),
+        raisedElevation = 16.dp,
+        activeElevation = 24.dp,
+        plateElevation = 8.dp,
+        buttonElevation = 9.dp,
+        buttonActiveElevation = 20.dp,
+        contactElevation = 3.dp
+    ),
     motion = SystemMotionTokens(
         progressMillis = 720,
         quickStateMillis = 220,
@@ -183,6 +234,11 @@ object SystemTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalSystemThemeTokens.current.glow
+
+    val material: SystemMaterialTokens
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalSystemThemeTokens.current.material
 
     val motion: SystemMotionTokens
         @Composable

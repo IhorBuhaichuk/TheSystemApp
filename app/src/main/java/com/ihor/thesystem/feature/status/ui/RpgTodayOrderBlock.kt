@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -44,7 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.SystemHexagonShape
-import com.ihor.thesystem.core.ui.components.SystemPanel
+import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemLargePanelShape
+import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
 import com.ihor.thesystem.feature.status.viewmodel.QuestUiModel
@@ -59,38 +62,57 @@ internal fun TodayOrderBlock(
     val decisionType = decision?.decisionType
     val accent = colors.accentPrimary
     val readinessProgress = ((decision?.readinessScore ?: 0) / 100f).coerceIn(0f, 1f)
-    val actionEnabled = decisionType != null && decisionType != TodayTrainingDecisionType.REST
+    val isRecoveryDay = decisionType == TodayTrainingDecisionType.REST ||
+        decisionType == TodayTrainingDecisionType.ACTIVE_RECOVERY
+    val actionEnabled = decisionType != null
     val actionText = when (decisionType) {
         TodayTrainingDecisionType.NO_EXCUSE -> "Почати 7 хв"
         TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Почати відновлення"
         TodayTrainingDecisionType.DELOAD -> "Почати deload"
-        TodayTrainingDecisionType.REST -> "День без тренування"
+        TodayTrainingDecisionType.REST -> "Почати відновлення"
         null -> "План формується"
         else -> "Почати тренування"
     }
     val title = decision.todayTitle(fallbackMainQuest).uppercase()
-    val subtitle = decision.shortDecisionLabel()
+    val subtitle = if (isRecoveryDay) "Відновлення організму" else decision.shortDecisionLabel()
     val durationText = fallbackMainQuest?.estimatedDurationMinutes?.let { "$it хв" }
+        ?: if (isRecoveryDay) "12 хв" else null
     val rewardText = fallbackMainQuest?.rewardXp?.let { "+$it XP" }
+        ?: if (isRecoveryDay) "+40 XP" else null
+    val cardShape = systemLargePanelShape()
 
-    SystemPanel(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(238.dp),
-        active = true,
-        accent = accent,
-        contentPadding = 0.dp
+            .height(334.dp)
+            .techSurface(
+                shape = cardShape,
+                active = true,
+                accent = accent,
+                role = TechSurfaceRole.Panel
+            )
     ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(accent.copy(alpha = 0.16f), Color.Transparent),
+                    center = Offset(size.width * 0.72f, size.height * 0.16f),
+                    radius = size.width * 0.42f
+                ),
+                radius = size.width * 0.42f,
+                center = Offset(size.width * 0.72f, size.height * 0.16f)
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 18.dp, top = 17.dp, end = 18.dp, bottom = 15.dp)
+                .padding(start = 26.dp, top = 30.dp, end = 26.dp, bottom = 22.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(138.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .height(146.dp),
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 Column(
@@ -112,68 +134,74 @@ internal fun TodayOrderBlock(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(7.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = title,
                         style = MaterialTheme.typography.headlineMedium.copy(
                             color = colors.textPrimary,
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Black,
-                            fontSize = 30.sp,
-                            lineHeight = 31.sp,
-                            letterSpacing = 0.6.sp
+                            fontSize = 31.sp,
+                            lineHeight = 33.sp,
+                            letterSpacing = 0.sp
                         ),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(5.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = colors.textSecondary,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 17.sp,
+                            fontSize = 16.sp,
                             lineHeight = 20.sp
                         ),
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    if (durationText != null && rewardText != null) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            QuestMetric(
-                                value = durationText,
-                                label = "Тривалість",
-                                accent = colors.textSecondary,
-                                modifier = Modifier.widthIn(min = 78.dp)
-                            ) {
-                                QuestClockBadge(accent = colors.textSecondary)
-                            }
-                            QuestMetric(
-                                value = rewardText,
-                                label = "Нагорода",
-                                accent = accent,
-                                modifier = Modifier.widthIn(min = 82.dp)
-                            ) {
-                                QuestXpBadge(accent = accent)
-                            }
-                        }
-                    }
                 }
 
                 QuestReadinessRing(
                     progress = readinessProgress,
                     accent = accent,
                     modifier = Modifier
-                        .padding(top = 16.dp)
-                        .size(108.dp)
+                        .padding(top = 6.dp)
+                        .size(110.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            if (durationText != null && rewardText != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    QuestMetric(
+                        value = durationText,
+                        label = "Тривалість",
+                        accent = colors.textSecondary,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(58.dp)
+                    ) {
+                        QuestClockBadge(accent = colors.textSecondary)
+                    }
+                    QuestMetric(
+                        value = rewardText,
+                        label = "Нагорода",
+                        accent = accent,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(58.dp)
+                    ) {
+                        QuestXpBadge(accent = accent)
+                    }
+                }
+                Spacer(modifier = Modifier.height(18.dp))
+            } else {
+                Spacer(modifier = Modifier.height(76.dp))
+            }
 
             QuestPrimaryButton(
                 text = actionText,
@@ -195,9 +223,17 @@ private fun QuestMetric(
     icon: @Composable () -> Unit
 ) {
     val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(13.dp)
     Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
+        modifier = modifier
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
+            .padding(horizontal = 22.dp),
+        horizontalArrangement = Arrangement.spacedBy(13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -216,8 +252,8 @@ private fun QuestMetric(
                 style = MaterialTheme.typography.titleSmall.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
-                    lineHeight = 16.sp
+                    fontSize = 17.sp,
+                    lineHeight = 19.sp
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -228,7 +264,7 @@ private fun QuestMetric(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Medium,
                     fontSize = 9.sp,
-                    lineHeight = 10.sp,
+                    lineHeight = 11.sp,
                     letterSpacing = 0.6.sp
                 ),
                 maxLines = 1,
@@ -293,7 +329,7 @@ private fun QuestReadinessRing(
     val clamped = progress.coerceIn(0f, 1f)
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val stroke = 9.dp.toPx()
+            val stroke = 10.dp.toPx()
             val inset = stroke / 2f
             val arcSize = Size(size.width - stroke, size.height - stroke)
             drawCircle(
@@ -305,7 +341,7 @@ private fun QuestReadinessRing(
                 center = center
             )
             drawArc(
-                color = colors.overlayMedium.copy(alpha = 0.85f),
+                color = accent.copy(alpha = 0.16f),
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -313,25 +349,21 @@ private fun QuestReadinessRing(
                 size = arcSize,
                 style = Stroke(width = stroke, cap = StrokeCap.Butt)
             )
-            repeat(28) { index ->
-                val segmentProgress = (index + 1) / 28f
-                val isActive = segmentProgress <= clamped
-                drawArc(
-                    brush = Brush.sweepGradient(
-                        colors = listOf(
-                            accent.copy(alpha = if (isActive) 0.78f else 0.10f),
-                            Color(0xFF008CFF).copy(alpha = if (isActive) 0.96f else 0.10f),
-                            accent.copy(alpha = if (isActive) 0.78f else 0.10f)
-                        )
-                    ),
-                    startAngle = -90f + index * (360f / 28f),
-                    sweepAngle = 8.2f,
-                    useCenter = false,
-                    topLeft = Offset(inset, inset),
-                    size = arcSize,
-                    style = Stroke(width = stroke, cap = StrokeCap.Butt)
-                )
-            }
+            drawArc(
+                brush = Brush.sweepGradient(
+                    colors = listOf(
+                        accent,
+                        Color(0xFF19B8FF),
+                        accent
+                    )
+                ),
+                startAngle = -90f,
+                sweepAngle = 360f * clamped,
+                useCenter = false,
+                topLeft = Offset(inset, inset),
+                size = arcSize,
+                style = Stroke(width = stroke, cap = StrokeCap.Butt)
+            )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
@@ -340,8 +372,8 @@ private fun QuestReadinessRing(
                     color = colors.textPrimary,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Black,
-                    fontSize = 30.sp,
-                    lineHeight = 31.sp,
+                    fontSize = 34.sp,
+                    lineHeight = 35.sp,
                     textAlign = TextAlign.Center
                 )
             )
@@ -350,8 +382,8 @@ private fun QuestReadinessRing(
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 9.sp,
-                    lineHeight = 10.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 13.sp,
                     letterSpacing = 0.7.sp,
                     textAlign = TextAlign.Center
                 ),
@@ -371,27 +403,17 @@ private fun QuestPrimaryButton(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    val shape = QuestButtonShape()
+    val shape = RoundedCornerShape(14.dp)
     Box(
         modifier = modifier
-            .height(54.dp)
-            .clip(shape)
-            .background(
-                Brush.linearGradient(
-                    colors = if (enabled) {
-                        listOf(
-                            accent.copy(alpha = 0.78f),
-                            Color(0xFF087DBD).copy(alpha = 0.78f),
-                            colors.backgroundElevated.copy(alpha = 0.92f)
-                        )
-                    } else {
-                        listOf(colors.overlayMedium, colors.surfaceGlassStrong)
-                    },
-                    start = Offset.Zero,
-                    end = Offset.Infinite
-                )
+            .height(58.dp)
+            .techSurface(
+                shape = shape,
+                active = enabled,
+                accent = accent,
+                role = TechSurfaceRole.Button,
+                enabled = enabled
             )
-            .border(1.dp, if (enabled) accent.copy(alpha = 0.86f) else colors.borderMuted, shape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -406,14 +428,14 @@ private fun QuestPrimaryButton(
         }
         Text(
             text = text.uppercase(),
-            modifier = Modifier.padding(horizontal = 48.dp),
+            modifier = Modifier.padding(start = 24.dp, end = 54.dp),
             style = MaterialTheme.typography.titleMedium.copy(
                 color = if (enabled) colors.textPrimary else colors.textMuted,
                 fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Black,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 lineHeight = 20.sp,
-                letterSpacing = 1.4.sp,
+                letterSpacing = 0.6.sp,
                 textAlign = TextAlign.Center
             ),
             maxLines = 1,
@@ -458,7 +480,7 @@ private fun TodayTrainingDecision?.todayTitle(fallbackMainQuest: QuestUiModel?):
         TodayTrainingDecisionType.NO_EXCUSE -> "No Excuse Protocol"
         TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Recovery Protocol"
         TodayTrainingDecisionType.DELOAD -> "Deload Session"
-        TodayTrainingDecisionType.REST -> "День без тренування"
+        TodayTrainingDecisionType.REST -> "Recovery Protocol"
         null -> fallbackMainQuest?.title ?: "Recovery Protocol"
         else -> workoutName ?: fallbackMainQuest?.title ?: "Recovery Protocol"
     }

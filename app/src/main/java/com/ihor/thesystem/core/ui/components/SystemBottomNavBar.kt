@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -61,36 +59,19 @@ fun SystemBottomNavBar(navController: NavHostController) {
             .background(Color.Transparent)
             .navigationBarsPadding()
             .padding(horizontal = 8.dp, vertical = 5.dp)
-            .height(101.dp)
+            .height(112.dp)
     ) {
-        val navShape = SystemCutCornerShape(17.dp)
+        val navShape = systemLargePanelShape()
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(82.dp)
-                .clip(navShape)
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xF403060A),
-                            Color(0xF20B121C),
-                            Color(0xF405080D)
-                        ),
-                        start = Offset.Zero,
-                        end = Offset.Infinite
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.linearGradient(
-                        listOf(
-                            colors.overlayStrong.copy(alpha = 0.60f),
-                            colors.borderSubtle.copy(alpha = 0.78f),
-                            Color.Black.copy(alpha = 0.80f)
-                        )
-                    ),
-                    shape = navShape
+                .height(86.dp)
+                .techSurface(
+                    shape = navShape,
+                    active = false,
+                    accent = colors.accentPrimary,
+                    role = TechSurfaceRole.Panel
                 )
         ) {
             NavPanelTexture(modifier = Modifier.matchParentSize())
@@ -100,8 +81,8 @@ fun SystemBottomNavBar(navController: NavHostController) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(98.dp)
-                .padding(horizontal = 5.dp),
+                .height(104.dp)
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
@@ -155,23 +136,23 @@ private fun NavIconButton(
         label = "bottom_nav_selection"
     )
     val iconScale by animateFloatAsState(
-        targetValue = if (item.isSelected) 1.18f else 1f,
+        targetValue = if (item.isSelected) 1.14f else 1f,
         animationSpec = tween(durationMillis = motion.progressMillis),
         label = "bottom_nav_icon_scale"
     )
     val itemHeight by animateFloatAsState(
-        targetValue = if (item.isSelected) 96f else 76f,
+        targetValue = if (item.isSelected) 90f else 78f,
         animationSpec = tween(durationMillis = motion.progressMillis),
         label = "bottom_nav_item_height"
     )
     val iconColor = if (item.isSelected) activeColor else Color(0xFFA3A7AE).copy(alpha = 0.78f)
     val labelColor = if (item.isSelected) activeColor else Color(0xFF9B9EA5).copy(alpha = 0.72f)
-    val activeShape = SystemCutCornerShape(13.dp)
+    val activeShape = systemLargePanelShape()
 
     Box(
         modifier = modifier
             .height(itemHeight.dp)
-            .padding(start = 1.dp, top = 0.dp, end = 1.dp, bottom = if (item.isSelected) 0.dp else 7.dp)
+            .padding(start = 1.dp, top = 0.dp, end = 1.dp, bottom = if (item.isSelected) 0.dp else 4.dp)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -179,37 +160,20 @@ private fun NavIconButton(
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .padding(start = 2.dp, top = 2.dp, end = 2.dp, bottom = 1.dp)
-                    .blur(13.dp)
-                    .background(activeColor.copy(alpha = 0.20f * selection), activeShape)
+                    .padding(start = 7.dp, top = 6.dp, end = 7.dp, bottom = 3.dp)
+                    .blur(14.dp)
+                    .background(activeColor.copy(alpha = 0.18f * selection), activeShape)
             )
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .padding(start = 3.dp, top = 0.dp, end = 3.dp, bottom = 1.dp)
-                    .clip(activeShape)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                activeColor.copy(alpha = 0.13f * selection),
-                                Color(0xFF07111B).copy(alpha = 0.95f * selection),
-                                Color(0xFF02050A).copy(alpha = 0.98f * selection)
-                            ),
-                            start = Offset.Zero,
-                            end = Offset.Infinite
-                        )
-                    )
-                    .border(
-                        width = 1.dp,
-                        brush = Brush.linearGradient(
-                            listOf(
-                                activeColor.copy(alpha = 0.80f * selection),
-                                Color.White.copy(alpha = 0.18f * selection),
-                                Color.Black.copy(alpha = 0.55f * selection),
-                                activeColor.copy(alpha = 0.50f * selection)
-                            )
-                        ),
-                        shape = activeShape
+                    .padding(start = 7.dp, top = 5.dp, end = 7.dp, bottom = 3.dp)
+                    .graphicsLayer { alpha = selection }
+                    .techSurface(
+                        shape = activeShape,
+                        active = true,
+                        accent = activeColor,
+                        role = TechSurfaceRole.Plate
                     )
             )
         }
@@ -217,12 +181,12 @@ private fun NavIconButton(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = if (item.isSelected) 10.dp else 7.dp, bottom = 8.dp),
+                .padding(top = if (item.isSelected) 11.dp else 8.dp, bottom = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Box(
-                modifier = Modifier.size(if (item.isSelected) 47.dp else 40.dp),
+                modifier = Modifier.size(if (item.isSelected) 43.dp else 36.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (selection > 0.01f) {
@@ -243,7 +207,7 @@ private fun NavIconButton(
                     color = iconColor,
                     glow = selection,
                     modifier = Modifier
-                        .size(if (item.isSelected) 34.dp else 27.dp)
+                        .size(if (item.isSelected) 30.dp else 24.dp)
                         .graphicsLayer {
                             scaleX = iconScale
                             scaleY = iconScale
@@ -255,8 +219,8 @@ private fun NavIconButton(
                 text = item.label,
                 color = labelColor,
                 fontFamily = FontFamily.SansSerif,
-                fontSize = if (item.isSelected) 11.sp else 10.sp,
-                lineHeight = 12.sp,
+                fontSize = if (item.isSelected) 10.sp else 9.sp,
+                lineHeight = 14.sp,
                 letterSpacing = 0.5.sp,
                 fontWeight = if (item.isSelected) FontWeight.Black else FontWeight.SemiBold,
                 maxLines = 1,

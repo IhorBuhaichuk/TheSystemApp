@@ -48,7 +48,7 @@ fun SystemDialogContainer(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.extraLarge)
+    val shape = systemLargePanelShape()
 
     Box(
         modifier = modifier

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Icon
@@ -27,6 +28,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -103,6 +105,146 @@ data class SystemHexagonShape(
 }
 
 @Composable
+fun systemLargePanelShape(): RoundedCornerShape =
+    RoundedCornerShape(SystemTheme.shapes.large)
+
+enum class TechSurfaceRole {
+    Panel,
+    Plate,
+    Button
+}
+
+@Composable
+fun Modifier.techSurface(
+    shape: Shape = systemLargePanelShape(),
+    active: Boolean = false,
+    accent: Color = SystemTheme.colors.accentPrimary,
+    role: TechSurfaceRole = TechSurfaceRole.Panel,
+    enabled: Boolean = true
+): Modifier {
+    val colors = SystemTheme.colors
+    val material = SystemTheme.material
+    val baseBrush = when {
+        role == TechSurfaceRole.Button && enabled -> Brush.linearGradient(
+            listOf(
+                accent.copy(alpha = 0.50f),
+                material.buttonTop,
+                material.buttonBottom
+            ),
+            start = Offset.Zero,
+            end = Offset.Infinite
+        )
+        role == TechSurfaceRole.Plate || !enabled -> Brush.linearGradient(
+            listOf(material.plateTop, material.plateMid, material.plateBottom),
+            start = Offset.Zero,
+            end = Offset.Infinite
+        )
+        else -> Brush.linearGradient(
+            listOf(material.panelTop, material.panelMid, material.panelBottom),
+            start = Offset.Zero,
+            end = Offset.Infinite
+        )
+    }
+    val elevation = when {
+        !enabled -> 0.dp
+        active -> material.activeElevation
+        role == TechSurfaceRole.Button -> material.buttonElevation
+        role == TechSurfaceRole.Plate -> material.plateElevation
+        else -> material.raisedElevation
+    }
+    val ambientColor = when {
+        !enabled -> Color.Transparent
+        active -> accent.copy(alpha = if (role == TechSurfaceRole.Button) 0.24f else 0.16f)
+        else -> material.ambientShadow
+    }
+    val borderBrush = Brush.linearGradient(
+        listOf(
+            material.edgeHighlight.copy(alpha = if (enabled) 0.92f else 0.34f),
+            if (enabled && active) accent.copy(alpha = 0.78f) else colors.borderSubtle.copy(alpha = 0.78f),
+            material.edgeShade.copy(alpha = 0.72f),
+            if (enabled) colors.borderMuted.copy(alpha = 0.92f) else colors.borderMuted.copy(alpha = 0.42f)
+        ),
+        start = Offset.Zero,
+        end = Offset.Infinite
+    )
+    val reflectedAlpha = when {
+        !enabled -> 0.025f
+        role == TechSurfaceRole.Button -> if (active) 0.22f else 0.15f
+        active -> 0.14f
+        else -> 0.065f
+    }
+
+    return this
+        .shadow(
+            elevation = elevation,
+            shape = shape,
+            ambientColor = ambientColor,
+            spotColor = if (enabled) material.contactShadow else Color.Transparent
+        )
+        .shadow(
+            elevation = if (enabled) material.contactElevation else 0.dp,
+            shape = shape,
+            ambientColor = Color.Transparent,
+            spotColor = material.contactShadow
+        )
+        .clip(shape)
+        .background(baseBrush)
+        .drawBehind {
+            drawRect(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        material.innerHighlight,
+                        Color.Transparent,
+                        material.innerShade
+                    ),
+                    start = Offset.Zero,
+                    end = Offset(size.width, size.height)
+                )
+            )
+            drawRect(
+                brush = Brush.radialGradient(
+                    colors = listOf(accent.copy(alpha = reflectedAlpha), Color.Transparent),
+                    center = Offset(size.width * 0.18f, size.height * 0.10f),
+                    radius = size.maxDimension * 0.62f
+                )
+            )
+            drawRect(
+                brush = Brush.radialGradient(
+                    colors = listOf(accent.copy(alpha = reflectedAlpha * 0.58f), Color.Transparent),
+                    center = Offset(size.width * 0.90f, size.height * 0.82f),
+                    radius = size.maxDimension * 0.52f
+                )
+            )
+            val stroke = 1.dp.toPx()
+            drawLine(
+                color = material.edgeHighlight,
+                start = Offset(stroke / 2f, stroke / 2f),
+                end = Offset(size.width - stroke / 2f, stroke / 2f),
+                strokeWidth = stroke
+            )
+            drawLine(
+                color = material.edgeHighlight.copy(alpha = 0.14f),
+                start = Offset(stroke / 2f, stroke / 2f),
+                end = Offset(stroke / 2f, size.height - stroke / 2f),
+                strokeWidth = stroke
+            )
+            drawLine(
+                color = material.edgeShade,
+                start = Offset(stroke / 2f, size.height - stroke / 2f),
+                end = Offset(size.width - stroke / 2f, size.height - stroke / 2f),
+                strokeWidth = stroke
+            )
+            drawLine(
+                color = material.edgeShade.copy(alpha = 0.38f),
+                start = Offset(size.width - stroke / 2f, stroke / 2f),
+                end = Offset(size.width - stroke / 2f, size.height - stroke / 2f),
+                strokeWidth = stroke
+            )
+        }
+        .border(BorderStroke(1.dp, borderBrush), shape)
+}
+
+@Composable
 fun SystemPanel(
     modifier: Modifier = Modifier,
     active: Boolean = false,
@@ -110,45 +252,16 @@ fun SystemPanel(
     contentPadding: Dp = SystemCardPadding,
     content: @Composable () -> Unit
 ) {
-    val colors = SystemTheme.colors
-    val glow = SystemTheme.glow
-    val shape = SystemCutCornerShape()
+    val shape = systemLargePanelShape()
     Box(
         modifier = modifier
-            .shadow(
-                elevation = if (active) glow.activeElevation else glow.restingElevation,
+            .techSurface(
                 shape = shape,
-                ambientColor = if (active) accent.copy(alpha = 0.16f) else glow.shadowAmbient,
-                spotColor = glow.shadowSpot
-            )
-            .clip(shape)
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        Color(0xF20A0F15),
-                        Color(0xE80F1720),
-                        Color(0xD3070B10)
-                    ),
-                    start = Offset.Zero,
-                    end = Offset.Infinite
-                )
-            )
-            .border(
-                BorderStroke(
-                    1.dp,
-                    Brush.linearGradient(
-                        listOf(
-                            colors.overlayStrong.copy(alpha = 0.62f),
-                            if (active) accent.copy(alpha = 0.78f) else colors.borderSubtle.copy(alpha = 0.72f),
-                            Color(0xFF0D1117),
-                            colors.borderMuted
-                        )
-                    )
-                ),
-                shape
+                active = active,
+                accent = accent,
+                role = TechSurfaceRole.Panel
             )
     ) {
-        PanelTexture(accent = accent, active = active)
         Box(modifier = Modifier.padding(contentPadding)) {
             content()
         }
@@ -393,6 +506,67 @@ fun SystemAvatarBadge(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun SystemHoodBadge(
+    modifier: Modifier = Modifier,
+    accent: Color = SystemTheme.colors.accentPrimary,
+    onClick: (() -> Unit)? = null
+) {
+    Canvas(
+        modifier = modifier.then(
+            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+        )
+    ) {
+        val hex = Path().apply {
+            moveTo(size.width * 0.50f, size.height * 0.02f)
+            lineTo(size.width * 0.90f, size.height * 0.25f)
+            lineTo(size.width * 0.90f, size.height * 0.70f)
+            lineTo(size.width * 0.50f, size.height * 0.98f)
+            lineTo(size.width * 0.10f, size.height * 0.70f)
+            lineTo(size.width * 0.10f, size.height * 0.25f)
+            close()
+        }
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(accent.copy(alpha = 0.30f), Color.Transparent),
+                center = Offset(size.width * 0.50f, size.height * 0.98f),
+                radius = size.width * 0.34f
+            ),
+            radius = size.width * 0.34f,
+            center = Offset(size.width * 0.50f, size.height * 0.98f)
+        )
+        drawPath(hex, color = Color(0x0A00E5FF))
+        drawPath(
+            hex,
+            color = accent.copy(alpha = 0.96f),
+            style = Stroke(width = 1.85.dp.toPx())
+        )
+        val hood = Path().apply {
+            moveTo(size.width * 0.29f, size.height * 0.72f)
+            cubicTo(
+                size.width * 0.29f, size.height * 0.20f,
+                size.width * 0.71f, size.height * 0.20f,
+                size.width * 0.71f, size.height * 0.72f
+            )
+            cubicTo(
+                size.width * 0.61f, size.height * 0.66f,
+                size.width * 0.39f, size.height * 0.66f,
+                size.width * 0.29f, size.height * 0.72f
+            )
+            close()
+        }
+        drawPath(hood, color = Color(0x3302070D))
+        drawPath(
+            hood,
+            color = accent.copy(alpha = 0.74f),
+            style = Stroke(width = 0.8.dp.toPx())
+        )
+        drawCircle(accent, radius = 2.55.dp.toPx(), center = Offset(size.width * 0.43f, size.height * 0.52f))
+        drawCircle(accent, radius = 2.55.dp.toPx(), center = Offset(size.width * 0.57f, size.height * 0.52f))
+        drawCircle(accent.copy(alpha = 0.92f), radius = 2.1.dp.toPx(), center = Offset(size.width * 0.50f, size.height * 0.98f))
     }
 }
 
