@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Today
@@ -37,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,22 +55,20 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemCutCornerShape
 import com.ihor.thesystem.core.ui.components.SystemHexIcon
-import com.ihor.thesystem.core.ui.components.SystemMetricBlock
 import com.ihor.thesystem.core.ui.components.SystemPanel
 import com.ihor.thesystem.core.ui.components.SystemProgressBar
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemSectionTitle
-import com.ihor.thesystem.domain.model.Rank
+import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.feature.status.ui.WorkoutDialogHost
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
 import com.ihor.thesystem.feature.status.viewmodel.CycleDayUiModel
 import com.ihor.thesystem.feature.status.viewmodel.DayType
-import com.ihor.thesystem.feature.status.viewmodel.ExerciseWorkoutUiModel
 import com.ihor.thesystem.feature.status.viewmodel.StatusUiData
 import com.ihor.thesystem.feature.status.viewmodel.StatusViewModel
 import com.ihor.thesystem.feature.status.viewmodel.WorkoutViewModel
 import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
-import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 import kotlin.math.roundToInt
 
 @Composable
@@ -125,6 +123,12 @@ fun CycleScreen(
                 activeWorkout = activeWorkout,
                 cycleDays = cycleDays
             )
+            ActiveCyclePanel(
+                statusData = statusData,
+                activeWorkout = activeWorkout,
+                cycleDays = cycleDays,
+                onEditCycle = workoutViewModel::onOpenWorkoutSettings
+            )
             TrainingDaySwitcher(
                 days = cycleDays,
                 onSelectDay = workoutViewModel::onCycleDaySelected
@@ -147,17 +151,6 @@ fun CycleScreen(
                     onAddExercise = openExercisePicker
                 )
             } else {
-                val workout = requireNotNull(activeWorkout)
-                DayOverviewCard(
-                    workout = workout,
-                    onEditDay = workoutViewModel::onOpenWorkoutSettings
-                )
-                TrainingStackCard(
-                    workout = workout,
-                    onOpenExercise = { exercise ->
-                        workoutViewModel.onOpenSetup(exercise.toMatrixEntry(workout))
-                    }
-                )
                 CycleActions(
                     onStartWorkout = workoutViewModel::onOpenMainWorkout,
                     onEditDay = workoutViewModel::onOpenWorkoutSettings,
@@ -196,44 +189,41 @@ private fun SystemOverviewPanel(
     }.coerceIn(0f, 1f)
     val activeDay = cycleDays.firstOrNull { it.isActive }?.dayNumber ?: activeWorkout?.dayNumber ?: 1
     val totalDays = cycleDays.size.coerceAtLeast(1)
+    val workoutDays = cycleDays.count { it.type == DayType.WORKOUT }
+    val phaseLabel = if ((activeWorkout?.exercises?.isNotEmpty() == true) || workoutDays > 0) {
+        "Build"
+    } else {
+        "Recovery"
+    }
 
     SystemPanel(modifier = Modifier.fillMaxWidth(), active = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(SystemCardPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     SystemSectionTitle(title = "Огляд системи")
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(
-                            text = statusData?.level?.toString() ?: "-",
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                color = colors.accentPrimary,
-                                fontWeight = FontWeight.Black
-                            ),
-                            maxLines = 1
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        SystemHeroStat(
+                            label = "Рівень",
+                            value = statusData?.level?.toString() ?: "-",
+                            accent = colors.accentPrimary,
+                            modifier = Modifier.weight(1f)
                         )
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(
-                                text = "Рівень",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = colors.textSecondary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                            Text(
-                                text = "Ранг ${statusData?.globalRank?.name ?: "-"}",
-                                style = MaterialTheme.typography.headlineSmall.copy(
-                                    color = colors.textPrimary,
-                                    fontWeight = FontWeight.Black
-                                )
-                            )
-                        }
+                        SystemHeroStat(
+                            label = "Ранг",
+                            value = statusData?.globalRank?.name ?: "-",
+                            accent = colors.textPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                     Text(
-                        text = "Активний день: $activeDay / $totalDays",
+                        text = "Активна фаза: $phaseLabel     День циклу: $activeDay / $totalDays",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = colors.textSecondary,
                             fontWeight = FontWeight.SemiBold
@@ -245,29 +235,7 @@ private fun SystemOverviewPanel(
                 SystemHexIcon(
                     icon = Icons.Filled.FitnessCenter,
                     accent = colors.accentPrimary,
-                    modifier = Modifier.size(104.dp)
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SystemMetricBlock(
-                    label = "Вправи",
-                    value = activeWorkout?.exercises?.size?.toString() ?: "0",
-                    modifier = Modifier.weight(1f)
-                )
-                SystemMetricBlock(
-                    label = "Підходи",
-                    value = activeWorkout?.totalSetCount()?.toString() ?: "0",
-                    modifier = Modifier.weight(1f),
-                    accent = colors.accentSuccess
-                )
-                SystemMetricBlock(
-                    label = "День",
-                    value = activeDay.toString(),
-                    modifier = Modifier.weight(1f),
-                    accent = colors.accentAi
+                    modifier = Modifier.size(112.dp)
                 )
             }
             Row(
@@ -297,6 +265,169 @@ private fun SystemOverviewPanel(
                     .height(7.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun SystemHeroStat(
+    label: String,
+    value: String,
+    accent: Color,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Text(
+            text = label.uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = colors.textSecondary,
+                fontWeight = FontWeight.Black
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.displayLarge.copy(
+                color = accent,
+                fontWeight = FontWeight.Black
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun ActiveCyclePanel(
+    statusData: StatusUiData?,
+    activeWorkout: ActiveDayUiModel?,
+    cycleDays: List<CycleDayUiModel>,
+    onEditCycle: () -> Unit
+) {
+    val colors = SystemTheme.colors
+    val selectedDay = cycleDays.firstOrNull { it.isSelected } ?: cycleDays.firstOrNull { it.isActive }
+    val activeDay = cycleDays.firstOrNull { it.isActive }?.dayNumber ?: activeWorkout?.dayNumber ?: selectedDay?.dayNumber ?: 1
+    val totalDays = cycleDays.size.coerceAtLeast(1)
+    val workoutDays = cycleDays.count { it.type == DayType.WORKOUT }
+    val cycleName = activeWorkout?.workoutName
+        ?: selectedDay?.workoutName
+        ?: if (workoutDays > 1) "Full Body / Workout A-B" else "Full Body"
+    val nextWorkout = activeWorkout?.workoutName
+        ?: cycleDays.firstOrNull { it.type == DayType.WORKOUT && it.isActive }?.workoutName
+        ?: selectedDay?.workoutName
+        ?: "Workout ${activeDay.toWorkoutLetter()}"
+    val progressLabel = statusData?.let { data ->
+        "${data.monthWorkoutsCompleted} / ${data.monthWorkoutsTotal.coerceAtLeast(1)}"
+    } ?: "$workoutDays / $totalDays"
+
+    SystemPanel(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(SystemCardPadding),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(11.dp)
+            ) {
+                SystemSectionTitle(title = "Активний цикл")
+                CycleDetailLine(
+                    icon = Icons.Filled.Settings,
+                    label = "Цикл",
+                    value = cycleName
+                )
+                CycleDetailLine(
+                    icon = Icons.Filled.Today,
+                    label = "День циклу",
+                    value = "$activeDay / $totalDays",
+                    accent = colors.accentAi
+                )
+                CycleDetailLine(
+                    icon = Icons.Filled.FitnessCenter,
+                    label = "Тренувань на тиждень",
+                    value = workoutDays.toString(),
+                    accent = colors.accentPrimary
+                )
+                CycleDetailLine(
+                    icon = Icons.AutoMirrored.Filled.ArrowForward,
+                    label = "Наступне тренування",
+                    value = nextWorkout
+                )
+            }
+            Column(
+                modifier = Modifier.weight(0.68f),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                SystemHexIcon(
+                    icon = Icons.Filled.Edit,
+                    accent = colors.accentPrimary,
+                    modifier = Modifier.size(64.dp)
+                )
+                Text(
+                    text = "Прогрес $progressLabel",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = colors.textMuted,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                SystemButton(
+                    text = "Редагувати цикл",
+                    icon = Icons.Filled.Edit,
+                    onClick = onEditCycle,
+                    glow = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CycleDetailLine(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    accent: Color? = null
+) {
+    val colors = SystemTheme.colors
+    val iconTint = accent ?: colors.textSecondary
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(19.dp)
+        )
+        Text(
+            text = "$label:",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = colors.textMuted,
+                fontWeight = FontWeight.Bold
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = colors.textSecondary,
+                fontWeight = FontWeight.SemiBold
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -340,6 +471,11 @@ private fun CycleDayChip(
 ) {
     val colors = SystemTheme.colors
     val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    val accent = when {
+        day.isSelected || day.isActive -> colors.accentPrimary
+        day.type == DayType.WORKOUT -> colors.textSecondary
+        else -> colors.textMuted
+    }
     val subtitle = when {
         day.isActive -> "Сьогодні"
         day.workoutName != null -> day.workoutName
@@ -349,21 +485,11 @@ private fun CycleDayChip(
     Column(
         modifier = modifier
             .height(108.dp)
-            .clip(shape)
-            .background(
-                when {
-                    day.isSelected -> colors.accentPrimary.copy(alpha = 0.18f)
-                    day.isActive -> colors.accentPrimary.copy(alpha = 0.12f)
-                    else -> colors.surfaceGlassSoft.copy(alpha = 0.74f)
-                }
-            )
-            .border(
-                if (day.isSelected || day.isActive) 1.4.dp else 1.dp,
-                when {
-                    day.isSelected || day.isActive -> colors.accentPrimary.copy(alpha = 0.72f)
-                    else -> colors.borderSubtle
-                },
-                shape
+            .techSurface(
+                shape = shape,
+                active = day.isSelected || day.isActive,
+                accent = accent,
+                role = TechSurfaceRole.Plate
             )
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 10.dp),
@@ -434,206 +560,6 @@ private fun TodayCycleActivationCard(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-    }
-}
-
-@Composable
-private fun DayOverviewCard(
-    workout: ActiveDayUiModel,
-    onEditDay: () -> Unit
-) {
-    DarkGlassCard(modifier = Modifier.fillMaxWidth(), active = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            SystemSectionHeader(
-                title = "День ${workout.dayNumber} · ${workout.workoutName ?: "Тренування"}",
-                subtitle = "Основна картка дня",
-                trailing = {
-                    CompactActionButton(
-                        icon = Icons.Filled.Edit,
-                        onClick = onEditDay
-                    )
-                }
-            )
-            workout.adjustmentReason?.let { reason ->
-                AdjustmentReasonRow(reason = reason)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SummaryMetric(
-                    label = "Вправи",
-                    value = workout.exercises.size.toString(),
-                    modifier = Modifier.weight(1f)
-                )
-                SummaryMetric(
-                    label = "Підходи",
-                    value = workout.totalSetCount().toString(),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun AdjustmentReasonRow(reason: String) {
-    val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(colors.overlayLight)
-            .border(1.dp, colors.borderSubtle, shape)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Info,
-            contentDescription = null,
-            tint = colors.accentAi,
-            modifier = Modifier.size(18.dp)
-        )
-        Text(
-            text = reason,
-            style = MaterialTheme.typography.bodySmall.copy(
-                color = colors.textSecondary,
-                fontWeight = FontWeight.SemiBold
-            ),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
-private fun SummaryMetric(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
-    Column(
-        modifier = modifier
-            .clip(shape)
-            .background(colors.overlayLight)
-            .border(1.dp, colors.borderSubtle, shape)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = colors.textMuted,
-                fontWeight = FontWeight.Bold
-            )
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge.copy(
-                color = colors.textPrimary,
-                fontWeight = FontWeight.Black
-            )
-        )
-    }
-}
-
-@Composable
-private fun TrainingStackCard(
-    workout: ActiveDayUiModel,
-    onOpenExercise: (ExerciseWorkoutUiModel) -> Unit
-) {
-    DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SystemSectionHeader(
-                title = "Тренувальний стек",
-                subtitle = "Цільові ваги, підходи та повторення"
-            )
-            workout.exercises.forEachIndexed { index, exercise ->
-                ExerciseStackRow(
-                    index = index + 1,
-                    exercise = exercise,
-                    onClick = { onOpenExercise(exercise) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ExerciseStackRow(
-    index: Int,
-    exercise: ExerciseWorkoutUiModel,
-    onClick: () -> Unit
-) {
-    val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surfaceGlassSoft)
-            .border(1.dp, colors.borderSubtle, shape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(RoundedCornerShape(SystemTheme.shapes.small))
-                .background(colors.accentPrimarySoft)
-                .border(
-                    1.dp,
-                    colors.accentPrimary.copy(alpha = 0.28f),
-                    RoundedCornerShape(SystemTheme.shapes.small)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = index.toString(),
-                style = MaterialTheme.typography.labelMedium.copy(
-                    color = colors.accentPrimary,
-                    fontWeight = FontWeight.Black
-                )
-            )
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                text = exercise.nameUk ?: exercise.name,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = colors.textPrimary,
-                    fontWeight = FontWeight.Bold
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = "Ціль: ${exercise.targetWeightText()}",
-                style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-        Text(
-            text = exercise.setSchemeText(),
-            style = MaterialTheme.typography.labelMedium.copy(
-                color = colors.textSecondary,
-                fontWeight = FontWeight.Bold
-            ),
-            maxLines = 1
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-            contentDescription = null,
-            tint = colors.textMuted,
-            modifier = Modifier.size(18.dp)
-        )
     }
 }
 
@@ -940,38 +866,5 @@ private fun CompactActionButton(
         )
     }
 }
-
-private fun ActiveDayUiModel.totalSetCount(): Int =
-    exercises.sumOf { exercise -> exercise.recommendedSets ?: exercise.sets.size }
-
-private fun ExerciseWorkoutUiModel.targetWeightText(): String =
-    recommendedWeight
-        ?.takeIf { it > 0.0 }
-        ?.let { "${it.formatWeight()} кг" }
-        ?: "не задано"
-
-private fun ExerciseWorkoutUiModel.setSchemeText(): String {
-    val sets = recommendedSets ?: this.sets.size.takeIf { it > 0 } ?: 1
-    val reps = recommendedReps ?: 0
-    return if (reps > 0) "$sets x $reps" else "$sets підх."
-}
-
-private fun Double.formatWeight(): String =
-    if (this % 1.0 == 0.0) toInt().toString() else "%.1f".format(this)
-
-private fun ExerciseWorkoutUiModel.toMatrixEntry(workout: ActiveDayUiModel): MatrixEntryUiModel =
-    workout.matrixEntries.find { it.exerciseId == exerciseId }
-        ?: MatrixEntryUiModel(
-            exerciseId = exerciseId,
-            exerciseName = nameUk ?: name,
-            startWeight = 0f,
-            targetWeight = recommendedWeight?.toFloat() ?: 0f,
-            currentWeight = recommendedWeight?.toFloat() ?: 0f,
-            targetWeightNote = null,
-            weeklyStep = 0f,
-            progressPercent = 0f,
-            currentRank = Rank.E,
-            usesExternalLoad = trackingMode.usesWeightInput
-        )
 
 private const val CYCLE_DAY_COLUMNS = 4
