@@ -95,13 +95,13 @@ import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.BossFight
 import com.ihor.thesystem.domain.model.BossFightStatus
 import com.ihor.thesystem.domain.model.BossFightTargetMetric
-import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.feature.status.viewmodel.QuestUiModel
 import com.ihor.thesystem.feature.status.viewmodel.StatusUiData
 import com.ihor.thesystem.feature.status.viewmodel.StatusWeekDayStatus
 import com.ihor.thesystem.feature.status.viewmodel.StatusWeekDayUiModel
 import com.ihor.thesystem.feature.status.viewmodel.StatusWeekDayVisualType
 import com.ihor.thesystem.feature.status.viewmodel.TaskUiModel
+import com.ihor.thesystem.feature.status.viewmodel.TodayOrderUiModel
 import com.ihor.thesystem.feature.status.viewmodel.TodoUiModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -221,8 +221,7 @@ private fun StatusActionsContent(
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
         TodayOrderBlock(
-            decision = data.todayDecision,
-            fallbackMainQuest = data.mainQuest,
+            order = data.todayOrder,
             onStartWorkout = onStartWorkout
         )
         TodoBlock(
@@ -258,7 +257,7 @@ private fun StatusInfoContent(
             onOpenCalendar = onOpenCalendar
         )
         TodayProgressBlock(data = data)
-        RecommendationPanel(decision = data.todayDecision)
+        RecommendationPanel(order = data.todayOrder)
         StatusSwipeHint()
     }
 }
@@ -602,7 +601,7 @@ private fun HeroXpPanel(
 
 @Composable
 private fun RecommendationPanel(
-    decision: TodayTrainingDecision?,
+    order: TodayOrderUiModel,
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
@@ -655,7 +654,7 @@ private fun RecommendationPanel(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = decision.displayReason(),
+                    text = order.reason,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = colors.textPrimary.copy(alpha = 0.92f),
                         fontWeight = FontWeight.Normal,

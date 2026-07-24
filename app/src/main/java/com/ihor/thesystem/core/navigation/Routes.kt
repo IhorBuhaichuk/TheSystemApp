@@ -13,6 +13,9 @@ sealed interface Routes {
     data object Status : Routes
 
     @Serializable
+    data object Onboarding : Routes
+
+    @Serializable
     data object Cycle : Routes
     
     @Serializable

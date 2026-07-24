@@ -339,7 +339,7 @@ class FinalizeSessionUseCase @Inject constructor(
 
         return AiArchitectReport(
             architectFeedback = MessageText.Resource(MessageTextKey.AI_FALLBACK_ACTIVATED),
-            currentStageStatus = "[ FALLBACK ]",
+            currentStageStatus = "[ SYSTEM_VERDICT ]",
             completedExercises = sets.filter { it.isCompleted }.map { it.exerciseId }.distinct(),
             pendingExercises = emptyList(),
             nextWorkoutDirectives = fallbackDirectives,

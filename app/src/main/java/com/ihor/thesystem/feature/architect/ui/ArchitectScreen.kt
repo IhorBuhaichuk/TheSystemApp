@@ -114,7 +114,7 @@ fun ArchitectScreen(
             AiHeader()
             AiModulesBlock(
                 hasWorkoutContext = uiState.lastWorkoutContext != null,
-                aiAvailable = uiState.aiAvailability == AiAvailabilityState.CONFIGURED,
+                aiAvailability = uiState.aiAvailability,
                 isLoading = uiState.isLoading,
                 onOpenAnnualProgression = onOpenAnnualProgression,
                 onAnalyzeWorkout = onOpenWorkoutAnalysis
@@ -129,7 +129,7 @@ fun ArchitectScreen(
                 onAnalyzeClick = viewModel::sendForAnalysis,
                 onApplyClick = viewModel::applyRecommendations,
                 onSendMessage = { message -> viewModel.sendMessage(0L, message) },
-                aiAvailable = uiState.aiAvailability == AiAvailabilityState.CONFIGURED
+                aiAvailability = uiState.aiAvailability
             )
         }
     }
@@ -156,11 +156,12 @@ private fun AiHeader() {
 @Composable
 private fun AiModulesBlock(
     hasWorkoutContext: Boolean,
-    aiAvailable: Boolean,
+    aiAvailability: AiAvailabilityState,
     isLoading: Boolean,
     onOpenAnnualProgression: () -> Unit,
     onAnalyzeWorkout: () -> Unit
 ) {
+    val aiAvailable = aiAvailability == AiAvailabilityState.CONFIGURED
     Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
         AiModuleCard(
             title = "План річної прогресії",
@@ -175,7 +176,7 @@ private fun AiModulesBlock(
             description = "Фідбек, рекомендації ваги та повторень",
             icon = Icons.Filled.Psychology,
             status = when {
-                !aiAvailable -> "AI недоступний"
+                !aiAvailable -> aiAvailability.shortStatus()
                 hasWorkoutContext -> "Готово"
                 else -> "Немає логу"
             },
@@ -435,6 +436,28 @@ internal fun EmptyAiBlock(text: String) {
         )
     )
 }
+
+internal fun AiAvailabilityState.shortStatus(): String =
+    when (this) {
+        AiAvailabilityState.CONFIGURED -> "Готово"
+        AiAvailabilityState.UNCONFIGURED -> "Локальний режим"
+        AiAvailabilityState.RATE_LIMITED -> "Ліміт AI"
+        AiAvailabilityState.OVERLOADED -> "AI перевантажений"
+        AiAvailabilityState.MALFORMED -> "AI відхилено"
+    }
+
+internal fun AiAvailabilityState.unavailableDescription(): String =
+    when (this) {
+        AiAvailabilityState.CONFIGURED -> ""
+        AiAvailabilityState.UNCONFIGURED ->
+            "AI Architect не налаштований у цій збірці. Логування, Today Order, прогрес і system verdict працюють локально."
+        AiAvailabilityState.RATE_LIMITED ->
+            "Ліміт AI-запитів вичерпано. Система не змінює план за AI і продовжує локальну логіку."
+        AiAvailabilityState.OVERLOADED ->
+            "AI тимчасово перевантажений. Локальні модулі залишаються активними, повторіть AI-аналіз пізніше."
+        AiAvailabilityState.MALFORMED ->
+            "AI повернув некоректну відповідь. Система її не застосувала і залишила локальні рішення активними."
+    }
 
 @Composable
 private fun AiSystemBackdrop() {

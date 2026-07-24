@@ -347,33 +347,36 @@ class StatusViewModel @Inject constructor(
         useCases.selectViewingDate(todayDate())
     }
 
-    private fun StatusData.toUiData(weekPreview: List<CalendarWeekDay> = emptyList()) = StatusUiData(
-        playerName = playerName,
-        playerClass = playerClass,
-        level = level,
-        xpTotal = xpTotal,
-        xpMax = xpMax,
-        currentMonth = currentMonth,
-        totalMonths = totalMonths,
-        currentWeight = currentWeight,
-        height = height,
-        cycleDay = cycleDay,
-        monthWorkoutsCompleted = monthWorkoutsCompleted,
-        monthWorkoutsTotal = monthWorkoutsTotal,
-        todos = todos.map { it.toUiModel() }.toImmutableList(),
-        dailyQuest = dailyQuest?.toUiModel(),
-        mainQuest = mainQuest?.toUiModel(),
-        promotionQuests = promotionQuests.map { it.toUiModel() }.toImmutableList(),
-        activeBossFight = activeBossFight,
-        globalRank = globalRank,
-        characterAttributes = characterAttributes,
-        currentStreak = currentStreak,
-        maxStreak = maxStreak,
-        xpThisWeek = xpThisWeek,
-        avatarUri = avatarUri,
-        todayDecision = todayDecision,
-        weekPreview = weekPreview.map { it.toUiModel() }.toImmutableList()
-    )
+    private fun StatusData.toUiData(weekPreview: List<CalendarWeekDay> = emptyList()): StatusUiData {
+        val mainQuestUi = mainQuest?.toUiModel()
+        return StatusUiData(
+            playerName = playerName,
+            playerClass = playerClass,
+            level = level,
+            xpTotal = xpTotal,
+            xpMax = xpMax,
+            currentMonth = currentMonth,
+            totalMonths = totalMonths,
+            currentWeight = currentWeight,
+            height = height,
+            cycleDay = cycleDay,
+            monthWorkoutsCompleted = monthWorkoutsCompleted,
+            monthWorkoutsTotal = monthWorkoutsTotal,
+            todos = todos.map { it.toUiModel() }.toImmutableList(),
+            dailyQuest = dailyQuest?.toUiModel(),
+            mainQuest = mainQuestUi,
+            promotionQuests = promotionQuests.map { it.toUiModel() }.toImmutableList(),
+            activeBossFight = activeBossFight,
+            globalRank = globalRank,
+            characterAttributes = characterAttributes,
+            currentStreak = currentStreak,
+            maxStreak = maxStreak,
+            xpThisWeek = xpThisWeek,
+            avatarUri = avatarUri,
+            todayOrder = todayDecision.toTodayOrderUiModel(mainQuestUi),
+            weekPreview = weekPreview.map { it.toUiModel() }.toImmutableList()
+        )
+    }
 
     private fun TodoItem.toUiModel(): TodoUiModel = TodoUiModel(
         id = id,

@@ -116,16 +116,16 @@ class LiveCoachRepositoryImpl @Inject constructor(
 
     companion object {
         private const val CONFIGURATION_ERROR_MESSAGE =
-            "AI-наставник не налаштований у цій збірці. Без серверного proxy або ключа розробника він недоступний."
+            "AI-наставник не налаштований у цій збірці. Локальна система, логи й прогрес працюють без AI."
         private const val TIMEOUT_ERROR_MESSAGE =
-            "Час очікування AI вичерпано. Спробуйте пізніше."
+            "Час очікування AI вичерпано. Система продовжує працювати локально."
         private const val RATE_LIMIT_ERROR_MESSAGE =
-            "Забагато запитів до AI. Спробуйте пізніше."
+            "Ліміт AI-запитів вичерпано. Система продовжує працювати локально."
         private const val OVERLOADED_ERROR_MESSAGE =
-            "Сервери AI тимчасово перевантажені. Спробуйте пізніше."
+            "AI тимчасово перевантажений. Система продовжує працювати локально."
         private const val MALFORMED_ERROR_MESSAGE =
-            "AI повернув некоректну відповідь. План не змінено."
+            "AI повернув некоректну відповідь. Система не застосувала її."
         private const val DEFAULT_ERROR_MESSAGE =
-            "Помилка зв'язку з тренером."
+            "AI-наставник зараз недоступний. Система продовжує працювати локально."
     }
 }

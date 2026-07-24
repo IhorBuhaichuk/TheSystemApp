@@ -83,12 +83,12 @@ class SendLiveCoachMessageUseCase @Inject constructor(
                 e is kotlinx.serialization.SerializationException || 
                 e.message?.contains("GrpcError") == true || 
                 e.message?.contains("503") == true -> 
-                    MessageText.DynamicString("Сервери AI тимчасово перевантажені. Спробуйте пізніше.")
+                    MessageText.DynamicString("AI тимчасово перевантажений. Система продовжує працювати локально.")
                 
                 e.message?.contains("429") == true -> 
-                    MessageText.DynamicString("Помилка зв'язку з тренером: Перевищено ліміт запитів (Quota Exceeded). Спробуйте пізніше.")
+                    MessageText.DynamicString("Ліміт AI-запитів вичерпано. Система продовжує працювати локально.")
 
-                else -> MessageText.DynamicString("Помилка зв'язку з тренером: ${e.localizedMessage ?: "невідома помилка"}")
+                else -> MessageText.DynamicString("AI-наставник зараз недоступний. Система продовжує працювати локально.")
             }
             ChatMessage(role = ChatRole.AI, text = errorText)
         }

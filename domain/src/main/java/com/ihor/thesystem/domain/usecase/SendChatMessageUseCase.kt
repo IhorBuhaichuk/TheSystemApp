@@ -9,6 +9,7 @@ import com.ihor.thesystem.domain.repository.AiArchitectRepository
 import com.ihor.thesystem.domain.repository.ChatRepository
 import com.ihor.thesystem.domain.repository.LiveCoachRepository
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 
 class SendChatMessageUseCase @Inject constructor(
     private val chatRepository: ChatRepository,
@@ -89,7 +90,8 @@ class SendChatMessageUseCase @Inject constructor(
             val coachResponse = try {
                 liveCoachRepository.sendMessage(history.dropLast(1), userMessage)
             } catch (e: Exception) {
-                "Помилка зв'язку з тренером: ${e.message}"
+                if (e is CancellationException) throw e
+                "AI-наставник зараз недоступний. Система продовжує працювати локально."
             }
 
             // 5. Зберігаємо відповідь через репозиторій

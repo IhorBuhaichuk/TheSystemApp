@@ -3,7 +3,6 @@ package com.ihor.thesystem.feature.status.viewmodel
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.domain.model.BossFight
 import com.ihor.thesystem.domain.model.Rank
-import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import java.time.LocalDate
@@ -34,8 +33,39 @@ data class StatusUiData(
     val maxStreak: Int = 0,
     val xpThisWeek: Int = 0,
     val avatarUri: String? = null,
-    val todayDecision: TodayTrainingDecision? = null,
+    val todayOrder: TodayOrderUiModel = TodayOrderUiModel(),
     val weekPreview: ImmutableList<StatusWeekDayUiModel> = persistentListOf()
+)
+
+enum class TodayOrderDayType {
+    TRAINING,
+    RECOVERY,
+    DELOAD,
+    NO_EXCUSE,
+    REST
+}
+
+enum class TodayOrderAccent {
+    PRIMARY,
+    SUCCESS,
+    WARNING,
+    ERROR,
+    AI
+}
+
+data class TodayOrderUiModel(
+    val dayType: TodayOrderDayType = TodayOrderDayType.TRAINING,
+    val dayTypeLabel: String = "Training",
+    val title: String = "План синхронізується",
+    val reason: String = "Система готує сьогоднішнє рішення. Показує базовий план без жорсткого навантаження.",
+    val primaryActionLabel: String = "План формується",
+    val outcomeText: String = "Безпечний fallback",
+    val outcomeLabel: String = "Наслідок",
+    val durationText: String = "План",
+    val durationLabel: String = "Формат",
+    val readinessProgress: Float = 0f,
+    val actionEnabled: Boolean = false,
+    val accent: TodayOrderAccent = TodayOrderAccent.PRIMARY
 )
 
 enum class StatusWeekDayVisualType {

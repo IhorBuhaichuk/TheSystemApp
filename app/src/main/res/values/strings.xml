@@ -97,7 +97,7 @@
     <string name="error_weight_update">Помилка оновлення ваги</string>
     <string name="error_height_update">Помилка оновлення зросту</string>
     <string name="error_age_update">Помилка оновлення віку</string>
-    <string name="error_ai_parsing">Помилка генерації AI, спробуйте ще раз</string>
+    <string name="error_ai_parsing">AI повернув некоректну відповідь. Система не застосувала її і залишила локальні рішення активними.</string>
     <string name="error_generic">Помилка</string>
     <string name="error_operation_failed">Помилка операції</string>
     <string name="error_workout_analysis_failed">Не вдалося сформувати аналіз тренування.</string>
@@ -113,10 +113,10 @@
     <string name="calendar_error_empty_cycle_days">Додайте хоча б один день циклу.</string>
     <string name="calendar_error_save_failed">Не вдалося зберегти календарний цикл.</string>
     <string name="error_no_completed_exercises">Завершіть хоча б один підхід</string>
-    <string name="error_ai_generic">Критична помилка AI. Перевірте конфігурацію.</string>
-    <string name="error_ai_unconfigured">AI-функції не налаштовані в цій збірці. Без серверного proxy або ключа розробника вони недоступні.</string>
+    <string name="error_ai_generic">AI зараз не відповідає. Система продовжує працювати локально: логи, verdict і прогрес збережені.</string>
+    <string name="error_ai_unconfigured">AI-функції не налаштовані в цій збірці. Основна система працює локально: тренування, verdict і прогрес доступні без AI.</string>
     <string name="ai_analysis_complete">Аналіз завершено.</string>
-    <string name="ai_fallback_activated">AI зараз недоступний, тому система зберегла тренування і виставила обережні цілі на наступний раз.</string>
+    <string name="ai_fallback_activated">Тренування збережено. Система сформувала verdict локально і залишила обережні цілі без AI-рекомендацій.</string>
 
     <!-- Muscle Groups -->
     <string name="muscle_group_chest">ГРУДИ</string>
@@ -137,9 +137,9 @@
     <string name="rank_master">Майстер</string>
     <string name="rank_the_system">Система</string>
 
-    <string name="error_ai_overloaded">Сервери AI тимчасово перевантажені. Спробуйте пізніше.</string>
-    <string name="error_ai_rate_limit">Занадто багато запитів до AI. Спробуйте пізніше.</string>
-    <string name="error_network_architect">ПОМИЛКА МЕРЕЖІ: %1$s</string>
+    <string name="error_ai_overloaded">AI тимчасово перевантажений. Система продовжує працювати локально, спробуйте AI-повтор пізніше.</string>
+    <string name="error_ai_rate_limit">Ліміт AI-запитів вичерпано. Система не змінює план за AI і продовжує локальну логіку.</string>
+    <string name="error_network_architect">AI-аналіз зараз недоступний. Система продовжує працювати локально.</string>
     <string name="error_unknown_architect">Невідома помилка зв\'язку з архітектором</string>
     <string name="error_apply_recommendations_failed">Помилка застосування рекомендацій</string>
     <string name="error_no_internet">Відсутнє підключення до інтернету</string>

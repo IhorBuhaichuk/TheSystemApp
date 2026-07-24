@@ -6,12 +6,17 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
@@ -28,6 +33,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.SystemBottomNavBar
+import com.ihor.thesystem.domain.model.AppStartDestination
 import com.ihor.thesystem.feature.architect.ui.AnnualProgressionPlanScreen
 import com.ihor.thesystem.feature.architect.ui.ArchitectScreen
 import com.ihor.thesystem.feature.architect.ui.WorkoutAnalysisScreen
@@ -35,6 +41,7 @@ import com.ihor.thesystem.feature.calendar.ui.CalendarSettingsScreen
 import com.ihor.thesystem.feature.calendar.ui.CalendarScreen
 import com.ihor.thesystem.feature.cycle.ui.CycleScreen
 import com.ihor.thesystem.feature.exercise_search.ui.ExercisePickerScreen
+import com.ihor.thesystem.feature.onboarding.ui.OnboardingScreen
 import com.ihor.thesystem.feature.profile.ui.ProfileScreen
 import com.ihor.thesystem.feature.statistics.ui.AnnualProgressionDetailsScreen
 import com.ihor.thesystem.feature.statistics.ui.StatisticsScreen
@@ -43,7 +50,17 @@ import com.ihor.thesystem.feature.status.viewmodel.WorkoutViewModel
 import kotlin.math.abs
 
 @Composable
-fun AppNavGraph(navController: NavHostController) {
+fun AppNavGraph(
+    navController: NavHostController,
+    appEntryViewModel: AppEntryViewModel = hiltViewModel()
+) {
+    val startDestinationState by appEntryViewModel.startDestination.collectAsStateWithLifecycle()
+    val appStartDestination = startDestinationState
+    if (appStartDestination == null) {
+        AppEntryLoading()
+        return
+    }
+
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
     val showBottomNav =
@@ -63,7 +80,7 @@ fun AppNavGraph(navController: NavHostController) {
     ) { paddingValues ->
         NavHost(
             navController    = navController,
-            startDestination = Routes.Status,
+            startDestination = appStartDestination.toRoute(),
             modifier         = Modifier
                 .padding(paddingValues)
                 .topLevelSwipeNavigation(
@@ -76,6 +93,18 @@ fun AppNavGraph(navController: NavHostController) {
             popEnterTransition = { topLevelEnterTransition() },
             popExitTransition = { topLevelExitTransition() }
         ) {
+            composable<Routes.Onboarding> {
+                OnboardingScreen(
+                    onCompleted = {
+                        navController.navigate(Routes.Status) {
+                            popUpTo<Routes.Onboarding> {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
             composable<Routes.Status> {
                 StatusScreen(navController = navController)
             }
@@ -177,6 +206,24 @@ fun AppNavGraph(navController: NavHostController) {
         }
     }
 }
+
+@Composable
+private fun AppEntryLoading() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(SystemTheme.colors.background),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(color = SystemTheme.colors.accentPrimary)
+    }
+}
+
+private fun AppStartDestination.toRoute(): Routes =
+    when (this) {
+        AppStartDestination.ONBOARDING -> Routes.Onboarding
+        AppStartDestination.STATUS -> Routes.Status
+    }
 
 private val topLevelRoutes = listOf(
     Routes.Status,

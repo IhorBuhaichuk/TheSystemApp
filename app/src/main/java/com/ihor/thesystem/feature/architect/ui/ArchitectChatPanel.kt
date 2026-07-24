@@ -42,6 +42,7 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
+import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
@@ -59,17 +60,19 @@ internal fun ChatPanel(
     onAnalyzeClick: () -> Unit,
     onApplyClick: (List<AiWorkoutRecommendation>) -> Unit,
     onSendMessage: (String) -> Unit,
-    aiAvailable: Boolean
+    aiAvailability: AiAvailabilityState
 ) {
     val colors = SystemTheme.colors
+    val aiAvailable = aiAvailability == AiAvailabilityState.CONFIGURED
+    val unavailableText = aiAvailability.unavailableDescription()
     DarkGlassCard(contentPadding = SystemCardPadding) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Чат",
-                subtitle = if (aiAvailable) "Додатковий канал" else "AI недоступний у цій збірці"
+                subtitle = if (aiAvailable) "Додатковий канал" else aiAvailability.shortStatus()
             )
             if (!aiAvailable) {
-                EmptyAiBlock(text = "AI недоступний. Працюють локальні графіки та ручне логування.")
+                EmptyAiBlock(text = unavailableText)
             }
             ChatModeSwitch(
                 selectedMode = selectedMode,
@@ -96,7 +99,7 @@ internal fun ChatPanel(
                         sessionId = 0L,
                         onSendMessage = { _, text -> onSendMessage(text) },
                         enabled = aiAvailable,
-                        disabledReason = "AI недоступний у цій збірці.",
+                        disabledReason = unavailableText,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

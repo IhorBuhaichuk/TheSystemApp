@@ -205,7 +205,8 @@ class ArchitectViewModel @Inject constructor(
                 _uiState.update { it.copy(
                     messages = it.messages + aiResponse,
                     isLoading = false,
-                    analysisAlreadySent = true
+                    analysisAlreadySent = aiResponse.recommendations.isNotEmpty(),
+                    aiAvailability = aiResponse.availabilityFailure() ?: it.aiAvailability
                 ) }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -216,10 +217,7 @@ class ArchitectViewModel @Inject constructor(
                 
                 val errorMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
-                    text = MessageText.Resource(
-                        key = MessageTextKey.ERROR_NETWORK_ARCHITECT,
-                        args = listOf(e.message ?: "")
-                    ),
+                    text = MessageText.Resource(MessageTextKey.ERROR_NETWORK_ARCHITECT),
                     isActionable = false
                 )
                 _uiState.update { it.copy(
@@ -276,10 +274,30 @@ class ArchitectViewModel @Inject constructor(
 
     private fun emitAiUnavailable() {
         viewModelScope.launch {
-            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_ai_unconfigured)))
+            _uiEvents.emit(UiEvent.ShowError(_uiState.value.aiAvailability.toUiText()))
         }
     }
 }
+
+private fun AiAvailabilityState.toUiText(): UiText =
+    UiText.StringResource(
+        when (this) {
+            AiAvailabilityState.CONFIGURED -> R.string.error_ai_generic
+            AiAvailabilityState.UNCONFIGURED -> R.string.error_ai_unconfigured
+            AiAvailabilityState.RATE_LIMITED -> R.string.error_ai_rate_limit
+            AiAvailabilityState.OVERLOADED -> R.string.error_ai_overloaded
+            AiAvailabilityState.MALFORMED -> R.string.error_ai_parsing
+        }
+    )
+
+private fun ChatMessage.availabilityFailure(): AiAvailabilityState? =
+    when ((text as? MessageText.Resource)?.key) {
+        MessageTextKey.ERROR_AI_UNCONFIGURED -> AiAvailabilityState.UNCONFIGURED
+        MessageTextKey.ERROR_AI_RATE_LIMIT -> AiAvailabilityState.RATE_LIMITED
+        MessageTextKey.ERROR_AI_OVERLOADED -> AiAvailabilityState.OVERLOADED
+        MessageTextKey.ERROR_AI_PARSING -> AiAvailabilityState.MALFORMED
+        else -> null
+    }
 
 private fun AiDashboardData.toUiState(): AiDashboardUiState {
     return AiDashboardUiState(

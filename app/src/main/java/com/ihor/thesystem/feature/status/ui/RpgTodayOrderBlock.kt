@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
@@ -30,17 +29,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.SystemTheme
@@ -48,37 +42,17 @@ import com.ihor.thesystem.core.ui.components.SystemHexagonShape
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
 import com.ihor.thesystem.core.ui.components.systemLargePanelShape
 import com.ihor.thesystem.core.ui.components.techSurface
-import com.ihor.thesystem.domain.model.TodayTrainingDecision
-import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
-import com.ihor.thesystem.feature.status.viewmodel.QuestUiModel
+import com.ihor.thesystem.feature.status.viewmodel.TodayOrderAccent
+import com.ihor.thesystem.feature.status.viewmodel.TodayOrderUiModel
 
 @Composable
 internal fun TodayOrderBlock(
-    decision: TodayTrainingDecision?,
-    fallbackMainQuest: QuestUiModel?,
+    order: TodayOrderUiModel,
     onStartWorkout: () -> Unit
 ) {
     val colors = SystemTheme.colors
-    val decisionType = decision?.decisionType
-    val accent = colors.accentPrimary
-    val readinessProgress = ((decision?.readinessScore ?: 0) / 100f).coerceIn(0f, 1f)
-    val isRecoveryDay = decisionType == TodayTrainingDecisionType.REST ||
-        decisionType == TodayTrainingDecisionType.ACTIVE_RECOVERY
-    val actionEnabled = decisionType != null
-    val actionText = when (decisionType) {
-        TodayTrainingDecisionType.NO_EXCUSE -> "Почати 7 хв"
-        TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Почати відновлення"
-        TodayTrainingDecisionType.DELOAD -> "Почати deload"
-        TodayTrainingDecisionType.REST -> "Почати відновлення"
-        null -> "План формується"
-        else -> "Почати тренування"
-    }
-    val title = decision.todayTitle(fallbackMainQuest).uppercase()
-    val subtitle = if (isRecoveryDay) "Відновлення організму" else decision.shortDecisionLabel()
-    val durationText = fallbackMainQuest?.estimatedDurationMinutes?.let { "$it хв" }
-        ?: if (isRecoveryDay) "12 хв" else null
-    val rewardText = fallbackMainQuest?.rewardXp?.let { "+$it XP" }
-        ?: if (isRecoveryDay) "+40 XP" else null
+    val accent = order.accent.toColor()
+    val title = order.title.uppercase()
     val cardShape = systemLargePanelShape()
 
     Box(
@@ -122,7 +96,7 @@ internal fun TodayOrderBlock(
                     verticalArrangement = Arrangement.Top
                 ) {
                     Text(
-                        text = "Головний квест".uppercase(),
+                        text = "Today order / ${order.dayTypeLabel}".uppercase(),
                         style = MaterialTheme.typography.labelLarge.copy(
                             color = accent,
                             fontFamily = FontFamily.SansSerif,
@@ -134,7 +108,7 @@ internal fun TodayOrderBlock(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = title,
                         style = MaterialTheme.typography.headlineMedium.copy(
@@ -145,25 +119,25 @@ internal fun TodayOrderBlock(
                             lineHeight = 33.sp,
                             letterSpacing = 0.sp
                         ),
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = subtitle,
+                        text = order.reason,
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = colors.textSecondary,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            lineHeight = 20.sp
+                            fontSize = 14.sp,
+                            lineHeight = 18.sp
                         ),
-                        maxLines = 2,
+                        maxLines = 3,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
                 QuestReadinessRing(
-                    progress = readinessProgress,
+                    progress = order.readinessProgress,
                     accent = accent,
                     modifier = Modifier
                         .padding(top = 6.dp)
@@ -171,46 +145,54 @@ internal fun TodayOrderBlock(
                 )
             }
 
-            if (durationText != null && rewardText != null) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                QuestMetric(
+                    value = order.durationText,
+                    label = order.durationLabel,
+                    accent = colors.textSecondary,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(58.dp)
                 ) {
-                    QuestMetric(
-                        value = durationText,
-                        label = "Тривалість",
-                        accent = colors.textSecondary,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(58.dp)
-                    ) {
-                        QuestClockBadge(accent = colors.textSecondary)
-                    }
-                    QuestMetric(
-                        value = rewardText,
-                        label = "Нагорода",
-                        accent = accent,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(58.dp)
-                    ) {
-                        QuestXpBadge(accent = accent)
-                    }
+                    QuestClockBadge(accent = colors.textSecondary)
                 }
-                Spacer(modifier = Modifier.height(18.dp))
-            } else {
-                Spacer(modifier = Modifier.height(76.dp))
+                QuestMetric(
+                    value = order.outcomeText,
+                    label = order.outcomeLabel,
+                    accent = accent,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(58.dp)
+                ) {
+                    QuestXpBadge(accent = accent)
+                }
             }
+            Spacer(modifier = Modifier.height(18.dp))
 
             QuestPrimaryButton(
-                text = actionText,
-                enabled = actionEnabled,
+                text = order.primaryActionLabel,
+                enabled = order.actionEnabled,
                 accent = accent,
                 onClick = onStartWorkout,
                 modifier = Modifier.fillMaxWidth()
             )
         }
+    }
+}
+
+@Composable
+private fun TodayOrderAccent.toColor(): Color {
+    val colors = SystemTheme.colors
+    return when (this) {
+        TodayOrderAccent.PRIMARY -> colors.accentPrimary
+        TodayOrderAccent.SUCCESS -> colors.accentSuccess
+        TodayOrderAccent.WARNING -> colors.accentWarning
+        TodayOrderAccent.ERROR -> colors.accentError
+        TodayOrderAccent.AI -> colors.accentAi
     }
 }
 
@@ -452,71 +434,3 @@ private fun QuestPrimaryButton(
         )
     }
 }
-
-private class QuestButtonShape : Shape {
-    override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density
-    ): Outline {
-        val cut = size.height * 0.30f
-        val notch = size.height * 0.18f
-        val path = Path().apply {
-            moveTo(cut, 0f)
-            lineTo(size.width - cut, 0f)
-            lineTo(size.width, size.height / 2f)
-            lineTo(size.width - cut, size.height)
-            lineTo(cut, size.height)
-            lineTo(0f, size.height / 2f)
-            lineTo(notch, size.height * 0.25f)
-            close()
-        }
-        return Outline.Generic(path)
-    }
-}
-
-private fun TodayTrainingDecision?.todayTitle(fallbackMainQuest: QuestUiModel?): String =
-    when (this?.decisionType) {
-        TodayTrainingDecisionType.NO_EXCUSE -> "No Excuse Protocol"
-        TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Recovery Protocol"
-        TodayTrainingDecisionType.DELOAD -> "Deload Session"
-        TodayTrainingDecisionType.REST -> "Recovery Protocol"
-        null -> fallbackMainQuest?.title ?: "Recovery Protocol"
-        else -> workoutName ?: fallbackMainQuest?.title ?: "Recovery Protocol"
-    }
-
-private fun TodayTrainingDecision?.shortDecisionLabel(): String =
-    when (this?.decisionType) {
-        TodayTrainingDecisionType.PROGRESS_ALLOWED -> "Прогрес дозволено"
-        TodayTrainingDecisionType.STANDARD_TRAINING -> "Планове тренування"
-        TodayTrainingDecisionType.REDUCED_LOAD -> "Зменшити навантаження"
-        TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Відновлення"
-        TodayTrainingDecisionType.NO_EXCUSE -> "План перераховано"
-        TodayTrainingDecisionType.DELOAD -> "Делоад"
-        TodayTrainingDecisionType.REST -> "Відпочинок"
-        null -> "План синхронізується"
-    }
-
-internal fun TodayTrainingDecision?.displayReason(): String =
-    when (this?.decisionType) {
-        TodayTrainingDecisionType.PROGRESS_ALLOWED ->
-            "Готовність висока, борг відновлення низький."
-        TodayTrainingDecisionType.STANDARD_TRAINING ->
-            "План на сьогодні підходить під поточний стан."
-        TodayTrainingDecisionType.REDUCED_LOAD ->
-            "Сьогодні краще знизити вагу та обсяг."
-        TodayTrainingDecisionType.ACTIVE_RECOVERY ->
-            "Організму потрібне відновлення замість силового навантаження."
-        TodayTrainingDecisionType.NO_EXCUSE ->
-            if (reason.contains("missed", ignoreCase = true)) {
-                "Система зафіксувала пропуск. План перераховано. Наступна оптимальна дія: коротке тренування."
-            } else {
-                "Готовність нижча за планову. Наступна оптимальна дія: коротке тренування."
-            }
-        TodayTrainingDecisionType.DELOAD ->
-            "Навантаження накопичилось, сьогодні працюємо легше."
-        TodayTrainingDecisionType.REST ->
-            "Сьогодні день без тренування."
-        null ->
-            "Система готує сьогоднішній план."
-    }
