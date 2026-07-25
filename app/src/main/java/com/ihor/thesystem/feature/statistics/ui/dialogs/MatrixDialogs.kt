@@ -26,8 +26,10 @@ import androidx.compose.ui.window.Dialog
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemDialogContainer
+import com.ihor.thesystem.core.ui.components.systemControlShape
 import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.ActiveSetInput
@@ -117,7 +119,7 @@ fun LogWorkoutSetsDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         PremiumDialogContainer(
-            title = "ЛОГУВАННЯ ПІДХОДІВ",
+            title = "Логування підходів",
             accentColor = colors.accentPrimary,
             onDismiss = onDismiss
         ) {
@@ -126,7 +128,7 @@ fun LogWorkoutSetsDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = exerciseName.uppercase(),
+                    text = exerciseName.toSystemSentenceCase(),
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = colors.textPrimary,
                         fontWeight = FontWeight.Bold
@@ -142,7 +144,7 @@ fun LogWorkoutSetsDialog(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "СЕТ ${index + 1}",
+                                text = "Сет ${index + 1}",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = colors.textMuted,
                                     fontWeight = FontWeight.Bold
@@ -180,19 +182,19 @@ fun LogWorkoutSetsDialog(
                         onClick = onRemove,
                         modifier = Modifier
                             .weight(1f)
-                            .height(44.dp)
-                            .background(colors.overlayLight, RoundedCornerShape(SystemTheme.shapes.small))
+                            .height(48.dp)
+                            .background(colors.overlayLight, systemControlShape())
                     ) {
-                        Icon(Icons.Default.Remove, contentDescription = null, tint = colors.accentError)
+                        Icon(Icons.Default.Remove, contentDescription = "Видалити підхід", tint = colors.accentError)
                     }
                     IconButton(
                         onClick = onAdd,
                         modifier = Modifier
                             .weight(1f)
-                            .height(44.dp)
-                            .background(colors.overlayLight, RoundedCornerShape(SystemTheme.shapes.small))
+                            .height(48.dp)
+                            .background(colors.overlayLight, systemControlShape())
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, tint = colors.accentSuccess)
+                        Icon(Icons.Default.Add, contentDescription = "Додати підхід", tint = colors.accentSuccess)
                     }
                 }
 
@@ -202,13 +204,13 @@ fun LogWorkoutSetsDialog(
                     placeholder = { Text("Фітбек (відчуття, памп...)", color = colors.textMuted) },
                     maxLines = 2,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(SystemTheme.shapes.medium),
+                    shape = systemControlShape(),
                     colors = systemOutlinedTextFieldColors(accent = colors.accentPrimary),
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.textPrimary)
                 )
 
                 PremiumDialogButton(
-                    text = "ЗАЛОГУВАТИ",
+                    text = "Залогувати",
                     color = colors.accentPrimary,
                     onClick = { onSave(feedback) }
                 )
@@ -254,12 +256,17 @@ fun PremiumDialogContainer(
                 IconButton(
                     onClick = onDismiss,
                     modifier = Modifier
-                        .size(34.dp)
-                        .clip(RoundedCornerShape(SystemTheme.shapes.small))
+                        .size(48.dp)
+                        .clip(systemControlShape())
                         .background(colors.overlayLight)
-                        .border(1.dp, colors.borderSubtle, RoundedCornerShape(SystemTheme.shapes.small))
+                        .border(1.dp, colors.borderSubtle, systemControlShape())
                 ) {
-                    Icon(Icons.Default.Close, null, tint = colors.textSecondary, modifier = Modifier.size(18.dp))
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Закрити",
+                        tint = colors.textSecondary,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
             }
             content()
@@ -288,7 +295,7 @@ private fun PremiumInputField(
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            shape = RoundedCornerShape(SystemTheme.shapes.medium),
+            shape = systemControlShape(),
             colors = systemOutlinedTextFieldColors(accent = accentColor),
             textStyle = MaterialTheme.typography.bodyLarge.copy(
                 color = colors.textPrimary,
@@ -320,7 +327,7 @@ private fun SmallPremiumInputField(
         },
         modifier = modifier,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        shape = RoundedCornerShape(SystemTheme.shapes.small),
+        shape = systemControlShape(),
         colors = systemOutlinedTextFieldColors(accent = accentColor),
         textStyle = MaterialTheme.typography.bodyMedium.copy(
             color = colors.textPrimary,

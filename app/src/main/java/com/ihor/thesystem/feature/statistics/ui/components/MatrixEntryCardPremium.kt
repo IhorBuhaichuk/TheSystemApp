@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,9 +39,11 @@ import androidx.compose.ui.unit.dp
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.OneRepMaxText
 import com.ihor.thesystem.core.ui.components.RankBadge
 import com.ihor.thesystem.core.ui.components.systemLargePanelShape
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 @Composable
@@ -91,7 +92,7 @@ fun MatrixEntryCardPremium(
                 ),
                 shape
             )
-            .clickable(enabled = entry.isActive) { onCardClick() }
+            .systemClickable(enabled = entry.isActive) { onCardClick() }
     ) {
         Column(
             modifier = Modifier.padding(SystemScreenPadding),
@@ -104,7 +105,7 @@ fun MatrixEntryCardPremium(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = entry.exerciseName.uppercase(),
+                        text = entry.exerciseName.toSystemSentenceCase(),
                         style = MaterialTheme.typography.titleSmall.copy(
                             color = colors.textPrimary,
                             fontWeight = FontWeight.Black
@@ -116,7 +117,7 @@ fun MatrixEntryCardPremium(
                         OneRepMaxText(
                             weight = entry.currentWeight.toDouble(),
                             reps = 8,
-                            label = "EST. 1RM: "
+                            label = "Est. 1RM: "
                         )
                     }
                 }
@@ -182,7 +183,7 @@ fun MatrixEntryCardPremium(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "NEXT: ${entry.nextRecommendedWeight}kg | ${entry.nextRecommendedSets}x${entry.nextRecommendedReps}",
+                                    text = "Next: ${entry.nextRecommendedWeight}kg | ${entry.nextRecommendedSets}x${entry.nextRecommendedReps}",
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         color = colors.textPrimary,
                                         fontWeight = FontWeight.Bold
@@ -210,9 +211,9 @@ fun MatrixEntryCardPremium(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    WeightInfoBlock("START", entry.displayStart, colors.textSecondary)
-                    WeightInfoBlock("CURRENT", entry.displayCurrent, accentColor)
-                    WeightInfoBlock("TARGET", entry.displayTarget, colors.accentWarning)
+                    WeightInfoBlock("Start", entry.displayStart, colors.textSecondary)
+                    WeightInfoBlock("Current", entry.displayCurrent, accentColor)
+                    WeightInfoBlock("Target", entry.displayTarget, colors.accentWarning)
                 }
 
                 IconButton(

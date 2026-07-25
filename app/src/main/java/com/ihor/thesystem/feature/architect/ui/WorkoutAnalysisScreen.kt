@@ -2,7 +2,6 @@ package com.ihor.thesystem.feature.architect.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,6 +54,7 @@ import com.ihor.thesystem.core.ui.components.SystemMetricCard
 import com.ihor.thesystem.core.ui.components.SystemProgressBar
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.domain.model.AnnualProgressComparison
 import com.ihor.thesystem.domain.model.AnnualProgressStatus
 import com.ihor.thesystem.domain.model.ExerciseProgressAnalysis
@@ -300,7 +300,7 @@ private fun SmallInfoButton(onClick: () -> Unit) {
             .clip(CircleShape)
             .background(colors.surfaceGlassSoft)
             .border(1.dp, colors.accentAi.copy(alpha = 0.28f), CircleShape)
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(

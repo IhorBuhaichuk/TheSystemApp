@@ -2,7 +2,6 @@ package com.ihor.thesystem.feature.statistics.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,6 +22,7 @@ import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.sciPanel
 import com.ihor.thesystem.core.ui.components.glassCard
 import com.ihor.thesystem.core.ui.components.neonGlow
+import com.ihor.thesystem.core.ui.components.systemCombinedClickable
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.ihor.thesystem.R
@@ -62,7 +62,7 @@ fun QuestCard(
                 if (isPromotion) Modifier.border(2.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(shapes.medium))
                 else Modifier
             )
-            .combinedClickable(
+            .systemCombinedClickable(
                 enabled = true, // Завжди клікабельна для перегляду деталей
                 onClick = onClick,
                 onLongClick = onLongClick

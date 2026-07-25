@@ -17,9 +17,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ihor.thesystem.core.theme.RajdhaniFamily
+import com.ihor.thesystem.core.theme.SystemBodyFamily
+import com.ihor.thesystem.core.theme.SystemDisplayFamily
 import com.ihor.thesystem.core.theme.SystemTheme
-import com.ihor.thesystem.core.theme.TekoFamily
 import com.ihor.thesystem.domain.model.Rank
 
 /**
@@ -86,9 +86,9 @@ fun RankBadge(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "RANK",
+                text = "Rank",
                 style = TextStyle(
-                    fontFamily = RajdhaniFamily,
+                    fontFamily = SystemBodyFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = (size.value * 0.16f).sp,
                     color = colors.textPrimary.copy(alpha = 0.6f),
@@ -99,7 +99,7 @@ fun RankBadge(
             Text(
                 text = rank.name,
                 style = TextStyle(
-                    fontFamily = TekoFamily,
+                    fontFamily = SystemDisplayFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = (size.value * 0.55f).sp,
                     color = colors.textPrimary,

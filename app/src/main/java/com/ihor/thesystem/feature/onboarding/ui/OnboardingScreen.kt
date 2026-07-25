@@ -2,7 +2,6 @@ package com.ihor.thesystem.feature.onboarding.ui
 
 import androidx.activity.compose.ReportDrawn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,6 +52,7 @@ import com.ihor.thesystem.core.ui.components.SystemPanel
 import com.ihor.thesystem.core.ui.components.SystemProgressBar
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
 import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.EquipmentType
 import com.ihor.thesystem.domain.model.OnboardingCyclePreset
@@ -123,7 +123,7 @@ private fun OnboardingHeader(uiState: OnboardingUiState) {
     val colors = SystemTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            text = "THE SYSTEM: LEVEL UP",
+            text = "The System: Level Up",
             style = MaterialTheme.typography.headlineSmall.copy(
                 color = colors.textPrimary,
                 fontWeight = FontWeight.Black
@@ -336,7 +336,7 @@ private fun SelectablePlate(
                 accent = accent,
                 role = TechSurfaceRole.Plate
             )
-            .clickable(onClick = onClick)
+            .systemClickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically

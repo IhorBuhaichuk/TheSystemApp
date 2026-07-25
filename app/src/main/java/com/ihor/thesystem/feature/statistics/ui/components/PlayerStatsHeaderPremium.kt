@@ -25,6 +25,7 @@ import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.asUiText
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.systemLargePanelShape
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 
@@ -97,7 +98,8 @@ fun PlayerStatsHeaderPremium(
                             border = BorderStroke(1.dp, colors.accentSuccess.copy(alpha = 0.2f))
                         ) {
                             Text(
-                                text = data.playerClass.asUiText().asString(context).uppercase(),
+                                text = data.playerClass.asUiText().asString(context)
+                                    .toSystemSentenceCase(),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = colors.accentSuccess,
@@ -129,21 +131,21 @@ fun PlayerStatsHeaderPremium(
             ) {
                 StatItemPremium(
                     icon = Icons.Default.CalendarToday,
-                    label = "МІСЯЦЬ",
+                    label = "Місяць",
                     value = "${data.currentMonth}/12",
                     color = colors.accentPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 StatItemPremium(
                     icon = Icons.Default.BarChart,
-                    label = "ТИЖДЕНЬ",
+                    label = "Тиждень",
                     value = "${data.currentWeek}",
                     color = colors.accentAi,
                     modifier = Modifier.weight(1f)
                 )
                 StatItemPremium(
                     icon = Icons.Default.HistoryToggleOff,
-                    label = "ЦИКЛ",
+                    label = "Цикл",
                     value = "${data.currentCycleDay}/4",
                     color = colors.accentWarning,
                     modifier = Modifier.weight(1f)

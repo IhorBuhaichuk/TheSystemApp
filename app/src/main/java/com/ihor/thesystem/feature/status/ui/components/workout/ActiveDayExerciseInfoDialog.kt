@@ -29,6 +29,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.components.SystemDialogContainer
+import com.ihor.thesystem.core.ui.components.SystemIconButton
+import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemPlateShape
+import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.feature.status.viewmodel.ExerciseWorkoutUiModel
 import com.ihor.thesystem.presentation.common.components.ExerciseAnimationPlayer
 import com.ihor.thesystem.presentation.common.components.HologramExerciseImage
@@ -41,21 +46,16 @@ internal fun ExerciseInfoDialog(
     onDismiss: () -> Unit
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.large)
 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Column(
+        SystemDialogContainer(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .clip(shape)
-                .background(colors.surfaceGlassStrong)
-                .border(1.dp, colors.borderActive, shape)
-                .padding(SystemCardPadding),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .fillMaxWidth(0.92f),
+            accent = colors.accentAi,
+            contentPadding = SystemCardPadding
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -79,15 +79,12 @@ internal fun ExerciseInfoDialog(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                IconButton(
+                SystemIconButton(
+                    icon = Icons.Filled.Close,
+                    contentDescription = "Закрити",
                     onClick = onDismiss,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(colors.overlayLight)
-                ) {
-                    Icon(Icons.Filled.Close, contentDescription = "Закрити", tint = colors.textSecondary)
-                }
+                    accent = colors.accentAi
+                )
             }
 
             if (exercise.externalId != null) {
@@ -96,8 +93,13 @@ internal fun ExerciseInfoDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(220.dp)
-                        .clip(RoundedCornerShape(SystemTheme.shapes.medium))
-                        .border(1.dp, colors.borderSubtle, RoundedCornerShape(SystemTheme.shapes.medium))
+                        .techSurface(
+                            shape = systemPlateShape(),
+                            active = false,
+                            accent = colors.accentAi,
+                            role = TechSurfaceRole.Plate
+                        )
+                        .clip(systemPlateShape())
                 )
             } else if (exercise.gifUrl != null) {
                 HologramExerciseImage(
@@ -105,17 +107,25 @@ internal fun ExerciseInfoDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(220.dp)
-                        .clip(RoundedCornerShape(SystemTheme.shapes.medium))
-                        .border(1.dp, colors.borderSubtle, RoundedCornerShape(SystemTheme.shapes.medium))
+                        .techSurface(
+                            shape = systemPlateShape(),
+                            active = false,
+                            accent = colors.accentAi,
+                            role = TechSurfaceRole.Plate
+                        )
+                        .clip(systemPlateShape())
                 )
             } else {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp)
-                        .clip(RoundedCornerShape(SystemTheme.shapes.medium))
-                        .background(colors.overlayLight)
-                        .border(1.dp, colors.borderSubtle, RoundedCornerShape(SystemTheme.shapes.medium)),
+                        .techSurface(
+                            shape = systemPlateShape(),
+                            active = false,
+                            accent = colors.accentAi,
+                            role = TechSurfaceRole.Plate
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(

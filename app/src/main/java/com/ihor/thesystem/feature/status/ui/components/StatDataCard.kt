@@ -1,6 +1,5 @@
 package com.ihor.thesystem.feature.status.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Height
@@ -16,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.sciPanel
+import com.ihor.thesystem.core.ui.components.systemClickable
 
 @Composable
 fun StatDataCard(
@@ -40,7 +40,13 @@ fun StatDataCard(
                 backgroundColor = colors.surfaceGlassSoft,
                 cornerCut = 8.dp
             )
-            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
+            .then(
+                if (onClick != null) {
+                    Modifier.systemClickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            )
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center

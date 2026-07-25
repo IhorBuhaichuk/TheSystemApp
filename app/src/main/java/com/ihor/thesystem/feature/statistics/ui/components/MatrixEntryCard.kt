@@ -3,7 +3,6 @@ package com.ihor.thesystem.feature.statistics.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,9 +29,11 @@ import androidx.compose.ui.unit.dp
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.OneRepMaxText
 import com.ihor.thesystem.core.ui.components.RankBadge
 import com.ihor.thesystem.core.ui.components.systemLargePanelShape
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 @Composable
@@ -77,7 +78,7 @@ fun MatrixEntryCard(
                 ),
                 shape
             )
-            .clickable(enabled = entry.isActive) { onCardClick() }
+            .systemClickable(enabled = entry.isActive) { onCardClick() }
             .padding(SystemScreenPadding),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -88,7 +89,7 @@ fun MatrixEntryCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = entry.exerciseName.uppercase(),
+                    text = entry.exerciseName.toSystemSentenceCase(),
                     style = MaterialTheme.typography.titleSmall.copy(
                         color = colors.textPrimary,
                         fontWeight = FontWeight.Bold
@@ -100,7 +101,7 @@ fun MatrixEntryCard(
                     OneRepMaxText(
                         weight = entry.currentWeight.toDouble(),
                         reps = 8,
-                        label = "EST. 1RM: "
+                        label = "Est. 1RM: "
                     )
                 }
             }

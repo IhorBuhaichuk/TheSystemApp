@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +57,7 @@ import com.ihor.thesystem.core.ui.asString
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
 import com.ihor.thesystem.feature.architect.viewmodel.AiArchitectInsightUiModel
 import com.ihor.thesystem.feature.architect.viewmodel.AiDashboardUiState
@@ -221,7 +221,7 @@ private fun AiModuleCard(
     DarkGlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier),
+            .systemClickable(enabled = enabled, onClick = onClick),
         active = enabled,
         contentPadding = SystemCardPadding
     ) {

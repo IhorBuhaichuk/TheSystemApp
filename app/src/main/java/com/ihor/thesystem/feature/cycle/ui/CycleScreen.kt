@@ -2,7 +2,6 @@ package com.ihor.thesystem.feature.cycle.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -54,6 +53,7 @@ import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemCutCornerShape
@@ -63,6 +63,9 @@ import com.ihor.thesystem.core.ui.components.SystemProgressBar
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemSectionTitle
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemControlShape
+import com.ihor.thesystem.core.ui.components.systemClickable
+import com.ihor.thesystem.core.ui.components.systemPlateShape
 import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.feature.status.ui.WorkoutDialogHost
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
@@ -288,7 +291,7 @@ private fun SystemHeroStat(
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Text(
-            text = label.uppercase(),
+            text = label.toSystemSentenceCase(),
             style = MaterialTheme.typography.labelSmall.copy(
                 color = colors.textSecondary,
                 fontWeight = FontWeight.Black
@@ -602,7 +605,7 @@ private fun CycleDayChip(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    val shape = systemPlateShape()
     val accent = when {
         day.isSelected || day.isActive -> colors.accentPrimary
         day.type == DayType.WORKOUT -> colors.textSecondary
@@ -623,17 +626,17 @@ private fun CycleDayChip(
                 accent = accent,
                 role = TechSurfaceRole.Plate
             )
-            .clickable(onClick = onClick)
+            .systemClickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = when (day.dayNumber) {
-                1 -> "ПН"
-                2 -> "СР"
-                3 -> "ПТ"
-                4 -> "НД"
+                1 -> "Пн"
+                2 -> "Ср"
+                3 -> "Пт"
+                4 -> "Нд"
                 else -> "Д${day.dayNumber}"
             },
             style = MaterialTheme.typography.labelLarge.copy(
@@ -656,7 +659,7 @@ private fun CycleDayChip(
             maxLines = 1
         )
         Text(
-            text = subtitle.uppercase(),
+            text = subtitle.toSystemSentenceCase(),
             style = MaterialTheme.typography.labelSmall.copy(
                 color = colors.textMuted,
                 textAlign = TextAlign.Center
@@ -792,25 +795,19 @@ private fun ParametersAndBonusesPanel(data: StatusUiData) {
                     AttributeLine(
                         label = "Сила",
                         value = data.level.toFloat(),
-                        accent = colors.accentError
+                        accent = colors.statusProgress
                     )
                     AttributeLine(
                         label = "Дисципліна",
                         value = data.currentStreak.toFloat() * 10f,
-                        accent = colors.accentSuccess
+                        accent = colors.statusProgress
                     )
                 } else {
-                    attributes.forEachIndexed { index, entry ->
+                    attributes.forEach { entry ->
                         AttributeLine(
                             label = entry.key.displayName(),
                             value = entry.value,
-                            accent = when (index % 5) {
-                                0 -> colors.accentError
-                                1 -> colors.accentPrimary
-                                2 -> colors.accentSuccess
-                                3 -> colors.accentAi
-                                else -> colors.accentWarning
-                            }
+                            accent = colors.statusProgress
                         )
                     }
                 }
@@ -846,7 +843,7 @@ private fun AttributeLine(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = label.uppercase(),
+                text = label.toSystemSentenceCase(),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Bold
@@ -984,25 +981,26 @@ private fun ArchitectCalloutPanel(
 @Composable
 private fun CompactActionButton(
     icon: ImageVector,
+    contentDescription: String,
     onClick: () -> Unit
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    val shape = systemControlShape()
     Box(
         modifier = Modifier
-            .size(38.dp)
+            .size(48.dp)
             .techSurface(
                 shape = shape,
                 active = false,
                 accent = colors.accentPrimary,
                 role = TechSurfaceRole.Plate
             )
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = colors.accentPrimary,
             modifier = Modifier.size(18.dp)
         )

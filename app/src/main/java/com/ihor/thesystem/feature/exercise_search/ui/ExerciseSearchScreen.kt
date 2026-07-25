@@ -3,7 +3,6 @@ package com.ihor.thesystem.feature.exercise_search.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,6 +58,7 @@ import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.feature.exercise_search.viewmodel.ExerciseFilterState
 import com.ihor.thesystem.feature.exercise_search.viewmodel.ExercisePickerItemUiModel
@@ -290,7 +290,7 @@ private fun PickerFilterChip(
     Surface(
         modifier = Modifier
             .clip(shape)
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick),
         shape = shape,
         color = if (selected) colors.accentPrimarySoft else colors.overlayLight,
         border = BorderStroke(1.dp, if (selected) colors.borderActive else colors.borderSubtle)
@@ -387,7 +387,7 @@ private fun ExercisePickerRow(
                 )
             )
             .border(1.dp, colors.borderSubtle, shape)
-            .clickable { onSelectExercise(exercise) }
+            .systemClickable { onSelectExercise(exercise) }
             .padding(SystemItemSpacing),
         horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing),
         verticalAlignment = Alignment.CenterVertically

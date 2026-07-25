@@ -34,8 +34,11 @@ import androidx.compose.ui.window.DialogProperties
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.SystemButton
-import com.ihor.thesystem.core.ui.components.SystemIconButton
+import com.ihor.thesystem.core.ui.components.SystemDialogScaffold
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
+import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemPlateShape
+import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.feature.status.ui.components.workout.ActiveDayCard
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
 import com.ihor.thesystem.feature.status.viewmodel.WorkoutLoggingSummaryUiModel
@@ -59,83 +62,49 @@ fun MainQuestWorkoutDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colors.background)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 16.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Тренування",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            color = colors.textPrimary,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    )
-
-                    SystemIconButton(
-                        icon = Icons.Default.Close,
-                        contentDescription = "Close",
-                        onClick = onDismiss
+        val summary = data?.loggingSummary
+        SystemDialogScaffold(
+            title = "Тренування",
+            onDismiss = onDismiss,
+            accent = colors.accentPrimary,
+            bottomBar = summary?.let {
+                {
+                    SystemButton(
+                        text = it.finishCtaText,
+                        onClick = onFinishWorkout,
+                        enabled = it.canFinish,
+                        glow = it.canFinish,
+                        icon = Icons.Filled.CheckCircle,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
+            }
+        ) {
+            if (data != null) {
+                Column(
+                    modifier = Modifier
+                    .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    WorkoutLoggingSummaryPanel(summary = data.loggingSummary)
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                Box(modifier = Modifier.weight(1f)) {
-                    if (data != null) {
-                        val summary = data.loggingSummary
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 16.dp)
-                        ) {
-                            WorkoutLoggingSummaryPanel(summary = summary)
-
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            ActiveDayCard(
-                                data = data,
-                                onSetWeightChanged = onSetWeightChanged,
-                                onSetRepsChanged = onSetRepsChanged,
-                                onSetFocusLost = onSetFocusLost,
-                                onSetCompletionChanged = onSetCompletionChanged,
-                                onAddSet = onAddSet,
-                                onOpenSetup = onOpenSetup
-                            )
-
-                            Spacer(modifier = Modifier.height(32.dp))
-
-                            SystemButton(
-                                text = summary.finishCtaText,
-                                onClick = onFinishWorkout,
-                                enabled = summary.canFinish,
-                                glow = summary.canFinish,
-                                icon = Icons.Filled.CheckCircle,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 8.dp)
-                            )
-
-                            Spacer(modifier = Modifier.height(32.dp))
-                        }
-                    } else {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = colors.accentPrimary)
-                        }
-                    }
+                    ActiveDayCard(
+                        data = data,
+                        onSetWeightChanged = onSetWeightChanged,
+                        onSetRepsChanged = onSetRepsChanged,
+                        onSetFocusLost = onSetFocusLost,
+                        onSetCompletionChanged = onSetCompletionChanged,
+                        onAddSet = onAddSet,
+                        onOpenSetup = onOpenSetup
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = colors.accentPrimary)
                 }
             }
         }
@@ -148,15 +117,17 @@ private fun WorkoutLoggingSummaryPanel(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.large)
     val accent = if (summary.canFinish) colors.accentSuccess else colors.accentPrimary
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(colors.overlayLight)
-            .border(1.dp, accent.copy(alpha = if (summary.canFinish) 0.34f else 0.18f), shape)
+            .techSurface(
+                shape = systemPlateShape(),
+                active = summary.canFinish,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
             .padding(SystemCardPadding),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -186,7 +157,7 @@ private fun WorkoutLoggingSummaryPanel(
                 )
             }
             SystemStatusChip(
-                text = if (summary.canFinish) "READY" else "LOG SET",
+                text = if (summary.canFinish) "Ready" else "Log set",
                 accent = accent,
                 active = summary.canFinish
             )

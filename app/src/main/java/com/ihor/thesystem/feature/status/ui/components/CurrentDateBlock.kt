@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.unit.dp
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.glassCard
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -33,7 +34,7 @@ fun CurrentDateBlock(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = dateDisplay.uppercase(locale),
+            text = dateDisplay.toSystemSentenceCase(locale),
             style = MaterialTheme.typography.labelLarge.copy(
                 color = colors.accentPrimary,
                 fontWeight = FontWeight.Bold

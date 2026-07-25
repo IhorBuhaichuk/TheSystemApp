@@ -15,7 +15,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +60,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -80,7 +78,9 @@ import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.theme.SystemDisplayFamily
 import com.ihor.thesystem.core.ui.SystemUiTestTags
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemHoodBadge
@@ -92,6 +92,8 @@ import com.ihor.thesystem.core.ui.components.SystemWeekDayStatus
 import com.ihor.thesystem.core.ui.components.SystemWeekDayVisualType
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
 import com.ihor.thesystem.core.ui.components.systemLargePanelShape
+import com.ihor.thesystem.core.ui.components.systemClickable
+import com.ihor.thesystem.core.ui.components.systemPlateShape
 import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.BossFight
 import com.ihor.thesystem.domain.model.BossFightStatus
@@ -387,7 +389,7 @@ private fun StatusHeroPanel(
         ) {
             Text(
                 text = displayName,
-                modifier = Modifier.clickable(onClick = onEditNameTap),
+                modifier = Modifier.systemClickable(onClick = onEditNameTap),
                 style = MaterialTheme.typography.displayLarge.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Black,
@@ -497,12 +499,12 @@ private fun HeroRankPlate(
                 accent = colors.accentPrimary,
                 role = TechSurfaceRole.Plate
             )
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = label.uppercase(),
+                text = label.toSystemSentenceCase(),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.SemiBold,
@@ -645,7 +647,7 @@ private fun RecommendationPanel(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Рекомендація системи".uppercase(),
+                    text = "Рекомендація системи",
                     style = MaterialTheme.typography.labelLarge.copy(
                         color = purple,
                         fontWeight = FontWeight.Black,
@@ -738,10 +740,10 @@ private fun TodayProgressBlock(data: StatusUiData) {
                 .padding(start = 24.dp, top = 22.dp, end = 24.dp, bottom = 18.dp)
         ) {
             Text(
-                text = "Сьогоднішній прогрес".uppercase(),
+                text = "Сьогоднішній прогрес",
                 style = MaterialTheme.typography.labelLarge.copy(
                     color = colors.accentPrimary,
-                    fontFamily = FontFamily.SansSerif,
+                    fontFamily = SystemDisplayFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     lineHeight = 16.sp,
@@ -818,7 +820,7 @@ private fun ProgressMetric(
         ) {
             icon()
             Text(
-                text = label.uppercase(),
+                text = label.toSystemSentenceCase(),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Medium,
@@ -834,7 +836,7 @@ private fun ProgressMetric(
             text = value,
             style = MaterialTheme.typography.headlineMedium.copy(
                 color = accent,
-                fontFamily = FontFamily.SansSerif,
+                fontFamily = SystemDisplayFamily,
                 fontWeight = FontWeight.Black,
                 fontSize = 30.sp,
                 lineHeight = 31.sp,
@@ -846,7 +848,7 @@ private fun ProgressMetric(
         )
         if (subtitle != null) {
             Text(
-                text = subtitle.uppercase(),
+                text = subtitle.toSystemSentenceCase(),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Medium,
@@ -1016,7 +1018,7 @@ private fun StatusHeader(
                 text = dateText,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = colors.textPrimary.copy(alpha = 0.96f),
-                    fontFamily = FontFamily.SansSerif,
+                    fontFamily = SystemDisplayFamily,
                     fontWeight = FontWeight.Black,
                     fontSize = 25.sp,
                     lineHeight = 26.sp,
@@ -1341,7 +1343,7 @@ private fun WeekPreviewBlock(
                     accent = colors.accentPrimary,
                     role = TechSurfaceRole.Panel
                 )
-                .clickable(onClick = onOpenCalendar)
+                .systemClickable(onClick = onOpenCalendar)
                 .padding(start = 13.dp, top = 19.dp, end = 13.dp, bottom = 15.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -1363,72 +1365,84 @@ private fun WeekPreviewBlock(
                 }
             }
 
-            Canvas(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
             ) {
-                val nodeCount = models.size.coerceAtLeast(1)
-                val circleY = size.height * 0.50f
-                val radius = 17.5.dp.toPx()
-                fun nodeX(index: Int): Float = size.width * ((index + 0.5f) / nodeCount.toFloat())
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val nodeCount = models.size.coerceAtLeast(1)
+                    val nodeY = size.height * 0.50f
+                    val nodeRadius = 20.dp.toPx()
+                    fun nodeX(index: Int): Float =
+                        size.width * ((index + 0.5f) / nodeCount.toFloat())
 
-                if (nodeCount > 1) {
-                    repeat(nodeCount - 1) { index ->
-                        val startX = nodeX(index) + radius
-                        val endX = nodeX(index + 1) - radius
-                        val segmentColor = if (index < progressIndex) colors.accentWarning else colors.accentPrimary
-                        drawLine(
-                            color = segmentColor.copy(alpha = 0.78f),
-                            start = Offset(startX, circleY),
-                            end = Offset(endX, circleY),
-                            strokeWidth = 1.1.dp.toPx(),
-                            cap = StrokeCap.Round
-                        )
+                    if (nodeCount > 1) {
+                        repeat(nodeCount - 1) { index ->
+                            val startX = nodeX(index) + nodeRadius
+                            val endX = nodeX(index + 1) - nodeRadius
+                            val segmentColor = if (index < progressIndex) {
+                                colors.accentWarning
+                            } else {
+                                colors.accentPrimary
+                            }
+                            drawLine(
+                                color = segmentColor.copy(alpha = 0.72f),
+                                start = Offset(startX, nodeY),
+                                end = Offset(endX, nodeY),
+                                strokeWidth = 1.2.dp.toPx(),
+                                cap = StrokeCap.Square
+                            )
+                        }
                     }
                 }
 
-                models.forEachIndexed { index, day ->
-                    val x = nodeX(index)
-                    val isPastOrToday = index <= progressIndex
-                    val isFuture = index > progressIndex
-                    val circleColor = when {
-                        day.isToday -> colors.accentWarning
-                        isPastOrToday -> colors.accentWarning
-                        isFuture -> colors.accentPrimary
-                        else -> colors.borderMuted
-                    }
-                    if (day.isToday) {
-                        drawCircle(
-                            color = colors.accentWarning.copy(alpha = 0.16f),
-                            radius = radius * 1.55f,
-                            center = Offset(x, circleY)
-                        )
-                    }
-                    drawCircle(
-                        color = Color.Black.copy(alpha = 0.20f),
-                        radius = radius,
-                        center = Offset(x, circleY)
-                    )
-                    drawCircle(
-                        color = circleColor,
-                        radius = radius,
-                        center = Offset(x, circleY),
-                        style = Stroke(width = if (day.isToday) 1.35.dp.toPx() else 1.dp.toPx())
-                    )
-                    drawContext.canvas.nativeCanvas.apply {
-                        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                            color = if (day.isToday) {
-                                android.graphics.Color.rgb(242, 184, 79)
-                            } else {
-                                android.graphics.Color.WHITE
-                            }
-                            textAlign = android.graphics.Paint.Align.CENTER
-                            textSize = 20.sp.toPx()
-                            typeface = android.graphics.Typeface.create(android.graphics.Typeface.SANS_SERIF, android.graphics.Typeface.BOLD)
-                            alpha = if (isFuture && !day.isToday) 230 else 255
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    models.forEachIndexed { index, day ->
+                        val isPastOrToday = index <= progressIndex
+                        val isNextDay = index == progressIndex + 1
+                        val dayAccent = when {
+                            isPastOrToday -> colors.accentWarning
+                            isNextDay -> colors.accentPrimary
+                            else -> colors.statusNeutral
                         }
-                        drawText(day.dayNumber, x, circleY + 7.dp.toPx(), paint)
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val dayShape = systemPlateShape()
+                            Box(
+                                modifier = Modifier
+                                    .size(if (day.isToday) 44.dp else 40.dp)
+                                    .techSurface(
+                                        shape = dayShape,
+                                        active = day.isToday || isNextDay,
+                                        accent = dayAccent,
+                                        role = TechSurfaceRole.Plate
+                                    )
+                                    .border(
+                                        width = if (day.isToday) 1.4.dp else 0.8.dp,
+                                        color = dayAccent.copy(alpha = if (isPastOrToday || isNextDay) 0.90f else 0.46f),
+                                        shape = dayShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = day.dayNumber,
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        color = if (day.isToday) dayAccent else colors.textPrimary,
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 20.sp,
+                                        lineHeight = 22.sp,
+                                        textAlign = TextAlign.Center
+                                    ),
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
                 }
             }

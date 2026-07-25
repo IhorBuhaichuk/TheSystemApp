@@ -2,48 +2,48 @@
     <string name="app_name">The System</string>
 
     <!-- UI Labels -->
-    <string name="text_player_status">СТАТУС ГРАВЦЯ</string>
-    <string name="text_level">РІВЕНЬ</string>
-    <string name="text_class">КЛАС</string>
-    <string name="text_rank">RANK</string>
-    <string name="text_cycle_counter">ЛІЧИЛЬНИК ЦИКЛУ</string>
-    <string name="text_month">МІСЯЦЬ</string>
-    <string name="text_week">ТИЖДЕНЬ</string>
-    <string name="text_day">ДЕНЬ</string>
-    <string name="text_penalty">ШТРАФ</string>
-    <string name="text_statistics">СТАТИСТИКА</string>
-    <string name="text_matrix_progression">МАТРИЦЯ ПРОГРЕСІЇ</string>
-    <string name="text_start">СТАРТ</string>
-    <string name="text_weight">ПОТОЧНА ВАГА</string>
-    <string name="text_height">ЗРІСТ</string>
-    <string name="text_matrix_empty">МАТРИЦЯ ПОРОЖНЯ</string>
+    <string name="text_player_status">Статус гравця</string>
+    <string name="text_level">Рівень</string>
+    <string name="text_class">Клас</string>
+    <string name="text_rank">Rank</string>
+    <string name="text_cycle_counter">Лічильник циклу</string>
+    <string name="text_month">Місяць</string>
+    <string name="text_week">Тиждень</string>
+    <string name="text_day">День</string>
+    <string name="text_penalty">Штраф</string>
+    <string name="text_statistics">Статистика</string>
+    <string name="text_matrix_progression">Матриця прогресії</string>
+    <string name="text_start">Старт</string>
+    <string name="text_weight">Поточна вага</string>
+    <string name="text_height">Зріст</string>
+    <string name="text_matrix_empty">Матриця порожня</string>
 
-    <string name="text_loading">ЗАВАНТАЖЕННЯ СИСТЕМИ&#8230;</string>
-    <string name="text_error">ПОМИЛКА</string>
-    <string name="text_annual_matrix">РІЧНА МАТРИЦЯ ПРОГРЕСІЇ</string>
-    <string name="text_tap_log_flag_setup">TAP = LOG | FLAG = SETUP</string>
+    <string name="text_loading">Завантаження системи&#8230;</string>
+    <string name="text_error">Помилка</string>
+    <string name="text_annual_matrix">Річна матриця прогресії</string>
+    <string name="text_tap_log_flag_setup">Tap = log | flag = setup</string>
     <string name="system_loading">Завантаження системи&#8230;</string>
-    <string name="text_critical_error_capital">КРИТИЧНА ПОМИЛКА СИСТЕМИ</string>
-    <string name="text_terminate_system">TERMINATE SYSTEM</string>
+    <string name="text_critical_error_capital">Критична помилка системи</string>
+    <string name="text_terminate_system">Terminate system</string>
     <string name="text_db_init_failed">Ініціалізація бази даних не вдалася:</string>
-    <string name="text_restart">ПЕРЕЗАПУСТИТИ</string>
+    <string name="text_restart">Перезапустити</string>
 
     <string name="text_ai_recommendation_note">Рекомендація AI (%1$d підходів, %2$s повторень)</string>
-    <string name="text_label_weight">ВАГА</string>
-    <string name="text_label_height">ЗРІСТ</string>
+    <string name="text_label_weight">Вага</string>
+    <string name="text_label_height">Зріст</string>
     <string name="text_unit_kg">кг</string>
     <string name="text_unit_cm">см</string>
 
-    <string name="text_rest_day_title">СЬОГОДНІ ВІДПОЧИНОК</string>
+    <string name="text_rest_day_title">Сьогодні відпочинок</string>
     <string name="text_rest_day_subtitle">Час для відновлення сил</string>
 
-    <string name="text_level_up">LEVEL UP</string>
-    <string name="text_system_updated">СИСТЕМА ОНОВЛЕНА</string>
-    <string name="text_month_n">МІСЯЦЬ %1$d</string>
-    <string name="text_accept_power">ПРИЙНЯТИ СИЛУ</string>
+    <string name="text_level_up">Level up</string>
+    <string name="text_system_updated">Система оновлена</string>
+    <string name="text_month_n">Місяць %1$d</string>
+    <string name="text_accept_power">Прийняти силу</string>
 
     <string name="text_greeting">Вітаю, %1$s</string>
-    <string name="text_main_quest">ОСНОВНИЙ КВЕСТ</string>
+    <string name="text_main_quest">Основний квест</string>
     <string name="text_more_exercises">+ ще %1$d вправ</string>
     <plurals name="quest_tasks_more">
         <item quantity="one">+ ще %d вправа</item>
@@ -51,33 +51,33 @@
         <item quantity="many">+ ще %d вправ</item>
         <item quantity="other">+ ще %d вправ</item>
     </plurals>
-    <string name="text_completed_check">ЗАВЕРШЕНО ✓</string>
-    <string name="text_daily_goals">СПИСОК ЗАВДАНЬ</string>
-    <string name="text_daily_tasks_section">ЗАВДАННЯ НА СЬОГОДНІ</string>
+    <string name="text_completed_check">Завершено ✓</string>
+    <string name="text_daily_goals">Список завдань</string>
+    <string name="text_daily_tasks_section">Завдання на сьогодні</string>
     <string name="text_completed_tasks">Виконані завдання</string>
     <string name="text_failed_tasks">Не виконані завдання</string>
-    <string name="text_add_task_title">СПИСОК ЗАВДАНЬ</string>
+    <string name="text_add_task_title">Список завдань</string>
     <string name="text_add_task_placeholder">Що потрібно зробити?</string>
-    <string name="text_add_task_confirm">ДОДАТИ</string>
-    <string name="text_add_new_goal">ДОДАТИ ЗАВДАННЯ</string>
-    <string name="text_add_task_cancel">СКАСУВАТИ</string>
-    <string name="text_confirm">ПІДТВЕРДИТИ</string>
-    <string name="text_cancel">СКАСУВАТИ</string>
-    <string name="text_edit_name_title">[ РЕДАГУВАТИ ІМ\'Я ]</string>
+    <string name="text_add_task_confirm">Додати</string>
+    <string name="text_add_new_goal">Додати завдання</string>
+    <string name="text_add_task_cancel">Скасувати</string>
+    <string name="text_confirm">Підтвердити</string>
+    <string name="text_cancel">Скасувати</string>
+    <string name="text_edit_name_title">[ Редагувати ім\'я ]</string>
     <string name="text_new_name">Нове ім\'я</string>
 
-    <string name="quest_progress">ПРОГРЕС: %1$d/%2$d</string>
-    <string name="quest_reward_week">НАГОРОДА: +1 ТИЖДЕНЬ</string>
-    <string name="quest_reward_promotion">НАГОРОДА: +500 EXP | ПІДТВЕРДЖЕННЯ РАНГУ</string>
-    <string name="quest_completed_capital">ВИКОНАНО ✓</string>
+    <string name="quest_progress">Прогрес: %1$d/%2$d</string>
+    <string name="quest_reward_week">Нагорода: +1 тиждень</string>
+    <string name="quest_reward_promotion">Нагорода: +500 EXP | підтвердження рангу</string>
+    <string name="quest_completed_capital">Виконано ✓</string>
 
 
     <!-- Cycle Days -->
-    <string name="cycle_day_1">ДЕННА ЗМІНА</string>
-    <string name="cycle_day_2">НІЧНА ЗМІНА</string>
-    <string name="cycle_day_3">ВІДСИПНИЙ</string>
-    <string name="cycle_day_4">ВИХІДНИЙ</string>
-    <string name="cycle_day_default">ДЕНЬ %1$d</string>
+    <string name="cycle_day_1">Денна зміна</string>
+    <string name="cycle_day_2">Нічна зміна</string>
+    <string name="cycle_day_3">Відсипний</string>
+    <string name="cycle_day_4">Вихідний</string>
+    <string name="cycle_day_default">День %1$d</string>
 
     <!-- Architect Messages -->
     <string name="architect_initial_message">Є збережені результати останнього тренування. Надіслати їх Архітектору для короткого аналізу?</string>
@@ -121,15 +121,15 @@
     <string name="ai_fallback_activated">Тренування збережено. Система сформувала verdict локально і залишила обережні цілі без AI-рекомендацій.</string>
 
     <!-- Muscle Groups -->
-    <string name="muscle_group_chest">ГРУДИ</string>
-    <string name="muscle_group_back">СПИНА</string>
-    <string name="muscle_group_shoulders">ДЕЛЬТИ</string>
-    <string name="muscle_group_quads">КВАДРИЦЕПСИ</string>
-    <string name="muscle_group_hamstrings_glutes">СТЕГНА ТА СІДНИЦІ</string>
-    <string name="muscle_group_arms">РУКИ</string>
-    <string name="muscle_group_abs">ПРЕС</string>
-    <string name="muscle_group_legs">НОГИ</string>
-    <string name="muscle_group_core">КОР</string>
+    <string name="muscle_group_chest">Груди</string>
+    <string name="muscle_group_back">Спина</string>
+    <string name="muscle_group_shoulders">Дельти</string>
+    <string name="muscle_group_quads">Квадрицепси</string>
+    <string name="muscle_group_hamstrings_glutes">Стегна та сідниці</string>
+    <string name="muscle_group_arms">Руки</string>
+    <string name="muscle_group_abs">Прес</string>
+    <string name="muscle_group_legs">Ноги</string>
+    <string name="muscle_group_core">Кор</string>
 
     <!-- Player Ranks -->
     <string name="rank_novice">Новачок</string>
@@ -147,15 +147,15 @@
     <string name="error_no_internet">Відсутнє підключення до інтернету</string>
     <string name="error_server_error">Помилка сервера</string>
     <string name="error_timeout">Час очікування вичерпано</string>
-    <string name="text_system_online">SYSTEM ONLINE</string>
-    <string name="text_level_label">LEVEL %1$d</string>
-    <string name="text_next_xp">NEXT: %1$d XP</string>
-    <string name="text_character">ПЕРСОНАЖ</string>
-    <string name="text_matrix">МАТРИЦЯ</string>
-    <string name="text_analytics">АНАЛІТИКА</string>
-    <string name="text_calendar_title">КАЛЕНДАР</string>
-    <string name="text_character_stats_capital">ХАРАКТЕРИСТИКИ ПЕРСОНАЖА</string>
-    <string name="text_progress_30_days">ПРОГРЕС ЗА 30 ДНІВ</string>
+    <string name="text_system_online">System online</string>
+    <string name="text_level_label">Level %1$d</string>
+    <string name="text_next_xp">Next: %1$d XP</string>
+    <string name="text_character">Персонаж</string>
+    <string name="text_matrix">Матриця</string>
+    <string name="text_analytics">Аналітика</string>
+    <string name="text_calendar_title">Календар</string>
+    <string name="text_character_stats_capital">Характеристики персонажа</string>
+    <string name="text_progress_30_days">Прогрес за 30 днів</string>
     <string name="text_exercise_label">Вправа %1$d</string>
     <string name="text_workout_results_header">Результати останнього тренувального дня (Тоннаж: %1$dкг):</string>
     <string name="text_workout_results_item">[ID: %1$d] %2$s: %3$.1fкг х %4$d</string>
@@ -172,12 +172,12 @@
     </string-array>
     <string name="text_workout_recommendation_format">%1$d x %2$d @ %3$.1f кг</string>
     <string name="text_exercise_default_name">Вправа</string>
-    <string name="text_day_details">ДЕТАЛІ ДНЯ</string>
-    <string name="text_activity_day">АКТИВНІСТЬ ДНЯ</string>
-    <string name="text_system_recommendations">РЕКОМЕНДАЦІЇ СИСТЕМИ</string>
-    <string name="text_planned_program">ПЛАНОВА ПРОГРАМА</string>
-    <string name="text_active_recovery">РЕЖИМ: АКТИВНЕ ВІДНОВЛЕННЯ</string>
-    <string name="text_status_label">СТАТУС</string>
+    <string name="text_day_details">Деталі дня</string>
+    <string name="text_activity_day">Активність дня</string>
+    <string name="text_system_recommendations">Рекомендації системи</string>
+    <string name="text_planned_program">Планова програма</string>
+    <string name="text_active_recovery">Режим: активне відновлення</string>
+    <string name="text_status_label">Статус</string>
 
     <!-- Calendar Weekdays -->
     <string name="text_day_mon">Пн</string>
@@ -189,13 +189,13 @@
     <string name="text_day_sun">Нд</string>
 
     <!-- Quests -->
-    <string name="text_exam">ЕКЗАМЕН</string>
-    <string name="text_empty_routine">РУТИНА ВІДСУТНЯ</string>
-    <string name="text_empty_main_quest">ОСНОВНИЙ КВЕСТ ВІДСУТНІЙ</string>
-    <string name="text_empty_promotions">ЕКЗАМЕНИ ВІДСУТНІ</string>
+    <string name="text_exam">Екзамен</string>
+    <string name="text_empty_routine">Рутина відсутня</string>
+    <string name="text_empty_main_quest">Основний квест відсутній</string>
+    <string name="text_empty_promotions">Екзамени відсутні</string>
 
     <!-- Exercise Stats -->
-    <string name="text_exercise_progress">ПРОГРЕС ВПРАВИ</string>
+    <string name="text_exercise_progress">Прогрес вправи</string>
     <string name="text_current">Поточна</string>
     <string name="text_target">Ціль</string>
     <string name="text_rank_label">Ранг</string>

@@ -45,7 +45,7 @@ fun LogAgeDialog(
         SystemDialogContainer(accent = colors.accentPrimary) {
             Icon(Icons.Filled.Cake, contentDescription = null, tint = colors.accentPrimary)
             Text(
-                text = "[ ОНОВИТИ ВІК ]",
+                text = "[ Оновити вік ]",
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colors.accentPrimary,
                     fontWeight = FontWeight.Bold

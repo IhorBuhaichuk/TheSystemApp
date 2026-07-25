@@ -2,7 +2,6 @@ package com.ihor.thesystem.feature.calendar.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +57,7 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.domain.model.CalendarCycleDayType
 import com.ihor.thesystem.domain.model.CalendarCycleTemplate
 import com.ihor.thesystem.domain.model.title
@@ -217,7 +217,7 @@ private fun TemplateOption(
             .clip(shape)
             .background(if (selected) colors.accentPrimarySoft else colors.surfaceGlassSoft)
             .border(1.dp, if (selected) colors.borderActive else colors.borderSubtle, shape)
-            .clickable(onClick = onClick)
+            .systemClickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -325,7 +325,7 @@ private fun TodayCycleDayChip(
             .clip(shape)
             .background(if (selected) colors.accentPrimarySoft else colors.surfaceGlassSoft)
             .border(1.dp, if (selected) colors.borderActive else colors.borderSubtle, shape)
-            .clickable(onClick = onClick)
+            .systemClickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -574,7 +574,7 @@ private fun DayTypeChip(
             .clip(shape)
             .background(if (selected) colors.accentPrimarySoft else colors.surfaceGlassSoft)
             .border(1.dp, if (selected) colors.borderActive else colors.borderSubtle, shape)
-            .clickable(onClick = onClick)
+            .systemClickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 8.dp)
     )
 }

@@ -2,7 +2,6 @@ package com.ihor.thesystem.feature.calendar.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -53,13 +52,20 @@ import com.ihor.thesystem.core.navigation.Routes
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.theme.SystemDisplayFamily
 import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.SystemUiTestTags
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.SystemCutCornerShape
 import com.ihor.thesystem.core.ui.components.SystemHoodBadge
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
+import com.ihor.thesystem.core.ui.components.SystemStateKind
+import com.ihor.thesystem.core.ui.components.SystemStatePanel
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemControlShape
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.core.ui.components.systemLargePanelShape
+import com.ihor.thesystem.core.ui.components.systemPlateShape
 import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus
 import com.ihor.thesystem.feature.calendar.viewmodel.CalendarDayUiModel
@@ -152,7 +158,13 @@ private fun CalendarHeader(
         modifier = Modifier
             .fillMaxWidth()
             .testTag(SystemUiTestTags.CALENDAR_HEADER)
-            .padding(bottom = 5.dp)
+            .techSurface(
+                shape = systemLargePanelShape(),
+                active = false,
+                accent = SystemTheme.colors.accentPrimary,
+                role = TechSurfaceRole.Panel
+            )
+            .padding(12.dp)
     ) {
         val compact = maxWidth < 400.dp
         if (compact) {
@@ -166,6 +178,7 @@ private fun CalendarHeader(
                     CalendarHeaderTitle(modifier = Modifier.weight(1f))
                     GlassIconButton(
                         icon = Icons.Filled.Today,
+                        contentDescription = "Налаштування календаря",
                         onClick = onOpenSettings,
                         active = true
                     )
@@ -188,6 +201,7 @@ private fun CalendarHeader(
                 }
                 GlassIconButton(
                     icon = Icons.Filled.Today,
+                    contentDescription = "Налаштування календаря",
                     onClick = onOpenSettings,
                     active = true
                 )
@@ -200,7 +214,7 @@ private fun CalendarHeader(
 private fun CalendarHeaderTitle(modifier: Modifier = Modifier) {
     val colors = SystemTheme.colors
     Text(
-        text = "КАЛЕНДАР",
+        text = "Календар",
         style = MaterialTheme.typography.headlineLarge.copy(
             color = colors.textPrimary,
             fontWeight = FontWeight.Black,
@@ -295,17 +309,12 @@ private fun HeaderDot(color: Color) {
 
 @Composable
 private fun CalendarLoadingBlock() {
-    val colors = SystemTheme.colors
-    DarkGlassCard(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = colors.accentPrimary)
-        }
-    }
+    SystemStatePanel(
+        kind = SystemStateKind.Loading,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp)
+    )
 }
 
 @Composable
@@ -348,12 +357,15 @@ private fun MonthOverviewPanel(
             ) {
                 CalendarMonthArrowButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Попередній місяць",
                     onClick = onPreviousMonth
                 )
                 Text(
-                    text = uiState.currentMonth.toLocalizedMonthYear().uppercase(UKRAINIAN_LOCALE),
+                    text = uiState.currentMonth.toLocalizedMonthYear()
+                        .toSystemSentenceCase(UKRAINIAN_LOCALE),
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = colors.accentPrimary,
+                        fontFamily = SystemDisplayFamily,
                         fontWeight = FontWeight.Black,
                         fontSize = 17.sp,
                         lineHeight = 20.sp,
@@ -366,6 +378,7 @@ private fun MonthOverviewPanel(
                 )
                 CalendarMonthArrowButton(
                     icon = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "Наступний місяць",
                     onClick = onNextMonth
                 )
             }
@@ -457,7 +470,7 @@ private fun CalendarDayCell(
 
     Box(
         modifier = modifier
-            .clickable(enabled = enabled) { onDateSelected(date) }
+            .systemClickable(enabled = enabled) { onDateSelected(date) }
     ) {
         if (shouldOutline) {
             Box(
@@ -545,7 +558,7 @@ private fun SelectedDayDetailsPanel(
         val hasAnyPlan = day.hasTrainingPlan || day.totalTasks > 0 || hasLogs
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
-                text = "ПОДІЇ НА ${day.date.toEventHeaderDate()}",
+                text = "Події на ${day.date.toEventHeaderDate()}",
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colors.accentPrimary,
                     fontWeight = FontWeight.Black,
@@ -604,7 +617,7 @@ private fun SelectedDayDetailsPanel(
             }
 
             CalendarActionButton(
-                text = "ВІДКРИТИ ДЕНЬ",
+                text = "Відкрити день",
                 icon = if (day.hasTrainingPlan) Icons.Filled.FitnessCenter else Icons.Filled.Today,
                 onClick = onOpenDay,
                 modifier = Modifier.fillMaxWidth()
@@ -620,7 +633,7 @@ private fun CalendarEmptyEventRow(
     accent: Color
 ) {
     val colors = SystemTheme.colors
-    val shape = SystemCutCornerShape(10.dp)
+    val shape = systemPlateShape()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -659,7 +672,7 @@ private fun CalendarEventRow(
     accent: Color
 ) {
     val colors = SystemTheme.colors
-    val shape = SystemCutCornerShape(10.dp)
+    val shape = systemPlateShape()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -727,7 +740,7 @@ private fun CalendarActionButton(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    val shape = SystemCutCornerShape(12.dp)
+    val shape = systemControlShape()
     Row(
         modifier = modifier
             .heightIn(min = 56.dp)
@@ -737,7 +750,7 @@ private fun CalendarActionButton(
                 accent = colors.accentPrimary,
                 role = TechSurfaceRole.Button
             )
-            .clickable(onClick = onClick)
+            .systemClickable(onClick = onClick)
             .padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
@@ -766,16 +779,17 @@ private fun CalendarActionButton(
 @Composable
 private fun CalendarMonthArrowButton(
     icon: ImageVector,
+    contentDescription: String,
     onClick: () -> Unit
 ) {
     val colors = SystemTheme.colors
     IconButton(
         onClick = onClick,
-        modifier = Modifier.size(34.dp)
+        modifier = Modifier.size(48.dp)
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = colors.textSecondary,
             modifier = Modifier.size(22.dp)
         )
@@ -785,15 +799,16 @@ private fun CalendarMonthArrowButton(
 @Composable
 private fun GlassIconButton(
     icon: ImageVector,
+    contentDescription: String,
     onClick: () -> Unit,
     active: Boolean = false
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    val shape = systemControlShape()
     IconButton(
         onClick = onClick,
         modifier = Modifier
-            .size(44.dp)
+            .size(48.dp)
             .techSurface(
                 shape = shape,
                 active = active,
@@ -803,7 +818,7 @@ private fun GlassIconButton(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = contentDescription,
             tint = if (active) colors.accentPrimary else colors.textSecondary,
             modifier = Modifier.size(20.dp)
         )
@@ -824,7 +839,8 @@ private fun YearMonth.toLocalizedMonthYear(): String {
 }
 
 private fun LocalDate.toEventHeaderDate(): String {
-    return "$dayOfMonth ${monthValue.toUkrainianMonthGenitive()}".uppercase(UKRAINIAN_LOCALE)
+    return "$dayOfMonth ${monthValue.toUkrainianMonthGenitive()}"
+        .lowercase(UKRAINIAN_LOCALE)
 }
 
 private fun Int.toUkrainianMonthName(): String =

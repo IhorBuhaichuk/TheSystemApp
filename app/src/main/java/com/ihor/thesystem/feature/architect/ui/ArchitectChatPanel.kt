@@ -2,7 +2,6 @@ package com.ihor.thesystem.feature.architect.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +41,7 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
 import com.ihor.thesystem.domain.model.AiArchitectInsight
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
@@ -159,7 +159,7 @@ private fun ChatModeButton(
                 if (selected) colors.accentAi.copy(alpha = 0.28f) else Color.Transparent,
                 shape
             )
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(

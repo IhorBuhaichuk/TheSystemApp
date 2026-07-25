@@ -444,7 +444,10 @@ class StatusViewModel @Inject constructor(
             weekDayLabel = date.dayOfWeek.getDisplayName(TextStyle.SHORT_STANDALONE, locale)
                 .replace(".", "")
                 .take(2)
-                .uppercase(locale),
+                .lowercase(locale)
+                .replaceFirstChar { character ->
+                    if (character.isLowerCase()) character.titlecase(locale) else character.toString()
+                },
             dayNumber = date.dayOfMonth.toString(),
             visualType = visualType,
             status = when (completionStatus) {

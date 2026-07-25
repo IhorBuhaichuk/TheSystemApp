@@ -45,7 +45,7 @@ fun LogWeightDialog(
         SystemDialogContainer(accent = colors.accentPrimary) {
             Icon(Icons.Filled.FitnessCenter, contentDescription = null, tint = colors.accentPrimary)
             Text(
-                text = "[ ЛОГУВАТИ ВАГУ ]",
+                text = "[ Логувати вагу ]",
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colors.accentPrimary,
                     fontWeight = FontWeight.Bold

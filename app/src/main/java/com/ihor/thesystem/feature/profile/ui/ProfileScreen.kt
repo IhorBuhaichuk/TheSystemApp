@@ -4,7 +4,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -49,12 +48,16 @@ import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.SystemAvatarBadge
 import com.ihor.thesystem.core.ui.components.SystemMetricBlock
 import com.ihor.thesystem.core.ui.components.SystemPanel
+import com.ihor.thesystem.core.ui.components.SystemStateKind
+import com.ihor.thesystem.core.ui.components.SystemStatePanel
 import com.ihor.thesystem.core.ui.components.SystemProgressBar
 import com.ihor.thesystem.core.ui.components.SystemSectionTitle
 import com.ihor.thesystem.core.ui.components.SystemSettingsRow
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.EditNameDialog
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogAgeDialog
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogHeightDialog
@@ -100,8 +103,16 @@ fun ProfileScreen(
         RpgStatusBackdrop()
 
         if (statusData == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = colors.accentPrimary)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(SystemScreenPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                SystemStatePanel(
+                    kind = SystemStateKind.Loading,
+                    modifier = Modifier.fillMaxSize(0.42f)
+                )
             }
         } else {
             ProfileDashboard(
@@ -236,8 +247,8 @@ private fun ProfileHeroPanel(
                     ) {
                         SystemSectionTitle(title = "Профіль")
                         Text(
-                            text = statusData.playerName.uppercase(),
-                            modifier = Modifier.clickable(onClick = onEditName),
+                            text = statusData.playerName.toSystemSentenceCase(),
+                            modifier = Modifier.systemClickable(onClick = onEditName),
                             style = MaterialTheme.typography.displayLarge.copy(
                                 color = colors.textPrimary,
                                 fontWeight = FontWeight.Black

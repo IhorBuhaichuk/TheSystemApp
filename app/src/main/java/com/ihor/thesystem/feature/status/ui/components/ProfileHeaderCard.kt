@@ -6,7 +6,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,8 +39,10 @@ import coil.request.ImageRequest
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.SystemCard
 import com.ihor.thesystem.core.ui.components.SystemProgressBar
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.feature.status.viewmodel.StatusUiData
 
 @Composable
@@ -72,23 +73,23 @@ fun ProfileHeaderCard(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
-                    text = "ГРАВЕЦЬ",
+                    text = "Гравець",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = colors.textSecondary,
                         fontWeight = FontWeight.Bold
                     )
                 )
                 Text(
-                    text = data.playerName.uppercase(),
+                    text = data.playerName.toSystemSentenceCase(),
                     style = MaterialTheme.typography.displayLarge.copy(
                         color = colors.textPrimary
                     ),
-                    modifier = Modifier.clickable { onNameTap() },
+                    modifier = Modifier.systemClickable(onClick = onNameTap),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "RANK ${data.globalRank.name}",
+                    text = "Rank ${data.globalRank.name.toSystemSentenceCase()}",
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = colors.accentPrimary,
                         fontWeight = FontWeight.Bold
@@ -120,7 +121,7 @@ fun ProfileHeaderCard(
                         ),
                         CircleShape
                     )
-                    .clickable {
+                    .systemClickable {
                         photoPickerLauncher.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
@@ -162,7 +163,7 @@ fun ProfileHeaderCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "XP PROGRESS",
+                    text = "XP progress",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = colors.textSecondary,
                         fontWeight = FontWeight.Bold

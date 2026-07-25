@@ -1,7 +1,6 @@
 package com.ihor.thesystem.feature.statistics.ui.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Flag
@@ -23,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
+import com.ihor.thesystem.core.ui.components.systemClickable
 
 @Composable
 fun StatRightPanel(
@@ -74,7 +74,7 @@ private fun HexStatBadge(
         modifier = modifier
             .aspectRatio(1.155f)
             .padding(2.dp)
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {

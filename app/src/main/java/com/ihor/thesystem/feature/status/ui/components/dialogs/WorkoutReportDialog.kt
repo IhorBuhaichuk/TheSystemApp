@@ -38,10 +38,11 @@ import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.asString
 import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.SystemDialogScaffold
 import com.ihor.thesystem.core.ui.components.SystemGhostButton
-import com.ihor.thesystem.core.ui.components.SystemIconButton
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemPlateShape
 import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.AiArchitectReport
 import com.ihor.thesystem.domain.model.SystemWorkoutGrade
@@ -62,98 +63,74 @@ fun WorkoutReportDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colors.background)
+        SystemDialogScaffold(
+            title = "Звіт тренування",
+            onDismiss = onDismiss,
+            accent = colors.accentAi,
+            bottomBar = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    SystemGhostButton(
+                        text = "Відкрити аналіз",
+                        onClick = onOpenAnalysis,
+                        modifier = Modifier.fillMaxWidth(),
+                        accent = colors.accentAi
+                    )
+                    SystemButton(
+                        text = "Прийняти",
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth(),
+                        accent = colors.accentPrimary,
+                        glow = true
+                    )
+                }
+            }
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(SystemScreenPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = SystemScreenPadding, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Звіт тренування",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            color = colors.accentAi,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    )
+                WorkoutCompletionBlock(report = report)
 
-                    SystemIconButton(
-                        icon = Icons.Default.Close,
-                        contentDescription = "Close",
-                        onClick = onDismiss
-                    )
+                report.judgment?.let { judgment ->
+                    SystemJudgmentBlock(judgment = judgment)
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    WorkoutCompletionBlock(report = report)
-
-                    report.judgment?.let { judgment ->
-                        SystemJudgmentBlock(judgment = judgment)
-                    }
-
-                    Text(
-                        text = report.architectFeedback.asString(context),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            color = colors.textPrimary.copy(alpha = 0.92f)
-                        )
+                Text(
+                    text = report.architectFeedback.asString(context),
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = colors.textPrimary.copy(alpha = 0.92f)
                     )
+                )
 
-                    HorizontalDivider(color = colors.borderSubtle)
+                HorizontalDivider(color = colors.borderSubtle)
 
+                Text(
+                    text = "Вікно відновлення: ${report.recoveryWindowHours.toInt()} годин",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = colors.accentPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+
+                NextWorkoutBlock(report = report)
+
+                if (report.isFallback) {
                     Text(
-                        text = "Вікно відновлення: ${report.recoveryWindowHours.toInt()} годин",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            color = colors.accentPrimary,
+                        text = "AI тимчасово недоступний. Тренування збережено, verdict сформовано локально.",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = colors.textSecondary,
                             fontWeight = FontWeight.Bold
                         )
                     )
-
-                    NextWorkoutBlock(report = report)
-
-                    if (report.isFallback) {
-                        Text(
-                            text = "AI тимчасово недоступний. Тренування збережено, verdict сформовано локально.",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = colors.textSecondary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
                 }
 
-                SystemGhostButton(
-                    text = "Відкрити аналіз",
-                    onClick = onOpenAnalysis,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    accent = colors.accentAi
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                SystemButton(
-                    text = "Прийняти",
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    accent = colors.accentPrimary,
-                    glow = true
-                )
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
@@ -199,7 +176,7 @@ private fun WorkoutCompletionBlock(
                 )
             }
             SystemStatusChip(
-                text = judgment?.progressionDecision?.progressLabel() ?: "LOGGED",
+                text = judgment?.progressionDecision?.progressLabel() ?: "Logged",
                 accent = progressAccent,
                 active = true
             )
@@ -223,14 +200,17 @@ private fun SystemJudgmentBlock(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    val shape = androidx.compose.foundation.shape.RoundedCornerShape(SystemTheme.shapes.medium)
+    val accent = judgment.progressionDecision.progressColor()
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(colors.overlayLight)
-            .border(1.dp, colors.borderActive, shape)
+            .techSurface(
+                shape = systemPlateShape(),
+                active = true,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -332,10 +312,9 @@ private fun NextWorkoutBlock(
 
 @Composable
 private fun Modifier.reportPlate(accent: Color): Modifier {
-    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     return this
         .techSurface(
-            shape = shape,
+            shape = systemPlateShape(),
             active = false,
             accent = accent,
             role = TechSurfaceRole.Plate
@@ -379,8 +358,8 @@ private fun WorkoutProgressionDecision.progressColor(): Color =
 
 private fun WorkoutProgressionDecision.progressLabel(): String =
     when (this) {
-        WorkoutProgressionDecision.INCREASE_ALLOWED -> "PROGRESS"
-        WorkoutProgressionDecision.HOLD -> "HOLD"
-        WorkoutProgressionDecision.REDUCE -> "REDUCE"
-        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "DELOAD"
+        WorkoutProgressionDecision.INCREASE_ALLOWED -> "Progress"
+        WorkoutProgressionDecision.HOLD -> "Hold"
+        WorkoutProgressionDecision.REDUCE -> "Reduce"
+        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "Deload"
     }

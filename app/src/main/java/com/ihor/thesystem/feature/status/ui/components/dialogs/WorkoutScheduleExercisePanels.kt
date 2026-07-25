@@ -2,7 +2,6 @@ package com.ihor.thesystem.feature.status.ui.components.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +37,7 @@ import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.domain.model.ExerciseDetails
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
@@ -284,7 +284,7 @@ private fun TrackingModeOptionChip(
             .clip(shape)
             .background(if (selected) colors.accentPrimarySoft else colors.surfaceGlassSoft)
             .border(1.dp, if (selected) colors.borderActive else colors.borderSubtle, shape)
-            .clickable(onClick = onClick)
+            .systemClickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 7.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -344,7 +344,7 @@ private fun CompactIconButton(
             .clip(shape)
             .background(tint.copy(alpha = 0.075f))
             .border(1.dp, tint.copy(alpha = 0.2f), shape)
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(

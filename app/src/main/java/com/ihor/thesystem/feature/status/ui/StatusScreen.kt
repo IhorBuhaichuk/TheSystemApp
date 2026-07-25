@@ -35,6 +35,8 @@ import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.SystemStateKind
+import com.ihor.thesystem.core.ui.components.SystemStatePanel
 import com.ihor.thesystem.feature.status.ui.components.dialogs.AddTaskDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.LevelUpDialog
 import com.ihor.thesystem.feature.status.viewmodel.StatusDialogState
@@ -120,9 +122,16 @@ fun StatusScreen(
 
 @Composable
 private fun StatusLoading() {
-    val colors = SystemTheme.colors
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = colors.accentPrimary)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(SystemScreenPadding),
+        contentAlignment = Alignment.Center
+    ) {
+        SystemStatePanel(
+            kind = SystemStateKind.Loading,
+            modifier = Modifier.fillMaxSize(0.42f)
+        )
     }
 }
 
@@ -171,27 +180,13 @@ private fun DatabaseErrorScreen(
             .padding(SystemScreenPadding),
         contentAlignment = Alignment.Center
     ) {
-        DarkGlassCard(active = true) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(SystemItemSpacing),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Критична помилка системи",
-                    style = MaterialTheme.typography.titleLarge.copy(color = colors.accentError),
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = message.asString(context),
-                    style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                SystemButton(
-                    text = "Повторити",
-                    onClick = onRetry
-                )
-            }
-        }
+        SystemStatePanel(
+            kind = SystemStateKind.Error,
+            title = "Критична помилка системи",
+            message = message.asString(context),
+            actionLabel = "Повторити",
+            onAction = onRetry,
+            modifier = Modifier.fillMaxSize(0.72f)
+        )
     }
 }

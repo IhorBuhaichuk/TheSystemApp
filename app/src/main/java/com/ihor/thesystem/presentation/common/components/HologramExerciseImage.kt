@@ -1,6 +1,5 @@
 package com.ihor.thesystem.presentation.common.components
 
-import android.os.Build.VERSION.SDK_INT
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -15,10 +14,8 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import com.ihor.thesystem.core.theme.SystemTheme
-import coil.ImageLoader
+import coil.imageLoader
 import coil.compose.SubcomposeAsyncImage
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 
 // Винесено за межі функції для уникнення реалокації пам'яті при кожній рекомпозиції
@@ -39,17 +36,7 @@ fun HologramExerciseImage(
     val context = LocalContext.current
     val colors = SystemTheme.colors
     
-    val imageLoader = remember(context) {
-        ImageLoader.Builder(context)
-            .components {
-                if (SDK_INT >= 28) {
-                    add(ImageDecoderDecoder.Factory())
-                } else {
-                    add(GifDecoder.Factory())
-                }
-            }
-            .build()
-    }
+    val imageLoader = context.imageLoader
 
     val imageRequest = remember(gifUrl, context) {
         ImageRequest.Builder(context)

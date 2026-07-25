@@ -119,7 +119,7 @@ class QuestRepositoryImpl @Inject constructor(
             QuestTaskEntity(
                 questId = questId,
                 name = description,
-                nameUk = exerciseNameUk?.let { "Контрольний норматив: ${it.uppercase()}" },
+                nameUk = exerciseNameUk?.let { "Контрольний норматив: $it" },
                 exerciseId = exerciseId,
                 isCompleted = false,
                 targetWeight = targetWeight,

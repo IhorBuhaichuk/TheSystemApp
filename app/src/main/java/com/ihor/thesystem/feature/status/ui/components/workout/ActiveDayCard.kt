@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -38,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,7 +47,12 @@ import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.SystemGhostButton
-import com.ihor.thesystem.core.ui.components.glassCard
+import com.ihor.thesystem.core.ui.components.SystemProgressBar
+import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemControlShape
+import com.ihor.thesystem.core.ui.components.systemLargePanelShape
+import com.ihor.thesystem.core.ui.components.systemPlateShape
+import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
@@ -124,7 +127,12 @@ private fun DecisionAdjustmentNotice(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .glassCard()
+            .techSurface(
+                shape = systemPlateShape(),
+                active = true,
+                accent = colors.accentAi,
+                role = TechSurfaceRole.Plate
+            )
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -160,7 +168,6 @@ private fun ActiveExerciseLoggerCard(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    val shapes = SystemTheme.shapes
     var showInfo by remember { mutableStateOf(false) }
     val completedCount = exercise.sets.count { it.isCompleted }
     val totalCount = exercise.sets.size.coerceAtLeast(1)
@@ -177,7 +184,12 @@ private fun ActiveExerciseLoggerCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .glassCard()
+            .techSurface(
+                shape = systemLargePanelShape(),
+                active = completedCount > 0,
+                accent = if (completedCount == totalCount) colors.statusRecovery else colors.statusProgress,
+                role = TechSurfaceRole.Panel
+            )
             .padding(SystemCardPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -225,10 +237,13 @@ private fun ActiveExerciseLoggerCard(
             IconButton(
                 onClick = { showInfo = true },
                 modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(colors.overlayLight)
-                    .border(1.dp, colors.borderSubtle, CircleShape)
+                    .size(48.dp)
+                    .techSurface(
+                        shape = systemControlShape(),
+                        active = false,
+                        accent = colors.accentAi,
+                        role = TechSurfaceRole.Plate
+                    )
             ) {
                 Icon(
                     imageVector = Icons.Filled.Info,
@@ -278,21 +293,13 @@ private fun ActiveExerciseLoggerCard(
                     )
                 }
             }
-            Box(
+            SystemProgressBar(
+                progress = progress,
+                accent = if (completedCount == totalCount) colors.statusRecovery else colors.statusProgress,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(CircleShape)
-                    .background(colors.overlayLight)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(progress.coerceIn(0f, 1f))
-                        .fillMaxHeight()
-                        .clip(CircleShape)
-                        .background(Brush.horizontalGradient(listOf(colors.accentPrimary, colors.accentAi)))
-                )
-            }
+                    .height(6.dp)
+            )
         }
 
         Row(
@@ -302,10 +309,13 @@ private fun ActiveExerciseLoggerCard(
             IconButton(
                 onClick = onSetup,
                 modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(shapes.small))
-                    .background(colors.overlayLight)
-                    .border(1.dp, colors.borderSubtle, RoundedCornerShape(shapes.small))
+                    .size(48.dp)
+                    .techSurface(
+                        shape = systemControlShape(),
+                        active = false,
+                        accent = colors.textSecondary,
+                        role = TechSurfaceRole.Plate
+                    )
             ) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
@@ -534,7 +544,7 @@ private fun CompactWorkoutInput(
     onFocusLost: () -> Unit
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.small)
+    val shape = systemControlShape()
     val borderColor = when {
         active -> colors.accentSuccess.copy(alpha = 0.52f)
         value.isNotBlank() -> colors.accentAi.copy(alpha = 0.42f)
@@ -553,7 +563,7 @@ private fun CompactWorkoutInput(
             textAlign = textAlign
         ),
         modifier = modifier
-            .height(42.dp)
+            .height(48.dp)
             .clip(shape)
             .background(if (active) colors.accentSuccess.copy(alpha = 0.10f) else colors.surfaceGlassSoft)
             .border(1.dp, borderColor, shape)
@@ -566,7 +576,7 @@ private fun CompactWorkoutInput(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(42.dp)
+                    .height(48.dp)
                     .padding(horizontal = 10.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -596,10 +606,10 @@ private fun StaticWorkoutMetricSlot(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.small)
+    val shape = systemControlShape()
     Box(
         modifier = modifier
-            .height(42.dp)
+            .height(48.dp)
             .clip(shape)
             .background(colors.surfaceGlassSoft)
             .border(

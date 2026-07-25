@@ -1,12 +1,8 @@
 package com.ihor.thesystem.feature.status.ui.components.workout
 
-import androidx.compose.animation.core.EaseInOutSine
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,12 +28,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
+import com.ihor.thesystem.core.ui.components.systemCombinedClickable
 import com.ihor.thesystem.feature.status.viewmodel.CycleDayUiModel
 
 @Composable
@@ -82,18 +81,12 @@ private fun CycleDayButton(
         else -> stringResource(R.string.cycle_day_default, day.dayNumber)
     }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "cycle-day-pulse")
-    val pulseValue by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(motion.breathingMillis / 3, easing = EaseInOutSine),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "cycle-day-glow"
-    )
-
     val isEmphasized = day.isActive || day.isSelected
+    val emphasis by animateFloatAsState(
+        targetValue = if (isEmphasized) 1f else 0f,
+        animationSpec = tween(motion.stateMillis, easing = EaseOutCubic),
+        label = "cycle_day_emphasis"
+    )
 
     Column(
         modifier = modifier,
@@ -103,37 +96,34 @@ private fun CycleDayButton(
         Box(
             modifier = Modifier
                 .size(56.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = { onTap() },
-                        onLongPress = { onLongPress() }
-                    )
-                },
+                .semantics { selected = day.isSelected }
+                .systemCombinedClickable(
+                    onClick = onTap,
+                    onLongClick = onLongPress
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = when {
-                    day.isActive -> lerp(iconColor, colors.textPrimary, pulseValue * 0.18f)
+                    day.isActive -> lerp(iconColor, colors.textPrimary, 0.12f)
                     day.isSelected -> iconColor
                     else -> iconColor.copy(alpha = 0.24f)
                 },
                 modifier = Modifier
                     .size(30.dp)
                     .graphicsLayer {
-                        if (isEmphasized) {
-                            val scale = 1f + ((motion.activeScale - 1f) * pulseValue)
-                            scaleX = scale
-                            scaleY = scale
-                        }
+                        val scale = 1f + ((motion.activeScale - 1f) * emphasis)
+                        scaleX = scale
+                        scaleY = scale
                     }
                     .drawBehind {
-                        if (isEmphasized) {
+                        if (emphasis > 0.01f) {
                             drawCircle(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        glowColor.copy(alpha = 0.28f * pulseValue),
+                                        glowColor.copy(alpha = 0.18f * emphasis),
                                         Color.Transparent
                                     ),
                                     center = center,
@@ -147,7 +137,7 @@ private fun CycleDayButton(
         }
 
         Text(
-            text = label.uppercase(),
+            text = label.toSystemSentenceCase(),
             style = MaterialTheme.typography.labelSmall.copy(
                 color = when {
                     day.isActive -> iconColor

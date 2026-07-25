@@ -1,9 +1,11 @@
 package com.ihor.thesystem.feature.status.ui
 
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -24,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,17 +36,25 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.theme.SystemDisplayFamily
 import com.ihor.thesystem.core.ui.SystemUiTestTags
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.SystemHexagonShape
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemControlShape
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.core.ui.components.systemLargePanelShape
 import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.feature.status.viewmodel.TodayOrderAccent
@@ -56,7 +67,7 @@ internal fun TodayOrderBlock(
 ) {
     val colors = SystemTheme.colors
     val accent = order.accent.toColor()
-    val title = order.title.uppercase()
+    val title = order.title.toSystemSentenceCase()
     val cardShape = systemLargePanelShape()
 
     BoxWithConstraints(
@@ -71,7 +82,7 @@ internal fun TodayOrderBlock(
                 role = TechSurfaceRole.Panel
             )
     ) {
-        val compact = maxWidth < 360.dp
+        val compact = maxWidth < 360.dp || LocalDensity.current.fontScale >= 1.2f
         val horizontalPadding = if (compact) 16.dp else 26.dp
 
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -109,10 +120,10 @@ internal fun TodayOrderBlock(
                     verticalArrangement = Arrangement.Top
                 ) {
                     Text(
-                        text = "Today order / ${order.dayTypeLabel}".uppercase(),
+                        text = "Today order / ${order.dayTypeLabel.toSystemSentenceCase()}",
                         style = MaterialTheme.typography.labelLarge.copy(
                             color = accent,
-                            fontFamily = FontFamily.SansSerif,
+                            fontFamily = SystemDisplayFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize = if (compact) 12.sp else 14.sp,
                             lineHeight = if (compact) 14.sp else 16.sp,
@@ -126,7 +137,7 @@ internal fun TodayOrderBlock(
                         text = title,
                         style = MaterialTheme.typography.headlineMedium.copy(
                             color = colors.textPrimary,
-                            fontFamily = FontFamily.SansSerif,
+                            fontFamily = SystemDisplayFamily,
                             fontWeight = FontWeight.Black,
                             fontSize = if (compact) 27.sp else 31.sp,
                             lineHeight = if (compact) 29.sp else 33.sp,
@@ -258,7 +269,7 @@ private fun QuestMetric(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = label.uppercase(),
+                text = label.toSystemSentenceCase(),
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Medium,
@@ -326,43 +337,121 @@ private fun QuestReadinessRing(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
+    val motion = SystemTheme.motion
     val clamped = progress.coerceIn(0f, 1f)
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = clamped,
+        animationSpec = tween(
+            durationMillis = motion.progressMillis,
+            easing = EaseOutCubic
+        ),
+        label = "readiness_progress"
+    )
+    Box(
+        modifier = modifier.semantics {
+            progressBarRangeInfo = ProgressBarRangeInfo(
+                current = clamped,
+                range = 0f..1f
+            )
+        },
+        contentAlignment = Alignment.Center
+    ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val stroke = 10.dp.toPx()
+            val drawnProgress = animatedProgress.coerceIn(0f, 1f)
+            val stroke = if (compact) 8.dp.toPx() else 9.dp.toPx()
             val inset = stroke / 2f
             val arcSize = Size(size.width - stroke, size.height - stroke)
+            val segmentCount = 44
+            val step = 360f / segmentCount
+            val segmentSweep = step - 2.15f
+            val activeSegments = (drawnProgress * segmentCount).toInt()
+
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(accent.copy(alpha = 0.14f), Color.Transparent),
+                    colors = listOf(
+                        colors.overlayMedium.copy(alpha = 0.10f),
+                        colors.background.copy(alpha = 0.84f)
+                    ),
+                    center = Offset(size.width * 0.42f, size.height * 0.34f),
+                    radius = size.minDimension * 0.40f
+                ),
+                radius = size.minDimension * 0.355f,
+                center = center
+            )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(accent.copy(alpha = 0.13f), Color.Transparent),
                     radius = size.minDimension * 0.55f
                 ),
                 radius = size.minDimension * 0.48f,
                 center = center
             )
-            drawArc(
-                color = accent.copy(alpha = 0.16f),
-                startAngle = -90f,
-                sweepAngle = 360f,
-                useCenter = false,
-                topLeft = Offset(inset, inset),
-                size = arcSize,
-                style = Stroke(width = stroke, cap = StrokeCap.Butt)
+            drawCircle(
+                color = colors.borderMuted.copy(alpha = 0.60f),
+                radius = size.minDimension * 0.485f,
+                center = center,
+                style = Stroke(width = 0.8.dp.toPx())
             )
-            drawArc(
-                brush = Brush.sweepGradient(
-                    colors = listOf(
-                        accent,
-                        Color(0xFF19B8FF),
+
+            repeat(segmentCount) { index ->
+                drawArc(
+                    color = colors.borderMuted.copy(alpha = if (index % 4 == 0) 0.52f else 0.30f),
+                    startAngle = -90f + index * step,
+                    sweepAngle = segmentSweep,
+                    useCenter = false,
+                    topLeft = Offset(inset, inset),
+                    size = arcSize,
+                    style = Stroke(width = stroke, cap = StrokeCap.Butt)
+                )
+                if (index < activeSegments) {
+                    val segmentColor = if (
+                        accent == colors.accentAi &&
+                        index < segmentCount * 0.30f
+                    ) {
+                        colors.accentPrimary
+                    } else {
                         accent
+                    }
+                    drawArc(
+                        color = segmentColor.copy(alpha = if (index % 5 == 0) 1f else 0.88f),
+                        startAngle = -90f + index * step,
+                        sweepAngle = segmentSweep,
+                        useCenter = false,
+                        topLeft = Offset(inset, inset),
+                        size = arcSize,
+                        style = Stroke(width = stroke, cap = StrokeCap.Butt)
                     )
-                ),
-                startAngle = -90f,
-                sweepAngle = 360f * clamped,
+                }
+            }
+
+            drawArc(
+                color = colors.textPrimary.copy(alpha = 0.30f),
+                startAngle = 212f,
+                sweepAngle = 50f,
                 useCenter = false,
-                topLeft = Offset(inset, inset),
-                size = arcSize,
-                style = Stroke(width = stroke, cap = StrokeCap.Butt)
+                topLeft = Offset(inset + stroke * 0.72f, inset + stroke * 0.72f),
+                size = Size(
+                    arcSize.width - stroke * 1.44f,
+                    arcSize.height - stroke * 1.44f
+                ),
+                style = Stroke(width = 0.8.dp.toPx(), cap = StrokeCap.Round)
+            )
+            drawCircle(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        colors.textPrimary.copy(alpha = 0.34f),
+                        colors.borderMuted.copy(alpha = 0.54f),
+                        colors.background.copy(alpha = 0.82f)
+                    ),
+                    start = Offset.Zero,
+                    end = Offset(size.width, size.height)
+                ),
+                radius = size.minDimension * 0.35f,
+                style = Stroke(width = 1.dp.toPx())
+            )
+            drawCircle(
+                color = accent.copy(alpha = 0.11f),
+                radius = size.minDimension * 0.305f
             )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -370,7 +459,7 @@ private fun QuestReadinessRing(
                 text = "${(clamped * 100).toInt()}%",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = colors.textPrimary,
-                    fontFamily = FontFamily.SansSerif,
+                    fontFamily = SystemDisplayFamily,
                     fontWeight = FontWeight.Black,
                     fontSize = if (compact) 29.sp else 34.sp,
                     lineHeight = if (compact) 31.sp else 35.sp,
@@ -378,7 +467,7 @@ private fun QuestReadinessRing(
                 )
             )
             Text(
-                text = "Готовність".uppercase(),
+                text = "Готовність",
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Bold,
@@ -403,7 +492,7 @@ private fun QuestPrimaryButton(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(14.dp)
+    val shape = systemControlShape()
     Box(
         modifier = modifier
             .heightIn(min = 58.dp)
@@ -415,7 +504,7 @@ private fun QuestPrimaryButton(
                 role = TechSurfaceRole.Button,
                 enabled = enabled
             )
-            .clickable(enabled = enabled, onClick = onClick),
+            .systemClickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -428,11 +517,11 @@ private fun QuestPrimaryButton(
             )
         }
         Text(
-            text = text.uppercase(),
+            text = text.toSystemSentenceCase(),
             modifier = Modifier.padding(start = 24.dp, end = 54.dp),
             style = MaterialTheme.typography.titleMedium.copy(
                 color = if (enabled) colors.textPrimary else colors.textMuted,
-                fontFamily = FontFamily.SansSerif,
+                fontFamily = SystemDisplayFamily,
                 fontWeight = FontWeight.Black,
                 fontSize = 16.sp,
                 lineHeight = 20.sp,

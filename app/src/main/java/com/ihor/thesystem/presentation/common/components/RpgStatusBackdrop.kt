@@ -29,23 +29,23 @@ fun RpgStatusBackdrop() {
         drawRect(
             brush = Brush.linearGradient(
                 colors = listOf(
-                    colors.accentPrimary.copy(alpha = 0.032f * ambientStrength),
+                    colors.accentPrimary.copy(alpha = 0.028f * ambientStrength),
                     Color.Transparent,
-                    colors.accentAi.copy(alpha = 0.022f * ambientStrength)
+                    colors.accentAi.copy(alpha = 0.014f * ambientStrength)
                 ),
-                start = Offset(size.width, 0f),
-                end = Offset(0f, size.height)
+                start = Offset.Zero,
+                end = Offset(size.width, size.height)
             )
         )
 
         drawRect(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    colors.accentPrimary.copy(alpha = 0.052f * ambientStrength),
+                    colors.accentPrimary.copy(alpha = 0.044f * ambientStrength),
                     Color.Transparent
                 ),
-                center = Offset(size.width * 0.86f, size.height * 0.12f),
-                radius = size.maxDimension * 0.72f
+                center = Offset(size.width * 0.08f, size.height * 0.04f),
+                radius = size.maxDimension * 0.68f
             )
         )
     }

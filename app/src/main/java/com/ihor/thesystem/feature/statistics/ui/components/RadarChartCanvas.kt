@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.asUiText
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.domain.model.MuscleGroup
 import kotlin.math.cos
 import kotlin.math.sin
@@ -36,7 +37,7 @@ fun RadarChartCanvas(
     )
 
     // Pre-resolve names to use in drawing
-    val labelNames = labels.map { it.asUiText().asString(context).uppercase() }
+    val labelNames = labels.map { it.asUiText().asString(context).toSystemSentenceCase() }
 
     Canvas(modifier = modifier) {
         val center = Offset(size.width / 2f, size.height / 2f)

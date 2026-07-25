@@ -8,6 +8,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,10 +33,12 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Icon
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,13 +52,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import java.time.DayOfWeek
 import java.time.LocalDate
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemControlHeight
 import com.ihor.thesystem.core.theme.SystemItemSpacing
+import com.ihor.thesystem.core.theme.SystemDisplayFamily
 import com.ihor.thesystem.core.theme.SystemRadiusPill
 import com.ihor.thesystem.core.theme.SystemTheme
 
@@ -63,12 +72,14 @@ import com.ihor.thesystem.core.theme.SystemTheme
 fun DarkGlassCard(
     modifier: Modifier = Modifier,
     active: Boolean = false,
+    accent: Color = SystemTheme.colors.accentPrimary,
     contentPadding: Dp = SystemCardPadding,
     content: @Composable () -> Unit
 ) {
     SystemCard(
         modifier = modifier,
         active = active,
+        accent = accent,
         contentPadding = contentPadding,
         content = content
     )
@@ -78,12 +89,14 @@ fun DarkGlassCard(
 fun SystemCard(
     modifier: Modifier = Modifier,
     active: Boolean = false,
+    accent: Color = SystemTheme.colors.accentPrimary,
     contentPadding: Dp = SystemCardPadding,
     content: @Composable () -> Unit
 ) {
     SystemPanel(
         modifier = modifier,
         active = active,
+        accent = accent,
         contentPadding = contentPadding,
         content = content
     )
@@ -100,13 +113,15 @@ fun SystemButton(
     glow: Boolean = false
 ) {
     val colors = SystemTheme.colors
-    val shape = SystemCutCornerShape(12.dp)
+    val shape = systemControlShape()
+    val interactionSource = remember { MutableInteractionSource() }
     val iconTint = if (enabled) accent else colors.textMuted
     val contentColor = if (enabled) colors.textPrimary else colors.textMuted
 
     Row(
         modifier = modifier
             .heightIn(min = 52.dp)
+            .systemPressMotion(interactionSource = interactionSource, enabled = enabled)
             .techSurface(
                 shape = shape,
                 active = glow && enabled,
@@ -114,7 +129,13 @@ fun SystemButton(
                 role = TechSurfaceRole.Button,
                 enabled = enabled
             )
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick
+            )
             .padding(horizontal = 18.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
@@ -146,17 +167,24 @@ fun SystemIconButton(
     active: Boolean = false
 ) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(SystemTheme.shapes.small)
+    val shape = systemControlShape()
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .size(SystemControlHeight)
+            .systemPressMotion(interactionSource = interactionSource)
             .techSurface(
                 shape = shape,
                 active = active,
                 accent = accent,
                 role = TechSurfaceRole.Plate
             )
-            .clickable(onClick = onClick),
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.Button,
+                onClick = onClick
+            ),
         contentAlignment = Alignment.Center
     ) {
         Icon(
@@ -173,20 +201,33 @@ fun SystemSectionHeader(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    icon: ImageVector? = null,
+    accent: Color = SystemTheme.colors.accentPrimary,
     trailing: @Composable (() -> Unit)? = null
 ) {
     val colors = SystemTheme.colors
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (icon != null) {
+            SystemHexIcon(
+                icon = icon,
+                accent = accent,
+                modifier = Modifier.size(34.dp)
+            )
+        }
         Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colors.textPrimary,
-                    fontWeight = FontWeight.Bold
+                    fontFamily = SystemDisplayFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    lineHeight = 20.sp,
+                    letterSpacing = 0.5.sp
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -222,6 +263,12 @@ fun SystemProgressBar(
             .height(7.dp)
             .clip(CircleShape)
             .background(colors.overlayMedium)
+            .semantics {
+                progressBarRangeInfo = ProgressBarRangeInfo(
+                    current = progress.coerceIn(0f, 1f),
+                    range = 0f..1f
+                )
+            }
     ) {
         Box(
             modifier = Modifier
@@ -229,7 +276,11 @@ fun SystemProgressBar(
                 .fillMaxHeight()
                 .background(
                     Brush.horizontalGradient(
-                        listOf(accent.copy(alpha = 0.72f), accent, colors.accentAi.copy(alpha = 0.72f))
+                        listOf(
+                            accent.copy(alpha = 0.58f),
+                            accent,
+                            accent.copy(alpha = 0.78f)
+                        )
                     )
                 )
         )
@@ -245,7 +296,12 @@ fun SystemMetricCard(
     subtitle: String? = null
 ) {
     val colors = SystemTheme.colors
-    SystemCard(modifier = modifier, contentPadding = SystemItemSpacing) {
+    SystemCard(
+        modifier = modifier,
+        active = false,
+        accent = accent,
+        contentPadding = SystemItemSpacing
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
                 text = label,
@@ -305,6 +361,89 @@ fun SystemStatusChip(
     }
 }
 
+enum class SystemStateKind {
+    Loading,
+    Empty,
+    Error
+}
+
+@Composable
+fun SystemStatePanel(
+    kind: SystemStateKind,
+    title: String? = null,
+    modifier: Modifier = Modifier,
+    message: String? = null,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
+) {
+    val colors = SystemTheme.colors
+    val accent = when (kind) {
+        SystemStateKind.Loading -> colors.statusProgress
+        SystemStateKind.Empty -> colors.statusNeutral
+        SystemStateKind.Error -> colors.statusDanger
+    }
+
+    SystemPanel(
+        modifier = modifier,
+        active = kind == SystemStateKind.Error,
+        accent = accent,
+        contentPadding = SystemCardPadding
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            when (kind) {
+                SystemStateKind.Loading -> CircularProgressIndicator(
+                    color = accent,
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(28.dp)
+                )
+                SystemStateKind.Empty -> Icon(
+                    imageVector = Icons.Filled.RadioButtonUnchecked,
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(28.dp)
+                )
+                SystemStateKind.Error -> Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            if (title != null) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = colors.textPrimary,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center
+                    )
+                )
+            }
+            if (message != null) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = colors.textSecondary,
+                        textAlign = TextAlign.Center
+                    )
+                )
+            }
+            if (actionLabel != null && onAction != null) {
+                SystemButton(
+                    text = actionLabel,
+                    onClick = onAction,
+                    accent = accent,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun SystemActionTile(
     title: String,
@@ -314,7 +453,11 @@ fun SystemActionTile(
     modifier: Modifier = Modifier,
     accent: Color = SystemTheme.colors.accentPrimary
 ) {
-    SystemCard(modifier = modifier.clickable(onClick = onClick), contentPadding = SystemCardPadding) {
+    SystemCard(
+        modifier = modifier.systemClickable(onClick = onClick),
+        accent = accent,
+        contentPadding = SystemCardPadding
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing), verticalAlignment = Alignment.CenterVertically) {
             SystemIconBubble(icon = icon, accent = accent)
             Column(modifier = Modifier.weight(1f)) {
@@ -359,7 +502,10 @@ fun SystemTodoItem(
                 }
             )
             .border(1.dp, borderColor, shape)
-            .clickable(onClick = onToggle)
+            .systemToggleable(
+                value = isCompleted,
+                onValueChange = { onToggle() }
+            )
             .padding(horizontal = if (compact) 10.dp else 12.dp, vertical = if (compact) 8.dp else 11.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(if (compact) 9.dp else 10.dp)
@@ -451,7 +597,7 @@ private fun TodoActionIcon(
             .clip(shape)
             .background(tint.copy(alpha = if (compact) 0.055f else 0.075f))
             .border(1.dp, tint.copy(alpha = if (compact) 0.12f else 0.2f), shape)
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
@@ -546,7 +692,7 @@ fun SystemWeekCalendarPreview(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(SystemTheme.shapes.medium))
-            .clickable(onClick = onOpenCalendar)
+            .systemClickable(onClick = onOpenCalendar)
             .padding(vertical = 2.dp)
     ) {
         SystemWeekTimeline(
@@ -602,15 +748,15 @@ private fun SystemWeekTimeline(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(46.dp)
+                .height(48.dp)
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val nodeCount = days.size
                 val centerY = size.height / 2f
-                val nodeRadius = 11.dp.toPx()
-                val activeRadius = 13.dp.toPx()
-                val strokeWidth = 4.dp.toPx()
-                val lineInset = 1.dp.toPx()
+                val nodeRadius = 18.dp.toPx()
+                val activeRadius = 20.dp.toPx()
+                val strokeWidth = 2.dp.toPx()
+                val lineInset = 2.dp.toPx()
                 fun nodeX(index: Int): Float =
                     size.width * ((index + 0.5f) / nodeCount.toFloat())
                 fun nodeEdgeRadius(index: Int): Float =
@@ -626,9 +772,9 @@ private fun SystemWeekTimeline(
                     if (startX < endX) {
                         drawLine(
                             color = if (completedSegment) {
-                                activeAccent.copy(alpha = 0.76f)
+                                activeAccent.copy(alpha = 0.66f)
                             } else {
-                                colors.borderMuted.copy(alpha = 0.54f)
+                                colors.accentPrimary.copy(alpha = 0.42f)
                             },
                             start = Offset(startX, centerY),
                             end = Offset(endX, centerY),
@@ -637,46 +783,47 @@ private fun SystemWeekTimeline(
                         )
                     }
                 }
+            }
 
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 days.forEachIndexed { index, day ->
-                    val x = nodeX(index)
-                    val filled = index <= progressIndex
-                    val accent = activeAccent
-                    if (filled) {
-                        drawCircle(
-                            color = accent.copy(alpha = if (day.isToday) 0.92f else 0.86f),
-                            radius = activeRadius,
-                            center = Offset(x, centerY)
-                        )
-                    } else {
-                        drawCircle(
-                            color = colors.surfaceGlassSoft,
-                            radius = nodeRadius,
-                            center = Offset(x, centerY)
-                        )
-                        drawCircle(
-                            color = colors.borderMuted.copy(alpha = 0.88f),
-                            radius = nodeRadius,
-                            center = Offset(x, centerY),
-                            style = Stroke(width = 2.dp.toPx())
-                        )
+                    val completed = index <= progressIndex
+                    val nextDay = index == progressIndex + 1
+                    val dayAccent = when {
+                        completed -> activeAccent
+                        nextDay -> colors.accentPrimary
+                        else -> colors.statusNeutral
+                    }
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(if (day.isToday) 40.dp else 36.dp)
+                                .techSurface(
+                                    shape = systemPlateShape(),
+                                    active = day.isToday || nextDay,
+                                    accent = dayAccent,
+                                    role = TechSurfaceRole.Plate
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = day.dayNumber,
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    color = if (completed || nextDay) dayAccent else colors.textSecondary,
+                                    fontWeight = FontWeight.Black,
+                                    textAlign = TextAlign.Center
+                                ),
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
-            }
-        }
-
-        Row(modifier = Modifier.fillMaxWidth()) {
-            days.forEachIndexed { index, day ->
-                Text(
-                    text = day.dayNumber,
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        color = if (index <= progressIndex) activeAccent else colors.textMuted,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    ),
-                    maxLines = 1
-                )
             }
         }
     }
@@ -747,7 +894,13 @@ fun SystemExerciseRow(
                 accent = colors.accentPrimary,
                 role = TechSurfaceRole.Plate
             )
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(
+                if (onClick != null) {
+                    Modifier.systemClickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            )
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically

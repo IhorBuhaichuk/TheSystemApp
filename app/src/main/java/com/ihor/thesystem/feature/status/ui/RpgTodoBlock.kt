@@ -3,7 +3,6 @@ package com.ihor.thesystem.feature.status.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +44,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,9 +54,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.ihor.thesystem.core.ui.components.SystemCutCornerShape
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.systemControlShape
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.core.ui.components.systemLargePanelShape
+import com.ihor.thesystem.core.ui.components.systemToggleable
 import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.theme.SystemDisplayFamily
 import com.ihor.thesystem.feature.status.viewmodel.TodoUiModel
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -91,11 +96,11 @@ internal fun TodoBlock(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "TO-DO",
+                        text = "To-do",
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.labelLarge.copy(
                         color = colors.accentPrimary,
-                        fontFamily = FontFamily.SansSerif,
+                        fontFamily = SystemDisplayFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         lineHeight = 18.sp,
@@ -217,7 +222,7 @@ private fun TodoListItem(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(52.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -261,14 +266,15 @@ private fun TodoAddButton(onClick: () -> Unit) {
     val colors = SystemTheme.colors
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .size(48.dp)
             .techSurface(
-                shape = CircleShape,
+                shape = systemControlShape(),
                 active = true,
                 accent = colors.accentPrimary,
                 role = TechSurfaceRole.Button
             )
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick)
+            .semantics { contentDescription = "Додати завдання" },
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.size(17.dp)) {
@@ -312,7 +318,7 @@ private fun TodoAddTaskRow(onClick: () -> Unit) {
                     style = stroke
                 )
             }
-            .clickable(onClick = onClick)
+            .systemClickable(onClick = onClick)
             .padding(horizontal = 18.dp),
         horizontalArrangement = Arrangement.spacedBy(18.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -352,9 +358,10 @@ private fun TodoDeleteButton(onClick: () -> Unit) {
     val colors = SystemTheme.colors
     Box(
         modifier = Modifier
-            .size(38.dp)
+            .size(48.dp)
             .clip(SystemCutCornerShape(6.dp))
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick)
+            .semantics { contentDescription = "Видалити завдання" },
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.size(16.dp)) {
@@ -386,33 +393,42 @@ private fun TodoCheckBox(
     val shape = SystemCutCornerShape(3.dp)
     Box(
         modifier = Modifier
-            .size(27.dp)
-            .clip(shape)
-            .background(if (checked) colors.accentPrimary.copy(alpha = 0.16f) else Color.Transparent)
-            .border(
-                width = 1.5.dp,
-                color = if (checked) colors.accentPrimary else colors.textSecondary.copy(alpha = 0.72f),
-                shape = shape
-            )
-            .clickable(onClick = onClick),
+            .size(48.dp)
+            .systemToggleable(
+                value = checked,
+                onValueChange = { onClick() }
+            ),
         contentAlignment = Alignment.Center
     ) {
-        if (checked) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawLine(
-                    color = colors.accentPrimary,
-                    start = Offset(size.width * 0.22f, size.height * 0.53f),
-                    end = Offset(size.width * 0.42f, size.height * 0.73f),
-                    strokeWidth = 3.dp.toPx(),
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = colors.accentPrimary,
-                    start = Offset(size.width * 0.42f, size.height * 0.73f),
-                    end = Offset(size.width * 0.80f, size.height * 0.27f),
-                    strokeWidth = 3.dp.toPx(),
-                    cap = StrokeCap.Round
-                )
+        Box(
+            modifier = Modifier
+                .size(27.dp)
+                .clip(shape)
+                .background(if (checked) colors.accentPrimary.copy(alpha = 0.16f) else Color.Transparent)
+                .border(
+                    width = 1.5.dp,
+                    color = if (checked) colors.accentPrimary else colors.textSecondary.copy(alpha = 0.72f),
+                    shape = shape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (checked) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawLine(
+                        color = colors.accentPrimary,
+                        start = Offset(size.width * 0.22f, size.height * 0.53f),
+                        end = Offset(size.width * 0.42f, size.height * 0.73f),
+                        strokeWidth = 3.dp.toPx(),
+                        cap = StrokeCap.Round
+                    )
+                    drawLine(
+                        color = colors.accentPrimary,
+                        start = Offset(size.width * 0.42f, size.height * 0.73f),
+                        end = Offset(size.width * 0.80f, size.height * 0.27f),
+                        strokeWidth = 3.dp.toPx(),
+                        cap = StrokeCap.Round
+                    )
+                }
             }
         }
     }

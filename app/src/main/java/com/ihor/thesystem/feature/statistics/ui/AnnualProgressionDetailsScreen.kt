@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -73,6 +72,7 @@ import com.ihor.thesystem.core.ui.components.SystemGhostButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
 import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.domain.model.AnnualProgressionDetailStatus
 import com.ihor.thesystem.domain.model.AnnualProgressionExerciseDetails
 import com.ihor.thesystem.domain.model.AnnualProgressionMonthlyProgress
@@ -236,7 +236,7 @@ private fun ExerciseChip(
             .clip(shape)
             .background(if (selected) colors.accentAiSoft else colors.overlayLight)
             .border(1.dp, if (selected) colors.borderActive else colors.borderSubtle, shape)
-            .clickable(onClick = onClick)
+            .systemClickable(onClick = onClick)
             .padding(horizontal = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(7.dp)

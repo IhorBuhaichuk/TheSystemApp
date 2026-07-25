@@ -7,7 +7,7 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 
 private fun systemColorScheme(tokens: SystemThemeTokens): ColorScheme =
     darkColorScheme(
@@ -29,16 +29,17 @@ private fun systemColorScheme(tokens: SystemThemeTokens): ColorScheme =
 
 private fun systemShapes(tokens: SystemThemeTokens): Shapes =
     Shapes(
-        extraSmall = RoundedCornerShape(tokens.shapes.extraSmall),
-        small = RoundedCornerShape(tokens.shapes.small),
-        medium = RoundedCornerShape(tokens.shapes.medium),
-        large = RoundedCornerShape(tokens.shapes.large),
-        extraLarge = RoundedCornerShape(tokens.shapes.extraLarge)
+        extraSmall = CutCornerShape(tokens.shapes.extraSmall),
+        small = CutCornerShape(tokens.shapes.controlCut),
+        medium = CutCornerShape(tokens.shapes.plateCut),
+        large = CutCornerShape(tokens.shapes.panelCut),
+        extraLarge = CutCornerShape(tokens.shapes.dialogCut)
     )
 
 private fun systemTypography(tokens: SystemThemeTokens): Typography =
     TheSystemTypography.copy(
         displayLarge = TheSystemTypography.displayLarge.copy(color = tokens.colors.textPrimary),
+        headlineLarge = TheSystemTypography.headlineLarge.copy(color = tokens.colors.textPrimary),
         headlineMedium = TheSystemTypography.headlineMedium.copy(color = tokens.colors.textPrimary),
         headlineSmall = TheSystemTypography.headlineSmall.copy(color = tokens.colors.textPrimary),
         titleLarge = TheSystemTypography.titleLarge.copy(color = tokens.colors.textPrimary),

@@ -38,7 +38,7 @@ fun WeightProgressChart(
 
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "ДИНАМІКА ВАГИ ТІЛА",
+            text = "Динаміка ваги тіла",
             modifier = Modifier.padding(bottom = 8.dp),
             style = MaterialTheme.typography.labelLarge.copy(
                 color = accent,

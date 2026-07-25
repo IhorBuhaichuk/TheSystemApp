@@ -3,7 +3,6 @@ package com.ihor.thesystem.feature.status.ui.components.dialogs
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,6 +59,7 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
+import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.domain.model.EquipmentProfile
 import com.ihor.thesystem.domain.model.EquipmentType
 import com.ihor.thesystem.domain.model.ExerciseDetails
@@ -328,7 +328,7 @@ private fun ScheduleDayChip(
         modifier = Modifier
             .widthIn(min = 82.dp)
             .clip(shape)
-            .clickable(onClick = onClick),
+            .systemClickable(onClick = onClick),
         shape = shape,
         color = if (selected) colors.accentPrimarySoft else colors.surfaceGlassSoft,
         border = BorderStroke(1.dp, if (selected) colors.borderActive else colors.borderSubtle)
@@ -429,7 +429,7 @@ internal fun ScheduleSettingsTab(
             .clip(shape)
             .background(if (selected) colors.accentPrimarySoft else colors.surfaceGlassSoft)
             .border(1.dp, if (selected) colors.borderActive else colors.borderSubtle, shape)
-            .clickable(onClick = onClick)
+            .systemClickable(onClick = onClick)
             .padding(vertical = 11.dp),
         contentAlignment = Alignment.Center
     ) {

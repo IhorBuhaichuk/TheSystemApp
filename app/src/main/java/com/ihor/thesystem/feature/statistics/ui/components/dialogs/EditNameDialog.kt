@@ -48,7 +48,7 @@ fun EditNameDialog(
             )
             OutlinedTextField(
                 value = inputName,
-                onValueChange = { inputName = it.uppercase() },
+                onValueChange = { inputName = it },
                 singleLine = true,
                 label = { Text(stringResource(R.string.text_new_name)) },
                 colors = systemOutlinedTextFieldColors(accent = colors.accentPrimary),

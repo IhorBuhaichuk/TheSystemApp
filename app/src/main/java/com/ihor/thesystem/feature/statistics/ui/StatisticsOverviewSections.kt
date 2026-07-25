@@ -10,11 +10,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,7 +54,8 @@ fun AnalyticsSummaryBlock(data: StatisticsUiData) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
                 title = "Поточний період",
-                subtitle = "Тиждень ${data.currentWeek}"
+                subtitle = "Тиждень ${data.currentWeek}",
+                icon = Icons.Filled.CalendarToday
             )
 
             Row(
@@ -91,8 +96,10 @@ fun BetaMetricsBlock(metrics: BetaMetricsUiModel) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "BETA METRICS",
-                subtitle = "Локальні сигнали без сторонньої аналітики"
+                title = "Beta metrics",
+                subtitle = "Локальні сигнали без сторонньої аналітики",
+                icon = Icons.Filled.Settings,
+                accent = colors.accentAi
             )
 
             Row(
@@ -101,14 +108,14 @@ fun BetaMetricsBlock(metrics: BetaMetricsUiModel) {
             ) {
                 SummaryMetricCell(
                     label = "Onboarding",
-                    value = if (metrics.onboardingCompleted) "OK" else "-",
+                    value = if (metrics.onboardingCompleted) "Ok" else "-",
                     subtitle = "first setup",
                     accent = if (metrics.onboardingCompleted) colors.accentSuccess else colors.textMuted,
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetricCell(
                     label = "First log",
-                    value = if (metrics.firstWorkoutLogged) "OK" else "-",
+                    value = if (metrics.firstWorkoutLogged) "Ok" else "-",
                     subtitle = "workout",
                     accent = if (metrics.firstWorkoutLogged) colors.accentPrimary else colors.textMuted,
                     modifier = Modifier.weight(1f)
@@ -433,7 +440,9 @@ fun WeeklySystemReportBlock(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Тижневий звіт системи",
-                subtitle = "Детермінований підсумок"
+                subtitle = "Детермінований підсумок",
+                icon = Icons.Filled.AutoAwesome,
+                accent = colors.accentAi
             )
             ReportLine("Найкращий день", report.bestTrainingDay, colors.accentSuccess)
             ReportLine("Слабке місце", report.weakestPattern, colors.accentWarning)
@@ -451,25 +460,41 @@ private fun ReportLine(
     accent: Color
 ) {
     val colors = SystemTheme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = accent,
-                fontWeight = FontWeight.Bold
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(top = 2.dp)
+                .width(3.dp)
+                .height(32.dp)
+                .clip(RoundedCornerShape(1.dp))
+                .background(accent.copy(alpha = 0.90f))
         )
-        Text(
-            text = text.ifBlank { "Даних поки недостатньо." },
-            style = MaterialTheme.typography.bodySmall.copy(
-                color = colors.textSecondary,
-                fontWeight = FontWeight.Medium
-            ),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = accent,
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = text.ifBlank { "Даних поки недостатньо." },
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = colors.textSecondary,
+                    fontWeight = FontWeight.Medium
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
@@ -483,8 +508,8 @@ private fun ProgressProofUiModel.proofAccent(colors: SystemColorTokens): Color =
 
 private fun NutritionFloorTargetStatus.shortLabel(): String =
     when (this) {
-        NutritionFloorTargetStatus.HIT -> "OK"
-        NutritionFloorTargetStatus.MISSED -> "MISS"
+        NutritionFloorTargetStatus.HIT -> "Ok"
+        NutritionFloorTargetStatus.MISSED -> "Miss"
         NutritionFloorTargetStatus.UNKNOWN -> "-"
     }
 

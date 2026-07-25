@@ -34,6 +34,9 @@ import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
+import com.ihor.thesystem.core.ui.components.SystemPanel
+import com.ihor.thesystem.core.ui.components.SystemStateKind
+import com.ihor.thesystem.core.ui.components.SystemStatePanel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsViewModel
 import com.ihor.thesystem.presentation.common.components.RpgStatusBackdrop
@@ -58,8 +61,16 @@ fun StatisticsScreen(
 
         when (val state = uiState) {
             UiState.Loading -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = colors.accentPrimary)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(SystemScreenPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    SystemStatePanel(
+                        kind = SystemStateKind.Loading,
+                        modifier = Modifier.fillMaxSize(0.42f)
+                    )
                 }
             }
 
@@ -78,34 +89,14 @@ fun StatisticsScreen(
                         .padding(SystemScreenPadding),
                     contentAlignment = Alignment.Center
                 ) {
-                    DarkGlassCard(active = true) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(SystemItemSpacing),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "Аналітика недоступна",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    color = colors.accentWarning,
-                                    fontWeight = FontWeight.Black,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
-                            Text(
-                                text = state.message.asString(context),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = colors.textSecondary,
-                                    fontWeight = FontWeight.Medium,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
-                            SystemButton(
-                                text = "Повторити",
-                                onClick = viewModel::refreshForCurrentDay,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
+                    SystemStatePanel(
+                        kind = SystemStateKind.Error,
+                        title = "Аналітика недоступна",
+                        message = state.message.asString(context),
+                        actionLabel = "Повторити",
+                        onAction = viewModel::refreshForCurrentDay,
+                        modifier = Modifier.fillMaxSize(0.72f)
+                    )
                 }
             }
         }
@@ -147,20 +138,24 @@ private fun AnalyticsDashboard(
 @Composable
 private fun AnalyticsHeader() {
     val colors = SystemTheme.colors
-    Column(
-        modifier = Modifier.testTag(SystemUiTestTags.STATISTICS_HEADER),
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+    SystemPanel(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(SystemUiTestTags.STATISTICS_HEADER),
+        contentPadding = 12.dp
     ) {
-        Text(
-            text = "4. STATISTICS",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                color = colors.textPrimary,
-                fontWeight = FontWeight.Black
+        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(
+                text = "4. Statistics",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.Black
+                )
             )
-        )
-        Text(
-            text = "Підсумок і прогрес",
-            style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
-        )
+            Text(
+                text = "Підсумок і прогрес",
+                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
+            )
+        }
     }
 }

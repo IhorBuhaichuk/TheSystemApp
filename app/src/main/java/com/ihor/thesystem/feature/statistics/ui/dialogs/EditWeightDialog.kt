@@ -64,7 +64,7 @@ fun EditWeightDialog(
         SystemDialogContainer(accent = colors.accentSuccess) {
             Icon(Icons.Filled.FitnessCenter, contentDescription = null, tint = colors.accentSuccess)
             Text(
-                text = if (usesExternalLoad) "[ ПОТОЧНА ВАГА ]" else "[ ВПРАВА БЕЗ КГ ]",
+                text = if (usesExternalLoad) "[ Поточна вага ]" else "[ Вправа без кг ]",
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colors.accentSuccess,
                     fontWeight = FontWeight.Bold
@@ -90,8 +90,8 @@ fun EditWeightDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
                     ) {
-                        InfoChip("СТАРТ", entry.displayStart, Modifier.weight(1f))
-                        InfoChip("ЦІЛЬ", entry.displayTarget, Modifier.weight(1f))
+                        InfoChip("Старт", entry.displayStart, Modifier.weight(1f))
+                        InfoChip("Ціль", entry.displayTarget, Modifier.weight(1f))
                         InfoChip("+/тиж", "+${String.format(Locale.US, "%.2f", entry.weeklyStep)}кг", Modifier.weight(1f))
                     }
 
@@ -139,12 +139,12 @@ fun EditWeightDialog(
                 horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
             ) {
                 SystemGhostButton(
-                    text = "СКАСУВАТИ",
+                    text = "Скасувати",
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f)
                 )
                 SystemButton(
-                    text = if (usesExternalLoad) "ЗБЕРЕГТИ" else "ЗАКРИТИ",
+                    text = if (usesExternalLoad) "Зберегти" else "Закрити",
                     onClick = {
                         if (usesExternalLoad) {
                             input.toFloatOrNull()?.let { onConfirm(it, feedback) }

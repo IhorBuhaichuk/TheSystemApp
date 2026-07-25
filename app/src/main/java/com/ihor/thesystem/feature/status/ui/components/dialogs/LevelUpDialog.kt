@@ -1,15 +1,13 @@
 package com.ihor.thesystem.feature.status.ui.components.dialogs
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -23,9 +21,11 @@ import com.ihor.thesystem.R
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.asUiText
+import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemDialogContainer
 import com.ihor.thesystem.core.ui.components.buildHexagonPath
+import com.ihor.thesystem.core.ui.components.systemCelebrationMotion
 import com.ihor.thesystem.domain.model.PlayerRank
 
 @Composable
@@ -36,17 +36,6 @@ fun LevelUpDialog(
 ) {
     val colors = SystemTheme.colors
     val context = LocalContext.current
-    val scale by rememberInfiniteTransition(label = "level-up-pulse")
-        .animateFloat(
-            initialValue  = 0.95f,
-            targetValue   = SystemTheme.motion.activeScale,
-            animationSpec = infiniteRepeatable(
-                tween(SystemTheme.motion.breathingMillis / 4, easing = EaseInOutSine),
-                RepeatMode.Reverse
-            ),
-            label = "level-up-scale"
-        )
-
     Dialog(onDismissRequest = onDismiss) {
         SystemDialogContainer(
             accent = colors.accentWarning,
@@ -60,7 +49,7 @@ fun LevelUpDialog(
                 Box(
                     modifier = Modifier
                         .size(100.dp)
-                        .scale(scale),
+                        .systemCelebrationMotion(),
                     contentAlignment = Alignment.Center
                 ) {
                     Canvas(modifier = Modifier.fillMaxSize()) {
@@ -105,7 +94,7 @@ fun LevelUpDialog(
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = newClass.asUiText().asString(context).uppercase(),
+                        text = newClass.asUiText().asString(context).toSystemSentenceCase(),
                         style = MaterialTheme.typography.titleLarge.copy(
                             color = colors.accentPrimary,
                             fontWeight = FontWeight.Black

@@ -45,7 +45,7 @@ fun LogHeightDialog(
         SystemDialogContainer(accent = colors.accentPrimary) {
             Icon(Icons.Filled.Height, contentDescription = null, tint = colors.accentPrimary)
             Text(
-                text = "[ ОНОВИТИ ЗРІСТ ]",
+                text = "[ Оновити зріст ]",
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colors.accentPrimary,
                     fontWeight = FontWeight.Bold

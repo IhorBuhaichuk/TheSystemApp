@@ -2,7 +2,6 @@ package com.ihor.thesystem.feature.status.ui.components.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,6 +35,7 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.systemOutlinedTextFieldColors
+import com.ihor.thesystem.core.ui.components.systemToggleable
 import com.ihor.thesystem.domain.model.EquipmentProfile
 import com.ihor.thesystem.domain.model.EquipmentType
 import com.ihor.thesystem.feature.status.viewmodel.BackupUiState
@@ -256,14 +256,17 @@ private fun EquipmentToggleRow(
             .clip(shape)
             .background(colors.surfaceGlassSoft)
             .border(1.dp, colors.borderSubtle, shape)
-            .clickable { onCheckedChange(!checked) }
+            .systemToggleable(
+                value = checked,
+                onValueChange = onCheckedChange
+            )
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Checkbox(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = null
         )
         Text(
             text = label,
