@@ -13,10 +13,26 @@ class GetAiDashboardDataUseCase @Inject constructor(
 ) {
     operator fun invoke(): Flow<AiDashboardData> {
         return getStatisticsData().map { statistics ->
+            val shortConclusion = statistics.systemInsight.recommendation
+                .ifBlank { statistics.systemInsight.weakPoint }
+                .ifBlank { statistics.systemInsight.improved }
+            val weeklyInsight = statistics.weeklySystemReport.nextWeekDecision
+                .ifBlank { shortConclusion }
+            val recoveryRisk = statistics.weeklySystemReport.recoveryIssue
+                .ifBlank { "Система не бачить критичного ризику відновлення." }
+
             AiDashboardData(
-                shortConclusion = statistics.systemInsight.recommendation
-                    .ifBlank { statistics.systemInsight.weakPoint }
-                    .ifBlank { statistics.systemInsight.improved },
+                shortConclusion = shortConclusion,
+                weeklyInsight = weeklyInsight,
+                actionableSuggestions = listOf(
+                    statistics.systemInsight.recommendation,
+                    statistics.weeklySystemReport.nextWeekDecision,
+                    statistics.weeklySystemReport.weakestPattern
+                ).map { it.trim() }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .take(MAX_DASHBOARD_SUGGESTIONS),
+                recoveryRisk = recoveryRisk,
                 lastRecommendation = statistics.matrixEntries
                     .map { it.entry }
                     .filter { it.hasAiRecommendation() }
@@ -44,5 +60,9 @@ class GetAiDashboardDataUseCase @Inject constructor(
             feedback = lastAiFeedback,
             analyzedTimestamp = lastAnalyzedTimestamp
         )
+    }
+
+    private companion object {
+        const val MAX_DASHBOARD_SUGGESTIONS = 3
     }
 }

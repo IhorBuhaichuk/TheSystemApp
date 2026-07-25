@@ -48,8 +48,20 @@ data class ChatMessage(
     val text: MessageText = MessageText.DynamicString(""),
     val recommendations: List<AiWorkoutRecommendation> = emptyList(),
     val isActionable: Boolean = false,
-    val aiFeedback: String? = null
+    val aiFeedback: String? = null,
+    val architectInsight: AiArchitectInsight? = null
 )
+
+data class AiArchitectInsight(
+    val weeklyInsight: String = "",
+    val actionableSuggestions: List<String> = emptyList(),
+    val recoveryRisk: String = ""
+) {
+    val hasSignal: Boolean
+        get() = weeklyInsight.isNotBlank() ||
+            actionableSuggestions.any { it.isNotBlank() } ||
+            recoveryRisk.isNotBlank()
+}
 
 /**
  * Базові моделі тренувань, що використовуються для аналізу Архітектором та в аналітиці.

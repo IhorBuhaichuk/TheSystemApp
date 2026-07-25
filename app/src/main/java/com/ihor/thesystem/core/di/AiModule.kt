@@ -76,11 +76,7 @@ abstract class AiModule {
                     responseMimeType = "application/json"
                 },
                 systemInstruction = content {
-                    text(
-                        "Ти AI-аналітик тренувальної системи. " +
-                            "Відповідай виключно валідним JSON-об'єктом без markdown. " +
-                            "Не приймай фінальних рішень щодо плану: системний валідатор обмежить або відхилить цілі."
-                    )
+                    text(ARCHITECT_SYSTEM_INSTRUCTION)
                 }
             )
         }
@@ -97,13 +93,21 @@ abstract class AiModule {
                 requestOptions = RequestOptions(timeout = 60.seconds),
                 safetySettings = defaultSafetySettings,
                 systemInstruction = content {
-                    text(
-                        "Ти живий AI-наставник з тренувань. " +
-                            "Відповідай коротко, природно й українською. " +
-                            "Не використовуй JSON або markdown. Не змінюй план і не призначай ваги як фінальне рішення."
-                    )
+                    text(LIVE_COACH_SYSTEM_INSTRUCTION)
                 }
             )
         }
+
+        private const val ARCHITECT_SYSTEM_INSTRUCTION =
+            "You are AI Architect v2 for a training decision system. " +
+                "Return only one valid JSON object, never markdown. " +
+                "Keep user-facing text short and Ukrainian. " +
+                "Explain trend, give 1-3 actionable suggestions, and mention recovery/readiness risk. " +
+                "AI suggests only; deterministic System validation decides and may clamp or reject targets. " +
+                "Do not write motivational essays, medical claims, or plan mutations."
+
+        private const val LIVE_COACH_SYSTEM_INSTRUCTION =
+            "You are a live AI training coach. Reply briefly, naturally, and in Ukrainian. " +
+                "Do not use JSON or markdown. Do not change the plan or prescribe weights as final decisions."
     }
 }

@@ -5,6 +5,7 @@ import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.data.remote.ai.AiAvailabilityProvider
 import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
+import com.ihor.thesystem.domain.model.AiArchitectInsight
 import com.ihor.thesystem.domain.model.AiDashboardData
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
@@ -97,6 +98,34 @@ class ArchitectViewModelTest {
 
         assertEquals(AiAvailabilityState.RATE_LIMITED, viewModel.uiState.value.aiAvailability)
         assertFalse(viewModel.uiState.value.analysisAlreadySent)
+    }
+
+    @Test
+    fun `structured architect insight updates ui state without target mutation`() {
+        val workoutContext = "last workout log"
+        coEvery { sendArchitectAnalysis.invoke(workoutContext) } returns ChatMessage(
+            role = ChatRole.AI,
+            text = MessageText.DynamicString("short insight"),
+            isActionable = false,
+            architectInsight = AiArchitectInsight(
+                weeklyInsight = "Тренд тижня стабільний.",
+                actionableSuggestions = listOf("Залиш вагу без змін."),
+                recoveryRisk = "Readiness стандартний."
+            )
+        )
+        val viewModel = viewModel(
+            apiKey = "dev-key",
+            clientAiEnabled = true,
+            lastWorkoutContext = workoutContext
+        )
+        mainDispatcherRule.advanceUntilIdle()
+
+        viewModel.sendForAnalysis()
+        mainDispatcherRule.advanceUntilIdle()
+
+        assertEquals(true, viewModel.uiState.value.analysisAlreadySent)
+        assertEquals("Тренд тижня стабільний.", viewModel.uiState.value.latestInsight?.weeklyInsight)
+        assertEquals(listOf("Залиш вагу без змін."), viewModel.uiState.value.latestInsight?.actionableSuggestions)
     }
 
     @Test

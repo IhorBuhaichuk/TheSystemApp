@@ -59,7 +59,8 @@ class AiArchitectRepositoryImpl @Inject constructor(
                         },
                         recommendations = parsedResponse.recommendations,
                         isActionable = parsedResponse.recommendations.isNotEmpty(),
-                        aiFeedback = parsedResponse.aiFeedback
+                        aiFeedback = parsedResponse.aiFeedback,
+                        architectInsight = parsedResponse.architectInsight
                     )
                 }
             }

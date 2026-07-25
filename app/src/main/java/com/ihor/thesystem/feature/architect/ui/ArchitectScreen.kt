@@ -59,6 +59,7 @@ import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
 import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
+import com.ihor.thesystem.feature.architect.viewmodel.AiArchitectInsightUiModel
 import com.ihor.thesystem.feature.architect.viewmodel.AiDashboardUiState
 import com.ihor.thesystem.feature.architect.viewmodel.AiRecommendationUiModel
 import com.ihor.thesystem.feature.architect.viewmodel.ArchitectViewModel
@@ -119,7 +120,11 @@ fun ArchitectScreen(
                 onOpenAnnualProgression = onOpenAnnualProgression,
                 onAnalyzeWorkout = onOpenWorkoutAnalysis
             )
-            ShortConclusionBlock(dashboardState)
+            ArchitectBriefBlock(
+                state = dashboardState,
+                latestInsight = uiState.latestInsight,
+                aiAvailability = uiState.aiAvailability
+            )
             LastRecommendationBlock(dashboardState.lastRecommendation)
             ChatPanel(
                 uiState = uiState,
@@ -273,6 +278,118 @@ private fun AiModuleCard(
                     contentDescription = null,
                     tint = if (enabled) colors.accentAi else colors.textMuted.copy(alpha = 0.55f),
                     modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ArchitectBriefBlock(
+    state: AiDashboardUiState,
+    latestInsight: AiArchitectInsightUiModel?,
+    aiAvailability: AiAvailabilityState
+) {
+    val colors = SystemTheme.colors
+    val aiAvailable = aiAvailability == AiAvailabilityState.CONFIGURED
+    val weeklyInsight = latestInsight?.weeklyInsight?.takeIf { it.isNotBlank() }
+        ?: state.weeklyInsight.ifBlank { state.shortConclusion }
+    val recoveryRisk = latestInsight?.recoveryRisk?.takeIf { it.isNotBlank() }
+        ?: state.recoveryRisk
+    val suggestions = latestInsight?.actionableSuggestions
+        ?.takeIf { it.isNotEmpty() }
+        ?: state.actionableSuggestions
+
+    DarkGlassCard {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SystemSectionHeader(
+                title = "Weekly insight",
+                subtitle = if (aiAvailable) "AI explains, System decides" else "Local system fallback"
+            )
+            if (state.isLoading) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        color = colors.accentAi,
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Text(
+                        text = "System reads metrics",
+                        style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
+                    )
+                }
+            } else {
+                if (!aiAvailable) {
+                    SystemStatusChip(
+                        text = aiAvailability.shortStatus(),
+                        accent = colors.textMuted,
+                        active = false
+                    )
+                }
+                SystemInsightText(
+                    text = weeklyInsight.ifBlank { "Not enough data for a weekly insight yet." },
+                    icon = Icons.Filled.AutoAwesome
+                )
+                if (recoveryRisk.isNotBlank()) {
+                    SystemInsightText(
+                        text = recoveryRisk,
+                        icon = Icons.Filled.Psychology
+                    )
+                }
+                if (suggestions.isNotEmpty()) {
+                    AiSuggestionList(suggestions = suggestions.take(3))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AiSuggestionList(suggestions: List<String>) {
+    val colors = SystemTheme.colors
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(colors.accentAi.copy(alpha = 0.075f))
+            .border(1.dp, colors.accentAi.copy(alpha = 0.16f), shape)
+            .padding(SystemItemSpacing),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Actions",
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = colors.accentAi,
+                fontWeight = FontWeight.Bold
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        suggestions.forEach { suggestion ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 6.dp)
+                        .size(5.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(colors.accentAi)
+                )
+                Text(
+                    text = suggestion,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = colors.textSecondary,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

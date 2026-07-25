@@ -1,6 +1,7 @@
 package com.ihor.thesystem.data.remote.ai
 
 import com.ihor.thesystem.data.remote.dto.GeminiWorkoutResponseDto
+import com.ihor.thesystem.domain.model.AiArchitectInsight
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -35,10 +36,23 @@ internal class AiArchitectResponseParser(
             }
         }
 
+        val insight = AiArchitectInsight(
+            weeklyInsight = dto.weeklyInsight.cleanBrief(MAX_INSIGHT_LENGTH),
+            actionableSuggestions = dto.actionableSuggestions
+                .map { it.cleanBrief(MAX_SUGGESTION_LENGTH) }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .take(MAX_SUGGESTIONS),
+            recoveryRisk = dto.recoveryRisk.cleanBrief(MAX_RISK_LENGTH)
+        ).takeIf { it.hasSignal }
+
         return ParsedAiArchitectResponse(
-            feedbackText = dto.feedbackText.trim(),
+            feedbackText = dto.feedbackText.cleanBrief(MAX_FEEDBACK_LENGTH)
+                .ifBlank { insight?.toFallbackFeedback().orEmpty() },
             recommendations = recommendations,
-            aiFeedback = dto.aiFeedback ?: recommendations.firstOrNull()?.aiFeedback
+            aiFeedback = dto.aiFeedback?.cleanBrief(MAX_FEEDBACK_LENGTH)
+                ?: recommendations.firstOrNull()?.aiFeedback?.cleanBrief(MAX_FEEDBACK_LENGTH),
+            architectInsight = insight
         )
     }
 
@@ -83,5 +97,25 @@ internal class AiArchitectResponseParser(
 internal data class ParsedAiArchitectResponse(
     val feedbackText: String,
     val recommendations: List<AiWorkoutRecommendation>,
-    val aiFeedback: String?
+    val aiFeedback: String?,
+    val architectInsight: AiArchitectInsight?
 )
+
+private fun String.cleanBrief(maxLength: Int): String =
+    trim()
+        .replace(Regex("\\s+"), " ")
+        .take(maxLength)
+        .trim()
+
+private fun AiArchitectInsight.toFallbackFeedback(): String =
+    listOfNotNull(
+        weeklyInsight.takeIf { it.isNotBlank() },
+        recoveryRisk.takeIf { it.isNotBlank() },
+        actionableSuggestions.firstOrNull { it.isNotBlank() }
+    ).joinToString(" ")
+
+private const val MAX_INSIGHT_LENGTH = 180
+private const val MAX_RISK_LENGTH = 160
+private const val MAX_FEEDBACK_LENGTH = 260
+private const val MAX_SUGGESTION_LENGTH = 140
+private const val MAX_SUGGESTIONS = 3

@@ -1,5 +1,6 @@
 package com.ihor.thesystem.domain.usecase
 
+import com.ihor.thesystem.domain.model.AiArchitectInsight
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
@@ -54,7 +55,7 @@ class SendArchitectAnalysisUseCaseTest {
     }
 
     @Test
-    fun `non actionable architect response is not persisted as completed analysis`() = runTest {
+    fun `non actionable empty architect response is not persisted as completed analysis`() = runTest {
         val response = ChatMessage(
             role = ChatRole.AI,
             text = MessageText.DynamicString("temporary error"),
@@ -72,6 +73,33 @@ class SendArchitectAnalysisUseCaseTest {
     }
 
     @Test
+    fun `architect insight without target mutation is persisted for session gate`() = runTest {
+        val response = ChatMessage(
+            role = ChatRole.AI,
+            text = MessageText.DynamicString("weekly insight"),
+            recommendations = emptyList(),
+            isActionable = false,
+            architectInsight = AiArchitectInsight(
+                weeklyInsight = "Тиждень стабільний.",
+                actionableSuggestions = listOf("Залиш план без змін."),
+                recoveryRisk = "Ризик відновлення низький."
+            )
+        )
+        coEvery { aiArchitectRepository.getChatResponse(any()) } returns response
+
+        val result = useCase("workout context")
+
+        assertEquals(response, result)
+        coVerify {
+            chatRepository.saveChatMessage(
+                sessionId = 0L,
+                role = ChatRole.AI,
+                text = "weekly insight"
+            )
+        }
+    }
+
+    @Test
     fun `architect prompt forbids kg targets for exercises without external load`() = runTest {
         val prompt = slot<String>()
         coEvery { aiArchitectRepository.getChatResponse(capture(prompt)) } returns ChatMessage(
@@ -80,15 +108,15 @@ class SendArchitectAnalysisUseCaseTest {
             recommendations = emptyList()
         )
 
-        useCase("Вправа: Push-up\n- Тип метрики: без зовнішньої ваги")
+        useCase("Exercise: Push-up\n- Metric type: no external load")
 
-        assertTrue("без зовнішньої ваги" in prompt.captured)
-        assertTrue("НЕ додавай цю вправу до next_workout_targets" in prompt.captured)
-        assertTrue("НЕ пропонуй кг" in prompt.captured)
+        assertTrue("no external load" in prompt.captured)
+        assertTrue("do not add it to next_workout_targets" in prompt.captured)
+        assertTrue("do not propose kg" in prompt.captured)
     }
 
     @Test
-    fun `architect prompt says system makes final decision`() = runTest {
+    fun `architect prompt uses v2 concise safe contract`() = runTest {
         val prompt = slot<String>()
         coEvery { aiArchitectRepository.getChatResponse(capture(prompt)) } returns ChatMessage(
             role = ChatRole.AI,
@@ -98,8 +126,12 @@ class SendArchitectAnalysisUseCaseTest {
 
         useCase("workout context")
 
-        assertTrue("AI НЕ є джерелом істини" in prompt.captured)
-        assertTrue("Фінальне рішення завжди приймає deterministic System validator" in prompt.captured)
-        assertTrue("Відповідь має бути тільки JSON" in prompt.captured)
+        assertTrue("AI explains trends and suggests" in prompt.captured)
+        assertTrue("The deterministic System decides" in prompt.captured)
+        assertTrue("ValidateDirectivesUseCase is the final gatekeeper" in prompt.captured)
+        assertTrue("\"weekly_insight\"" in prompt.captured)
+        assertTrue("\"actionable_suggestions\"" in prompt.captured)
+        assertTrue("\"recovery_risk\"" in prompt.captured)
+        assertTrue("Avoid motivational essays" in prompt.captured)
     }
 }

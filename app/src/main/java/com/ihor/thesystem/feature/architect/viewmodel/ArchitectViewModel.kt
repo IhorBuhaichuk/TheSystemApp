@@ -205,7 +205,8 @@ class ArchitectViewModel @Inject constructor(
                 _uiState.update { it.copy(
                     messages = it.messages + aiResponse,
                     isLoading = false,
-                    analysisAlreadySent = aiResponse.recommendations.isNotEmpty(),
+                    analysisAlreadySent = aiResponse.isCompletedArchitectAnalysis(),
+                    latestInsight = aiResponse.architectInsight?.toUiModel() ?: it.latestInsight,
                     aiAvailability = aiResponse.availabilityFailure() ?: it.aiAvailability
                 ) }
             } catch (e: Exception) {
@@ -299,10 +300,16 @@ private fun ChatMessage.availabilityFailure(): AiAvailabilityState? =
         else -> null
     }
 
+private fun ChatMessage.isCompletedArchitectAnalysis(): Boolean =
+    recommendations.isNotEmpty() || architectInsight?.hasSignal == true
+
 private fun AiDashboardData.toUiState(): AiDashboardUiState {
     return AiDashboardUiState(
         isLoading = false,
         shortConclusion = shortConclusion,
+        weeklyInsight = weeklyInsight,
+        actionableSuggestions = actionableSuggestions,
+        recoveryRisk = recoveryRisk,
         lastRecommendation = lastRecommendation?.let { recommendation ->
             AiRecommendationUiModel(
                 exerciseName = recommendation.exerciseName,

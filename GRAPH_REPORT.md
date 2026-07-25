@@ -135,7 +135,7 @@ Shared UI foundation:
 - System tab (`CycleScreen`) presents cycle overview and edits training schedules through `WorkoutViewModel`.
 - Statistics tab reads progression matrix, body logs, annual progression, quest and workout proof data. It also displays local beta metrics built by `GetBetaMetricsUseCase` from onboarding state, workout logs, player streak, schedule/config, and `BetaMetricsRepository` event snapshots.
 - Local beta metrics are first-party only: no Firebase/Amplitude/Segment. `AppEntryViewModel` records unique opened days through `RecordBetaAppOpenUseCase`; Status/Statistics refreshes also mark the current day idempotently. `RecordTodayOrderDecisionUseCase` records one Today Order decision type per epoch day.
-- Architect screens use AI repositories through domain use cases and validation logic. AI output must stay constrained by domain validators before mutating plans.
+- Architect screens use AI repositories through domain use cases and validation logic. AI Architect v2 returns structured weekly insight, 1-3 suggestions, recovery/readiness risk, and optional workout targets. AI output must stay constrained by `ValidateDirectivesUseCase` before mutating plans.
 - Exercise picker is shared by cycle editing and annual progression planning through route source parameters.
 
 ## Change Hotspots

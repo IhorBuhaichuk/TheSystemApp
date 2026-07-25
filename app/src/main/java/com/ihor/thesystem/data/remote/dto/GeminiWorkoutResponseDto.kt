@@ -6,6 +6,9 @@ import kotlinx.serialization.SerialName
 @Serializable
 data class GeminiWorkoutResponseDto(
     @SerialName("status") val status: String = "success",
+    @SerialName("weekly_insight") val weeklyInsight: String = "",
+    @SerialName("actionable_suggestions") val actionableSuggestions: List<String> = emptyList(),
+    @SerialName("recovery_risk") val recoveryRisk: String = "",
     @SerialName("feedback_text") val feedbackText: String = "",
     @SerialName("next_workout_targets") val nextWorkoutTargets: List<WorkoutTargetDto> = emptyList(),
     @SerialName("aiFeedback") val aiFeedback: String? = null

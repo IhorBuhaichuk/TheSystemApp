@@ -43,6 +43,7 @@ import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
 import com.ihor.thesystem.data.remote.ai.AiAvailabilityState
+import com.ihor.thesystem.domain.model.AiArchitectInsight
 import com.ihor.thesystem.domain.model.AiWorkoutRecommendation
 import com.ihor.thesystem.domain.model.ChatMessage
 import com.ihor.thesystem.domain.model.ChatRole
@@ -287,13 +288,18 @@ private fun ArchitectChatBubble(
                     .padding(SystemItemSpacing),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = message.text.asString(),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = colors.textPrimary,
-                        fontWeight = FontWeight.Medium
+                val architectInsight = message.architectInsight?.takeIf { it.hasSignal }
+                if (architectInsight == null) {
+                    Text(
+                        text = message.text.asString(),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = colors.textPrimary,
+                            fontWeight = FontWeight.Medium
+                        )
                     )
-                )
+                } else {
+                    ArchitectInsightPayload(insight = architectInsight)
+                }
                 if (message.isSystemCorrectionNotice()) {
                     SystemStatusChip(
                         text = "Скориговано системою",
@@ -332,6 +338,55 @@ private fun ArchitectChatBubble(
 private fun ChatMessage.isSystemCorrectionNotice(): Boolean =
     role == ChatRole.SYSTEM &&
         (text as? MessageText.DynamicString)?.value == SYSTEM_AI_CORRECTION_TEXT
+
+@Composable
+private fun ArchitectInsightPayload(insight: AiArchitectInsight) {
+    val colors = SystemTheme.colors
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (insight.weeklyInsight.isNotBlank()) {
+            InsightLine(label = "Trend", text = insight.weeklyInsight, accent = colors.accentAi)
+        }
+        if (insight.recoveryRisk.isNotBlank()) {
+            InsightLine(label = "Risk", text = insight.recoveryRisk, accent = colors.accentWarning)
+        }
+        insight.actionableSuggestions.take(3).forEachIndexed { index, suggestion ->
+            InsightLine(
+                label = "Action ${index + 1}",
+                text = suggestion,
+                accent = colors.accentPrimary
+            )
+        }
+    }
+}
+
+@Composable
+private fun InsightLine(
+    label: String,
+    text: String,
+    accent: Color
+) {
+    val colors = SystemTheme.colors
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = accent,
+                fontWeight = FontWeight.Black
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = colors.textPrimary,
+                fontWeight = FontWeight.Medium
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
 
 @Composable
 private fun RecommendationList(recommendations: List<AiWorkoutRecommendation>) {

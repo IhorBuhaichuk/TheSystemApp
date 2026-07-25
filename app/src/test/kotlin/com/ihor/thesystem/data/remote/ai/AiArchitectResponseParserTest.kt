@@ -59,6 +59,9 @@ class AiArchitectResponseParserTest {
     fun `maps valid targets and drops unsafe directives`() {
         val response = """
             {
+              "weekly_insight": "Ритм тижня стабільний",
+              "actionable_suggestions": ["Тримай поточний план"],
+              "recovery_risk": "Ризик відновлення низький",
               "feedback_text": "Solid session",
               "next_workout_targets": [
                 {
@@ -89,11 +92,42 @@ class AiArchitectResponseParserTest {
 
         assertEquals("Solid session", result.feedbackText)
         assertEquals("Global note", result.aiFeedback)
+        assertEquals("Ритм тижня стабільний", result.architectInsight?.weeklyInsight)
+        assertEquals(listOf("Тримай поточний план"), result.architectInsight?.actionableSuggestions)
+        assertEquals("Ризик відновлення низький", result.architectInsight?.recoveryRisk)
         assertEquals(1, result.recommendations.size)
         assertEquals(7, result.recommendations.single().exerciseId)
         assertEquals(52.5f, result.recommendations.single().weight, 0.001f)
         assertEquals(3, result.recommendations.single().sets)
         assertEquals("8-10", result.recommendations.single().reps)
+    }
+
+    @Test
+    fun `parses architect v2 insight without target mutations`() {
+        val response = """
+            {
+              "weekly_insight": "Тренд тижня рівний, але обсяг краще не піднімати.",
+              "actionable_suggestions": [
+                "Залиш вагу без змін.",
+                "Додай один легкий підхід техніки.",
+                "Запиши самопочуття після сесії.",
+                "Цей пункт має бути відкинутий."
+              ],
+              "recovery_risk": "Readiness нижче стандарту, тому прогресію краще заблокувати.",
+              "feedback_text": "",
+              "next_workout_targets": []
+            }
+        """.trimIndent()
+
+        val result = parser.parse(response)
+
+        assertEquals("Тренд тижня рівний, але обсяг краще не піднімати.", result.architectInsight?.weeklyInsight)
+        assertEquals(3, result.architectInsight?.actionableSuggestions?.size)
+        assertEquals(emptyList<Any>(), result.recommendations)
+        assertEquals(
+            "Тренд тижня рівний, але обсяг краще не піднімати. Readiness нижче стандарту, тому прогресію краще заблокувати. Залиш вагу без змін.",
+            result.feedbackText
+        )
     }
 
     @Test
