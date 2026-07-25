@@ -232,11 +232,17 @@ fun Modifier.techSurface(
     }
 
     return this
-        .shadow(
-            elevation = elevation,
-            shape = shape,
-            ambientColor = ambientColor,
-            spotColor = if (enabled) depth.contactShadow else Color.Transparent
+        .then(
+            if (elevation > 0.dp) {
+                Modifier.shadow(
+                    elevation = elevation,
+                    shape = shape,
+                    ambientColor = ambientColor,
+                    spotColor = if (enabled) depth.contactShadow else Color.Transparent
+                )
+            } else {
+                Modifier
+            }
         )
         .clip(shape)
         .background(baseBrush)

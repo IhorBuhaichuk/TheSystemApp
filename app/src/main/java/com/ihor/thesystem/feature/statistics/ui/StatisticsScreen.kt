@@ -4,11 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -109,29 +109,40 @@ private fun AnalyticsDashboard(
     onOpenAnnualProgression: () -> Unit,
     onLogWorkout: () -> Unit
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .testTag(SystemUiTestTags.STATISTICS_SCROLL)
-            .padding(horizontal = SystemScreenPadding)
-            .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 8.dp),
+            .testTag(SystemUiTestTags.STATISTICS_SCROLL),
+        contentPadding = PaddingValues(
+            start = SystemScreenPadding,
+            top = SystemCardPadding,
+            end = SystemScreenPadding,
+            bottom = SystemScreenPadding + 8.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
-        AnalyticsHeader()
-        WeeklySystemReportBlock(report = data.weeklySystemReport)
-        AnalyticsSummaryBlock(data)
-        BetaMetricsBlock(metrics = data.betaMetrics)
-        WeeklySummaryBlock(
-            days = data.weeklySummary.days,
-            totalTonnage = data.weeklySummary.totalTonnage,
-            onLogWorkout = onLogWorkout
-        )
-        AnnualProgressionBlock(
-            data = data,
-            onOpenAnnualProgression = onOpenAnnualProgression
-        )
-        DeterministicSystemInsightBlock(insight = data.systemInsight)
+        item(key = "header") { AnalyticsHeader() }
+        item(key = "weekly_report") {
+            WeeklySystemReportBlock(report = data.weeklySystemReport)
+        }
+        item(key = "summary") { AnalyticsSummaryBlock(data) }
+        item(key = "usage") { BetaMetricsBlock(metrics = data.betaMetrics) }
+        item(key = "weekly_summary") {
+            WeeklySummaryBlock(
+                days = data.weeklySummary.days,
+                totalTonnage = data.weeklySummary.totalTonnage,
+                onLogWorkout = onLogWorkout
+            )
+        }
+        item(key = "annual_progression") {
+            AnnualProgressionBlock(
+                data = data,
+                onOpenAnnualProgression = onOpenAnnualProgression
+            )
+        }
+        item(key = "system_insight") {
+            DeterministicSystemInsightBlock(insight = data.systemInsight)
+        }
     }
 }
 

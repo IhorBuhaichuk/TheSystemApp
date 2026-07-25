@@ -137,6 +137,11 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - 2026-07-26: Known system workout titles use a presentation mapper. Custom names
   remain unchanged. The top-level System and Statistics screenshots are stored as
   `slice-2-system.png` and `slice-2-statistics.png`.
+- 2026-07-26: Calendar, System, Statistics, and Profile top-level feeds now use
+  keyed lazy sections in the same visual order. Reselecting the active bottom tab no
+  longer writes a redundant navigation entry; the Realme rendered zero app frames
+  for that no-op tap instead of one 200 ms frame. System scroll remains a debug-build
+  hotspot (23.33% jank, 48 ms median) and needs release-profile validation.
 
 ## Current checkpoint
 

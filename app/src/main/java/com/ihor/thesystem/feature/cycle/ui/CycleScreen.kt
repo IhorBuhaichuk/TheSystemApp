@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,9 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
@@ -116,58 +116,75 @@ fun CycleScreen(
     ) {
         RpgStatusBackdrop()
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .testTag(SystemUiTestTags.CYCLE_SCROLL)
-                .padding(horizontal = SystemScreenPadding)
-                .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
+                .testTag(SystemUiTestTags.CYCLE_SCROLL),
+            contentPadding = PaddingValues(
+                start = SystemScreenPadding,
+                top = SystemCardPadding,
+                end = SystemScreenPadding,
+                bottom = SystemScreenPadding + 4.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
         ) {
-            SystemOverviewPanel(
-                statusData = statusData,
-                activeWorkout = activeWorkout,
-                cycleDays = cycleDays
-            )
-            ActiveCyclePanel(
-                statusData = statusData,
-                activeWorkout = activeWorkout,
-                cycleDays = cycleDays,
-                onEditCycle = workoutViewModel::onOpenWorkoutSettings
-            )
-            TrainingDaySwitcher(
-                days = cycleDays,
-                onSelectDay = workoutViewModel::onCycleDaySelected
-            )
-            statusData?.let {
-                ParametersAndBonusesPanel(data = it)
+            item(key = "overview") {
+                SystemOverviewPanel(
+                    statusData = statusData,
+                    activeWorkout = activeWorkout,
+                    cycleDays = cycleDays
+                )
+            }
+            item(key = "active_cycle") {
+                ActiveCyclePanel(
+                    statusData = statusData,
+                    activeWorkout = activeWorkout,
+                    cycleDays = cycleDays,
+                    onEditCycle = workoutViewModel::onOpenWorkoutSettings
+                )
+            }
+            item(key = "day_switcher") {
+                TrainingDaySwitcher(
+                    days = cycleDays,
+                    onSelectDay = workoutViewModel::onCycleDaySelected
+                )
+            }
+            if (statusData != null) {
+                item(key = "parameters_and_bonuses") {
+                    ParametersAndBonusesPanel(data = statusData)
+                }
             }
             if (activeCycleDay != null && selectedCycleDay != activeCycleDay) {
-                TodayCycleActivationCard(
-                    selectedDay = selectedCycleDay,
-                    activeDay = activeCycleDay,
-                    onActivateToday = workoutViewModel::onActivateSelectedCycleDayToday
-                )
+                item(key = "today_activation") {
+                    TodayCycleActivationCard(
+                        selectedDay = selectedCycleDay,
+                        activeDay = activeCycleDay,
+                        onActivateToday = workoutViewModel::onActivateSelectedCycleDayToday
+                    )
+                }
             }
 
-            if (activeWorkout == null || activeWorkout?.exercises.isNullOrEmpty()) {
-                EmptyCycleBlock(
-                    selectedDay = cycleDays.firstOrNull { it.isSelected }?.dayNumber,
-                    onEditDay = workoutViewModel::onOpenWorkoutSettings,
-                    onAddExercise = openExercisePicker
-                )
-            } else {
-                CycleActions(
-                    onStartWorkout = workoutViewModel::onOpenMainWorkout,
-                    onEditDay = workoutViewModel::onOpenWorkoutSettings,
-                    onAddExercise = openExercisePicker
+            item(key = "cycle_actions") {
+                if (activeWorkout?.exercises.isNullOrEmpty()) {
+                    EmptyCycleBlock(
+                        selectedDay = cycleDays.firstOrNull { it.isSelected }?.dayNumber,
+                        onEditDay = workoutViewModel::onOpenWorkoutSettings,
+                        onAddExercise = openExercisePicker
+                    )
+                } else {
+                    CycleActions(
+                        onStartWorkout = workoutViewModel::onOpenMainWorkout,
+                        onEditDay = workoutViewModel::onOpenWorkoutSettings,
+                        onAddExercise = openExercisePicker
+                    )
+                }
+            }
+            item(key = "architect") {
+                ArchitectCalloutPanel(
+                    onAnalyze = { navController.navigate(Routes.Architect) },
+                    onOpenFocus = workoutViewModel::onOpenWorkoutSettings
                 )
             }
-            ArchitectCalloutPanel(
-                onAnalyze = { navController.navigate(Routes.Architect) },
-                onOpenFocus = workoutViewModel::onOpenWorkoutSettings
-            )
         }
 
         WorkoutDialogHost(

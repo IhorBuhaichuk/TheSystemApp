@@ -247,12 +247,12 @@ val AiOrganismThemeTokens = SystemThemeTokens(
     depth = SystemDepthTokens(
         ambientShadow = Color.Black.copy(alpha = 0.34f),
         contactShadow = Color.Black.copy(alpha = 0.48f),
-        panelElevation = 5.dp,
-        activeElevation = 7.dp,
+        panelElevation = 0.dp,
+        activeElevation = 2.dp,
         plateElevation = 0.dp,
-        buttonElevation = 2.dp,
-        buttonActiveElevation = 4.dp,
-        dialogElevation = 14.dp
+        buttonElevation = 0.dp,
+        buttonActiveElevation = 1.dp,
+        dialogElevation = 10.dp
     ),
     motion = SystemMotionTokens(
         pressMillis = 110,

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,9 +16,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -100,43 +100,52 @@ fun CalendarScreen(
     ) {
         RpgStatusBackdrop()
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .testTag(SystemUiTestTags.CALENDAR_SCROLL)
-                .padding(horizontal = SystemScreenPadding)
-                .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
+                .testTag(SystemUiTestTags.CALENDAR_SCROLL),
+            contentPadding = PaddingValues(
+                start = SystemScreenPadding,
+                top = SystemCardPadding,
+                end = SystemScreenPadding,
+                bottom = SystemScreenPadding + 4.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            CalendarHeader(
-                uiState = uiState,
-                onOpenSettings = { navController.navigate(Routes.CalendarSettings) }
-            )
+            item(key = "header") {
+                CalendarHeader(
+                    uiState = uiState,
+                    onOpenSettings = { navController.navigate(Routes.CalendarSettings) }
+                )
+            }
 
             if (uiState.isLoading && uiState.days.isEmpty()) {
-                CalendarLoadingBlock()
+                item(key = "loading") { CalendarLoadingBlock() }
             } else {
-                MonthOverviewPanel(
-                    uiState = uiState,
-                    onPreviousMonth = { viewModel.onMonthChange(uiState.currentMonth.minusMonths(1)) },
-                    onNextMonth = { viewModel.onMonthChange(uiState.currentMonth.plusMonths(1)) },
-                    onDateSelected = viewModel::onDateSelected
-                )
-                SelectedDayDetailsPanel(
-                    uiState = uiState,
-                    day = selectedDay,
-                    onOpenDay = {
-                        selectedDay?.let { day ->
-                            viewModel.onDateSelected(day.date)
-                            if (day.hasTrainingPlan) {
-                                navController.navigate(Routes.Cycle)
-                            } else {
-                                navController.navigate(Routes.Status)
+                item(key = "month_overview") {
+                    MonthOverviewPanel(
+                        uiState = uiState,
+                        onPreviousMonth = { viewModel.onMonthChange(uiState.currentMonth.minusMonths(1)) },
+                        onNextMonth = { viewModel.onMonthChange(uiState.currentMonth.plusMonths(1)) },
+                        onDateSelected = viewModel::onDateSelected
+                    )
+                }
+                item(key = "selected_day") {
+                    SelectedDayDetailsPanel(
+                        uiState = uiState,
+                        day = selectedDay,
+                        onOpenDay = {
+                            selectedDay?.let { day ->
+                                viewModel.onDateSelected(day.date)
+                                if (day.hasTrainingPlan) {
+                                    navController.navigate(Routes.Cycle)
+                                } else {
+                                    navController.navigate(Routes.Status)
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

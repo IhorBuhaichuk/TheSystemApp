@@ -94,7 +94,11 @@ fun SystemBottomNavBar(navController: NavHostController) {
                         modifier = Modifier.weight(1f),
                         item = item,
                         activeColor = colors.accentPrimary,
-                        onClick = { navController.navigateTopLevel(item.route) }
+                        onClick = {
+                            if (!item.isSelected) {
+                                navController.navigateTopLevel(item.route)
+                            }
+                        }
                     )
                 }
             }
