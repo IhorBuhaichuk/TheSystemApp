@@ -2,7 +2,7 @@
 
 Graphify-style architecture map for **THE SYSTEM: LEVEL UP**.
 
-Generated from the current repository structure on 2026-07-23. Use this file as the first context checkpoint before refactoring or adding features, then read only the target files needed for the task.
+Generated from the current repository structure on 2026-07-25. Use this file as the first context checkpoint before refactoring or adding features, then read only the target files needed for the task.
 
 ## High-Level Modules
 
@@ -45,7 +45,7 @@ Rules of ownership:
 Key Hilt modules live in `app/src/main/java/com/ihor/thesystem/core/di`:
 
 - `DatabaseModule.kt`: creates `AppDatabase`, applies `DatabaseMigrations.ALL_MIGRATIONS`, runs `DatabasePopulator`, exposes DAOs, binds `TransactionProvider`.
-- `RepositoryModule.kt`: binds domain repository interfaces to implementations in `data/repository_impl`.
+- `RepositoryModule.kt`: binds domain repository interfaces to implementations in `data/repository_impl`, including local SharedPreferences-backed lightweight state such as onboarding and beta metrics.
 - `AiModule.kt`: binds `AiArchitectRepository`, `WorkoutAnalyticsRepository`, `LiveCoachRepository`, and provides Gemini models/config.
 - `NetworkModule.kt`: provides `OkHttpClient` and Coil `ImageLoader`.
 - `DispatcherModule.kt`, `AppScopeModule.kt`, `TextProviderModule.kt`: coroutine dispatchers, app scope, and text/context providers.
@@ -90,6 +90,7 @@ Repository implementation layer:
 - Local data repositories live in `app/src/main/java/com/ihor/thesystem/data/repository_impl`.
 - Repository contracts live in `domain/src/main/java/com/ihor/thesystem/domain/repository`.
 - Mappers near repository implementations translate Room entities/DTOs into domain models.
+- `BetaMetricsRepositoryImpl` stores local beta event snapshots in SharedPreferences, not Room; it does not require a database migration.
 
 ## Compose Screen and Navigation Map
 
@@ -132,7 +133,8 @@ Shared UI foundation:
 - Onboarding is isolated in `feature/onboarding`; domain owns first-launch state and completion rules through `OnboardingRepository`, `ObserveAppStartDestinationUseCase`, and `CompleteOnboardingUseCase`. App/data persists the completion flag through `OnboardingRepositoryImpl`.
 - Calendar tab reads date summaries, todo stats, training/rest markers, and cycle state.
 - System tab (`CycleScreen`) presents cycle overview and edits training schedules through `WorkoutViewModel`.
-- Statistics tab reads progression matrix, body logs, annual progression, quest and workout proof data.
+- Statistics tab reads progression matrix, body logs, annual progression, quest and workout proof data. It also displays local beta metrics built by `GetBetaMetricsUseCase` from onboarding state, workout logs, player streak, schedule/config, and `BetaMetricsRepository` event snapshots.
+- Local beta metrics are first-party only: no Firebase/Amplitude/Segment. `AppEntryViewModel` records unique opened days through `RecordBetaAppOpenUseCase`; Status/Statistics refreshes also mark the current day idempotently. `RecordTodayOrderDecisionUseCase` records one Today Order decision type per epoch day.
 - Architect screens use AI repositories through domain use cases and validation logic. AI output must stay constrained by domain validators before mutating plans.
 - Exercise picker is shared by cycle editing and annual progression planning through route source parameters.
 

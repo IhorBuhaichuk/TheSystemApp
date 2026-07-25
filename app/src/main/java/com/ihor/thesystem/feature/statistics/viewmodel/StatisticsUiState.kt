@@ -35,6 +35,7 @@ data class StatisticsUiData(
     val weeklySystemReport: WeeklySystemReportUiModel = WeeklySystemReportUiModel(),
     val nutritionFloorStatus: NutritionFloorStatus = NutritionFloorStatus(),
     val systemInsight: SystemInsightUiModel = SystemInsightUiModel(),
+    val betaMetrics: BetaMetricsUiModel = BetaMetricsUiModel(),
     val avatarUri: String? = null
 )
 
@@ -71,6 +72,30 @@ data class SystemInsightUiModel(
     val improved: String = "",
     val weakPoint: String = "",
     val recommendation: String = ""
+)
+
+data class BetaMetricsUiModel(
+    val onboardingCompleted: Boolean = false,
+    val firstWorkoutLogged: Boolean = false,
+    val plannedCompletedThisWeek: Int = 0,
+    val plannedMissedThisWeek: Int = 0,
+    val currentStreak: Int = 0,
+    val daysAppOpenedOrRefreshed: Int = 0,
+    val decisionDistribution: ImmutableList<BetaDecisionDistributionUiModel> = persistentListOf()
+) {
+    val hasSignal: Boolean
+        get() = onboardingCompleted ||
+            firstWorkoutLogged ||
+            plannedCompletedThisWeek > 0 ||
+            plannedMissedThisWeek > 0 ||
+            currentStreak > 0 ||
+            daysAppOpenedOrRefreshed > 0 ||
+            decisionDistribution.any { it.count > 0 }
+}
+
+data class BetaDecisionDistributionUiModel(
+    val label: String,
+    val count: Int
 )
 
 sealed class StatisticsDialogState {

@@ -37,6 +37,7 @@ import com.ihor.thesystem.domain.model.NutritionFloorTargetStatus
 import com.ihor.thesystem.domain.model.NutritionGoalMode
 import com.ihor.thesystem.domain.model.ProgressProofType
 import com.ihor.thesystem.domain.model.WeightTrend
+import com.ihor.thesystem.feature.statistics.viewmodel.BetaMetricsUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.ProgressProofUiModel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 import com.ihor.thesystem.feature.statistics.viewmodel.WeeklySystemReportUiModel
@@ -77,6 +78,125 @@ fun AnalyticsSummaryBlock(data: StatisticsUiData) {
                     accent = colors.accentWarning,
                     modifier = Modifier.weight(1f)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun BetaMetricsBlock(metrics: BetaMetricsUiModel) {
+    if (!metrics.hasSignal) return
+
+    val colors = SystemTheme.colors
+    DarkGlassCard {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SystemSectionHeader(
+                title = "BETA METRICS",
+                subtitle = "Локальні сигнали без сторонньої аналітики"
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SummaryMetricCell(
+                    label = "Onboarding",
+                    value = if (metrics.onboardingCompleted) "OK" else "-",
+                    subtitle = "first setup",
+                    accent = if (metrics.onboardingCompleted) colors.accentSuccess else colors.textMuted,
+                    modifier = Modifier.weight(1f)
+                )
+                SummaryMetricCell(
+                    label = "First log",
+                    value = if (metrics.firstWorkoutLogged) "OK" else "-",
+                    subtitle = "workout",
+                    accent = if (metrics.firstWorkoutLogged) colors.accentPrimary else colors.textMuted,
+                    modifier = Modifier.weight(1f)
+                )
+                SummaryMetricCell(
+                    label = "Opened",
+                    value = metrics.daysAppOpenedOrRefreshed.toString(),
+                    subtitle = "days",
+                    accent = colors.accentAi,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SummaryMetricCell(
+                    label = "Plan done",
+                    value = metrics.plannedCompletedThisWeek.toString(),
+                    subtitle = "this week",
+                    accent = colors.accentSuccess,
+                    modifier = Modifier.weight(1f)
+                )
+                SummaryMetricCell(
+                    label = "Plan missed",
+                    value = metrics.plannedMissedThisWeek.toString(),
+                    subtitle = "this week",
+                    accent = if (metrics.plannedMissedThisWeek > 0) colors.accentWarning else colors.textMuted,
+                    modifier = Modifier.weight(1f)
+                )
+                SummaryMetricCell(
+                    label = "Streak",
+                    value = metrics.currentStreak.toString(),
+                    subtitle = "days",
+                    accent = colors.accentWarning,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            if (metrics.decisionDistribution.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .techSurface(
+                            shape = RoundedCornerShape(SystemTheme.shapes.medium),
+                            active = false,
+                            accent = colors.accentPrimary,
+                            role = TechSurfaceRole.Plate
+                        )
+                        .padding(11.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Today Order distribution",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = colors.textSecondary,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    metrics.decisionDistribution.take(4).forEach { item ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = item.label,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = colors.textPrimary,
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = item.count.toString(),
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = colors.accentPrimary,
+                                    fontWeight = FontWeight.Black
+                                ),
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
             }
         }
     }

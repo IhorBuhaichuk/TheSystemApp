@@ -9,9 +9,11 @@ import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.ui.asUiText
 import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.domain.util.Result
+import com.ihor.thesystem.domain.usecase.GetBetaMetricsUseCase
 import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
 import com.ihor.thesystem.domain.usecase.LogWorkoutSetsUseCase
 import com.ihor.thesystem.domain.usecase.LogWeightUseCase
+import com.ihor.thesystem.domain.usecase.RecordBetaAppOpenUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
 import com.ihor.thesystem.domain.usecase.SelectViewingDateUseCase
 import com.ihor.thesystem.domain.usecase.UpdateMatrixGoalsUseCase
@@ -19,7 +21,6 @@ import com.ihor.thesystem.domain.usecase.UpdatePlayerAgeUseCase
 import com.ihor.thesystem.domain.usecase.UpdatePlayerHeightUseCase
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.DomainError
-import com.ihor.thesystem.domain.model.StatisticsData
 import com.ihor.thesystem.domain.model.ValidationError
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,6 +35,7 @@ import javax.inject.Inject
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     private val getStatisticsDataUseCase: GetStatisticsDataUseCase,
+    private val getBetaMetricsUseCase: GetBetaMetricsUseCase,
     private val logWorkoutSetsUseCase: LogWorkoutSetsUseCase,
     private val updateMatrixGoalsUseCase: UpdateMatrixGoalsUseCase,
     private val recalculateGlobalRankUseCase: RecalculateGlobalRankUseCase,
@@ -41,6 +43,7 @@ class StatisticsViewModel @Inject constructor(
     private val logWeightUseCase: LogWeightUseCase,
     private val updatePlayerHeightUseCase: UpdatePlayerHeightUseCase,
     private val updatePlayerAgeUseCase: UpdatePlayerAgeUseCase,
+    private val recordBetaAppOpen: RecordBetaAppOpenUseCase,
     private val clock: AppClock
 ) : ViewModel() {
 
@@ -49,9 +52,14 @@ class StatisticsViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<UiState<StatisticsUiData>> = _refreshRequests
         .flatMapLatest {
-            getStatisticsDataUseCase()
+            combine(
+                getStatisticsDataUseCase(),
+                getBetaMetricsUseCase()
+            ) { statisticsData, betaMetrics ->
+                statisticsData.toStatisticsUiData(betaMetrics)
+            }
         }
-        .map<StatisticsData, UiState<StatisticsUiData>> { UiState.Content(it.toStatisticsUiData()) }
+        .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
         .catch { e ->
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to load statistics screen data")
@@ -71,8 +79,13 @@ class StatisticsViewModel @Inject constructor(
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
 
+    init {
+        recordAppOpen()
+    }
+
     fun refreshForCurrentDay() {
         selectViewingDateUseCase(todayDate())
+        recordAppOpen()
         _refreshRequests.value = clock.now()
     }
 
@@ -203,6 +216,17 @@ class StatisticsViewModel @Inject constructor(
         Instant.ofEpochMilli(clock.now())
             .atZone(clock.zoneId())
             .toLocalDate()
+
+    private fun recordAppOpen() {
+        viewModelScope.launch {
+            try {
+                recordBetaAppOpen()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Timber.w(e, "Failed to record beta app open metric")
+            }
+        }
+    }
 
     private suspend fun handleProfileUpdate(result: Result<Unit, DomainError>, fallback: UiText) {
         when (result) {

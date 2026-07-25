@@ -129,6 +129,7 @@ private fun AnalyticsDashboard(
         AnalyticsHeader()
         WeeklySystemReportBlock(report = data.weeklySystemReport)
         AnalyticsSummaryBlock(data)
+        BetaMetricsBlock(metrics = data.betaMetrics)
         WeeklySummaryBlock(
             days = data.weeklySummary.days,
             totalTonnage = data.weeklySummary.totalTonnage,

@@ -47,6 +47,7 @@ private const val MINUTES_PER_WORKOUT_SET = 3
 class StatusViewModel @Inject constructor(
     private val useCases: StatusUseCases,
     private val databaseReadinessRepo: DatabaseReadinessRepository,
+    private val recordBetaAppOpen: RecordBetaAppOpenUseCase,
     private val clock: AppClock
 ) : ViewModel() {
 
@@ -147,6 +148,7 @@ class StatusViewModel @Inject constructor(
                 }
                 
                 refreshDailyState()
+                recordBetaAppOpen()
                 
                 _questsReady.value = true   // ← ТІЛЬКИ тут відкриваємо доступ до UI Flow
                 
@@ -184,6 +186,7 @@ class StatusViewModel @Inject constructor(
         if (databaseStatus.value !is DatabaseStatus.Ready) return@launchCatching
         useCases.selectViewingDate(todayDate())
         refreshDailyState()
+        recordBetaAppOpen()
         _refreshRequests.value = clock.now()
     }
 

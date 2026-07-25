@@ -1,10 +1,14 @@
 package com.ihor.thesystem.feature.statistics.viewmodel
 
+import com.ihor.thesystem.domain.model.BetaMetrics
 import com.ihor.thesystem.domain.model.StatisticsData
+import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
 import com.ihor.thesystem.presentation.common.model.toMatrixEntryUiModel
 import kotlinx.collections.immutable.toImmutableList
 
-fun StatisticsData.toStatisticsUiData() = StatisticsUiData(
+fun StatisticsData.toStatisticsUiData(
+    betaMetrics: BetaMetrics = BetaMetrics()
+) = StatisticsUiData(
     playerName = playerName,
     playerClass = playerClass,
     level = level,
@@ -59,8 +63,41 @@ fun StatisticsData.toStatisticsUiData() = StatisticsUiData(
         weakPoint = systemInsight.weakPoint,
         recommendation = systemInsight.recommendation
     ),
+    betaMetrics = betaMetrics.toUiModel(),
     avatarUri = avatarUri
 )
+
+private fun BetaMetrics.toUiModel(): BetaMetricsUiModel =
+    BetaMetricsUiModel(
+        onboardingCompleted = onboardingCompleted,
+        firstWorkoutLogged = firstWorkoutLogged,
+        plannedCompletedThisWeek = plannedWorkoutsCompletedThisWeek,
+        plannedMissedThisWeek = plannedWorkoutsMissedThisWeek,
+        currentStreak = currentStreak,
+        daysAppOpenedOrRefreshed = daysAppOpenedOrRefreshed,
+        decisionDistribution = todayOrderDecisionDistribution
+            .filterValues { it > 0 }
+            .entries
+            .sortedWith(compareByDescending<Map.Entry<TodayTrainingDecisionType, Int>> { it.value }.thenBy { it.key.name })
+            .map { (type, count) ->
+                BetaDecisionDistributionUiModel(
+                    label = type.betaLabel(),
+                    count = count
+                )
+            }
+            .toImmutableList()
+    )
+
+private fun TodayTrainingDecisionType.betaLabel(): String =
+    when (this) {
+        TodayTrainingDecisionType.PROGRESS_ALLOWED -> "training+"
+        TodayTrainingDecisionType.STANDARD_TRAINING -> "training"
+        TodayTrainingDecisionType.REDUCED_LOAD -> "reduced"
+        TodayTrainingDecisionType.ACTIVE_RECOVERY -> "recovery"
+        TodayTrainingDecisionType.NO_EXCUSE -> "no excuse"
+        TodayTrainingDecisionType.DELOAD -> "deload"
+        TodayTrainingDecisionType.REST -> "rest"
+    }
 
 private fun shortDayLabel(dayOfWeekValue: Int): String = when (dayOfWeekValue) {
     1 -> "Пн"
