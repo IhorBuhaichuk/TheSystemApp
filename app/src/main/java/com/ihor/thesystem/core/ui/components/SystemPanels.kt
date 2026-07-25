@@ -341,6 +341,7 @@ fun SystemSectionTitle(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    titleColor: Color = SystemTheme.colors.accentPrimary,
     trailing: @Composable (() -> Unit)? = null
 ) {
     val colors = SystemTheme.colors
@@ -356,7 +357,7 @@ fun SystemSectionTitle(
             Text(
                 text = title.toSystemSentenceCase(),
                 style = MaterialTheme.typography.titleMedium.copy(
-                    color = colors.accentPrimary,
+                    color = titleColor,
                     fontFamily = SystemDisplayFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,

@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -121,12 +122,12 @@ fun CycleScreen(
                 .fillMaxSize()
                 .testTag(SystemUiTestTags.CYCLE_SCROLL),
             contentPadding = PaddingValues(
-                start = SystemScreenPadding,
-                top = SystemCardPadding,
-                end = SystemScreenPadding,
+                start = SystemCardPadding,
+                top = 12.dp,
+                end = SystemCardPadding,
                 bottom = SystemScreenPadding + 4.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item(key = "overview") {
                 SystemOverviewPanel(
@@ -224,16 +225,20 @@ private fun SystemOverviewPanel(
         modifier = Modifier
             .fillMaxWidth()
             .testTag(SystemUiTestTags.CYCLE_OVERVIEW),
-        active = true
+        active = true,
+        contentPadding = 14.dp
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(SystemCardPadding),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SystemSectionTitle(title = "Огляд системи")
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SystemSectionTitle(
+                        title = "Огляд системи",
+                        titleColor = colors.textPrimary
+                    )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(18.dp)
@@ -251,20 +256,36 @@ private fun SystemOverviewPanel(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    Text(
-                        text = "Активна фаза: $phaseLabel     День циклу: $activeDay / $totalDays",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = colors.textSecondary,
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Фаза: $phaseLabel",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = colors.textSecondary,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "День: $activeDay / $totalDays",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = colors.textSecondary,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(0.75f)
+                        )
+                    }
                 }
                 SystemHexIcon(
                     icon = Icons.Filled.FitnessCenter,
                     accent = colors.accentPrimary,
-                    modifier = Modifier.size(96.dp)
+                    modifier = Modifier.size(80.dp)
                 )
             }
             Row(
@@ -354,14 +375,18 @@ private fun ActiveCyclePanel(
     val progressLabel = statusData?.let { data ->
         "${data.monthWorkoutsCompleted} / ${data.monthWorkoutsTotal.coerceAtLeast(1)}"
     } ?: "$workoutDays / $totalDays"
+    val largeText = LocalDensity.current.fontScale >= LARGE_TEXT_SCALE
 
-    SystemPanel(modifier = Modifier.fillMaxWidth()) {
+    SystemPanel(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = 14.dp
+    ) {
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            val compact = maxWidth < 320.dp
+            val compact = maxWidth < 320.dp || largeText
             if (compact) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     ActiveCycleDetails(
                         cycleName = cycleName,
@@ -381,7 +406,7 @@ private fun ActiveCyclePanel(
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(SystemCardPadding),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ActiveCycleDetails(
@@ -391,13 +416,13 @@ private fun ActiveCyclePanel(
                         workoutDays = workoutDays,
                         nextWorkout = nextWorkout,
                         compact = false,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1.18f)
                     )
                     ActiveCycleActions(
                         progressLabel = progressLabel,
                         onEditCycle = onEditCycle,
                         compact = false,
-                        modifier = Modifier.weight(0.68f)
+                        modifier = Modifier.weight(0.58f)
                     )
                 }
             }
@@ -418,9 +443,12 @@ private fun ActiveCycleDetails(
     val colors = SystemTheme.colors
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(11.dp)
+        verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
-        SystemSectionTitle(title = "Активний цикл")
+        SystemSectionTitle(
+            title = "Активний цикл",
+            titleColor = colors.textPrimary
+        )
         CycleDetailLine(
             icon = Icons.Filled.Settings,
             label = "Цикл",
@@ -443,10 +471,9 @@ private fun ActiveCycleDetails(
         )
         CycleDetailLine(
             icon = Icons.AutoMirrored.Filled.ArrowForward,
-            label = "Наступне тренування",
+            label = "Далі",
             value = nextWorkout,
-            compact = compact,
-            stacked = true
+            compact = compact
         )
     }
 }
@@ -481,7 +508,7 @@ private fun ActiveCycleActions(
                 modifier = Modifier.weight(0.65f)
             )
             SystemButton(
-                text = "Редагувати цикл",
+                text = "Змінити цикл",
                 icon = Icons.Filled.Edit,
                 onClick = onEditCycle,
                 glow = true,
@@ -497,7 +524,7 @@ private fun ActiveCycleActions(
             SystemHexIcon(
                 icon = Icons.Filled.Edit,
                 accent = colors.accentPrimary,
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(44.dp)
             )
             Text(
                 text = "Прогрес $progressLabel",
@@ -509,7 +536,7 @@ private fun ActiveCycleActions(
                 overflow = TextOverflow.Ellipsis
             )
             SystemButton(
-                text = "Редагувати цикл",
+                text = "Змінити цикл",
                 icon = Icons.Filled.Edit,
                 onClick = onEditCycle,
                 glow = true,
@@ -525,8 +552,7 @@ private fun CycleDetailLine(
     label: String,
     value: String,
     accent: Color? = null,
-    compact: Boolean = false,
-    stacked: Boolean = false
+    compact: Boolean = false
 ) {
     val colors = SystemTheme.colors
     val iconTint = accent ?: colors.textSecondary
@@ -539,9 +565,9 @@ private fun CycleDetailLine(
             imageVector = icon,
             contentDescription = null,
             tint = iconTint,
-            modifier = Modifier.size(19.dp)
+            modifier = Modifier.size(17.dp)
         )
-        if (compact || stacked) {
+        if (compact) {
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(1.dp)
@@ -594,13 +620,22 @@ private fun TrainingDaySwitcher(
     days: List<CycleDayUiModel>,
     onSelectDay: (Int) -> Unit
 ) {
-    SystemPanel(modifier = Modifier.fillMaxWidth(), contentPadding = SystemItemSpacing) {
+    val colors = SystemTheme.colors
+    val columns = if (LocalDensity.current.fontScale >= LARGE_TEXT_SCALE) {
+        2
+    } else {
+        CYCLE_DAY_COLUMNS
+    }
+    SystemPanel(modifier = Modifier.fillMaxWidth(), contentPadding = 10.dp) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            SystemSectionTitle(title = "План на тиждень")
-            days.chunked(CYCLE_DAY_COLUMNS).forEach { rowDays ->
+            SystemSectionTitle(
+                title = "План на тиждень",
+                titleColor = colors.textPrimary
+            )
+            days.chunked(columns).forEach { rowDays ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -612,7 +647,7 @@ private fun TrainingDaySwitcher(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    repeat(CYCLE_DAY_COLUMNS - rowDays.size) {
+                    repeat(columns - rowDays.size) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }
@@ -642,7 +677,7 @@ private fun CycleDayChip(
     }
     Column(
         modifier = modifier
-            .heightIn(min = 108.dp)
+            .heightIn(min = 84.dp)
             .techSurface(
                 shape = shape,
                 active = day.isSelected || day.isActive,
@@ -650,7 +685,7 @@ private fun CycleDayChip(
                 role = TechSurfaceRole.Plate
             )
             .systemClickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 10.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
@@ -678,7 +713,7 @@ private fun CycleDayChip(
             style = MaterialTheme.typography.headlineMedium.copy(
                 color = if (day.isSelected || day.isActive) colors.textPrimary else colors.textSecondary,
                 fontWeight = FontWeight.Black,
-                fontSize = if (day.type == DayType.WORKOUT) 30.sp else 15.sp
+                fontSize = if (day.type == DayType.WORKOUT) 26.sp else 14.sp
             ),
             maxLines = 1
         )
@@ -802,52 +837,112 @@ private fun EmptyCycleBlock(
 
 @Composable
 private fun ParametersAndBonusesPanel(data: StatusUiData) {
-    val colors = SystemTheme.colors
     val attributes = data.characterAttributes.entries.take(5)
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
-    ) {
-        SystemPanel(
-            modifier = Modifier.weight(1f),
-            accent = colors.accentPrimary,
-            contentPadding = 12.dp
+    if (LocalDensity.current.fontScale >= LARGE_TEXT_SCALE) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                SystemSectionTitle(title = "Параметри")
-                if (attributes.isEmpty()) {
+            ParametersPanel(
+                attributes = attributes,
+                level = data.level,
+                streak = data.currentStreak
+            )
+            BonusesPanel(data = data)
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
+        ) {
+            ParametersPanel(
+                attributes = attributes,
+                level = data.level,
+                streak = data.currentStreak,
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 216.dp)
+            )
+            BonusesPanel(
+                data = data,
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 216.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ParametersPanel(
+    attributes: List<Map.Entry<com.ihor.thesystem.domain.model.MuscleGroup, Float>>,
+    level: Int,
+    streak: Int,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    SystemPanel(
+        modifier = modifier.fillMaxWidth(),
+        accent = colors.accentPrimary,
+        contentPadding = 12.dp
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            SystemSectionTitle(
+                title = "Параметри",
+                titleColor = colors.textPrimary
+            )
+            if (attributes.isEmpty()) {
+                AttributeLine(
+                    label = "Сила",
+                    value = level.toFloat(),
+                    accent = colors.statusProgress
+                )
+                AttributeLine(
+                    label = "Дисципліна",
+                    value = streak.toFloat() * 10f,
+                    accent = colors.statusProgress
+                )
+            } else {
+                attributes.forEach { entry ->
                     AttributeLine(
-                        label = "Сила",
-                        value = data.level.toFloat(),
+                        label = entry.key.displayName(),
+                        value = entry.value,
                         accent = colors.statusProgress
                     )
-                    AttributeLine(
-                        label = "Дисципліна",
-                        value = data.currentStreak.toFloat() * 10f,
-                        accent = colors.statusProgress
-                    )
-                } else {
-                    attributes.forEach { entry ->
-                        AttributeLine(
-                            label = entry.key.displayName(),
-                            value = entry.value,
-                            accent = colors.statusProgress
-                        )
-                    }
                 }
             }
         }
-        SystemPanel(
-            modifier = Modifier.weight(1f),
-            accent = colors.accentSuccess,
-            contentPadding = 12.dp
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                SystemSectionTitle(title = "Активні бонуси")
-                BonusLine(text = "Серія ${data.currentStreak} днів", value = "+${(data.currentStreak * 2).coerceAtMost(20)}% досвіду")
-                BonusLine(text = "Планувальник", value = "${data.todos.count { it.isCompleted }}/${data.todos.size.coerceAtLeast(1)}")
-                BonusLine(text = "Рівень ${data.level}", value = "Ранг ${data.globalRank.name}")
-            }
+    }
+}
+
+@Composable
+private fun BonusesPanel(
+    data: StatusUiData,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    SystemPanel(
+        modifier = modifier.fillMaxWidth(),
+        accent = colors.accentSuccess,
+        contentPadding = 12.dp
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            SystemSectionTitle(
+                title = "Активні бонуси",
+                titleColor = colors.textPrimary
+            )
+            BonusLine(
+                text = "Серія ${data.currentStreak} днів",
+                value = "+${(data.currentStreak * 2).coerceAtMost(20)}% досвіду"
+            )
+            BonusLine(
+                text = "Планувальник",
+                value = "${data.todos.count { it.isCompleted }}/${data.todos.size.coerceAtLeast(1)}"
+            )
+            BonusLine(
+                text = "Рівень ${data.level}",
+                value = "Ранг ${data.globalRank.name}"
+            )
         }
     }
 }
@@ -1032,3 +1127,4 @@ private fun CompactActionButton(
 }
 
 private const val CYCLE_DAY_COLUMNS = 4
+private const val LARGE_TEXT_SCALE = 1.2f
