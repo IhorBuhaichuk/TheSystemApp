@@ -55,11 +55,11 @@ enum class TodayOrderAccent {
 
 data class TodayOrderUiModel(
     val dayType: TodayOrderDayType = TodayOrderDayType.TRAINING,
-    val dayTypeLabel: String = "Training",
+    val dayTypeLabel: String = "Тренування",
     val title: String = "План синхронізується",
-    val reason: String = "Система готує сьогоднішнє рішення. Показує базовий план без жорсткого навантаження.",
+    val reason: String = "Показник готовності оновлюється. Поки показано звичайний план без підвищення навантаження.",
     val primaryActionLabel: String = "План формується",
-    val outcomeText: String = "Безпечний fallback",
+    val outcomeText: String = "Безпечний варіант",
     val outcomeLabel: String = "Наслідок",
     val durationText: String = "План",
     val durationLabel: String = "Формат",

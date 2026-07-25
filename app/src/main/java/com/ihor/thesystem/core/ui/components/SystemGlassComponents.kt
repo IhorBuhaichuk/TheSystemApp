@@ -253,7 +253,7 @@ fun SystemProgressBar(
 ) {
     val colors = SystemTheme.colors
     val motion = SystemTheme.motion
-    val animatedProgress by animateFloatAsState(
+    val animatedProgress = animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
         animationSpec = tween(motion.progressMillis, easing = EaseOutCubic),
         label = "system_progress"
@@ -270,20 +270,22 @@ fun SystemProgressBar(
                 )
             }
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(animatedProgress)
-                .fillMaxHeight()
-                .background(
-                    Brush.horizontalGradient(
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val fillWidth = size.width * animatedProgress.value
+            if (fillWidth > 0f) {
+                drawRect(
+                    brush = Brush.horizontalGradient(
                         listOf(
                             accent.copy(alpha = 0.58f),
                             accent,
                             accent.copy(alpha = 0.78f)
-                        )
-                    )
+                        ),
+                        endX = fillWidth
+                    ),
+                    size = androidx.compose.ui.geometry.Size(fillWidth, size.height)
                 )
-        )
+            }
+        }
     }
 }
 

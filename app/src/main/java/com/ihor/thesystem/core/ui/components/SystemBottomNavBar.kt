@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -51,11 +53,11 @@ fun SystemBottomNavBar(navController: NavHostController) {
     val destination = backStackEntry?.destination
     val colors = SystemTheme.colors
     val items = listOf(
-        NavBarItem(Routes.Status, NavGlyph.Status, "Status", SystemUiTestTags.BOTTOM_NAV_STATUS, destination?.hasRoute<Routes.Status>() == true),
-        NavBarItem(Routes.Calendar, NavGlyph.Calendar, "Calendar", SystemUiTestTags.BOTTOM_NAV_CALENDAR, destination?.hasRoute<Routes.Calendar>() == true),
-        NavBarItem(Routes.Cycle, NavGlyph.System, "System", SystemUiTestTags.BOTTOM_NAV_SYSTEM, destination?.hasRoute<Routes.Cycle>() == true),
-        NavBarItem(Routes.Statistics, NavGlyph.Statistics, "Statistics", SystemUiTestTags.BOTTOM_NAV_STATISTICS, destination?.hasRoute<Routes.Statistics>() == true),
-        NavBarItem(Routes.Profile, NavGlyph.Profile, "Profile", SystemUiTestTags.BOTTOM_NAV_PROFILE, destination?.hasRoute<Routes.Profile>() == true)
+        NavBarItem(Routes.Status, NavGlyph.Status, "Статус", SystemUiTestTags.BOTTOM_NAV_STATUS, destination?.hasRoute<Routes.Status>() == true),
+        NavBarItem(Routes.Calendar, NavGlyph.Calendar, "Календар", SystemUiTestTags.BOTTOM_NAV_CALENDAR, destination?.hasRoute<Routes.Calendar>() == true),
+        NavBarItem(Routes.Cycle, NavGlyph.System, "Система", SystemUiTestTags.BOTTOM_NAV_SYSTEM, destination?.hasRoute<Routes.Cycle>() == true),
+        NavBarItem(Routes.Statistics, NavGlyph.Statistics, "Статистика", SystemUiTestTags.BOTTOM_NAV_STATISTICS, destination?.hasRoute<Routes.Statistics>() == true),
+        NavBarItem(Routes.Profile, NavGlyph.Profile, "Профіль", SystemUiTestTags.BOTTOM_NAV_PROFILE, destination?.hasRoute<Routes.Profile>() == true)
     )
 
     Box(
@@ -133,19 +135,18 @@ private fun NavIconButton(
     val colors = SystemTheme.colors
     val motion = SystemTheme.motion
     val interactionSource = remember { MutableInteractionSource() }
-    val selection by animateFloatAsState(
+    val selection = animateFloatAsState(
         targetValue = if (item.isSelected) 1f else 0f,
         animationSpec = tween(durationMillis = motion.quickStateMillis),
         label = "bottom_nav_selection"
     )
-    val iconScale by animateFloatAsState(
+    val iconScale = animateFloatAsState(
         targetValue = if (item.isSelected) 1.08f else 1f,
         animationSpec = tween(durationMillis = motion.stateMillis),
         label = "bottom_nav_icon_scale"
     )
     val iconColor = if (item.isSelected) activeColor else colors.textSecondary.copy(alpha = 0.76f)
     val labelColor = if (item.isSelected) activeColor else colors.textSecondary.copy(alpha = 0.72f)
-    val activeShape = systemPlateShape()
 
     Box(
         modifier = modifier
@@ -162,21 +163,6 @@ private fun NavIconButton(
             ),
         contentAlignment = Alignment.Center
     ) {
-        if (selection > 0.01f) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .padding(horizontal = 3.dp)
-                    .graphicsLayer { alpha = selection }
-                    .techSurface(
-                        shape = activeShape,
-                        active = true,
-                        accent = activeColor,
-                        role = TechSurfaceRole.Plate
-                    )
-            )
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -188,22 +174,15 @@ private fun NavIconButton(
                 modifier = Modifier.size(35.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (selection > 0.01f) {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(activeColor.copy(alpha = 0.10f * selection), SystemHexagonShape())
-                    )
-                }
                 SystemNavGlyph(
                     glyph = item.glyph,
                     color = iconColor,
-                    glow = selection,
+                    glow = if (item.isSelected) 1f else 0f,
                     modifier = Modifier
                         .size(26.dp)
                         .graphicsLayer {
-                            scaleX = iconScale
-                            scaleY = iconScale
+                            scaleX = iconScale.value
+                            scaleY = iconScale.value
                         }
                 )
             }
@@ -222,6 +201,23 @@ private fun NavIconButton(
                 overflow = TextOverflow.Ellipsis
             )
         }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 2.dp)
+                .size(width = 28.dp, height = 3.dp)
+                .graphicsLayer {
+                    alpha = selection.value
+                    scaleX = 0.55f + (0.45f * selection.value)
+                }
+                .background(activeColor, RoundedCornerShape(999.dp))
+                .border(
+                    width = 0.5.dp,
+                    color = colors.textPrimary.copy(alpha = 0.22f),
+                    shape = RoundedCornerShape(999.dp)
+                )
+        )
     }
 }
 

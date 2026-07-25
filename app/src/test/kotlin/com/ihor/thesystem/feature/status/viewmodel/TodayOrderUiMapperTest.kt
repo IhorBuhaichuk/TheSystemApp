@@ -23,9 +23,9 @@ class TodayOrderUiMapperTest {
         ).toTodayOrderUiModel(mainQuest())
 
         assertEquals(TodayOrderDayType.TRAINING, order.dayType)
-        assertEquals("Training", order.dayTypeLabel)
+        assertEquals("Тренування", order.dayTypeLabel)
         assertEquals("Workout A", order.title)
-        assertEquals("Readiness 72% підходить під поточний план. Система не бачить блокерів.", order.reason)
+        assertEquals("Готовність — 72%. Перешкод для тренування немає, можна виконувати звичайний план.", order.reason)
         assertEquals("Відкрити тренування", order.primaryActionLabel)
         assertEquals("+75 XP", order.outcomeText)
         assertEquals("45 хв", order.durationText)
@@ -43,11 +43,11 @@ class TodayOrderUiMapperTest {
         ).toTodayOrderUiModel(null)
 
         assertEquals(TodayOrderDayType.RECOVERY, order.dayType)
-        assertEquals("Recovery", order.dayTypeLabel)
-        assertEquals("Recovery Protocol", order.title)
-        assertTrue(order.reason.contains("силове навантаження сьогодні заблоковано"))
-        assertEquals("Відкрити recovery", order.primaryActionLabel)
-        assertEquals("Recovery + streak", order.outcomeText)
+        assertEquals("Відновлення", order.dayTypeLabel)
+        assertEquals("Активне відновлення", order.title)
+        assertTrue(order.reason.contains("силове тренування сьогодні не рекомендоване"))
+        assertEquals("Відкрити відновлення", order.primaryActionLabel)
+        assertEquals("Відновлення і серія", order.outcomeText)
         assertEquals("12 хв", order.durationText)
         assertEquals(TodayOrderAccent.SUCCESS, order.accent)
         assertTrue(order.actionEnabled)
@@ -62,11 +62,11 @@ class TodayOrderUiMapperTest {
         ).toTodayOrderUiModel(null)
 
         assertEquals(TodayOrderDayType.NO_EXCUSE, order.dayType)
-        assertEquals("No Excuse", order.dayTypeLabel)
-        assertEquals("No Excuse Protocol", order.title)
-        assertTrue(order.reason.contains("зафіксувала пропуск"))
+        assertEquals("Короткий мінімум", order.dayTypeLabel)
+        assertEquals("Коротке тренування", order.title)
+        assertTrue(order.reason.contains("тренування пропущено"))
         assertEquals("Відкрити 7 хв", order.primaryActionLabel)
-        assertEquals("Streak + quest", order.outcomeText)
+        assertEquals("Серія і квест", order.outcomeText)
         assertEquals(TodayOrderAccent.ERROR, order.accent)
     }
 
@@ -78,14 +78,14 @@ class TodayOrderUiMapperTest {
             .toTodayOrderUiModel(null)
 
         assertEquals(TodayOrderDayType.DELOAD, deload.dayType)
-        assertEquals("Відкрити deload", deload.primaryActionLabel)
-        assertEquals("Recovery + контроль XP", deload.outcomeText)
+        assertEquals("Відкрити легкий план", deload.primaryActionLabel)
+        assertEquals("Відновлення без втрати ритму", deload.outcomeText)
         assertEquals(TodayOrderAccent.WARNING, deload.accent)
 
         assertEquals(TodayOrderDayType.REST, rest.dayType)
-        assertEquals("Rest", rest.dayTypeLabel)
+        assertEquals("Відпочинок", rest.dayTypeLabel)
         assertEquals("Відкрити план дня", rest.primaryActionLabel)
-        assertEquals("Recovery без штрафу", rest.outcomeText)
+        assertEquals("Відновлення без штрафу", rest.outcomeText)
         assertEquals(TodayOrderAccent.AI, rest.accent)
     }
 
@@ -95,9 +95,9 @@ class TodayOrderUiMapperTest {
             .toTodayOrderUiModel(mainQuest(title = "Workout B", minutes = 38, xp = 60))
 
         assertEquals(TodayOrderDayType.TRAINING, order.dayType)
-        assertEquals("Training", order.dayTypeLabel)
+        assertEquals("Тренування", order.dayTypeLabel)
         assertEquals("Workout B", order.title)
-        assertTrue(order.reason.contains("Readiness ще синхронізується"))
+        assertTrue(order.reason.contains("Показник готовності ще оновлюється"))
         assertEquals("План формується", order.primaryActionLabel)
         assertEquals("+60 XP", order.outcomeText)
         assertEquals("38 хв", order.durationText)

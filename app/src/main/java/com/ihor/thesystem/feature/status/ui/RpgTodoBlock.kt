@@ -96,7 +96,7 @@ internal fun TodoBlock(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                        text = "To-do",
+                        text = "Завдання",
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.labelLarge.copy(
                         color = colors.accentPrimary,

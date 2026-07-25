@@ -90,23 +90,24 @@ animation behavior; remove or replace only decorative work that is proven unnece
 | Slice | Target | Status | Primary files |
 |---|---|---|---|
 | 0 | Baseline and measurement | Complete | this file, ADB artifacts |
-| 1 | Shared tonal surfaces and tokens | Pending | `SystemTokens.kt`, `SystemPanels.kt` |
-| 2 | Shared interaction and progress motion | Pending | `SystemMotion.kt`, `SystemGlassComponents.kt`, `SystemBottomNavBar.kt` |
-| 3 | Status | Pending | `StatusScreen.kt`, `RpgStatusDashboard.kt`, `RpgTodayOrderBlock.kt`, `RpgTodoBlock.kt` |
+| 1 | Shared tonal surfaces and tokens | Complete | `SystemTokens.kt`, `SystemPanels.kt` |
+| 2 | Shared interaction and progress motion | In progress | `SystemMotion.kt`, `SystemGlassComponents.kt`, `SystemBottomNavBar.kt` |
+| 3 | Status | In progress | `StatusScreen.kt`, `RpgStatusDashboard.kt`, `RpgTodayOrderBlock.kt`, `RpgTodoBlock.kt` |
 | 4 | Calendar | Pending | `CalendarScreen.kt` |
 | 5 | System/Cycle | Pending | `CycleScreen.kt` |
 | 6 | Statistics | Pending | `StatisticsScreen.kt`, overview sections, chart components |
 | 7 | Profile | Pending | `ProfileScreen.kt` |
 | 8 | Dialogs and state panels | Pending | shared dialogs and changed workout/report dialogs |
 | 9 | Accessibility/performance regression | Pending | tests and screenshot artifacts |
+| 10 | Plain-language Ukrainian copy | In progress | presentation mappers, top-level screens, dialogs |
 
 ## Verification ledger
 
 - [x] Baseline screenshots for five tabs
 - [ ] Baseline screenshots for representative dialogs
 - [x] Baseline `gfxinfo` captured on Realme
-- [ ] `scripts/check-quick.cmd`
-- [ ] `scripts/check-web-ui-guard.cmd`
+- [x] `scripts/check-quick.cmd`
+- [x] `scripts/check-web-ui-guard.cmd`
 - [ ] relevant unit and Compose/UI tests
 - [ ] small phone
 - [ ] normal phone
@@ -126,6 +127,13 @@ animation behavior; remove or replace only decorative work that is proven unnece
   23 janky frames (95.83%), 300 ms median, and 550 ms p90/p95. This is a diagnostic
   development-build baseline, not a release benchmark, but it confirms that surface
   and animation work must reduce main-thread/draw cost.
+- 2026-07-26: Shared armored surfaces were replaced with rounded tonal surfaces and
+  a single border/light pass. A warmed ten-tab development-build pass improved the
+  median from 300 ms to 125 ms and jank from 95.83% to 81.40%. This is meaningful
+  but still far from the 60 fps goal; screen-specific Canvas/blur work remains.
+- 2026-07-26: User-facing copy is a dedicated track. Translate at presentation
+  boundaries; do not rename persisted template titles, enum values, JSON keys, or
+  Room data. XP and product names may remain only where they are established terms.
 
 ## Current checkpoint
 
@@ -133,5 +141,6 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - Base product commit: `78ccd52`
 - Concept commit: `be7172b`
 - Baseline: `artifacts/design-implementation/minimal-hud-v2/baseline/`
-- Next action: run the baseline compile/Compose-only guards, then simplify the shared
-  surface hierarchy before touching individual screen layout.
+- Next action: finish the Status density/motion pass, then remove screen-specific
+  blur and repeating decorative work before rolling the surface hierarchy across
+  the remaining tabs.

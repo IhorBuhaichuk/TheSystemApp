@@ -112,21 +112,22 @@ data class SystemHexagonShape(
 
 @Composable
 fun systemLargePanelShape(): Shape =
-    SystemCutCornerShape(SystemTheme.shapes.panelCut)
+    RoundedCornerShape(SystemTheme.shapes.large)
 
 @Composable
 fun systemPlateShape(): Shape =
-    SystemCutCornerShape(SystemTheme.shapes.plateCut)
+    RoundedCornerShape(SystemTheme.shapes.medium)
 
 @Composable
 fun systemControlShape(): Shape =
-    SystemCutCornerShape(SystemTheme.shapes.controlCut)
+    RoundedCornerShape(SystemTheme.shapes.medium)
 
 @Composable
 fun systemDialogShape(): Shape =
-    SystemCutCornerShape(SystemTheme.shapes.dialogCut)
+    RoundedCornerShape(SystemTheme.shapes.extraLarge)
 
 enum class TechSurfaceRole {
+    Hero,
     Panel,
     Plate,
     Button,
@@ -149,7 +150,7 @@ fun Modifier.techSurface(
     val baseBrush = when {
         role == TechSurfaceRole.Button && enabled -> Brush.linearGradient(
             listOf(
-                accent.copy(alpha = if (active) 0.34f else 0.22f),
+                accent.copy(alpha = if (active) 0.17f else 0.08f),
                 material.buttonTop,
                 material.buttonBottom
             ),
@@ -170,6 +171,16 @@ fun Modifier.techSurface(
             start = Offset.Zero,
             end = Offset.Infinite
         )
+        role == TechSurfaceRole.Hero -> Brush.linearGradient(
+            listOf(
+                accent.copy(alpha = if (active) 0.085f else 0.035f),
+                material.panelTop,
+                material.panelMid,
+                material.panelBottom
+            ),
+            start = Offset.Zero,
+            end = Offset.Infinite
+        )
         else -> Brush.linearGradient(
             listOf(material.panelTop, material.panelMid, material.panelBottom),
             start = Offset.Zero,
@@ -183,7 +194,7 @@ fun Modifier.techSurface(
         active -> depth.activeElevation
         role == TechSurfaceRole.Button -> depth.buttonElevation
         role == TechSurfaceRole.Plate -> depth.plateElevation
-        role == TechSurfaceRole.Navigation -> depth.plateElevation
+        role == TechSurfaceRole.Navigation -> depth.panelElevation
         else -> depth.panelElevation
     }
     val ambientColor = when {
@@ -193,32 +204,31 @@ fun Modifier.techSurface(
     }
     val borderBrush = Brush.linearGradient(
         listOf(
-            material.edgeHighlight.copy(alpha = if (enabled) 0.92f else 0.32f),
-            if (enabled && active) accent.copy(alpha = 0.72f) else colors.borderSubtle.copy(alpha = 0.58f),
-            material.edgeShade.copy(alpha = 0.88f),
-            if (enabled) material.edgeShade.copy(alpha = 0.94f) else colors.borderMuted.copy(alpha = 0.24f)
+            material.edgeHighlight.copy(alpha = if (enabled) 0.26f else 0.10f),
+            if (enabled && active) {
+                accent.copy(alpha = 0.34f)
+            } else {
+                colors.borderSubtle.copy(alpha = 0.11f)
+            },
+            colors.borderMuted.copy(alpha = if (enabled) 0.07f else 0.035f),
+            material.edgeShade.copy(alpha = if (enabled) 0.38f else 0.18f)
         ),
         start = Offset.Zero,
         end = Offset.Infinite
     )
     val reflectedAlpha = when {
-        !enabled -> 0.018f
+        !enabled -> 0.012f
+        role == TechSurfaceRole.Hero -> if (active) 0.10f else 0.065f
         active -> glow.activeAlpha
-        role == TechSurfaceRole.Button -> 0.085f
-        role == TechSurfaceRole.Navigation -> 0.070f
+        role == TechSurfaceRole.Button -> 0.050f
+        role == TechSurfaceRole.Navigation -> 0.040f
+        role == TechSurfaceRole.Panel -> 0.032f
         else -> glow.restingAlpha
     }
     val reflectedColor = when (accent) {
         colors.accentAi -> material.reflectedAi
         colors.accentPrimary -> material.reflectedPrimary
         else -> accent.copy(alpha = 0.10f)
-    }
-    val textureAlpha = when (role) {
-        TechSurfaceRole.Panel -> 0.022f
-        TechSurfaceRole.Plate -> 0.014f
-        TechSurfaceRole.Button -> 0.018f
-        TechSurfaceRole.Dialog -> 0.018f
-        TechSurfaceRole.Navigation -> 0.014f
     }
 
     return this
@@ -231,22 +241,6 @@ fun Modifier.techSurface(
         .clip(shape)
         .background(baseBrush)
         .drawWithCache {
-            val textureStroke = 0.55.dp.toPx()
-            val textureSpacing = when (role) {
-                TechSurfaceRole.Panel, TechSurfaceRole.Dialog -> 22.dp.toPx()
-                else -> 26.dp.toPx()
-            }
-            val surfaceSize = size
-            val textureLines = buildList {
-                var textureX = -surfaceSize.height
-                while (textureX < surfaceSize.width + surfaceSize.height) {
-                    add(
-                        Offset(textureX, surfaceSize.height) to
-                            Offset(textureX + surfaceSize.height, 0f)
-                    )
-                    textureX += textureSpacing
-                }
-            }
             val innerBrush = Brush.linearGradient(
                 colors = listOf(
                     material.innerHighlight,
@@ -261,191 +255,13 @@ fun Modifier.techSurface(
                     reflectedColor.copy(alpha = reflectedAlpha),
                     Color.Transparent
                 ),
-                center = Offset(size.width * 0.08f, size.height * 0.04f),
-                radius = size.maxDimension * 0.48f
+                center = Offset(size.width * 0.06f, size.height * 0.03f),
+                radius = size.maxDimension * 0.58f
             )
-            val outerStroke = 1.dp.toPx()
-            val bevelStroke = 1.35.dp.toPx()
-            val innerStroke = 0.65.dp.toPx()
-            val railStroke = 1.15.dp.toPx()
-            val frameInset = when (role) {
-                TechSurfaceRole.Panel, TechSurfaceRole.Dialog -> 5.5.dp.toPx()
-                TechSurfaceRole.Navigation -> 4.dp.toPx()
-                TechSurfaceRole.Button -> 3.5.dp.toPx()
-                TechSurfaceRole.Plate -> 3.dp.toPx()
-            }
-            val nominalCut = when (role) {
-                TechSurfaceRole.Panel -> 12.dp.toPx()
-                TechSurfaceRole.Dialog -> 14.dp.toPx()
-                TechSurfaceRole.Navigation -> 10.dp.toPx()
-                TechSurfaceRole.Button -> 7.dp.toPx()
-                TechSurfaceRole.Plate -> 8.dp.toPx()
-            }
-            val isArmorPanel = role == TechSurfaceRole.Panel ||
-                role == TechSurfaceRole.Dialog ||
-                role == TechSurfaceRole.Navigation
-
-            fun chamferedFrame(inset: Float, requestedCut: Float): Path {
-                val left = inset.coerceAtMost(size.width * 0.24f)
-                val top = inset.coerceAtMost(size.height * 0.24f)
-                val right = (size.width - inset).coerceAtLeast(left)
-                val bottom = (size.height - inset).coerceAtLeast(top)
-                val cut = requestedCut
-                    .coerceAtLeast(1.dp.toPx())
-                    .coerceAtMost((right - left) * 0.24f)
-                    .coerceAtMost((bottom - top) * 0.24f)
-                return Path().apply {
-                    moveTo(left + cut, top)
-                    lineTo(right - cut, top)
-                    lineTo(right, top + cut)
-                    lineTo(right, bottom - cut)
-                    lineTo(right - cut, bottom)
-                    lineTo(left + cut, bottom)
-                    lineTo(left, bottom - cut)
-                    lineTo(left, top + cut)
-                    close()
-                }
-            }
-
-            val bevelFrame = chamferedFrame(
-                inset = 2.dp.toPx(),
-                requestedCut = nominalCut - 1.dp.toPx()
-            )
-            val innerFrame = chamferedFrame(
-                inset = frameInset,
-                requestedCut = nominalCut - frameInset * 0.46f
-            )
-            val armorInset = if (isArmorPanel) 8.5.dp.toPx() else 5.dp.toPx()
-            val armorFrame = chamferedFrame(
-                inset = armorInset,
-                requestedCut = nominalCut - armorInset * 0.42f
-            )
-            val cornerRail = material.railInactive
-            val fastenerRadius = 2.15.dp.toPx()
-            val fastenerInset = 9.5.dp.toPx()
-            val fasteners = listOf(
-                Offset(fastenerInset, fastenerInset),
-                Offset(size.width - fastenerInset, fastenerInset),
-                Offset(fastenerInset, size.height - fastenerInset),
-                Offset(size.width - fastenerInset, size.height - fastenerInset)
-            )
-            val topNotch = Path().apply {
-                val half = size.width * 0.095f
-                val notch = 3.5.dp.toPx()
-                moveTo(size.width / 2f - half, frameInset)
-                lineTo(size.width / 2f - half * 0.76f, frameInset + notch)
-                lineTo(size.width / 2f + half * 0.76f, frameInset + notch)
-                lineTo(size.width / 2f + half, frameInset)
-            }
 
             onDrawBehind {
                 drawRect(brush = innerBrush)
-                textureLines.forEach { (start, end) ->
-                    drawLine(
-                        color = material.edgeHighlight.copy(alpha = textureAlpha),
-                        start = start,
-                        end = end,
-                        strokeWidth = textureStroke
-                    )
-                }
                 drawRect(brush = reflectedBrush)
-
-                drawPath(
-                    path = bevelFrame,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            material.edgeHighlight.copy(alpha = if (enabled) 0.78f else 0.24f),
-                            material.railInactive.copy(alpha = 0.72f),
-                            material.edgeShade.copy(alpha = 0.96f)
-                        ),
-                        start = Offset.Zero,
-                        end = Offset(size.width, size.height)
-                    ),
-                    style = Stroke(width = bevelStroke)
-                )
-                drawPath(
-                    path = innerFrame,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            material.edgeHighlight.copy(alpha = 0.52f),
-                            material.railInactive,
-                            material.edgeShade.copy(alpha = 0.82f)
-                        ),
-                        start = Offset.Zero,
-                        end = Offset(size.width, size.height)
-                    ),
-                    style = Stroke(width = outerStroke)
-                )
-                drawPath(
-                    path = armorFrame,
-                    color = colors.borderMuted.copy(alpha = if (isArmorPanel) 0.42f else 0.24f),
-                    style = Stroke(width = innerStroke)
-                )
-
-                if (isArmorPanel && size.width > 150.dp.toPx() && size.height > 58.dp.toPx()) {
-                    drawPath(
-                        path = topNotch,
-                        color = material.edgeHighlight.copy(alpha = 0.50f),
-                        style = Stroke(width = innerStroke)
-                    )
-                    fasteners.forEach { center ->
-                        drawCircle(
-                            color = material.edgeShade.copy(alpha = 0.90f),
-                            radius = fastenerRadius,
-                            center = center
-                        )
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    material.edgeHighlight.copy(alpha = 0.72f),
-                                    material.railInactive,
-                                    material.edgeShade
-                                ),
-                                center = center - Offset(
-                                    fastenerRadius * 0.32f,
-                                    fastenerRadius * 0.32f
-                                ),
-                                radius = fastenerRadius * 1.2f
-                            ),
-                            radius = fastenerRadius * 0.72f,
-                            center = center
-                        )
-                    }
-
-                    val bracket = 10.dp.toPx()
-                    val bracketInset = armorInset + 2.dp.toPx()
-                    listOf(
-                        Offset(bracketInset, bracketInset),
-                        Offset(size.width - bracketInset, bracketInset),
-                        Offset(bracketInset, size.height - bracketInset),
-                        Offset(size.width - bracketInset, size.height - bracketInset)
-                    ).forEachIndexed { index, corner ->
-                        val horizontalDirection = if (index % 2 == 0) 1f else -1f
-                        val verticalDirection = if (index < 2) 1f else -1f
-                        drawLine(
-                            color = cornerRail,
-                            start = corner,
-                            end = corner + Offset(horizontalDirection * bracket, 0f),
-                            strokeWidth = railStroke
-                        )
-                        drawLine(
-                            color = material.edgeHighlight.copy(alpha = 0.34f),
-                            start = corner,
-                            end = corner + Offset(0f, verticalDirection * bracket),
-                            strokeWidth = innerStroke
-                        )
-                    }
-
-                    repeat(3) { index ->
-                        val tickX = size.width - armorInset - (index * 5.dp.toPx())
-                        drawLine(
-                            color = material.railInactive,
-                            start = Offset(tickX, armorInset),
-                            end = Offset(tickX - 2.5.dp.toPx(), armorInset + 3.dp.toPx()),
-                            strokeWidth = innerStroke
-                        )
-                    }
-                }
             }
         }
         .border(BorderStroke(1.dp, borderBrush), shape)
@@ -456,6 +272,7 @@ fun SystemPanel(
     modifier: Modifier = Modifier,
     active: Boolean = false,
     accent: Color = SystemTheme.colors.accentPrimary,
+    role: TechSurfaceRole = TechSurfaceRole.Panel,
     contentPadding: Dp = SystemCardPadding,
     content: @Composable () -> Unit
 ) {
@@ -466,7 +283,7 @@ fun SystemPanel(
                 shape = shape,
                 active = active,
                 accent = accent,
-                role = TechSurfaceRole.Panel
+                role = role
             )
     ) {
         Box(modifier = Modifier.padding(contentPadding)) {

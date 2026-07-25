@@ -9,11 +9,11 @@ internal fun TodayTrainingDecision?.toTodayOrderUiModel(
 ): TodayOrderUiModel {
     val decision = this ?: return TodayOrderUiModel(
         dayType = TodayOrderDayType.TRAINING,
-        dayTypeLabel = "Training",
+        dayTypeLabel = "Тренування",
         title = fallbackMainQuest?.title ?: "План синхронізується",
-        reason = "Readiness ще синхронізується. Система показує базовий план і не піднімає навантаження без даних.",
+        reason = "Показник готовності ще оновлюється. Поки показано звичайний план без підвищення навантаження.",
         primaryActionLabel = "План формується",
-        outcomeText = fallbackMainQuest.rewardText("Безпечний fallback"),
+        outcomeText = fallbackMainQuest.rewardText("Безпечний варіант"),
         durationText = fallbackMainQuest.durationText("План"),
         readinessProgress = 0f,
         actionEnabled = false,
@@ -23,31 +23,31 @@ internal fun TodayTrainingDecision?.toTodayOrderUiModel(
     return when (decision.decisionType) {
         TodayTrainingDecisionType.PROGRESS_ALLOWED -> decision.toTrainingOrder(
             fallbackMainQuest = fallbackMainQuest,
-            reasonText = "Readiness ${decision.readinessScore}% і recovery debt ${decision.recoveryDebt.level.displayLabel()}: можна атакувати прогрес.",
+            reasonText = "Готовність — ${decision.readinessScore}%. Накопичена втома — ${decision.recoveryDebt.level.displayLabel()}. Можна поступово підвищувати навантаження.",
             actionText = "Відкрити тренування",
-            outcomeText = fallbackMainQuest.rewardText("XP + quest"),
+            outcomeText = fallbackMainQuest.rewardText("XP і нагорода за квест"),
             accent = TodayOrderAccent.SUCCESS
         )
         TodayTrainingDecisionType.STANDARD_TRAINING -> decision.toTrainingOrder(
             fallbackMainQuest = fallbackMainQuest,
-            reasonText = "Readiness ${decision.readinessScore}% підходить під поточний план. Система не бачить блокерів.",
+            reasonText = "Готовність — ${decision.readinessScore}%. Перешкод для тренування немає, можна виконувати звичайний план.",
             actionText = "Відкрити тренування",
-            outcomeText = fallbackMainQuest.rewardText("XP + quest")
+            outcomeText = fallbackMainQuest.rewardText("XP і нагорода за квест")
         )
         TodayTrainingDecisionType.REDUCED_LOAD -> decision.toTrainingOrder(
             fallbackMainQuest = fallbackMainQuest,
-            reasonText = "Readiness ${decision.readinessScore}% або recovery debt ${decision.recoveryDebt.level.displayLabel()}: працюємо легше, без зриву циклу.",
+            reasonText = "Готовність — ${decision.readinessScore}%. Накопичена втома — ${decision.recoveryDebt.level.displayLabel()}. Сьогодні працюємо легше, щоб зберегти ритм.",
             actionText = "Відкрити легкий план",
-            outcomeText = "XP без debt",
+            outcomeText = "XP без перевтоми",
             accent = TodayOrderAccent.WARNING
         )
         TodayTrainingDecisionType.ACTIVE_RECOVERY -> TodayOrderUiModel(
             dayType = TodayOrderDayType.RECOVERY,
-            dayTypeLabel = "Recovery",
-            title = "Recovery Protocol",
-            reason = "Readiness ${decision.readinessScore}% або recovery debt ${decision.recoveryDebt.level.displayLabel()}: силове навантаження сьогодні заблоковано.",
-            primaryActionLabel = "Відкрити recovery",
-            outcomeText = "Recovery + streak",
+            dayTypeLabel = "Відновлення",
+            title = "Активне відновлення",
+            reason = "Через низьку готовність або накопичену втому силове тренування сьогодні не рекомендоване.",
+            primaryActionLabel = "Відкрити відновлення",
+            outcomeText = "Відновлення і серія",
             durationText = fallbackMainQuest.durationText("12 хв"),
             readinessProgress = decision.readinessProgress(),
             actionEnabled = true,
@@ -55,11 +55,11 @@ internal fun TodayTrainingDecision?.toTodayOrderUiModel(
         )
         TodayTrainingDecisionType.NO_EXCUSE -> TodayOrderUiModel(
             dayType = TodayOrderDayType.NO_EXCUSE,
-            dayTypeLabel = "No Excuse",
-            title = "No Excuse Protocol",
+            dayTypeLabel = "Короткий мінімум",
+            title = "Коротке тренування",
             reason = decision.noExcuseReason(),
             primaryActionLabel = "Відкрити 7 хв",
-            outcomeText = "Streak + quest",
+            outcomeText = "Серія і квест",
             durationText = fallbackMainQuest.durationText("7 хв"),
             readinessProgress = decision.readinessProgress(),
             actionEnabled = true,
@@ -67,11 +67,11 @@ internal fun TodayTrainingDecision?.toTodayOrderUiModel(
         )
         TodayTrainingDecisionType.DELOAD -> TodayOrderUiModel(
             dayType = TodayOrderDayType.DELOAD,
-            dayTypeLabel = "Deload",
-            title = "Deload Session",
-            reason = "Recovery debt ${decision.recoveryDebt.level.displayLabel()}: зменшуємо інтенсивність, щоб зберегти цикл.",
-            primaryActionLabel = "Відкрити deload",
-            outcomeText = "Recovery + контроль XP",
+            dayTypeLabel = "Розвантаження",
+            title = "Полегшене тренування",
+            reason = "Накопичена втома — ${decision.recoveryDebt.level.displayLabel()}. Зменшуємо вагу й кількість підходів, щоб відновитися.",
+            primaryActionLabel = "Відкрити легкий план",
+            outcomeText = "Відновлення без втрати ритму",
             durationText = fallbackMainQuest.durationText("30 хв"),
             readinessProgress = decision.readinessProgress(),
             actionEnabled = true,
@@ -79,12 +79,12 @@ internal fun TodayTrainingDecision?.toTodayOrderUiModel(
         )
         TodayTrainingDecisionType.REST -> TodayOrderUiModel(
             dayType = TodayOrderDayType.REST,
-            dayTypeLabel = "Rest",
-            title = "Rest Day",
-            reason = "Календар або recovery debt ставить паузу: сьогодні без силового блоку.",
+            dayTypeLabel = "Відпочинок",
+            title = "День відпочинку",
+            reason = "За календарем або через накопичену втому сьогодні відпочиваємо від силового тренування.",
             primaryActionLabel = "Відкрити план дня",
-            outcomeText = "Recovery без штрафу",
-            durationText = "Rest",
+            outcomeText = "Відновлення без штрафу",
+            durationText = "Відпочинок",
             readinessProgress = decision.readinessProgress(),
             actionEnabled = true,
             accent = TodayOrderAccent.AI
@@ -101,8 +101,8 @@ private fun TodayTrainingDecision.toTrainingOrder(
 ): TodayOrderUiModel =
     TodayOrderUiModel(
         dayType = TodayOrderDayType.TRAINING,
-        dayTypeLabel = "Training",
-        title = workoutName ?: fallbackMainQuest?.title ?: "Workout",
+        dayTypeLabel = "Тренування",
+        title = workoutName ?: fallbackMainQuest?.title ?: "Тренування",
         reason = reasonText,
         primaryActionLabel = actionText,
         outcomeText = outcomeText,
@@ -117,9 +117,9 @@ private fun TodayTrainingDecision.readinessProgress(): Float =
 
 private fun TodayTrainingDecision.noExcuseReason(): String =
     if (reason.contains("missed", ignoreCase = true)) {
-        "Система зафіксувала пропуск. Наступна оптимальна дія: короткий протокол без торгу."
+        "Попереднє тренування пропущено. Сьогодні достатньо короткого тренування, щоб повернутися до ритму."
     } else {
-        "Readiness $readinessScore% нижче плану. Система скорочує дію до мінімального переможного блоку."
+        "Готовність — $readinessScore%. Система пропонує коротке тренування, яке допоможе зберегти ритм."
     }
 
 private fun QuestUiModel?.durationText(fallback: String): String =
@@ -130,8 +130,8 @@ private fun QuestUiModel?.rewardText(fallback: String): String =
 
 private fun RecoveryDebtLevel.displayLabel(): String =
     when (this) {
-        RecoveryDebtLevel.LOW -> "низький"
-        RecoveryDebtLevel.MODERATE -> "помірний"
-        RecoveryDebtLevel.HIGH -> "високий"
-        RecoveryDebtLevel.CRITICAL -> "критичний"
+        RecoveryDebtLevel.LOW -> "низька"
+        RecoveryDebtLevel.MODERATE -> "помірна"
+        RecoveryDebtLevel.HIGH -> "висока"
+        RecoveryDebtLevel.CRITICAL -> "критична"
     }

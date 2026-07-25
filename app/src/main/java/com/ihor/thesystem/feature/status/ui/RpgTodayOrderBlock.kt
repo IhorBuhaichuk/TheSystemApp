@@ -79,23 +79,12 @@ internal fun TodayOrderBlock(
                 shape = cardShape,
                 active = true,
                 accent = accent,
-                role = TechSurfaceRole.Panel
+                role = TechSurfaceRole.Hero
             )
     ) {
         val compact = maxWidth < 360.dp || LocalDensity.current.fontScale >= 1.2f
         val horizontalPadding = if (compact) 16.dp else 26.dp
 
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(accent.copy(alpha = 0.16f), Color.Transparent),
-                    center = Offset(size.width * 0.72f, size.height * 0.16f),
-                    radius = size.width * 0.42f
-                ),
-                radius = size.width * 0.42f,
-                center = Offset(size.width * 0.72f, size.height * 0.16f)
-            )
-        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -120,14 +109,14 @@ internal fun TodayOrderBlock(
                     verticalArrangement = Arrangement.Top
                 ) {
                     Text(
-                        text = "Today order / ${order.dayTypeLabel.toSystemSentenceCase()}",
+                        text = "План на сьогодні · ${order.dayTypeLabel.toSystemSentenceCase()}",
                         style = MaterialTheme.typography.labelLarge.copy(
                             color = accent,
                             fontFamily = SystemDisplayFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize = if (compact) 12.sp else 14.sp,
                             lineHeight = if (compact) 14.sp else 16.sp,
-                            letterSpacing = if (compact) 1.2.sp else 2.2.sp
+                            letterSpacing = if (compact) 0.8.sp else 1.2.sp
                         ),
                         maxLines = if (compact) 3 else 2,
                         overflow = TextOverflow.Ellipsis
@@ -155,7 +144,7 @@ internal fun TodayOrderBlock(
                             fontSize = if (compact) 13.sp else 14.sp,
                             lineHeight = if (compact) 17.sp else 18.sp
                         ),
-                        maxLines = if (compact) 5 else 3,
+                        maxLines = if (compact) 5 else 4,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -182,7 +171,7 @@ internal fun TodayOrderBlock(
                     compact = compact,
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = if (compact) 72.dp else 58.dp)
+                        .heightIn(min = if (compact) 72.dp else 64.dp)
                 ) {
                     QuestClockBadge(accent = colors.textSecondary)
                 }
@@ -193,7 +182,7 @@ internal fun TodayOrderBlock(
                     compact = compact,
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = if (compact) 72.dp else 58.dp)
+                        .heightIn(min = if (compact) 72.dp else 64.dp)
                 ) {
                     QuestXpBadge(accent = accent)
                 }
@@ -262,10 +251,10 @@ private fun QuestMetric(
                 style = MaterialTheme.typography.titleSmall.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = if (compact) 14.sp else 17.sp,
-                    lineHeight = if (compact) 17.sp else 19.sp
+                    fontSize = if (compact) 13.sp else 15.sp,
+                    lineHeight = if (compact) 16.sp else 18.sp
                 ),
-                maxLines = if (compact) 3 else 2,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
@@ -339,7 +328,7 @@ private fun QuestReadinessRing(
     val colors = SystemTheme.colors
     val motion = SystemTheme.motion
     val clamped = progress.coerceIn(0f, 1f)
-    val animatedProgress by animateFloatAsState(
+    val animatedProgress = animateFloatAsState(
         targetValue = clamped,
         animationSpec = tween(
             durationMillis = motion.progressMillis,
@@ -357,20 +346,16 @@ private fun QuestReadinessRing(
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val drawnProgress = animatedProgress.coerceIn(0f, 1f)
-            val stroke = if (compact) 8.dp.toPx() else 9.dp.toPx()
+            val drawnProgress = animatedProgress.value.coerceIn(0f, 1f)
+            val stroke = if (compact) 9.dp.toPx() else 10.dp.toPx()
             val inset = stroke / 2f
             val arcSize = Size(size.width - stroke, size.height - stroke)
-            val segmentCount = 44
-            val step = 360f / segmentCount
-            val segmentSweep = step - 2.15f
-            val activeSegments = (drawnProgress * segmentCount).toInt()
 
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        colors.overlayMedium.copy(alpha = 0.10f),
-                        colors.background.copy(alpha = 0.84f)
+                        colors.overlayMedium.copy(alpha = 0.08f),
+                        colors.background.copy(alpha = 0.70f)
                     ),
                     center = Offset(size.width * 0.42f, size.height * 0.34f),
                     radius = size.minDimension * 0.40f
@@ -379,53 +364,43 @@ private fun QuestReadinessRing(
                 center = center
             )
             drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(accent.copy(alpha = 0.13f), Color.Transparent),
-                    radius = size.minDimension * 0.55f
-                ),
+                color = colors.borderSubtle.copy(alpha = 0.13f),
                 radius = size.minDimension * 0.48f,
-                center = center
-            )
-            drawCircle(
-                color = colors.borderMuted.copy(alpha = 0.60f),
-                radius = size.minDimension * 0.485f,
                 center = center,
                 style = Stroke(width = 0.8.dp.toPx())
             )
 
-            repeat(segmentCount) { index ->
+            drawArc(
+                color = colors.borderMuted.copy(alpha = 0.18f),
+                startAngle = -90f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = Offset(inset, inset),
+                size = arcSize,
+                style = Stroke(width = stroke, cap = StrokeCap.Round)
+            )
+            if (drawnProgress > 0f) {
                 drawArc(
-                    color = colors.borderMuted.copy(alpha = if (index % 4 == 0) 0.52f else 0.30f),
-                    startAngle = -90f + index * step,
-                    sweepAngle = segmentSweep,
+                    brush = if (accent == colors.accentAi) {
+                        Brush.sweepGradient(
+                            listOf(colors.accentPrimary, colors.accentAi, colors.accentPrimary)
+                        )
+                    } else {
+                        Brush.sweepGradient(
+                            listOf(accent.copy(alpha = 0.72f), accent, accent.copy(alpha = 0.72f))
+                        )
+                    },
+                    startAngle = -90f,
+                    sweepAngle = 360f * drawnProgress,
                     useCenter = false,
                     topLeft = Offset(inset, inset),
                     size = arcSize,
-                    style = Stroke(width = stroke, cap = StrokeCap.Butt)
+                    style = Stroke(width = stroke, cap = StrokeCap.Round)
                 )
-                if (index < activeSegments) {
-                    val segmentColor = if (
-                        accent == colors.accentAi &&
-                        index < segmentCount * 0.30f
-                    ) {
-                        colors.accentPrimary
-                    } else {
-                        accent
-                    }
-                    drawArc(
-                        color = segmentColor.copy(alpha = if (index % 5 == 0) 1f else 0.88f),
-                        startAngle = -90f + index * step,
-                        sweepAngle = segmentSweep,
-                        useCenter = false,
-                        topLeft = Offset(inset, inset),
-                        size = arcSize,
-                        style = Stroke(width = stroke, cap = StrokeCap.Butt)
-                    )
-                }
             }
 
             drawArc(
-                color = colors.textPrimary.copy(alpha = 0.30f),
+                color = colors.textPrimary.copy(alpha = 0.22f),
                 startAngle = 212f,
                 sweepAngle = 50f,
                 useCenter = false,
@@ -439,9 +414,9 @@ private fun QuestReadinessRing(
             drawCircle(
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        colors.textPrimary.copy(alpha = 0.34f),
-                        colors.borderMuted.copy(alpha = 0.54f),
-                        colors.background.copy(alpha = 0.82f)
+                        colors.textPrimary.copy(alpha = 0.20f),
+                        colors.borderMuted.copy(alpha = 0.20f),
+                        colors.background.copy(alpha = 0.68f)
                     ),
                     start = Offset.Zero,
                     end = Offset(size.width, size.height)
@@ -450,7 +425,7 @@ private fun QuestReadinessRing(
                 style = Stroke(width = 1.dp.toPx())
             )
             drawCircle(
-                color = accent.copy(alpha = 0.11f),
+                color = accent.copy(alpha = 0.07f),
                 radius = size.minDimension * 0.305f
             )
         }
