@@ -90,13 +90,13 @@ private fun BetaMetrics.toUiModel(): BetaMetricsUiModel =
 
 private fun TodayTrainingDecisionType.betaLabel(): String =
     when (this) {
-        TodayTrainingDecisionType.PROGRESS_ALLOWED -> "training+"
-        TodayTrainingDecisionType.STANDARD_TRAINING -> "training"
-        TodayTrainingDecisionType.REDUCED_LOAD -> "reduced"
-        TodayTrainingDecisionType.ACTIVE_RECOVERY -> "recovery"
-        TodayTrainingDecisionType.NO_EXCUSE -> "no excuse"
-        TodayTrainingDecisionType.DELOAD -> "deload"
-        TodayTrainingDecisionType.REST -> "rest"
+        TodayTrainingDecisionType.PROGRESS_ALLOWED -> "Посилене тренування"
+        TodayTrainingDecisionType.STANDARD_TRAINING -> "Звичайне тренування"
+        TodayTrainingDecisionType.REDUCED_LOAD -> "Легше тренування"
+        TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Відновлення"
+        TodayTrainingDecisionType.NO_EXCUSE -> "Коротке тренування"
+        TodayTrainingDecisionType.DELOAD -> "Розвантаження"
+        TodayTrainingDecisionType.REST -> "Відпочинок"
     }
 
 private fun shortDayLabel(dayOfWeekValue: Int): String = when (dayOfWeekValue) {

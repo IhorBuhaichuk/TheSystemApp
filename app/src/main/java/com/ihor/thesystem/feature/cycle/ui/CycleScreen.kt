@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -52,6 +53,7 @@ import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.SystemUiTestTags
+import com.ihor.thesystem.core.ui.toUserFacingWorkoutName
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
@@ -196,9 +198,9 @@ private fun SystemOverviewPanel(
     val totalDays = cycleDays.size.coerceAtLeast(1)
     val workoutDays = cycleDays.count { it.type == DayType.WORKOUT }
     val phaseLabel = if ((activeWorkout?.exercises?.isNotEmpty() == true) || workoutDays > 0) {
-        "Build"
+        "Розвиток"
     } else {
-        "Recovery"
+        "Відновлення"
     }
 
     SystemPanel(
@@ -323,13 +325,15 @@ private fun ActiveCyclePanel(
     val activeDay = cycleDays.firstOrNull { it.isActive }?.dayNumber ?: activeWorkout?.dayNumber ?: selectedDay?.dayNumber ?: 1
     val totalDays = cycleDays.size.coerceAtLeast(1)
     val workoutDays = cycleDays.count { it.type == DayType.WORKOUT }
-    val cycleName = activeWorkout?.workoutName
+    val cycleName = (activeWorkout?.workoutName
         ?: selectedDay?.workoutName
-        ?: if (workoutDays > 1) "Full Body / Workout A-B" else "Full Body"
-    val nextWorkout = activeWorkout?.workoutName
+        ?: if (workoutDays > 1) "Full Body / Workout A-B" else "Full Body")
+        .toUserFacingWorkoutName()
+    val nextWorkout = (activeWorkout?.workoutName
         ?: cycleDays.firstOrNull { it.type == DayType.WORKOUT && it.isActive }?.workoutName
         ?: selectedDay?.workoutName
-        ?: "Workout ${activeDay.toWorkoutLetter()}"
+        ?: "Тренування ${activeDay.toWorkoutLetter()}")
+        .toUserFacingWorkoutName()
     val progressLabel = statusData?.let { data ->
         "${data.monthWorkoutsCompleted} / ${data.monthWorkoutsTotal.coerceAtLeast(1)}"
     } ?: "$workoutDays / $totalDays"
@@ -424,7 +428,8 @@ private fun ActiveCycleDetails(
             icon = Icons.AutoMirrored.Filled.ArrowForward,
             label = "Наступне тренування",
             value = nextWorkout,
-            compact = compact
+            compact = compact,
+            stacked = true
         )
     }
 }
@@ -503,7 +508,8 @@ private fun CycleDetailLine(
     label: String,
     value: String,
     accent: Color? = null,
-    compact: Boolean = false
+    compact: Boolean = false,
+    stacked: Boolean = false
 ) {
     val colors = SystemTheme.colors
     val iconTint = accent ?: colors.textSecondary
@@ -518,7 +524,7 @@ private fun CycleDetailLine(
             tint = iconTint,
             modifier = Modifier.size(19.dp)
         )
-        if (compact) {
+        if (compact || stacked) {
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(1.dp)
@@ -613,7 +619,7 @@ private fun CycleDayChip(
     }
     val subtitle = when {
         day.isActive -> "Сьогодні"
-        day.workoutName != null -> day.workoutName
+        day.workoutName != null -> day.workoutName.toUserFacingWorkoutName()
         day.type == DayType.WORKOUT -> "Тренування"
         else -> "Відновлення"
     }
@@ -650,11 +656,12 @@ private fun CycleDayChip(
             text = if (day.type == DayType.WORKOUT) {
                 day.dayNumber.toWorkoutLetter()
             } else {
-                "R"
+                "Пауза"
             },
             style = MaterialTheme.typography.headlineMedium.copy(
                 color = if (day.isSelected || day.isActive) colors.textPrimary else colors.textSecondary,
-                fontWeight = FontWeight.Black
+                fontWeight = FontWeight.Black,
+                fontSize = if (day.type == DayType.WORKOUT) 30.sp else 15.sp
             ),
             maxLines = 1
         )
@@ -672,9 +679,9 @@ private fun CycleDayChip(
 
 private fun Int.toWorkoutLetter(): String =
     when (this) {
-        1 -> "A"
-        2 -> "B"
-        3 -> "C"
+        1 -> "А"
+        2 -> "Б"
+        3 -> "В"
         else -> toString()
     }
 
@@ -822,7 +829,7 @@ private fun ParametersAndBonusesPanel(data: StatusUiData) {
                 SystemSectionTitle(title = "Активні бонуси")
                 BonusLine(text = "Серія ${data.currentStreak} днів", value = "+${(data.currentStreak * 2).coerceAtMost(20)}% XP")
                 BonusLine(text = "Планувальник", value = "${data.todos.count { it.isCompleted }}/${data.todos.size.coerceAtLeast(1)}")
-                BonusLine(text = "Рівень ${data.level}", value = "R${data.globalRank.name}")
+                BonusLine(text = "Рівень ${data.level}", value = "Ранг ${data.globalRank.name}")
             }
         }
     }
@@ -953,7 +960,7 @@ private fun ArchitectCalloutPanel(
                 )
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     SystemSectionTitle(
-                        title = "AI-Архітектор",
+                        title = "ШІ-архітектор",
                         subtitle = "Система може проаналізувати прогрес і запропонувати наступний крок."
                     )
                 }

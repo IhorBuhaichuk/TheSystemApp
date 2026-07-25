@@ -93,10 +93,10 @@ animation behavior; remove or replace only decorative work that is proven unnece
 | 1 | Shared tonal surfaces and tokens | Complete | `SystemTokens.kt`, `SystemPanels.kt` |
 | 2 | Shared interaction and progress motion | In progress | `SystemMotion.kt`, `SystemGlassComponents.kt`, `SystemBottomNavBar.kt` |
 | 3 | Status | In progress | `StatusScreen.kt`, `RpgStatusDashboard.kt`, `RpgTodayOrderBlock.kt`, `RpgTodoBlock.kt` |
-| 4 | Calendar | Pending | `CalendarScreen.kt` |
-| 5 | System/Cycle | Pending | `CycleScreen.kt` |
-| 6 | Statistics | Pending | `StatisticsScreen.kt`, overview sections, chart components |
-| 7 | Profile | Pending | `ProfileScreen.kt` |
+| 4 | Calendar | In progress | `CalendarScreen.kt` |
+| 5 | System/Cycle | In progress | `CycleScreen.kt` |
+| 6 | Statistics | In progress | `StatisticsScreen.kt`, overview sections, chart components |
+| 7 | Profile | In progress | `ProfileScreen.kt` |
 | 8 | Dialogs and state panels | Pending | shared dialogs and changed workout/report dialogs |
 | 9 | Accessibility/performance regression | Pending | tests and screenshot artifacts |
 | 10 | Plain-language Ukrainian copy | In progress | presentation mappers, top-level screens, dialogs |
@@ -134,6 +134,9 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - 2026-07-26: User-facing copy is a dedicated track. Translate at presentation
   boundaries; do not rename persisted template titles, enum values, JSON keys, or
   Room data. XP and product names may remain only where they are established terms.
+- 2026-07-26: Known system workout titles use a presentation mapper. Custom names
+  remain unchanged. The top-level System and Statistics screenshots are stored as
+  `slice-2-system.png` and `slice-2-statistics.png`.
 
 ## Current checkpoint
 

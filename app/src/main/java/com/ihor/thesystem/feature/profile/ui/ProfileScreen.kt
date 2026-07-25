@@ -439,7 +439,7 @@ private fun SettingsPanel(
             SystemSectionTitle(title = "Налаштування")
             SystemSettingsRow(
                 title = "Налаштування тренувань",
-                subtitle = "Цикл, вправи, обладнання, Health Connect, backup",
+                subtitle = "Цикл, вправи, обладнання, дані сну та резервна копія",
                 icon = Icons.Filled.FitnessCenter,
                 accent = colors.accentPrimary,
                 onClick = onOpenWorkoutSettings

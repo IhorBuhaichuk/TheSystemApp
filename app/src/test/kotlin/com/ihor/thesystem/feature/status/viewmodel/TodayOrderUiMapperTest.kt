@@ -24,7 +24,7 @@ class TodayOrderUiMapperTest {
 
         assertEquals(TodayOrderDayType.TRAINING, order.dayType)
         assertEquals("Тренування", order.dayTypeLabel)
-        assertEquals("Workout A", order.title)
+        assertEquals("Тренування А", order.title)
         assertEquals("Готовність — 72%. Перешкод для тренування немає, можна виконувати звичайний план.", order.reason)
         assertEquals("Відкрити тренування", order.primaryActionLabel)
         assertEquals("+75 XP", order.outcomeText)
@@ -96,7 +96,7 @@ class TodayOrderUiMapperTest {
 
         assertEquals(TodayOrderDayType.TRAINING, order.dayType)
         assertEquals("Тренування", order.dayTypeLabel)
-        assertEquals("Workout B", order.title)
+        assertEquals("Тренування Б", order.title)
         assertTrue(order.reason.contains("Показник готовності ще оновлюється"))
         assertEquals("План формується", order.primaryActionLabel)
         assertEquals("+60 XP", order.outcomeText)

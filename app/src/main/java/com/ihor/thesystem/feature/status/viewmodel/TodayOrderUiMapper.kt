@@ -1,5 +1,6 @@
 package com.ihor.thesystem.feature.status.viewmodel
 
+import com.ihor.thesystem.core.ui.toUserFacingWorkoutName
 import com.ihor.thesystem.domain.model.RecoveryDebtLevel
 import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
@@ -10,7 +11,8 @@ internal fun TodayTrainingDecision?.toTodayOrderUiModel(
     val decision = this ?: return TodayOrderUiModel(
         dayType = TodayOrderDayType.TRAINING,
         dayTypeLabel = "Тренування",
-        title = fallbackMainQuest?.title ?: "План синхронізується",
+        title = fallbackMainQuest?.title?.toUserFacingWorkoutName()
+            ?: "План синхронізується",
         reason = "Показник готовності ще оновлюється. Поки показано звичайний план без підвищення навантаження.",
         primaryActionLabel = "План формується",
         outcomeText = fallbackMainQuest.rewardText("Безпечний варіант"),
@@ -102,7 +104,8 @@ private fun TodayTrainingDecision.toTrainingOrder(
     TodayOrderUiModel(
         dayType = TodayOrderDayType.TRAINING,
         dayTypeLabel = "Тренування",
-        title = workoutName ?: fallbackMainQuest?.title ?: "Тренування",
+        title = (workoutName ?: fallbackMainQuest?.title)?.toUserFacingWorkoutName()
+            ?: "Тренування",
         reason = reasonText,
         primaryActionLabel = actionText,
         outcomeText = outcomeText,

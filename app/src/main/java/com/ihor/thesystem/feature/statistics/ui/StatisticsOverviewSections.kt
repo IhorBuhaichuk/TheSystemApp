@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -96,8 +97,8 @@ fun BetaMetricsBlock(metrics: BetaMetricsUiModel) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Beta metrics",
-                subtitle = "Локальні сигнали без сторонньої аналітики",
+                title = "Використання застосунку",
+                subtitle = "Основні дії та регулярність",
                 icon = Icons.Filled.Settings,
                 accent = colors.accentAi
             )
@@ -107,23 +108,23 @@ fun BetaMetricsBlock(metrics: BetaMetricsUiModel) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 SummaryMetricCell(
-                    label = "Onboarding",
-                    value = if (metrics.onboardingCompleted) "Ok" else "-",
-                    subtitle = "first setup",
+                    label = "Початкове налаштування",
+                    value = if (metrics.onboardingCompleted) "Так" else "Ні",
+                    subtitle = "завершено",
                     accent = if (metrics.onboardingCompleted) colors.accentSuccess else colors.textMuted,
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetricCell(
-                    label = "First log",
-                    value = if (metrics.firstWorkoutLogged) "Ok" else "-",
-                    subtitle = "workout",
+                    label = "Перше тренування",
+                    value = if (metrics.firstWorkoutLogged) "Так" else "Ні",
+                    subtitle = "записано",
                     accent = if (metrics.firstWorkoutLogged) colors.accentPrimary else colors.textMuted,
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetricCell(
-                    label = "Opened",
+                    label = "Дні використання",
                     value = metrics.daysAppOpenedOrRefreshed.toString(),
-                    subtitle = "days",
+                    subtitle = "усього",
                     accent = colors.accentAi,
                     modifier = Modifier.weight(1f)
                 )
@@ -134,23 +135,23 @@ fun BetaMetricsBlock(metrics: BetaMetricsUiModel) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 SummaryMetricCell(
-                    label = "Plan done",
+                    label = "За планом",
                     value = metrics.plannedCompletedThisWeek.toString(),
-                    subtitle = "this week",
+                    subtitle = "цього тижня",
                     accent = colors.accentSuccess,
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetricCell(
-                    label = "Plan missed",
+                    label = "Пропущено",
                     value = metrics.plannedMissedThisWeek.toString(),
-                    subtitle = "this week",
+                    subtitle = "цього тижня",
                     accent = if (metrics.plannedMissedThisWeek > 0) colors.accentWarning else colors.textMuted,
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetricCell(
-                    label = "Streak",
+                    label = "Серія",
                     value = metrics.currentStreak.toString(),
-                    subtitle = "days",
+                    subtitle = "днів",
                     accent = colors.accentWarning,
                     modifier = Modifier.weight(1f)
                 )
@@ -170,7 +171,7 @@ fun BetaMetricsBlock(metrics: BetaMetricsUiModel) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Today Order distribution",
+                        text = "Як змінювався план на сьогодні",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = colors.textSecondary,
                             fontWeight = FontWeight.Bold
@@ -215,7 +216,7 @@ fun NutritionFloorBlock(status: NutritionFloorStatus) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Нутриціологічна база",
+                title = "Основи харчування",
                 subtitle = "Без калорій і бази продуктів"
             )
             Row(
@@ -225,7 +226,7 @@ fun NutritionFloorBlock(status: NutritionFloorStatus) {
                 SummaryMetricCell(
                     label = "Білок",
                     value = status.proteinStatus.shortLabel(),
-                    subtitle = "денний floor",
+                    subtitle = "денна норма",
                     accent = status.proteinStatus.statusAccent(colors),
                     modifier = Modifier.weight(1f)
                 )
@@ -242,7 +243,7 @@ fun NutritionFloorBlock(status: NutritionFloorStatus) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 SummaryMetricCell(
-                    label = "7-day avg",
+                    label = "Середнє за 7 днів",
                     value = status.weeklyWeightAverage?.formatWeightAverage() ?: "-",
                     subtitle = status.trend.label(),
                     accent = status.trend.trendAccent(colors),
@@ -281,7 +282,7 @@ private fun SummaryMetricCell(
     val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Column(
         modifier = modifier
-            .height(92.dp)
+            .heightIn(min = 104.dp)
             .techSurface(
                 shape = shape,
                 active = false,
@@ -297,7 +298,7 @@ private fun SummaryMetricCell(
                 color = colors.textSecondary,
                 fontWeight = FontWeight.Bold
             ),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
         Text(
@@ -306,7 +307,7 @@ private fun SummaryMetricCell(
                 color = colors.textPrimary,
                 fontWeight = FontWeight.Black
             ),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
         Text(
@@ -330,11 +331,11 @@ fun ProgressProofsBlock(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Доказ прогресу",
-                subtitle = "Короткі факти з логів"
+            subtitle = "Короткі факти із записаних тренувань"
             )
 
             if (proofs.isEmpty()) {
-                EmptyAnalyticsMessage(text = "Поки недостатньо логів для порівняння.")
+                EmptyAnalyticsMessage(text = "Поки недостатньо записаних тренувань для порівняння.")
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     proofs.take(3).forEach { proof ->
@@ -440,7 +441,7 @@ fun WeeklySystemReportBlock(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Тижневий звіт системи",
-                subtitle = "Детермінований підсумок",
+            subtitle = "Підсумок за вашими даними",
                 icon = Icons.Filled.AutoAwesome,
                 accent = colors.accentAi
             )
@@ -508,8 +509,8 @@ private fun ProgressProofUiModel.proofAccent(colors: SystemColorTokens): Color =
 
 private fun NutritionFloorTargetStatus.shortLabel(): String =
     when (this) {
-        NutritionFloorTargetStatus.HIT -> "Ok"
-        NutritionFloorTargetStatus.MISSED -> "Miss"
+        NutritionFloorTargetStatus.HIT -> "Виконано"
+        NutritionFloorTargetStatus.MISSED -> "Не виконано"
         NutritionFloorTargetStatus.UNKNOWN -> "-"
     }
 
@@ -529,9 +530,9 @@ private fun NutritionGoalMode.shortLabel(): String =
 
 private fun WeightTrend.label(): String =
     when (this) {
-        WeightTrend.DOWN -> "trend down"
-        WeightTrend.STABLE -> "stable"
-        WeightTrend.UP -> "trend up"
+        WeightTrend.DOWN -> "Знижується"
+        WeightTrend.STABLE -> "Без змін"
+        WeightTrend.UP -> "Зростає"
     }
 
 private fun WeightTrend.trendAccent(colors: SystemColorTokens): Color =

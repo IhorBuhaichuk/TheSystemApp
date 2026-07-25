@@ -598,7 +598,7 @@ private fun SelectedDayDetailsPanel(
                 }
                 if (day.totalTasks > 0) {
                     CalendarEventRow(
-                        title = "To-do",
+                    title = "Завдання",
                         subtitle = "${day.completedTasks}/${day.totalTasks} виконано",
                         meta = day.completionStatus.toDisplayText(),
                         icon = Icons.AutoMirrored.Filled.ListAlt,

@@ -146,7 +146,7 @@ private fun AnalyticsHeader() {
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
-                text = "4. Statistics",
+                        text = "Статистика",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Black
