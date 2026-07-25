@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,9 +37,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.components.SystemHexagonShape
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
 import com.ihor.thesystem.core.ui.components.systemLargePanelShape
@@ -55,10 +59,11 @@ internal fun TodayOrderBlock(
     val title = order.title.uppercase()
     val cardShape = systemLargePanelShape()
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .height(334.dp)
+            .heightIn(min = 334.dp)
+            .testTag(SystemUiTestTags.TODAY_ORDER)
             .techSurface(
                 shape = cardShape,
                 active = true,
@@ -66,6 +71,9 @@ internal fun TodayOrderBlock(
                 role = TechSurfaceRole.Panel
             )
     ) {
+        val compact = maxWidth < 360.dp
+        val horizontalPadding = if (compact) 16.dp else 26.dp
+
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(
                 brush = Brush.radialGradient(
@@ -79,14 +87,19 @@ internal fun TodayOrderBlock(
         }
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 26.dp, top = 30.dp, end = 26.dp, bottom = 22.dp)
+                .fillMaxWidth()
+                .padding(
+                    start = horizontalPadding,
+                    top = if (compact) 24.dp else 30.dp,
+                    end = horizontalPadding,
+                    bottom = 22.dp
+                )
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(146.dp),
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
+                    .heightIn(min = if (compact) 184.dp else 146.dp),
+                horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 18.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 Column(
@@ -101,11 +114,11 @@ internal fun TodayOrderBlock(
                             color = accent,
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            lineHeight = 16.sp,
-                            letterSpacing = 2.2.sp
+                            fontSize = if (compact) 12.sp else 14.sp,
+                            lineHeight = if (compact) 14.sp else 16.sp,
+                            letterSpacing = if (compact) 1.2.sp else 2.2.sp
                         ),
-                        maxLines = 1,
+                        maxLines = if (compact) 3 else 2,
                         overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -115,11 +128,11 @@ internal fun TodayOrderBlock(
                             color = colors.textPrimary,
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Black,
-                            fontSize = 31.sp,
-                            lineHeight = 33.sp,
+                            fontSize = if (compact) 27.sp else 31.sp,
+                            lineHeight = if (compact) 29.sp else 33.sp,
                             letterSpacing = 0.sp
                         ),
-                        maxLines = 1,
+                        maxLines = if (compact) 3 else 2,
                         overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -128,10 +141,10 @@ internal fun TodayOrderBlock(
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = colors.textSecondary,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            lineHeight = 18.sp
+                            fontSize = if (compact) 13.sp else 14.sp,
+                            lineHeight = if (compact) 17.sp else 18.sp
                         ),
-                        maxLines = 3,
+                        maxLines = if (compact) 5 else 3,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -139,24 +152,26 @@ internal fun TodayOrderBlock(
                 QuestReadinessRing(
                     progress = order.readinessProgress,
                     accent = accent,
+                    compact = compact,
                     modifier = Modifier
                         .padding(top = 6.dp)
-                        .size(110.dp)
+                        .size(if (compact) 96.dp else 110.dp)
                 )
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 QuestMetric(
                     value = order.durationText,
                     label = order.durationLabel,
                     accent = colors.textSecondary,
+                    compact = compact,
                     modifier = Modifier
                         .weight(1f)
-                        .height(58.dp)
+                        .heightIn(min = if (compact) 72.dp else 58.dp)
                 ) {
                     QuestClockBadge(accent = colors.textSecondary)
                 }
@@ -164,9 +179,10 @@ internal fun TodayOrderBlock(
                     value = order.outcomeText,
                     label = order.outcomeLabel,
                     accent = accent,
+                    compact = compact,
                     modifier = Modifier
                         .weight(1f)
-                        .height(58.dp)
+                        .heightIn(min = if (compact) 72.dp else 58.dp)
                 ) {
                     QuestXpBadge(accent = accent)
                 }
@@ -201,6 +217,7 @@ private fun QuestMetric(
     value: String,
     label: String,
     accent: Color,
+    compact: Boolean,
     modifier: Modifier = Modifier,
     icon: @Composable () -> Unit
 ) {
@@ -214,13 +231,13 @@ private fun QuestMetric(
                 accent = accent,
                 role = TechSurfaceRole.Plate
             )
-            .padding(horizontal = 22.dp),
-        horizontalArrangement = Arrangement.spacedBy(13.dp),
+            .padding(horizontal = if (compact) 8.dp else 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(29.dp)
+                .size(if (compact) 25.dp else 29.dp)
                 .clip(SystemHexagonShape())
                 .background(Color.Black.copy(alpha = 0.24f))
                 .border(1.dp, colors.overlayStrong.copy(alpha = 0.70f), SystemHexagonShape()),
@@ -234,10 +251,10 @@ private fun QuestMetric(
                 style = MaterialTheme.typography.titleSmall.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 17.sp,
-                    lineHeight = 19.sp
+                    fontSize = if (compact) 14.sp else 17.sp,
+                    lineHeight = if (compact) 17.sp else 19.sp
                 ),
-                maxLines = 1,
+                maxLines = if (compact) 3 else 2,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
@@ -245,11 +262,11 @@ private fun QuestMetric(
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 9.sp,
-                    lineHeight = 11.sp,
-                    letterSpacing = 0.6.sp
+                    fontSize = if (compact) 8.sp else 9.sp,
+                    lineHeight = if (compact) 10.sp else 11.sp,
+                    letterSpacing = if (compact) 0.3.sp else 0.6.sp
                 ),
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
@@ -305,6 +322,7 @@ private fun QuestXpBadge(accent: Color) {
 private fun QuestReadinessRing(
     progress: Float,
     accent: Color,
+    compact: Boolean,
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
@@ -354,8 +372,8 @@ private fun QuestReadinessRing(
                     color = colors.textPrimary,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Black,
-                    fontSize = 34.sp,
-                    lineHeight = 35.sp,
+                    fontSize = if (compact) 29.sp else 34.sp,
+                    lineHeight = if (compact) 31.sp else 35.sp,
                     textAlign = TextAlign.Center
                 )
             )
@@ -364,9 +382,9 @@ private fun QuestReadinessRing(
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp,
-                    lineHeight = 13.sp,
-                    letterSpacing = 0.7.sp,
+                    fontSize = if (compact) 8.sp else 11.sp,
+                    lineHeight = if (compact) 10.sp else 13.sp,
+                    letterSpacing = if (compact) 0.2.sp else 0.7.sp,
                     textAlign = TextAlign.Center
                 ),
                 maxLines = 1,
@@ -388,7 +406,8 @@ private fun QuestPrimaryButton(
     val shape = RoundedCornerShape(14.dp)
     Box(
         modifier = modifier
-            .height(58.dp)
+            .heightIn(min = 58.dp)
+            .testTag(SystemUiTestTags.TODAY_ORDER_CTA)
             .techSurface(
                 shape = shape,
                 active = enabled,
@@ -420,7 +439,7 @@ private fun QuestPrimaryButton(
                 letterSpacing = 0.6.sp,
                 textAlign = TextAlign.Center
             ),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
         Icon(

@@ -7,15 +7,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,6 +46,7 @@ import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
+import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.SystemAvatarBadge
 import com.ihor.thesystem.core.ui.components.SystemMetricBlock
@@ -160,8 +163,7 @@ private fun ProfileDashboard(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .statusBarsPadding()
-            .navigationBarsPadding()
+            .testTag(SystemUiTestTags.PROFILE_SCROLL)
             .padding(horizontal = SystemScreenPadding)
             .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
@@ -204,81 +206,121 @@ private fun ProfileHeroPanel(
         0f
     }.coerceIn(0f, 1f)
 
-    SystemPanel(active = true, modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(SystemCardPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SystemAvatarBadge(
-                avatarUri = statusData.avatarUri,
-                modifier = Modifier.size(132.dp),
-                onClick = {
-                    photoPickerLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+    SystemPanel(
+        active = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(SystemUiTestTags.PROFILE_HERO)
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val compact = maxWidth < 400.dp
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(SystemCardPadding),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SystemAvatarBadge(
+                        avatarUri = statusData.avatarUri,
+                        modifier = Modifier.size(if (compact) 104.dp else 132.dp),
+                        onClick = {
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
                     )
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        SystemSectionTitle(title = "Профіль")
+                        Text(
+                            text = statusData.playerName.uppercase(),
+                            modifier = Modifier.clickable(onClick = onEditName),
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                color = colors.textPrimary,
+                                fontWeight = FontWeight.Black
+                            ),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Мисливець рангу ${statusData.globalRank.name}",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = colors.textSecondary,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (!compact) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                RankMiniBox(
+                                    label = "Ранг",
+                                    value = statusData.globalRank.name,
+                                    modifier = Modifier.width(86.dp)
+                                )
+                                RankMiniBox(
+                                    label = "Рівень",
+                                    value = statusData.level.toString(),
+                                    modifier = Modifier.width(86.dp)
+                                )
+                            }
+                        }
+                    }
                 }
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SystemSectionTitle(title = "Профіль")
-                Text(
-                    text = statusData.playerName.uppercase(),
-                    modifier = Modifier.clickable(onClick = onEditName),
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        color = colors.textPrimary,
-                        fontWeight = FontWeight.Black
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "Мисливець рангу ${statusData.globalRank.name}",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = colors.textSecondary,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    RankMiniBox(label = "Ранг", value = statusData.globalRank.name)
-                    RankMiniBox(label = "Рівень", value = statusData.level.toString())
-                }
-            }
-        }
 
-        Column(
-            modifier = Modifier.padding(top = SystemCardPadding),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "${statusData.xpTotal} / ${statusData.xpMax} XP",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = colors.accentPrimary,
-                        fontWeight = FontWeight.Black
+                if (compact) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = SystemCardPadding),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        RankMiniBox(
+                            label = "Ранг",
+                            value = statusData.globalRank.name,
+                            modifier = Modifier.weight(1f)
+                        )
+                        RankMiniBox(
+                            label = "Рівень",
+                            value = statusData.level.toString(),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.padding(top = SystemCardPadding),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "${statusData.xpTotal} / ${statusData.xpMax} XP",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = colors.accentPrimary,
+                                fontWeight = FontWeight.Black
+                            )
+                        )
+                        Text(
+                            text = "${(progress * 100).roundToInt()}%",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = colors.textSecondary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+                    SystemProgressBar(
+                        progress = progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
                     )
-                )
-                Text(
-                    text = "${(progress * 100).roundToInt()}%",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = colors.textSecondary,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
+                }
             }
-            SystemProgressBar(
-                progress = progress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-            )
         }
     }
 }
@@ -286,12 +328,13 @@ private fun ProfileHeroPanel(
 @Composable
 private fun RankMiniBox(
     label: String,
-    value: String
+    value: String,
+    modifier: Modifier = Modifier
 ) {
     SystemMetricBlock(
         label = label,
         value = value,
-        modifier = Modifier.size(width = 86.dp, height = 74.dp)
+        modifier = modifier.heightIn(min = 74.dp)
     )
 }
 

@@ -5,16 +5,16 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -39,7 +39,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,6 +52,7 @@ import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
+import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
@@ -112,8 +115,7 @@ fun CycleScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .statusBarsPadding()
-                .navigationBarsPadding()
+                .testTag(SystemUiTestTags.CYCLE_SCROLL)
                 .padding(horizontal = SystemScreenPadding)
                 .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
             verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
@@ -196,7 +198,12 @@ private fun SystemOverviewPanel(
         "Recovery"
     }
 
-    SystemPanel(modifier = Modifier.fillMaxWidth(), active = true) {
+    SystemPanel(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(SystemUiTestTags.CYCLE_OVERVIEW),
+        active = true
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -228,14 +235,14 @@ private fun SystemOverviewPanel(
                             color = colors.textSecondary,
                             fontWeight = FontWeight.SemiBold
                         ),
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
                 SystemHexIcon(
                     icon = Icons.Filled.FitnessCenter,
                     accent = colors.accentPrimary,
-                    modifier = Modifier.size(112.dp)
+                    modifier = Modifier.size(96.dp)
                 )
             }
             Row(
@@ -325,66 +332,164 @@ private fun ActiveCyclePanel(
     } ?: "$workoutDays / $totalDays"
 
     SystemPanel(modifier = Modifier.fillMaxWidth()) {
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val compact = maxWidth < 320.dp
+            if (compact) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    ActiveCycleDetails(
+                        cycleName = cycleName,
+                        activeDay = activeDay,
+                        totalDays = totalDays,
+                        workoutDays = workoutDays,
+                        nextWorkout = nextWorkout,
+                        compact = true
+                    )
+                    ActiveCycleActions(
+                        progressLabel = progressLabel,
+                        onEditCycle = onEditCycle,
+                        compact = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(SystemCardPadding),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ActiveCycleDetails(
+                        cycleName = cycleName,
+                        activeDay = activeDay,
+                        totalDays = totalDays,
+                        workoutDays = workoutDays,
+                        nextWorkout = nextWorkout,
+                        compact = false,
+                        modifier = Modifier.weight(1f)
+                    )
+                    ActiveCycleActions(
+                        progressLabel = progressLabel,
+                        onEditCycle = onEditCycle,
+                        compact = false,
+                        modifier = Modifier.weight(0.68f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActiveCycleDetails(
+    cycleName: String,
+    activeDay: Int,
+    totalDays: Int,
+    workoutDays: Int,
+    nextWorkout: String,
+    compact: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(11.dp)
+    ) {
+        SystemSectionTitle(title = "Активний цикл")
+        CycleDetailLine(
+            icon = Icons.Filled.Settings,
+            label = "Цикл",
+            value = cycleName,
+            compact = compact
+        )
+        CycleDetailLine(
+            icon = Icons.Filled.Today,
+            label = "День циклу",
+            value = "$activeDay / $totalDays",
+            accent = colors.accentAi,
+            compact = compact
+        )
+        CycleDetailLine(
+            icon = Icons.Filled.FitnessCenter,
+            label = "Тренувань на тиждень",
+            value = workoutDays.toString(),
+            accent = colors.accentPrimary,
+            compact = compact
+        )
+        CycleDetailLine(
+            icon = Icons.AutoMirrored.Filled.ArrowForward,
+            label = "Наступне тренування",
+            value = nextWorkout,
+            compact = compact
+        )
+    }
+}
+
+@Composable
+private fun ActiveCycleActions(
+    progressLabel: String,
+    onEditCycle: () -> Unit,
+    compact: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    if (compact) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(SystemCardPadding),
+            modifier = modifier,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(11.dp)
-            ) {
-                SystemSectionTitle(title = "Активний цикл")
-                CycleDetailLine(
-                    icon = Icons.Filled.Settings,
-                    label = "Цикл",
-                    value = cycleName
-                )
-                CycleDetailLine(
-                    icon = Icons.Filled.Today,
-                    label = "День циклу",
-                    value = "$activeDay / $totalDays",
-                    accent = colors.accentAi
-                )
-                CycleDetailLine(
-                    icon = Icons.Filled.FitnessCenter,
-                    label = "Тренувань на тиждень",
-                    value = workoutDays.toString(),
-                    accent = colors.accentPrimary
-                )
-                CycleDetailLine(
-                    icon = Icons.AutoMirrored.Filled.ArrowForward,
-                    label = "Наступне тренування",
-                    value = nextWorkout
-                )
-            }
-            Column(
-                modifier = Modifier.weight(0.68f),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                SystemHexIcon(
-                    icon = Icons.Filled.Edit,
-                    accent = colors.accentPrimary,
-                    modifier = Modifier.size(64.dp)
-                )
-                Text(
-                    text = "Прогрес $progressLabel",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = colors.textMuted,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                SystemButton(
-                    text = "Редагувати цикл",
-                    icon = Icons.Filled.Edit,
-                    onClick = onEditCycle,
-                    glow = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            SystemHexIcon(
+                icon = Icons.Filled.Edit,
+                accent = colors.accentPrimary,
+                modifier = Modifier.size(44.dp)
+            )
+            Text(
+                text = "Прогрес $progressLabel",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = colors.textMuted,
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(0.65f)
+            )
+            SystemButton(
+                text = "Редагувати цикл",
+                icon = Icons.Filled.Edit,
+                onClick = onEditCycle,
+                glow = true,
+                modifier = Modifier.weight(1.35f)
+            )
+        }
+    } else {
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            SystemHexIcon(
+                icon = Icons.Filled.Edit,
+                accent = colors.accentPrimary,
+                modifier = Modifier.size(64.dp)
+            )
+            Text(
+                text = "Прогрес $progressLabel",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = colors.textMuted,
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            SystemButton(
+                text = "Редагувати цикл",
+                icon = Icons.Filled.Edit,
+                onClick = onEditCycle,
+                glow = true,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -394,7 +499,8 @@ private fun CycleDetailLine(
     icon: ImageVector,
     label: String,
     value: String,
-    accent: Color? = null
+    accent: Color? = null,
+    compact: Boolean = false
 ) {
     val colors = SystemTheme.colors
     val iconTint = accent ?: colors.textSecondary
@@ -409,25 +515,51 @@ private fun CycleDetailLine(
             tint = iconTint,
             modifier = Modifier.size(19.dp)
         )
-        Text(
-            text = "$label:",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = colors.textMuted,
-                fontWeight = FontWeight.Bold
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = colors.textSecondary,
-                fontWeight = FontWeight.SemiBold
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
+        if (compact) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(1.dp)
+            ) {
+                Text(
+                    text = "$label:",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = colors.textMuted,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = colors.textSecondary,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        } else {
+            Text(
+                text = "$label:",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = colors.textMuted,
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = colors.textSecondary,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
@@ -484,7 +616,7 @@ private fun CycleDayChip(
     }
     Column(
         modifier = modifier
-            .height(108.dp)
+            .heightIn(min = 108.dp)
             .techSurface(
                 shape = shape,
                 active = day.isSelected || day.isActive,
@@ -525,8 +657,11 @@ private fun CycleDayChip(
         )
         Text(
             text = subtitle.uppercase(),
-            style = MaterialTheme.typography.labelSmall.copy(color = colors.textMuted),
-            maxLines = 1,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = colors.textMuted,
+                textAlign = TextAlign.Center
+            ),
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
     }

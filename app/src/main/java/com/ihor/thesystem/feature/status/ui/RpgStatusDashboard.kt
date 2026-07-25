@@ -9,8 +9,8 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -68,6 +67,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -80,6 +80,7 @@ import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemHoodBadge
@@ -136,7 +137,7 @@ fun RpgStatusDashboard(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .navigationBarsPadding()
+            .testTag(SystemUiTestTags.STATUS_DASHBOARD)
             .statusDashboardSwipe(
                 state = dashboardState,
                 onStateChange = { dashboardState = it }
@@ -151,15 +152,15 @@ fun RpgStatusDashboard(
                 val enteringStatus = targetState == StatusDashboardState.STATUS
                 (
                     fadeIn(animationSpec = tween(durationMillis = 160)) +
-                        slideInVertically(
+                        slideInHorizontally(
                             animationSpec = tween(durationMillis = 280),
-                            initialOffsetY = { if (enteringStatus) transitionOffsetPx else -transitionOffsetPx }
+                            initialOffsetX = { if (enteringStatus) transitionOffsetPx else -transitionOffsetPx }
                         )
                     ).togetherWith(
                     fadeOut(animationSpec = tween(durationMillis = 140)) +
-                        slideOutVertically(
+                        slideOutHorizontally(
                             animationSpec = tween(durationMillis = 280),
-                            targetOffsetY = { if (enteringStatus) -transitionOffsetPx else transitionOffsetPx }
+                            targetOffsetX = { if (enteringStatus) -transitionOffsetPx else transitionOffsetPx }
                         )
                 ).using(SizeTransform(clip = false))
             },
@@ -217,6 +218,7 @@ private fun StatusActionsContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .testTag(SystemUiTestTags.STATUS_ACTIONS_CONTENT)
             .padding(horizontal = SystemScreenPadding),
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
@@ -247,6 +249,7 @@ private fun StatusInfoContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .testTag(SystemUiTestTags.STATUS_INFO_CONTENT)
             .padding(horizontal = SystemScreenPadding),
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
@@ -307,12 +310,12 @@ private fun StatusDashboardState.resolveSwipeTarget(
     totalY: Float,
     threshold: Float
 ): StatusDashboardState? {
-    if (abs(totalY) < threshold || abs(totalY) < abs(totalX) * 1.35f) {
+    if (abs(totalX) < threshold || abs(totalX) < abs(totalY) * 1.60f) {
         return null
     }
     return when {
-        this == StatusDashboardState.ACTIONS && totalY < 0f -> StatusDashboardState.STATUS
-        this == StatusDashboardState.STATUS && totalY > 0f -> StatusDashboardState.ACTIONS
+        this == StatusDashboardState.ACTIONS && totalX < 0f -> StatusDashboardState.STATUS
+        this == StatusDashboardState.STATUS && totalX > 0f -> StatusDashboardState.ACTIONS
         else -> null
     }
 }
@@ -1443,25 +1446,25 @@ private fun ActionsSwipeHint() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
-        Canvas(modifier = Modifier.size(width = 24.dp, height = 15.dp)) {
+        Canvas(modifier = Modifier.size(width = 15.dp, height = 24.dp)) {
             val stroke = 2.1.dp.toPx()
             drawLine(
                 color = colors.textMuted.copy(alpha = 0.72f),
-                start = Offset(size.width * 0.18f, size.height * 0.74f),
-                end = Offset(size.width * 0.50f, size.height * 0.28f),
+                start = Offset(size.width * 0.74f, size.height * 0.18f),
+                end = Offset(size.width * 0.28f, size.height * 0.50f),
                 strokeWidth = stroke,
                 cap = StrokeCap.Round
             )
             drawLine(
                 color = colors.textMuted.copy(alpha = 0.72f),
-                start = Offset(size.width * 0.50f, size.height * 0.28f),
-                end = Offset(size.width * 0.82f, size.height * 0.74f),
+                start = Offset(size.width * 0.28f, size.height * 0.50f),
+                end = Offset(size.width * 0.74f, size.height * 0.82f),
                 strokeWidth = stroke,
                 cap = StrokeCap.Round
             )
         }
         Text(
-            text = "Проведіть вгору — показати прогрес",
+            text = "Проведіть вліво — показати прогрес",
             style = MaterialTheme.typography.bodySmall.copy(
                 color = colors.textMuted.copy(alpha = 0.88f),
                 fontSize = 14.sp,
@@ -1484,25 +1487,25 @@ private fun StatusSwipeHint() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
-        Canvas(modifier = Modifier.size(width = 24.dp, height = 15.dp)) {
+        Canvas(modifier = Modifier.size(width = 15.dp, height = 24.dp)) {
             val stroke = 2.1.dp.toPx()
             drawLine(
                 color = colors.accentPrimary.copy(alpha = 0.88f),
-                start = Offset(size.width * 0.18f, size.height * 0.26f),
-                end = Offset(size.width * 0.50f, size.height * 0.72f),
+                start = Offset(size.width * 0.26f, size.height * 0.18f),
+                end = Offset(size.width * 0.72f, size.height * 0.50f),
                 strokeWidth = stroke,
                 cap = StrokeCap.Round
             )
             drawLine(
                 color = colors.accentPrimary.copy(alpha = 0.88f),
-                start = Offset(size.width * 0.50f, size.height * 0.72f),
-                end = Offset(size.width * 0.82f, size.height * 0.26f),
+                start = Offset(size.width * 0.72f, size.height * 0.50f),
+                end = Offset(size.width * 0.26f, size.height * 0.82f),
                 strokeWidth = stroke,
                 cap = StrokeCap.Round
             )
         }
         Text(
-            text = "Проведіть вниз — повернутись до завдань",
+            text = "Проведіть вправо — повернутись до завдань",
             style = MaterialTheme.typography.bodySmall.copy(
                 color = colors.textMuted.copy(alpha = 0.88f),
                 fontSize = 14.sp,

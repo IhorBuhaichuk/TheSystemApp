@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -39,6 +40,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.ihor.thesystem.core.navigation.Routes
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.SystemUiTestTags
 
 @Composable
 fun SystemBottomNavBar(navController: NavHostController) {
@@ -46,11 +48,11 @@ fun SystemBottomNavBar(navController: NavHostController) {
     val destination = backStackEntry?.destination
     val colors = SystemTheme.colors
     val items = listOf(
-        NavBarItem(Routes.Status, NavGlyph.Status, "STATUS", destination?.hasRoute<Routes.Status>() == true),
-        NavBarItem(Routes.Calendar, NavGlyph.Calendar, "CALENDAR", destination?.hasRoute<Routes.Calendar>() == true),
-        NavBarItem(Routes.Cycle, NavGlyph.System, "SYSTEM", destination?.hasRoute<Routes.Cycle>() == true),
-        NavBarItem(Routes.Statistics, NavGlyph.Statistics, "STATISTICS", destination?.hasRoute<Routes.Statistics>() == true),
-        NavBarItem(Routes.Profile, NavGlyph.Profile, "PROFILE", destination?.hasRoute<Routes.Profile>() == true)
+        NavBarItem(Routes.Status, NavGlyph.Status, "STATUS", SystemUiTestTags.BOTTOM_NAV_STATUS, destination?.hasRoute<Routes.Status>() == true),
+        NavBarItem(Routes.Calendar, NavGlyph.Calendar, "CALENDAR", SystemUiTestTags.BOTTOM_NAV_CALENDAR, destination?.hasRoute<Routes.Calendar>() == true),
+        NavBarItem(Routes.Cycle, NavGlyph.System, "SYSTEM", SystemUiTestTags.BOTTOM_NAV_SYSTEM, destination?.hasRoute<Routes.Cycle>() == true),
+        NavBarItem(Routes.Statistics, NavGlyph.Statistics, "STATISTICS", SystemUiTestTags.BOTTOM_NAV_STATISTICS, destination?.hasRoute<Routes.Statistics>() == true),
+        NavBarItem(Routes.Profile, NavGlyph.Profile, "PROFILE", SystemUiTestTags.BOTTOM_NAV_PROFILE, destination?.hasRoute<Routes.Profile>() == true)
     )
 
     Box(
@@ -58,15 +60,15 @@ fun SystemBottomNavBar(navController: NavHostController) {
             .fillMaxWidth()
             .background(Color.Transparent)
             .navigationBarsPadding()
-            .padding(horizontal = 8.dp, vertical = 5.dp)
-            .height(112.dp)
+            .padding(horizontal = 6.dp)
+            .height(84.dp)
     ) {
         val navShape = systemLargePanelShape()
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(86.dp)
+                .height(68.dp)
                 .techSurface(
                     shape = navShape,
                     active = false,
@@ -81,8 +83,8 @@ fun SystemBottomNavBar(navController: NavHostController) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(104.dp)
-                .padding(horizontal = 8.dp),
+                .height(80.dp)
+                .padding(horizontal = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
@@ -141,7 +143,7 @@ private fun NavIconButton(
         label = "bottom_nav_icon_scale"
     )
     val itemHeight by animateFloatAsState(
-        targetValue = if (item.isSelected) 90f else 78f,
+        targetValue = if (item.isSelected) 74f else 66f,
         animationSpec = tween(durationMillis = motion.progressMillis),
         label = "bottom_nav_item_height"
     )
@@ -152,6 +154,7 @@ private fun NavIconButton(
     Box(
         modifier = modifier
             .height(itemHeight.dp)
+            .testTag(item.testTag)
             .padding(start = 1.dp, top = 0.dp, end = 1.dp, bottom = if (item.isSelected) 0.dp else 4.dp)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -181,24 +184,24 @@ private fun NavIconButton(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = if (item.isSelected) 11.dp else 8.dp, bottom = 12.dp),
+                .padding(top = if (item.isSelected) 7.dp else 6.dp, bottom = 7.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Box(
-                modifier = Modifier.size(if (item.isSelected) 43.dp else 36.dp),
+                modifier = Modifier.size(if (item.isSelected) 35.dp else 30.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (selection > 0.01f) {
                     Box(
                         modifier = Modifier
-                            .size(52.dp)
+                            .size(43.dp)
                             .blur(10.dp)
                             .background(activeColor.copy(alpha = 0.30f * selection), SystemHexagonShape())
                     )
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(32.dp)
                             .background(activeColor.copy(alpha = 0.12f * selection), SystemHexagonShape())
                     )
                 }
@@ -207,7 +210,7 @@ private fun NavIconButton(
                     color = iconColor,
                     glow = selection,
                     modifier = Modifier
-                        .size(if (item.isSelected) 30.dp else 24.dp)
+                        .size(if (item.isSelected) 26.dp else 22.dp)
                         .graphicsLayer {
                             scaleX = iconScale
                             scaleY = iconScale
@@ -219,8 +222,8 @@ private fun NavIconButton(
                 text = item.label,
                 color = labelColor,
                 fontFamily = FontFamily.SansSerif,
-                fontSize = if (item.isSelected) 10.sp else 9.sp,
-                lineHeight = 14.sp,
+                fontSize = if (item.isSelected) 9.sp else 8.sp,
+                lineHeight = 12.sp,
                 letterSpacing = 0.5.sp,
                 fontWeight = if (item.isSelected) FontWeight.Black else FontWeight.SemiBold,
                 maxLines = 1,
@@ -236,6 +239,7 @@ private data class NavBarItem(
     val route: Routes,
     val glyph: NavGlyph,
     val label: String,
+    val testTag: String,
     val isSelected: Boolean
 )
 

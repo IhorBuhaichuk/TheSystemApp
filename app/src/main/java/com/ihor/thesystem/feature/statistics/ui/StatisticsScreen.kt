@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
@@ -20,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -30,6 +30,7 @@ import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
+import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
@@ -121,7 +122,7 @@ private fun AnalyticsDashboard(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .statusBarsPadding()
+            .testTag(SystemUiTestTags.STATISTICS_SCROLL)
             .padding(horizontal = SystemScreenPadding)
             .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 8.dp),
         verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)
@@ -146,7 +147,10 @@ private fun AnalyticsDashboard(
 @Composable
 private fun AnalyticsHeader() {
     val colors = SystemTheme.colors
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+    Column(
+        modifier = Modifier.testTag(SystemUiTestTags.STATISTICS_HEADER),
+        verticalArrangement = Arrangement.spacedBy(3.dp)
+    ) {
         Text(
             text = "4. STATISTICS",
             style = MaterialTheme.typography.headlineMedium.copy(

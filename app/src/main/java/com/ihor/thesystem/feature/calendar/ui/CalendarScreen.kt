@@ -5,16 +5,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,6 +54,7 @@ import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
+import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.components.SystemCutCornerShape
 import com.ihor.thesystem.core.ui.components.SystemHoodBadge
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
@@ -96,8 +98,7 @@ fun CalendarScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .statusBarsPadding()
-                .navigationBarsPadding()
+                .testTag(SystemUiTestTags.CALENDAR_SCROLL)
                 .padding(horizontal = SystemScreenPadding)
                 .padding(top = SystemCardPadding, bottom = SystemScreenPadding + 4.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -140,7 +141,6 @@ private fun CalendarHeader(
     uiState: CalendarUiState,
     onOpenSettings: () -> Unit
 ) {
-    val colors = SystemTheme.colors
     val activeDays = uiState.days.count {
         it.completionStatus == CalendarDayCompletionStatus.COMPLETED ||
             it.completionStatus == CalendarDayCompletionStatus.PARTIAL
@@ -148,53 +148,103 @@ private fun CalendarHeader(
     val plannedTrainings = uiState.days.count { it.hasTrainingPlan }
     val missedDays = uiState.days.count { it.completionStatus == CalendarDayCompletionStatus.MISSED }
 
-    Row(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 0.dp, bottom = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .testTag(SystemUiTestTags.CALENDAR_HEADER)
+            .padding(bottom = 5.dp)
     ) {
-        SystemHoodBadge(modifier = Modifier.size(76.dp))
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Text(
-                text = "КАЛЕНДАР",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    color = colors.textPrimary,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 30.sp,
-                    lineHeight = 32.sp,
-                    letterSpacing = 1.0.sp
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+        val compact = maxWidth < 400.dp
+        if (compact) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    SystemHoodBadge(modifier = Modifier.size(64.dp))
+                    CalendarHeaderTitle(modifier = Modifier.weight(1f))
+                    GlassIconButton(
+                        icon = Icons.Filled.Today,
+                        onClick = onOpenSettings,
+                        active = true
+                    )
+                }
+                CalendarHeaderStats(activeDays, plannedTrainings, missedDays)
+            }
+        } else {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                CalendarHeaderStat(value = activeDays.toString(), label = "активних днів")
-                HeaderDot(colors.accentPrimary)
-                CalendarHeaderStat(
-                    value = plannedTrainings.toString(),
-                    label = "тренувань",
-                    accent = colors.accentPrimary
-                )
-                HeaderDot(colors.accentWarning)
-                CalendarHeaderStat(
-                    value = missedDays.toString(),
-                    label = "пропуски",
-                    accent = colors.accentWarning
+                SystemHoodBadge(modifier = Modifier.size(76.dp))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    CalendarHeaderTitle()
+                    CalendarHeaderStats(activeDays, plannedTrainings, missedDays)
+                }
+                GlassIconButton(
+                    icon = Icons.Filled.Today,
+                    onClick = onOpenSettings,
+                    active = true
                 )
             }
         }
-        GlassIconButton(
-            icon = Icons.Filled.Today,
-            onClick = onOpenSettings,
-            active = true
+    }
+}
+
+@Composable
+private fun CalendarHeaderTitle(modifier: Modifier = Modifier) {
+    val colors = SystemTheme.colors
+    Text(
+        text = "КАЛЕНДАР",
+        style = MaterialTheme.typography.headlineLarge.copy(
+            color = colors.textPrimary,
+            fontWeight = FontWeight.Black,
+            fontSize = 30.sp,
+            lineHeight = 32.sp,
+            letterSpacing = 1.0.sp
+        ),
+        modifier = modifier,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis
+    )
+}
+
+@Composable
+private fun CalendarHeaderStats(
+    activeDays: Int,
+    plannedTrainings: Int,
+    missedDays: Int,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CalendarHeaderStat(
+            value = activeDays.toString(),
+            label = "активних днів",
+            modifier = Modifier.weight(1f)
+        )
+        HeaderDot(colors.accentPrimary)
+        CalendarHeaderStat(
+            value = plannedTrainings.toString(),
+            label = "тренувань",
+            accent = colors.accentPrimary,
+            modifier = Modifier.weight(1f)
+        )
+        HeaderDot(colors.accentWarning)
+        CalendarHeaderStat(
+            value = missedDays.toString(),
+            label = "пропуски",
+            accent = colors.accentWarning,
+            modifier = Modifier.weight(1f)
         )
     }
 }
@@ -203,10 +253,12 @@ private fun CalendarHeader(
 private fun CalendarHeaderStat(
     value: String,
     label: String,
-    accent: Color = SystemTheme.colors.textSecondary
+    accent: Color = SystemTheme.colors.textSecondary,
+    modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
     Row(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -225,7 +277,7 @@ private fun CalendarHeaderStat(
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp
             ),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
     }
@@ -373,7 +425,7 @@ private fun CalendarGrid(
                         onDateSelected = onDateSelected,
                         modifier = Modifier
                             .weight(1f)
-                            .height(38.dp)
+                            .heightIn(min = 42.dp)
                     )
                 }
             }
@@ -501,7 +553,7 @@ private fun SelectedDayDetailsPanel(
                     lineHeight = 20.sp,
                     letterSpacing = 1.8.sp
                 ),
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
 
@@ -641,7 +693,7 @@ private fun CalendarEventRow(
                     fontWeight = FontWeight.Black,
                     fontSize = 17.sp
                 ),
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
@@ -650,7 +702,7 @@ private fun CalendarEventRow(
                     color = colors.textSecondary,
                     fontWeight = FontWeight.Medium
                 ),
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
@@ -661,7 +713,7 @@ private fun CalendarEventRow(
                 fontWeight = FontWeight.Black,
                 fontSize = 15.sp
             ),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
     }
@@ -678,7 +730,7 @@ private fun CalendarActionButton(
     val shape = SystemCutCornerShape(12.dp)
     Row(
         modifier = modifier
-            .height(56.dp)
+            .heightIn(min = 56.dp)
             .techSurface(
                 shape = shape,
                 active = true,
@@ -705,7 +757,7 @@ private fun CalendarActionButton(
                 fontSize = 16.sp,
                 letterSpacing = 1.3.sp
             ),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
     }

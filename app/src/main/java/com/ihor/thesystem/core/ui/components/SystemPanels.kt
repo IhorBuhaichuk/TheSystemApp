@@ -345,7 +345,7 @@ fun SystemSectionTitle(
                     color = colors.accentPrimary,
                     fontWeight = FontWeight.Black
                 ),
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
             if (subtitle != null) {
@@ -423,7 +423,7 @@ fun SystemMetricBlock(
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center
                 ),
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
@@ -716,7 +716,7 @@ fun SystemSettingsRow(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 ),
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
             if (subtitle != null) {
@@ -726,7 +726,7 @@ fun SystemSettingsRow(
                         color = colors.textMuted,
                         fontWeight = FontWeight.Medium
                     ),
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
             }
