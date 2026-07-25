@@ -58,15 +58,15 @@ fun AnnualProgressionBlock(
     DarkGlassCard(active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             SystemSectionHeader(
-                title = "Річна прогресія",
-                subtitle = "План / факт · місяць ${data.currentMonth}/${data.totalMonths}",
+                title = "Річний прогрес",
+                subtitle = "План і результат · місяць ${data.currentMonth}/${data.totalMonths}",
                 trailing = {
                     AiLabel(text = "${plannedEntries.size} вправ")
                 }
             )
 
             if (plannedEntries.isEmpty()) {
-                EmptyAnalyticsMessage(text = "Річна прогресія ще порожня")
+                EmptyAnalyticsMessage(text = "Річний план ще не створено")
             } else {
                 AnnualPlanFactChart(
                     entries = plannedEntries.take(6),
@@ -163,7 +163,7 @@ private fun ChartLegend() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         LegendItem(label = "План", color = colors.accentAi)
-        LegendItem(label = "Факт", color = colors.accentPrimary)
+                LegendItem(label = "Результат", color = colors.accentPrimary)
     }
 }
 
@@ -227,7 +227,7 @@ private fun KeyExerciseRow(entry: MatrixEntryUiModel) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Факт ${formatKg(entry.currentWeight)} · план ${formatKg(entry.targetWeight)}",
+            text = "Результат ${formatKg(entry.currentWeight)} · ціль ${formatKg(entry.targetWeight)}",
                 style = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -252,7 +252,7 @@ fun DeterministicSystemInsightBlock(insight: SystemInsightUiModel) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Висновок системи",
-                subtitle = "На основі існуючих метрик"
+                subtitle = "На основі ваших результатів"
             )
             InsightLine(
                 title = "Покращилось",

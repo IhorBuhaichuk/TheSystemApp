@@ -171,7 +171,7 @@ private fun AnnualPlanHeader(onBack: () -> Unit) {
         }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "План річної прогресії",
+                    text = "Річний план прогресу",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Black
@@ -180,7 +180,7 @@ private fun AnnualPlanHeader(onBack: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "12 місяців по вибраних вправах",
+                    text = "12 місяців для вибраних вправ",
                 style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -201,8 +201,8 @@ private fun AdaptationStatusBlock(
     DarkGlassCard(active = state.isAdaptationComplete) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Статус адаптації",
-                subtitle = "2 тижні перед фінальним планом"
+                title = "Збір стартових даних",
+                subtitle = "Потрібно 2 тижні тренувань"
             )
             Text(
                 text = "Перші 2 тижні система збирає стартові дані. Після цього можна сформувати річний графік з цілями на кожен місяць.",
@@ -241,7 +241,7 @@ private fun AdaptationStatusBlock(
                 text = if (state.isAdaptationComplete) {
                     "Адаптацію завершено. Можна формувати фінальний річний план."
                 } else {
-                    "До завершення адаптації: ${state.adaptationRemainingDays} дн. Фінальний план не генерується завчасно."
+                    "До завершення збору даних: ${state.adaptationRemainingDays} дн. Після цього можна буде створити точніший план."
                 },
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = if (state.isAdaptationComplete) colors.accentAi else colors.textMuted,
@@ -409,13 +409,13 @@ private fun SelectedExerciseCard(
             AnnualNumberField(
                 value = exercise.targetWeightInput,
                 onValueChange = onTargetWeightChanged,
-                label = "Ціль М12",
+                    label = "Ціль через 12 місяців",
                 modifier = Modifier.weight(1f)
             )
             AnnualNumberField(
                 value = exercise.inventoryStepInput,
                 onValueChange = onInventoryStepChanged,
-                label = "Крок",
+                    label = "Мінімальний крок ваги",
                 modifier = Modifier.weight(1f)
             )
         }
@@ -423,10 +423,10 @@ private fun SelectedExerciseCard(
         if (exercise.isExpanded) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 AnnualMetricLine(label = "Останнє тренування", value = exercise.lastTrainingTimestamp.formatTimestamp())
-                AnnualMetricLine(label = "Estimated 1RM", value = exercise.estimatedOneRepMax.formatNullableWeight())
+                AnnualMetricLine(label = "Розрахунковий максимум", value = exercise.estimatedOneRepMax.formatNullableWeight())
                 if (!exercise.canGenerate) {
                     Text(
-                        text = "Потрібні поточна вага, ціль вище поточної та крок інвентарю.",
+                    text = "Вкажіть поточну вагу, вищу ціль і найменший доступний крок ваги.",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = colors.textMuted,
                             fontWeight = FontWeight.SemiBold
@@ -490,7 +490,7 @@ private fun GenerationBlock(
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Генерація",
+                title = "Створення плану",
                 subtitle = "12 місяців · ціль на кожен місяць"
             )
             Text(
@@ -503,7 +503,7 @@ private fun GenerationBlock(
                 style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
             )
             SystemButton(
-                text = if (state.isGenerating) "Формую..." else "Сформувати план",
+                text = if (state.isGenerating) "Створюю…" else "Створити план",
                 icon = Icons.AutoMirrored.Filled.ArrowForward,
                 onClick = onGeneratePlan,
                 accent = colors.accentAi,
@@ -584,7 +584,7 @@ private fun AnnualExercisePlanCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "${plan.currentWeight.formatWeight()} кг > ${plan.targetWeight.formatWeight()} кг",
+                    text = "${plan.currentWeight.formatWeight()} кг → ${plan.targetWeight.formatWeight()} кг",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = colors.accentAi,
                         fontWeight = FontWeight.SemiBold
@@ -635,7 +635,7 @@ private fun MonthlyTargetChip(target: AnnualProgressionMonthlyTarget) {
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
-            text = "M${target.monthIndex}",
+                    text = "Міс. ${target.monthIndex}",
             style = MaterialTheme.typography.labelSmall.copy(
                 color = colors.textMuted,
                 fontWeight = FontWeight.Bold

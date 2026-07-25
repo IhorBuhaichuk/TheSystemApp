@@ -182,7 +182,7 @@ internal fun AnnualDetailsHeader(onBack: () -> Unit) {
         )
         Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
             Text(
-                text = "Річна прогресія",
+                        text = "Річний прогрес",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Black
@@ -191,7 +191,7 @@ internal fun AnnualDetailsHeader(onBack: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Факт проти плану",
+                        text = "Результат проти плану",
                 style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -376,7 +376,7 @@ private fun AnnualProgressionLineChart(
         ) {
             listOf(0, 3, 6, 9, 12).forEach { month ->
                 Text(
-                    text = "M$month",
+                        text = "Міс. $month",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = colors.textMuted,
                         fontWeight = FontWeight.Bold
@@ -408,7 +408,7 @@ private fun ChartLegend() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         LegendItem(label = "План", color = colors.accentAi)
-        LegendItem(label = "Факт", color = colors.accentPrimary)
+            LegendItem(label = "Результат", color = colors.accentPrimary)
     }
 }
 
@@ -473,7 +473,7 @@ private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "M${month.monthIndex}",
+                    text = "Міс. ${month.monthIndex}",
                 style = MaterialTheme.typography.labelMedium.copy(
                     color = accent,
                     fontWeight = FontWeight.Black
@@ -491,7 +491,7 @@ private fun MonthlyTargetRow(month: AnnualProgressionMonthlyProgress) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Факт ${month.actualWeight?.let { "${it.formatWeight()} кг" } ?: "-"}",
+                    text = "Результат ${month.actualWeight?.let { "${it.formatWeight()} кг" } ?: "-"}",
                 style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -514,7 +514,7 @@ private fun CurrentConclusionBlock(exercise: AnnualProgressionExerciseDetails) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Поточний висновок",
-                subtitle = "Останній доступний факт проти плану",
+                subtitle = "Останній результат проти плану",
                 trailing = {
                     SystemStatusChip(
                         text = AnnualProgressionDetailsUiMapper.statusLabel(exercise.currentStatus),

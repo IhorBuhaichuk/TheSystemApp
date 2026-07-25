@@ -41,7 +41,11 @@ fun WeeklySummaryBlock(
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             SystemSectionHeader(
                 title = "Тижневий підсумок",
-                subtitle = if (totalTonnage > 0.0) "${formatTonnage(totalTonnage)} тоннажу" else "Ритм виконання"
+                subtitle = if (totalTonnage > 0.0) {
+                    "Загальна піднята вага: ${formatTonnage(totalTonnage)}"
+                } else {
+                    "Ритм виконання"
+                }
             )
 
             if (days.isEmpty()) {

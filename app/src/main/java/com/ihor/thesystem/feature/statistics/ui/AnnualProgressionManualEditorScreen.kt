@@ -560,7 +560,7 @@ private fun AnnualProgressionManualExerciseUiModel.manualMetricLabel(): String =
     if (trackingMode.usesWeightInput) {
         "Старт ${currentWorkingWeight?.let { trackingMode.formatPrimaryValue(it) } ?: "-"}"
     } else {
-        "Метрика ${trackingMode.metricUnit}"
+        "Показник ${trackingMode.metricUnit}"
     }
 
 private const val MANUAL_MONTHS_PER_PAGE = 3

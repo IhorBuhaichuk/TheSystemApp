@@ -54,7 +54,7 @@ fun SetupMatrixDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         PremiumDialogContainer(
-            title = "Налаштування матриці",
+            title = "Налаштування цілі",
             accentColor = colors.accentPrimary,
             onDismiss = onDismiss
         ) {
@@ -76,7 +76,7 @@ fun SetupMatrixDialog(
                     PremiumInputField(label = "Цільова вага (кг)", value = target, accentColor = colors.accentPrimary) { target = it }
                 } else {
                     Text(
-                        text = "Ця вправа не використовує зовнішню вагу. Прогрес фіксується через повторення або час у логуванні підходів.",
+                        text = "Ця вправа не використовує додаткову вагу. Прогрес визначається за повтореннями або часом у записаних підходах.",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = colors.textSecondary,
                             fontWeight = FontWeight.Medium
@@ -119,7 +119,7 @@ fun LogWorkoutSetsDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         PremiumDialogContainer(
-            title = "Логування підходів",
+            title = "Запис підходів",
             accentColor = colors.accentPrimary,
             onDismiss = onDismiss
         ) {
@@ -144,7 +144,7 @@ fun LogWorkoutSetsDialog(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "Сет ${index + 1}",
+                                text = "Підхід ${index + 1}",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = colors.textMuted,
                                     fontWeight = FontWeight.Bold
@@ -201,7 +201,7 @@ fun LogWorkoutSetsDialog(
                 OutlinedTextField(
                     value = feedback,
                     onValueChange = { feedback = it },
-                    placeholder = { Text("Фітбек (відчуття, памп...)", color = colors.textMuted) },
+                    placeholder = { Text("Як минув підхід?", color = colors.textMuted) },
                     maxLines = 2,
                     modifier = Modifier.fillMaxWidth(),
                     shape = systemControlShape(),
@@ -210,7 +210,7 @@ fun LogWorkoutSetsDialog(
                 )
 
                 PremiumDialogButton(
-                    text = "Залогувати",
+                    text = "Записати",
                     color = colors.accentPrimary,
                     onClick = { onSave(feedback) }
                 )
