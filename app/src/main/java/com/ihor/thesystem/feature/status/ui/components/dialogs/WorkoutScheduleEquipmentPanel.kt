@@ -141,15 +141,15 @@ private fun HealthConnectSettingsBlock(
         else -> colors.textMuted
     }
     val statusText = when {
-        state.isLoading -> "Перевірка статусу"
-        state.hasReadinessPermission -> "Підключено: сон може уточнювати readiness"
-        state.isAvailable -> "Доступно: потрібен дозвіл на сон"
-        else -> "Health Connect недоступний на цьому пристрої"
+        state.isLoading -> "Перевіряємо підключення"
+        state.hasReadinessPermission -> "Підключено: дані про сон допомагають оцінити готовність"
+        state.isAvailable -> "Потрібен дозвіл на читання даних про сон"
+        else -> "Сервіс Health Connect недоступний на цьому пристрої"
     }
     val buttonText = when {
         state.hasReadinessPermission -> "Підключено"
-        state.isLoading -> "Перевірка"
-        else -> "Connect"
+        state.isLoading -> "Перевірка…"
+        else -> "Підключити"
     }
 
     Column(
@@ -162,11 +162,11 @@ private fun HealthConnectSettingsBlock(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         SystemSectionHeader(
-            title = "Health Connect",
+            title = "Дані здоров’я",
             subtitle = statusText
         )
         Text(
-            text = "Дані здоров'я лишаються локальним сигналом readiness.",
+            text = "Дані про сон обробляються на пристрої та допомагають оцінити готовність до тренування.",
             style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
         )
         SystemButton(
@@ -189,9 +189,9 @@ private fun BackupSettingsBlock(
     val colors = SystemTheme.colors
     val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     val lastBackupText = state.lastExportedAtMillis
-        ?.let { "Останній backup: ${it.backupTimeLabel()}" }
-        ?: state.lastImportedAtMillis?.let { "Останній імпорт: ${it.backupTimeLabel()}" }
-        ?: "Останній backup: ще не створено"
+        ?.let { "Остання копія: ${it.backupTimeLabel()}" }
+        ?: state.lastImportedAtMillis?.let { "Останнє відновлення: ${it.backupTimeLabel()}" }
+        ?: "Резервну копію ще не створено"
 
     Column(
         modifier = Modifier
@@ -203,11 +203,11 @@ private fun BackupSettingsBlock(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         SystemSectionHeader(
-            title = "Backup даних",
+            title = "Резервна копія",
             subtitle = lastBackupText
         )
         Text(
-            text = "Експортуються тренування, профіль, матриця прогресу, readiness, обладнання, календар, задачі та історія квестів.",
+            text = "До копії входять тренування, профіль, цілі вправ, обладнання, календар, завдання та історія квестів.",
             style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
         )
         Row(
@@ -215,7 +215,7 @@ private fun BackupSettingsBlock(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SystemButton(
-                text = if (state.isBusy) "Обробка" else "Експорт даних",
+                text = if (state.isBusy) "Зачекайте…" else "Створити копію",
                 icon = Icons.Filled.Save,
                 onClick = onExport,
                 enabled = !state.isBusy,
@@ -223,7 +223,7 @@ private fun BackupSettingsBlock(
                 modifier = Modifier.weight(1f)
             )
             SystemButton(
-                text = "Імпорт даних",
+                text = "Відновити дані",
                 icon = Icons.Filled.Add,
                 onClick = onImport,
                 enabled = !state.isBusy,

@@ -156,7 +156,7 @@ class OnboardingViewModel @Inject constructor(
             ValidationError.INVALID_PLAYER_NAME ->
                 UiText.DynamicString("Ім'я має бути від 1 до 50 символів.")
             else ->
-                UiText.DynamicString(message ?: "Не вдалося завершити onboarding.")
+                UiText.DynamicString("Не вдалося завершити початкове налаштування. Спробуйте ще раз.")
         }
 
     private companion object {

@@ -32,18 +32,18 @@ internal fun BackupImportConfirmationDialog(
     Dialog(onDismissRequest = { if (!isBusy) onDismiss() }) {
         SystemDialogContainer(accent = colors.accentWarning) {
             Text(
-                text = "Підтвердити імпорт backup",
+                text = "Відновити дані з резервної копії",
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = colors.accentWarning,
                     fontWeight = FontWeight.Black
                 )
             )
             Text(
-                text = "Файл перевірено: ${preview.tableCount} таблиць, ${preview.rowCount} рядків. Створено: ${preview.exportedAtMillis.previewTimeLabel()}.",
+                text = "У копії ${preview.tableCount} розділів і ${preview.rowCount} записів. Створено ${preview.exportedAtMillis.previewTimeLabel()}.",
                 style = MaterialTheme.typography.bodyMedium.copy(color = colors.textPrimary)
             )
             Text(
-                text = "Після підтвердження записи з такими самими ключами буде оновлено. Якщо імпорт не завершиться, поточні дані не будуть частково змінені.",
+                text = "Після підтвердження наявні дані буде оновлено інформацією з файлу. Якщо відновлення не завершиться, нічого не зміниться.",
                 style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
             )
             Row(
@@ -57,7 +57,7 @@ internal fun BackupImportConfirmationDialog(
                     modifier = Modifier.weight(1f)
                 )
                 SystemButton(
-                    text = if (isBusy) "Імпорт" else "Підтвердити",
+                    text = if (isBusy) "Відновлення…" else "Відновити",
                     onClick = onConfirm,
                     enabled = !isBusy,
                     accent = colors.accentWarning,

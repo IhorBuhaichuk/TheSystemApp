@@ -1,11 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources">
-    <string name="app_name">The System</string>
+    <string name="app_name">Система</string>
 
     <!-- UI Labels -->
     <string name="text_player_status">Статус гравця</string>
     <string name="text_level">Рівень</string>
     <string name="text_class">Клас</string>
-    <string name="text_rank">Rank</string>
+    <string name="text_rank">Ранг</string>
     <string name="text_cycle_counter">Лічильник циклу</string>
     <string name="text_month">Місяць</string>
     <string name="text_week">Тиждень</string>
@@ -21,14 +21,14 @@
     <string name="text_loading">Завантаження системи&#8230;</string>
     <string name="text_error">Помилка</string>
     <string name="text_annual_matrix">Річна матриця прогресії</string>
-    <string name="text_tap_log_flag_setup">Tap = log | flag = setup</string>
+    <string name="text_tap_log_flag_setup">Торкніться, щоб записати; прапорець — щоб налаштувати</string>
     <string name="system_loading">Завантаження системи&#8230;</string>
     <string name="text_critical_error_capital">Критична помилка системи</string>
-    <string name="text_terminate_system">Terminate system</string>
+    <string name="text_terminate_system">Закрити застосунок</string>
     <string name="text_db_init_failed">Ініціалізація бази даних не вдалася:</string>
     <string name="text_restart">Перезапустити</string>
 
-    <string name="text_ai_recommendation_note">Рекомендація AI (%1$d підходів, %2$s повторень)</string>
+    <string name="text_ai_recommendation_note">Рекомендація ШІ: %1$d підходів, %2$s повторень</string>
     <string name="text_label_weight">Вага</string>
     <string name="text_label_height">Зріст</string>
     <string name="text_unit_kg">кг</string>
@@ -37,7 +37,7 @@
     <string name="text_rest_day_title">Сьогодні відпочинок</string>
     <string name="text_rest_day_subtitle">Час для відновлення сил</string>
 
-    <string name="text_level_up">Level up</string>
+    <string name="text_level_up">Новий рівень</string>
     <string name="text_system_updated">Система оновлена</string>
     <string name="text_month_n">Місяць %1$d</string>
     <string name="text_accept_power">Прийняти силу</string>
@@ -68,7 +68,7 @@
 
     <string name="quest_progress">Прогрес: %1$d/%2$d</string>
     <string name="quest_reward_week">Нагорода: +1 тиждень</string>
-    <string name="quest_reward_promotion">Нагорода: +500 EXP | підтвердження рангу</string>
+    <string name="quest_reward_promotion">Нагорода: +500 досвіду · підтвердження рангу</string>
     <string name="quest_completed_capital">Виконано ✓</string>
 
 
@@ -97,10 +97,10 @@
     <string name="error_weight_update">Помилка оновлення ваги</string>
     <string name="error_height_update">Помилка оновлення зросту</string>
     <string name="error_age_update">Помилка оновлення віку</string>
-    <string name="error_ai_parsing">AI повернув некоректну відповідь. Система не застосувала її і залишила локальні рішення активними.</string>
+    <string name="error_ai_parsing">ШІ надіслав відповідь, яку не вдалося перевірити. План не змінено.</string>
     <string name="error_generic">Помилка</string>
     <string name="error_operation_failed">Помилка операції</string>
-    <string name="error_backup_invalid">Не вдалося перевірити backup. Поточні дані не змінено.</string>
+    <string name="error_backup_invalid">Не вдалося перевірити резервну копію. Поточні дані не змінено.</string>
     <string name="error_backup_import_failed">Імпорт не завершено. Поточні дані не було частково змінено.</string>
     <string name="error_workout_analysis_failed">Не вдалося сформувати аналіз тренування.</string>
     <string name="error_annual_progression_exercise_not_found">Не вдалося знайти вправу в базі.</string>
@@ -111,14 +111,14 @@
     <string name="annual_progression_plan_saved">План збережено. Аналітика підхопить його з матриці прогресії.</string>
     <string name="error_annual_progression_save_failed">Не вдалося зберегти річний план прогресії.</string>
     <string name="calendar_error_min_cycle_length">Цикл має містити щонайменше один день.</string>
-    <string name="calendar_error_invalid_start_date">Вкажіть дату старту у форматі YYYY-MM-DD.</string>
+    <string name="calendar_error_invalid_start_date">Вкажіть дату початку, наприклад 2026-07-25.</string>
     <string name="calendar_error_empty_cycle_days">Додайте хоча б один день циклу.</string>
     <string name="calendar_error_save_failed">Не вдалося зберегти календарний цикл.</string>
     <string name="error_no_completed_exercises">Завершіть хоча б один підхід</string>
-    <string name="error_ai_generic">AI зараз не відповідає. Система продовжує працювати локально: логи, verdict і прогрес збережені.</string>
-    <string name="error_ai_unconfigured">AI-функції не налаштовані в цій збірці. Основна система працює локально: тренування, verdict і прогрес доступні без AI.</string>
+    <string name="error_ai_generic">ШІ зараз не відповідає. Тренування та прогрес продовжують зберігатися на пристрої.</string>
+    <string name="error_ai_unconfigured">Функції ШІ не налаштовані в цій версії. Тренування та прогрес доступні без них.</string>
     <string name="ai_analysis_complete">Аналіз завершено.</string>
-    <string name="ai_fallback_activated">Тренування збережено. Система сформувала verdict локально і залишила обережні цілі без AI-рекомендацій.</string>
+    <string name="ai_fallback_activated">Тренування збережено. Підсумок сформовано на пристрої, а цілі залишено без змін.</string>
 
     <!-- Muscle Groups -->
     <string name="muscle_group_chest">Груди</string>
@@ -139,17 +139,17 @@
     <string name="rank_master">Майстер</string>
     <string name="rank_the_system">Система</string>
 
-    <string name="error_ai_overloaded">AI тимчасово перевантажений. Система продовжує працювати локально, спробуйте AI-повтор пізніше.</string>
-    <string name="error_ai_rate_limit">Ліміт AI-запитів вичерпано. Система не змінює план за AI і продовжує локальну логіку.</string>
-    <string name="error_network_architect">AI-аналіз зараз недоступний. Система продовжує працювати локально.</string>
-    <string name="error_unknown_architect">Невідома помилка зв\'язку з архітектором</string>
-    <string name="error_apply_recommendations_failed">Помилка застосування рекомендацій</string>
-    <string name="error_no_internet">Відсутнє підключення до інтернету</string>
-    <string name="error_server_error">Помилка сервера</string>
-    <string name="error_timeout">Час очікування вичерпано</string>
-    <string name="text_system_online">System online</string>
-    <string name="text_level_label">Level %1$d</string>
-    <string name="text_next_xp">Next: %1$d XP</string>
+    <string name="error_ai_overloaded">ШІ тимчасово перевантажений. Застосунок продовжує працювати, спробуйте аналіз пізніше.</string>
+    <string name="error_ai_rate_limit">Ліміт запитів до ШІ вичерпано. План не змінено, спробуйте пізніше.</string>
+    <string name="error_network_architect">Аналіз ШІ зараз недоступний. Тренування та прогрес працюють як завжди.</string>
+    <string name="error_unknown_architect">Не вдалося зв’язатися з ШІ-тренером</string>
+    <string name="error_apply_recommendations_failed">Не вдалося застосувати рекомендації</string>
+    <string name="error_no_internet">Немає з’єднання з інтернетом</string>
+    <string name="error_server_error">Сервіс тимчасово недоступний</string>
+    <string name="error_timeout">Сервіс не відповів вчасно</string>
+    <string name="text_system_online">Система працює</string>
+    <string name="text_level_label">Рівень %1$d</string>
+    <string name="text_next_xp">До наступного рівня: %1$d XP</string>
     <string name="text_character">Персонаж</string>
     <string name="text_matrix">Матриця</string>
     <string name="text_analytics">Аналітика</string>
@@ -158,7 +158,7 @@
     <string name="text_progress_30_days">Прогрес за 30 днів</string>
     <string name="text_exercise_label">Вправа %1$d</string>
     <string name="text_workout_results_header">Результати останнього тренувального дня (Тоннаж: %1$dкг):</string>
-    <string name="text_workout_results_item">[ID: %1$d] %2$s: %3$.1fкг х %4$d</string>
+    <string name="text_workout_results_item">%2$s: %3$.1f кг × %4$d</string>
 
     <array name="com_google_android_gms_fonts_certs">
         <item>@array/com_google_android_gms_fonts_certs_dev</item>
@@ -170,7 +170,7 @@
     <string-array name="com_google_android_gms_fonts_certs_prod" translatable="false" tools:ignore="Typos">
         <item>MIIEqDCCA5CgAwIBAgIJANrd9k9SRE90MA0GCSqGSIb3DQEBBQUAMIGUMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UEChMHR29vZ2xlMRAwDgYDVQQLEwdBbmRyb2lkMRAwDgYDVQQDEwdBbmRyb2lkMSEwHwYJKoZIhvcNAQkBFhJhbmRyb2lkQGdvb2dsZS5jb20wIBcNMTMwNDI0MjI1MDU2WhcNNDAwNDEwMjI1MDU2WjCBlDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxEDAOBgNVBAoTB0dvb2dsZTEQMA4GA1UECxMHQW5kcm9pZDEQMA4GA1UEAxMHQW5kcm9pZDEhMB8GCSqGSIb3DQEJARYSYW5kcm9pZEBnb29nbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvYvOfvS98pSgd0asv8SAbS+SqcOPDr6C3A9TdVWQXZQN8pxf91Z6G1Ec4gWjyS2nW6G3Asui8BthCAJE87j6dfBCdA2ALyuH/7S8uNoGvXEA06AlS1Rpk7uErVof9Lqy8hBsuyW7OnUMNoNRRARE62UvU6Sdc1CofP/986SxoC8fLOf6lTh9V28u9Zqx+f8Wqn5vS9smhV69JyTHK6GfCoGfGPRUf9kvZyPhS3ujV5ZtSOP9mS6PJcWIrSNoSBYWvtWvrlB2XC7+Qd7n3SgukSna0lkedidP2QZND8Nf4fszFpLsd5LHqCZ6ytfW6unVr5S3OcS6pDe3fNdt8Lu9Sw=</item>
     </string-array>
-    <string name="text_workout_recommendation_format">%1$d x %2$d @ %3$.1f кг</string>
+    <string name="text_workout_recommendation_format">%1$d × %2$d · %3$.1f кг</string>
     <string name="text_exercise_default_name">Вправа</string>
     <string name="text_day_details">Деталі дня</string>
     <string name="text_activity_day">Активність дня</string>
@@ -243,8 +243,8 @@
     <string name="filter_mechanic_na">Не вказано</string>
 
     <!-- Filter Forces -->
-    <string name="filter_force_pull">Тяга (Pull)</string>
-    <string name="filter_force_push">Жим (Push)</string>
+    <string name="filter_force_pull">Тяга</string>
+    <string name="filter_force_push">Жим</string>
     <string name="filter_force_static">Статична</string>
 
     <!-- Empty States -->

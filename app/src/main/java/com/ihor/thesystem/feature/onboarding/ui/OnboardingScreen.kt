@@ -123,7 +123,7 @@ private fun OnboardingHeader(uiState: OnboardingUiState) {
     val colors = SystemTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            text = "The System: Level Up",
+            text = "Система: новий рівень",
             style = MaterialTheme.typography.headlineSmall.copy(
                 color = colors.textPrimary,
                 fontWeight = FontWeight.Black
@@ -132,7 +132,7 @@ private fun OnboardingHeader(uiState: OnboardingUiState) {
             overflow = TextOverflow.Ellipsis
         )
         Text(
-            text = "Первинне калібрування",
+            text = "Початкове налаштування",
             style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -389,7 +389,7 @@ private fun OnboardingActions(
         }
 
         SystemButton(
-            text = if (uiState.isLastStep) "Відкрити Today Order" else "Далі",
+            text = if (uiState.isLastStep) "Перейти до плану" else "Далі",
             onClick = onContinue,
             modifier = Modifier.weight(1.35f),
             icon = if (uiState.isLastStep) Icons.Filled.Check else Icons.Filled.Whatshot,
@@ -428,7 +428,7 @@ private val EQUIPMENT_OPTIONS = listOf(
     EquipmentOption(EquipmentType.BENCH, "Лава", "Жими, тяги та стабільна опора"),
     EquipmentOption(EquipmentType.PULL_UP_BAR, "Турнік", "Підтягування та вертикальна тяга"),
     EquipmentOption(EquipmentType.BANDS, "Резинки", "Мобільність, активація, легкі тяги"),
-    EquipmentOption(EquipmentType.MACHINE, "Зал / тренажери", "Тренажери, блоки, кабелі")
+    EquipmentOption(EquipmentType.MACHINE, "Зал і тренажери", "Тренажери та блочні станції")
 )
 
 @Composable
@@ -454,11 +454,11 @@ private fun OnboardingStep.icon(): ImageVector =
 
 private fun OnboardingStep.title(): String =
     when (this) {
-        OnboardingStep.NAME -> "Ідентифікація"
+        OnboardingStep.NAME -> "Як вас звати?"
         OnboardingStep.GOAL -> "Головна ціль"
         OnboardingStep.EQUIPMENT -> "Доступне обладнання"
         OnboardingStep.EXPERIENCE -> "Рівень досвіду"
-        OnboardingStep.CYCLE -> "Базовий цикл"
+        OnboardingStep.CYCLE -> "Розклад тренувань"
     }
 
 @Composable
@@ -482,24 +482,24 @@ private fun OnboardingGoal.title(): String =
 
 private fun OnboardingGoal.subtitle(): String =
     when (this) {
-        OnboardingGoal.BUILD_STRENGTH -> "Базовий таргет: 5 підходів по 5"
-        OnboardingGoal.BUILD_MUSCLE -> "Базовий таргет: 4 підходи по 10"
-        OnboardingGoal.LOSE_WEIGHT -> "Базовий таргет: 3 підходи по 15"
-        OnboardingGoal.BUILD_HABIT -> "Базовий таргет: 3 підходи по 8"
+        OnboardingGoal.BUILD_STRENGTH -> "Рекомендований старт: 5 підходів по 5"
+        OnboardingGoal.BUILD_MUSCLE -> "Рекомендований старт: 4 підходи по 10"
+        OnboardingGoal.LOSE_WEIGHT -> "Рекомендований старт: 3 підходи по 15"
+        OnboardingGoal.BUILD_HABIT -> "Рекомендований старт: 3 підходи по 8"
     }
 
 private fun OnboardingExperience.title(): String =
     when (this) {
         OnboardingExperience.BEGINNER -> "Новачок"
-        OnboardingExperience.RETURNING -> "Повертаюсь"
+        OnboardingExperience.RETURNING -> "Повертаюся"
         OnboardingExperience.INTERMEDIATE -> "Досвідчений"
     }
 
 private fun OnboardingExperience.subtitle(): String =
     when (this) {
-        OnboardingExperience.BEGINNER -> "Старт з 1 рівня"
-        OnboardingExperience.RETURNING -> "Старт з 2 рівня"
-        OnboardingExperience.INTERMEDIATE -> "Старт з 3 рівня"
+        OnboardingExperience.BEGINNER -> "Почати з 1 рівня"
+        OnboardingExperience.RETURNING -> "Почати з 2 рівня"
+        OnboardingExperience.INTERMEDIATE -> "Почати з 3 рівня"
     }
 
 private fun OnboardingCyclePreset.title(): String =
@@ -512,6 +512,6 @@ private fun OnboardingCyclePreset.title(): String =
 private fun OnboardingCyclePreset.subtitle(): String =
     when (this) {
         OnboardingCyclePreset.THREE_DAY -> "Компактний старт: менше днів, більше відновлення"
-        OnboardingCyclePreset.FOUR_DAY -> "Стандарт SYSTEM: баланс тренувань і пауз"
+        OnboardingCyclePreset.FOUR_DAY -> "Збалансований варіант: тренування чергуються з відпочинком"
         OnboardingCyclePreset.FIVE_DAY -> "Щільніший ритм для регулярної роботи"
     }
