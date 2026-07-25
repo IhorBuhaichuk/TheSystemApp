@@ -86,7 +86,7 @@ fun RankBadge(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Rank",
+                text = "Ранг",
                 style = TextStyle(
                     fontFamily = SystemBodyFamily,
                     fontWeight = FontWeight.Bold,

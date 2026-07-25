@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -307,14 +308,11 @@ private fun QuestClockBadge(accent: Color) {
 
 @Composable
 private fun QuestXpBadge(accent: Color) {
-    Text(
-        text = "XP",
-        style = MaterialTheme.typography.labelSmall.copy(
-            color = accent.copy(alpha = 0.96f),
-            fontWeight = FontWeight.Black,
-            fontSize = 9.sp,
-            lineHeight = 9.sp
-        )
+    Icon(
+        imageVector = Icons.Filled.Star,
+        contentDescription = null,
+        tint = accent.copy(alpha = 0.96f),
+        modifier = Modifier.size(16.dp)
     )
 }
 

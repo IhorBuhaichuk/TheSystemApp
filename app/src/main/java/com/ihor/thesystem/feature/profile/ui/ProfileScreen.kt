@@ -322,7 +322,7 @@ private fun ProfileHeroPanel(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "${statusData.xpTotal} / ${statusData.xpMax} XP",
+                            text = "${statusData.xpTotal} / ${statusData.xpMax} досвіду",
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 color = colors.accentPrimary,
                                 fontWeight = FontWeight.Black

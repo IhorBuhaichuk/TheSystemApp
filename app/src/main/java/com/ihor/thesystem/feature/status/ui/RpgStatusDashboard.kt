@@ -402,7 +402,7 @@ private fun StatusHeroPanel(
         }
 
         HeroXpPanel(
-            xpText = "${data.xpTotal} / ${data.xpMax} XP",
+            xpText = "${data.xpTotal} / ${data.xpMax} досвіду",
             percentText = "${(progress * 100).roundToInt()}%",
             progress = progress,
             modifier = Modifier
@@ -758,7 +758,7 @@ private fun TodayProgressBlock(data: StatusUiData) {
                 verticalAlignment = Alignment.Top
             ) {
                 ProgressMetric(
-                    label = "XP сьогодні",
+                    label = "Досвід сьогодні",
                     value = "0",
                     accent = colors.accentPrimary,
                     icon = { ProgressXpBadge() },
@@ -874,15 +874,11 @@ private fun ProgressXpBadge() {
             .border(1.dp, colors.accentPrimary.copy(alpha = 0.78f), SystemHexagonShape()),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "XP",
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = colors.textPrimary,
-                fontWeight = FontWeight.Black,
-                fontSize = 9.sp,
-                lineHeight = 9.sp,
-                textAlign = TextAlign.Center
-            )
+        Icon(
+            imageVector = Icons.Filled.Star,
+            contentDescription = null,
+            tint = colors.textPrimary,
+            modifier = Modifier.size(14.dp)
         )
     }
 }
@@ -1098,7 +1094,7 @@ private fun SystemLevelBlock(data: StatusUiData) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${data.xpTotal} / ${data.xpMax} XP",
+                    text = "${data.xpTotal} / ${data.xpMax} досвіду",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = colors.textSecondary,
                         fontWeight = FontWeight.SemiBold
@@ -1107,7 +1103,7 @@ private fun SystemLevelBlock(data: StatusUiData) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "До рівня ${data.level + 1}: $xpRemaining XP",
+                    text = "До рівня ${data.level + 1}: $xpRemaining досвіду",
                     style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

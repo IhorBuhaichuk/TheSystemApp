@@ -75,7 +75,7 @@ fun QuestChecklistSheet(
                     )
                 )
                 Text(
-                    text = "Daily Operations Protocol",
+                    text = "Завдання на сьогодні",
                     style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
                 )
             }
@@ -117,7 +117,7 @@ fun QuestChecklistSheet(
                     },
                     modifier = Modifier.size(SystemControlHeight)
                 ) {
-                    Icon(Icons.Filled.Add, "Add", tint = accentColor)
+                    Icon(Icons.Filled.Add, "Додати завдання", tint = accentColor)
                 }
             }
 
@@ -218,7 +218,7 @@ private fun TaskRow(
         IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
             Icon(
                 imageVector = Icons.Filled.Close,
-                contentDescription = "Delete",
+                contentDescription = "Видалити завдання",
                 tint = colors.accentError.copy(alpha = 0.5f),
                 modifier = Modifier.size(18.dp)
             )

@@ -101,7 +101,7 @@ fun MatrixEntryCard(
                     OneRepMaxText(
                         weight = entry.currentWeight.toDouble(),
                         reps = 8,
-                        label = "Est. 1RM: "
+                        label = "Розрахунковий максимум: "
                     )
                 }
             }
@@ -137,7 +137,7 @@ fun MatrixEntryCard(
                     )
                 )
                 Text(
-                    text = "${entry.nextRecommendedWeight} кг, ${entry.nextRecommendedSets}x, ${entry.nextRecommendedReps}",
+                    text = "${entry.nextRecommendedWeight} кг, ${entry.nextRecommendedSets} підх. по ${entry.nextRecommendedReps}",
                     style = MaterialTheme.typography.labelMedium.copy(
                         color = colors.accentPrimary,
                         fontWeight = FontWeight.Bold
@@ -156,7 +156,7 @@ fun MatrixEntryCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Psychology,
-                    contentDescription = "Coach AI",
+                    contentDescription = "Порада ШІ-тренера",
                     tint = colors.accentPrimary,
                     modifier = Modifier.size(16.dp)
                 )
@@ -189,7 +189,7 @@ fun MatrixEntryCard(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Flag,
-                    contentDescription = "Setup Goals",
+                    contentDescription = "Налаштувати цілі",
                     tint = colors.accentWarning,
                     modifier = Modifier.size(18.dp)
                 )

@@ -117,7 +117,7 @@ fun MatrixEntryCardPremium(
                         OneRepMaxText(
                             weight = entry.currentWeight.toDouble(),
                             reps = 8,
-                            label = "Est. 1RM: "
+                            label = "Розрахунковий максимум: "
                         )
                     }
                 }
@@ -131,7 +131,7 @@ fun MatrixEntryCardPremium(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Прогрес матриці",
+                            text = "Прогрес до цілі",
                             style = MaterialTheme.typography.labelSmall.copy(color = colors.textMuted)
                         )
                         Text(
@@ -183,7 +183,7 @@ fun MatrixEntryCardPremium(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Next: ${entry.nextRecommendedWeight}kg | ${entry.nextRecommendedSets}x${entry.nextRecommendedReps}",
+                                    text = "Далі: ${entry.nextRecommendedWeight} кг · ${entry.nextRecommendedSets} підх. по ${entry.nextRecommendedReps}",
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         color = colors.textPrimary,
                                         fontWeight = FontWeight.Bold
@@ -211,9 +211,9 @@ fun MatrixEntryCardPremium(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    WeightInfoBlock("Start", entry.displayStart, colors.textSecondary)
-                    WeightInfoBlock("Current", entry.displayCurrent, accentColor)
-                    WeightInfoBlock("Target", entry.displayTarget, colors.accentWarning)
+                    WeightInfoBlock("Старт", entry.displayStart, colors.textSecondary)
+                    WeightInfoBlock("Зараз", entry.displayCurrent, accentColor)
+                    WeightInfoBlock("Ціль", entry.displayTarget, colors.accentWarning)
                 }
 
                 IconButton(

@@ -30,7 +30,7 @@ fun PenaltyActivatedDialog(onDismiss: () -> Unit) {
         title = "Штрафна зона",
         message = "2 провали поспіль зафіксовано.",
         emphasis = "Цільові ваги знижені на 20%.",
-        note = "Виконай 2 Main Quest поспіль для відновлення.",
+        note = "Виконай 2 головні тренування поспіль, щоб відновити звичайні цілі.",
         buttonText = "Зрозуміло",
         accent = colors.accentError,
         onDismiss = onDismiss
@@ -42,7 +42,7 @@ fun PenaltyDeactivatedDialog(onDismiss: () -> Unit) {
     val colors = SystemTheme.colors
     PenaltyStateDialog(
         title = "Штраф знято",
-        message = "2 успішні Main Quest поспіль!",
+        message = "2 головні тренування поспіль виконано успішно.",
         emphasis = "Продуктивність відновлено.",
         note = null,
         buttonText = "Продовжити",

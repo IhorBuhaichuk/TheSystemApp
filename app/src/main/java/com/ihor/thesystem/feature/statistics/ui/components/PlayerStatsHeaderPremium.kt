@@ -59,7 +59,7 @@ fun PlayerStatsHeaderPremium(
                                 .data(data.avatarUri)
                                 .crossfade(true)
                                 .build(),
-                            contentDescription = "Avatar",
+                            contentDescription = "Фото профілю",
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)

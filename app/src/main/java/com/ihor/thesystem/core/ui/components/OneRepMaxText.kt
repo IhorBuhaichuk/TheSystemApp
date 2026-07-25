@@ -20,7 +20,7 @@ fun OneRepMaxText(
     weight: Double,
     reps: Int,
     modifier: Modifier = Modifier,
-    label: String = "1RM: "
+    label: String = "Розрахунковий максимум: "
 ) {
     val oneRepMax = OneRepMaxCalculator.calculate(weight, reps)
     if (oneRepMax <= 0) return
@@ -49,7 +49,7 @@ fun MaxOneRepMaxText(
     val colors = SystemTheme.colors
 
     Text(
-        text = "MAX 1RM: ${OneRepMaxCalculator.format(max1RM)}${stringResource(R.string.text_unit_kg)}",
+        text = "Найкращий розрахунковий максимум: ${OneRepMaxCalculator.format(max1RM)}${stringResource(R.string.text_unit_kg)}",
         style = MaterialTheme.typography.labelMedium.copy(
             color = colors.accentPrimary,
             fontWeight = FontWeight.Black

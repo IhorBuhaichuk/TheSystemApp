@@ -149,7 +149,7 @@
     <string name="error_timeout">Сервіс не відповів вчасно</string>
     <string name="text_system_online">Система працює</string>
     <string name="text_level_label">Рівень %1$d</string>
-    <string name="text_next_xp">До наступного рівня: %1$d XP</string>
+    <string name="text_next_xp">До наступного рівня: %1$d досвіду</string>
     <string name="text_character">Персонаж</string>
     <string name="text_matrix">Матриця</string>
     <string name="text_analytics">Аналітика</string>

@@ -265,7 +265,7 @@ private fun CycleParametersBlock(
                 label = "Дата старту циклу",
                 value = uiState.startDateInput,
                 onValueChange = onStartDateChanged,
-                supportingText = "Формат: YYYY-MM-DD"
+                supportingText = "Наприклад: 2026-07-25"
             )
             CycleLengthRow(
                 cycleLength = uiState.cycleLength,

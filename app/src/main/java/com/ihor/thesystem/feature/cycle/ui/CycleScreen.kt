@@ -273,7 +273,7 @@ private fun SystemOverviewPanel(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${statusData?.xpTotal ?: 0} / ${statusData?.xpMax ?: 1000} XP",
+                    text = "${statusData?.xpTotal ?: 0} / ${statusData?.xpMax ?: 1000} досвіду",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = colors.accentPrimary,
                         fontWeight = FontWeight.Black
@@ -844,7 +844,7 @@ private fun ParametersAndBonusesPanel(data: StatusUiData) {
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 SystemSectionTitle(title = "Активні бонуси")
-                BonusLine(text = "Серія ${data.currentStreak} днів", value = "+${(data.currentStreak * 2).coerceAtMost(20)}% XP")
+                BonusLine(text = "Серія ${data.currentStreak} днів", value = "+${(data.currentStreak * 2).coerceAtMost(20)}% досвіду")
                 BonusLine(text = "Планувальник", value = "${data.todos.count { it.isCompleted }}/${data.todos.size.coerceAtLeast(1)}")
                 BonusLine(text = "Рівень ${data.level}", value = "Ранг ${data.globalRank.name}")
             }

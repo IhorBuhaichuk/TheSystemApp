@@ -27,20 +27,20 @@ internal fun TodayTrainingDecision?.toTodayOrderUiModel(
             fallbackMainQuest = fallbackMainQuest,
             reasonText = "Готовність — ${decision.readinessScore}%. Накопичена втома — ${decision.recoveryDebt.level.displayLabel()}. Можна поступово підвищувати навантаження.",
             actionText = "Відкрити тренування",
-            outcomeText = fallbackMainQuest.rewardText("XP і нагорода за квест"),
+            outcomeText = fallbackMainQuest.rewardText("Нагорода за виконання"),
             accent = TodayOrderAccent.SUCCESS
         )
         TodayTrainingDecisionType.STANDARD_TRAINING -> decision.toTrainingOrder(
             fallbackMainQuest = fallbackMainQuest,
             reasonText = "Готовність — ${decision.readinessScore}%. Перешкод для тренування немає, можна виконувати звичайний план.",
             actionText = "Відкрити тренування",
-            outcomeText = fallbackMainQuest.rewardText("XP і нагорода за квест")
+            outcomeText = fallbackMainQuest.rewardText("Нагорода за виконання")
         )
         TodayTrainingDecisionType.REDUCED_LOAD -> decision.toTrainingOrder(
             fallbackMainQuest = fallbackMainQuest,
             reasonText = "Готовність — ${decision.readinessScore}%. Накопичена втома — ${decision.recoveryDebt.level.displayLabel()}. Сьогодні працюємо легше, щоб зберегти ритм.",
             actionText = "Відкрити легкий план",
-            outcomeText = "XP без перевтоми",
+            outcomeText = "Досвід без перевтоми",
             accent = TodayOrderAccent.WARNING
         )
         TodayTrainingDecisionType.ACTIVE_RECOVERY -> TodayOrderUiModel(
@@ -129,7 +129,7 @@ private fun QuestUiModel?.durationText(fallback: String): String =
     this?.estimatedDurationMinutes?.let { "$it хв" } ?: fallback
 
 private fun QuestUiModel?.rewardText(fallback: String): String =
-    this?.rewardXp?.let { "+$it XP" } ?: fallback
+    this?.rewardXp?.let { "+$it досвіду" } ?: fallback
 
 private fun RecoveryDebtLevel.displayLabel(): String =
     when (this) {

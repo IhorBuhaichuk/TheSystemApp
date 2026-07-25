@@ -78,7 +78,7 @@ fun AnalyticsSummaryBlock(data: StatisticsUiData) {
                     modifier = Modifier.weight(1f)
                 )
                 SummaryMetricCell(
-                    label = "XP",
+                    label = "Досвід",
                     value = data.xpThisWeek.toString(),
                     subtitle = "за період",
                     accent = colors.accentWarning,

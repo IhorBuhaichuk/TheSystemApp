@@ -89,7 +89,7 @@ fun ProfileHeaderCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "Rank ${data.globalRank.name.toSystemSentenceCase()}",
+                    text = "Ранг ${data.globalRank.name.toSystemSentenceCase()}",
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = colors.accentPrimary,
                         fontWeight = FontWeight.Bold
@@ -163,7 +163,7 @@ fun ProfileHeaderCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "XP progress",
+                    text = "Прогрес досвіду",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = colors.textSecondary,
                         fontWeight = FontWeight.Bold
