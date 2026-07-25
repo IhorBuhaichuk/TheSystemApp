@@ -16,12 +16,9 @@ The app may store the following data locally on your device:
 
 ## Health Connect Data
 
-The app can optionally read Health Connect signals after you grant permission. Current requested data types are:
+The app can optionally read a Health Connect sleep signal after you grant permission. The current requested data type is:
 
 - Sleep sessions: used to estimate readiness and recovery context.
-- Steps: used as movement/load context.
-- Heart rate: used as workout/recovery context when available.
-- Exercise sessions: used to understand recent workout activity.
 
 Health Connect access is optional. If you do not grant it, the app continues working with manual inputs and local fallback decisions.
 
@@ -46,7 +43,7 @@ Android automatic cloud backup and device-transfer backup exclude the Room datab
 - `the_system_db-shm`
 - `the_system_db-wal`
 
-This is intentional because the database contains sensitive fitness and body-progress data. Users can use the explicit in-app JSON export/import flow when they choose to create a backup file.
+This is intentional because the database contains sensitive fitness and body-progress data. Users can use the explicit in-app JSON export/import flow when they choose to create a backup file. Before an import writes data, the app validates the file and shows a preview with explicit confirmation. Failed imports are transactional and do not leave a partial database update.
 
 Important: exported JSON backup files are user-controlled files. Store them only in places you trust.
 
@@ -74,4 +71,3 @@ Stop exercise and seek professional help if you experience concerning symptoms, 
 - Google Play User Data policy: https://support.google.com/googleplay/android-developer/answer/10144311
 - Google Play Health apps policy: https://support.google.com/googleplay/android-developer/answer/14738291
 - Google Play Data safety: https://support.google.com/googleplay/android-developer/answer/10787469
-

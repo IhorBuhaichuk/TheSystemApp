@@ -23,6 +23,15 @@ class ImportBackupUseCase @Inject constructor(
     }
 }
 
+class PreviewBackupImportUseCase @Inject constructor(
+    private val repository: BackupRepository
+) {
+    suspend operator fun invoke(payload: BackupPayload): BackupImportSummary {
+        payload.validateForImport()
+        return repository.previewImport(payload)
+    }
+}
+
 class GetBackupStatusUseCase @Inject constructor(
     private val repository: BackupRepository
 ) {

@@ -24,7 +24,7 @@ Core features:
 - Calendar: see planned training days, completed work, missed days, and daily events.
 - Statistics: weekly summary, progression proof, annual progression, body/profile trends.
 - Profile: personal metrics, rank, level, streaks, and settings.
-- Optional Health Connect support: sleep, steps, heart-rate, and exercise-session signals can improve readiness context when you grant permission.
+- Optional Health Connect support: sleep-session data can improve readiness context when you grant permission.
 - Local fallback mode: the app remains useful without Gemini/AI.
 
 THE SYSTEM: LEVEL UP is not a medical app. It does not diagnose, treat, or prevent disease and does not replace professional medical advice.
@@ -95,4 +95,3 @@ Recommended public screenshot order:
 5. Statistics
 6. Profile
 7. AI unavailable/local mode if included in release marketing
-

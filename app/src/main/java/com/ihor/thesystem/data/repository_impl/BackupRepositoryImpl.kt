@@ -83,6 +83,29 @@ class BackupRepositoryImpl @Inject constructor(
             )
         }
 
+    override suspend fun previewImport(payload: BackupPayload): BackupImportSummary =
+        withContext(dispatchers.io) {
+            validateTables(payload)
+            val sqlite = database.openHelper.readableDatabase
+            var validatedRows = 0
+
+            payload.tables.forEach { table ->
+                val allowedColumns = sqlite.columnNamesFor(table.name)
+                table.rows.forEach { row ->
+                    validateRow(table.name, row, allowedColumns)
+                    row.values.forEach { (columnName, value) ->
+                        BackupImportPolicy.bindableValue(table.name, columnName, value)
+                    }
+                    validatedRows += 1
+                }
+            }
+
+            BackupImportSummary(
+                tableCount = payload.tables.size,
+                rowCount = validatedRows
+            )
+        }
+
     override suspend fun getBackupStatus(): BackupStatus =
         withContext(dispatchers.io) {
             BackupStatus(

@@ -50,9 +50,9 @@ fun WorkoutDialogHost(
                 reader.readText()
             } ?: error("Backup input stream is not available.")
         }.onSuccess { rawJson ->
-            workoutViewModel.importBackupJson(rawJson)
+            workoutViewModel.previewBackupImportJson(rawJson)
         }.onFailure {
-            workoutViewModel.onBackupFileOperationFailed()
+            workoutViewModel.onBackupImportFileReadFailed()
         }
     }
 
@@ -152,7 +152,9 @@ fun WorkoutDialogHost(
                 },
                 onImportBackup = {
                     importBackupLauncher.launch(arrayOf("application/json", "text/*"))
-                }
+                },
+                onConfirmBackupImport = { workoutViewModel.confirmBackupImport() },
+                onCancelBackupImport = { workoutViewModel.cancelBackupImportPreview() }
             )
         }
         is StatusDialogState.WorkoutReport -> WorkoutReportDialog(

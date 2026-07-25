@@ -100,6 +100,8 @@
     <string name="error_ai_parsing">AI повернув некоректну відповідь. Система не застосувала її і залишила локальні рішення активними.</string>
     <string name="error_generic">Помилка</string>
     <string name="error_operation_failed">Помилка операції</string>
+    <string name="error_backup_invalid">Не вдалося перевірити backup. Поточні дані не змінено.</string>
+    <string name="error_backup_import_failed">Імпорт не завершено. Поточні дані не було частково змінено.</string>
     <string name="error_workout_analysis_failed">Не вдалося сформувати аналіз тренування.</string>
     <string name="error_annual_progression_exercise_not_found">Не вдалося знайти вправу в базі.</string>
     <string name="error_annual_progression_snapshot_failed">Не вдалося підготувати дані вправи для річного плану.</string>

@@ -2,11 +2,7 @@ package com.ihor.thesystem.data.repository_impl
 
 import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
-import androidx.health.connect.client.records.ExerciseSessionRecord
-import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
-import androidx.health.connect.client.records.StepsRecord
-import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import com.ihor.thesystem.core.util.DispatcherProvider
@@ -28,7 +24,7 @@ import kotlinx.coroutines.withContext
 
 @Singleton
 class HealthConnectSignalsRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val clock: AppClock,
     private val dispatchers: DispatcherProvider
 ) : HealthSignalsRepository {
@@ -79,28 +75,9 @@ class HealthConnectSignalsRepositoryImpl @Inject constructor(
         val range = TimeRangeFilter.between(start, end)
 
         val sleepPermission = HealthConnectPermissions.permissionsFor(setOf(HealthSignalPermission.SLEEP)).single()
-        val stepsPermission = HealthConnectPermissions.permissionsFor(setOf(HealthSignalPermission.STEPS)).single()
-        val heartRatePermission = HealthConnectPermissions.permissionsFor(setOf(HealthSignalPermission.HEART_RATE)).single()
-        val exercisePermission = HealthConnectPermissions.permissionsFor(setOf(HealthSignalPermission.EXERCISE_SESSIONS)).single()
-
         return HealthSignals(
             sleepDurationMinutes = if (sleepPermission in granted) {
                 readSleepMinutes(client, range)
-            } else {
-                null
-            },
-            stepsToday = if (stepsPermission in granted) {
-                readSteps(client, range)
-            } else {
-                null
-            },
-            restingHeartRate = if (heartRatePermission in granted) {
-                readRestingHeartRateEstimate(client, range)
-            } else {
-                null
-            },
-            workoutSessions = if (exercisePermission in granted) {
-                readExerciseSessionCount(client, range)
             } else {
                 null
             },
@@ -126,49 +103,6 @@ class HealthConnectSignalsRepositoryImpl @Inject constructor(
                 .sumOf { record -> Duration.between(record.startTime, record.endTime).toMinutes() }
                 .toInt()
                 .takeIf { it > 0 }
-        }
-
-    private suspend fun readSteps(
-        client: HealthConnectClient,
-        range: TimeRangeFilter
-    ): Int? =
-        safeHealthRead {
-            val result = client.aggregate(
-                AggregateRequest(
-                    metrics = setOf(StepsRecord.COUNT_TOTAL),
-                    timeRangeFilter = range
-                )
-            )
-            result[StepsRecord.COUNT_TOTAL]?.toInt()
-        }
-
-    private suspend fun readRestingHeartRateEstimate(
-        client: HealthConnectClient,
-        range: TimeRangeFilter
-    ): Int? =
-        safeHealthRead {
-            client.readRecords(
-                ReadRecordsRequest(
-                    recordType = HeartRateRecord::class,
-                    timeRangeFilter = range
-                )
-            ).records
-                .flatMap { it.samples }
-                .map { it.beatsPerMinute.toInt() }
-                .minOrNull()
-        }
-
-    private suspend fun readExerciseSessionCount(
-        client: HealthConnectClient,
-        range: TimeRangeFilter
-    ): Int? =
-        safeHealthRead {
-            client.readRecords(
-                ReadRecordsRequest(
-                    recordType = ExerciseSessionRecord::class,
-                    timeRangeFilter = range
-                )
-            ).records.size.takeIf { it > 0 }
         }
 
     private fun clientOrNull(): HealthConnectClient? =

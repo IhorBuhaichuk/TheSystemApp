@@ -50,6 +50,19 @@ class BackupUseCasesTest {
         )
     }
 
+    @Test
+    fun `preview validates payload without importing it`() = runTest {
+        val repository = FakeBackupRepository(exportPayload())
+        val useCase = PreviewBackupImportUseCase(repository)
+
+        val summary = useCase(exportPayload())
+
+        assertEquals(4, summary.tableCount)
+        assertEquals(4, summary.rowCount)
+        assertEquals(1, repository.previewCalls)
+        assertEquals(0, repository.importCalls)
+    }
+
     private fun exportPayload(): BackupPayload =
         BackupPayload(
             version = BackupPayload.SUPPORTED_VERSION,
@@ -76,13 +89,26 @@ class BackupUseCasesTest {
     private class FakeBackupRepository(
         private val payload: BackupPayload
     ) : BackupRepository {
+        var previewCalls = 0
+        var importCalls = 0
+
         override suspend fun exportBackup(): BackupPayload = payload
 
-        override suspend fun importBackup(payload: BackupPayload): BackupImportSummary =
-            BackupImportSummary(
+        override suspend fun previewImport(payload: BackupPayload): BackupImportSummary {
+            previewCalls += 1
+            return BackupImportSummary(
                 tableCount = payload.tables.size,
                 rowCount = payload.tables.sumOf { it.rows.size }
             )
+        }
+
+        override suspend fun importBackup(payload: BackupPayload): BackupImportSummary {
+            importCalls += 1
+            return BackupImportSummary(
+                tableCount = payload.tables.size,
+                rowCount = payload.tables.sumOf { it.rows.size }
+            )
+        }
 
         override suspend fun getBackupStatus(): BackupStatus = BackupStatus()
     }

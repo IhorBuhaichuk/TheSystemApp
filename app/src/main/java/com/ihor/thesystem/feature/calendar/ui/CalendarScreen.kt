@@ -70,7 +70,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Locale
 
-private val UKRAINIAN_LOCALE = Locale("uk", "UA")
+private val UKRAINIAN_LOCALE: Locale = Locale.forLanguageTag("uk-UA")
 
 @Composable
 fun CalendarScreen(

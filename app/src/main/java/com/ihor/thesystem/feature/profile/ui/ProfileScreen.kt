@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import java.util.Locale
 import com.ihor.thesystem.core.navigation.Routes
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
@@ -480,4 +481,4 @@ private fun ProfileStatisticsDialogs(
 }
 
 private fun Float.formatCompact(): String =
-    if (this % 1f == 0f) toInt().toString() else "%.1f".format(this)
+    if (this % 1f == 0f) toInt().toString() else String.format(Locale.US, "%.1f", this)

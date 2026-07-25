@@ -27,6 +27,7 @@ import com.ihor.thesystem.domain.usecase.GetBackupStatusUseCase
 import com.ihor.thesystem.domain.usecase.GetSystemConfigUseCase
 import com.ihor.thesystem.domain.usecase.ExportBackupUseCase
 import com.ihor.thesystem.domain.usecase.ImportBackupUseCase
+import com.ihor.thesystem.domain.usecase.PreviewBackupImportUseCase
 import com.ihor.thesystem.domain.usecase.SetRecommendation
 import com.ihor.thesystem.domain.usecase.WorkoutUseCases
 import com.ihor.thesystem.domain.repository.HealthSignalsRepository
@@ -57,6 +58,7 @@ class WorkoutViewModel @Inject constructor(
     private val healthSignalsRepository: HealthSignalsRepository,
     private val exportBackup: ExportBackupUseCase,
     private val importBackup: ImportBackupUseCase,
+    private val previewBackupImport: PreviewBackupImportUseCase,
     private val getBackupStatus: GetBackupStatusUseCase,
     private val dispatchers: DispatcherProvider,
     private val clock: AppClock
@@ -73,9 +75,10 @@ class WorkoutViewModel @Inject constructor(
 
     private var settingsDayJob: Job? = null
     private val backupJson = Json {
-        ignoreUnknownKeys = true
+        ignoreUnknownKeys = false
         prettyPrint = true
     }
+    private var pendingBackupImport: BackupPayload? = null
 
     private val _currentLogSets = MutableStateFlow<List<ActiveSetInput>>(emptyList())
     private val _userEdits = MutableStateFlow<Map<Int, List<ActiveSetInput>>>(emptyMap())
@@ -514,27 +517,76 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
-    fun importBackupJson(rawJson: String) {
+    fun previewBackupImportJson(rawJson: String) {
         _settingsUiState.update { it.copy(backup = it.backup.copy(isBusy = true)) }
         viewModelScope.launch {
             try {
                 val payload = backupJson.decodeFromString<BackupPayload>(rawJson)
+                val summary = kotlinx.coroutines.withContext(dispatchers.io) {
+                    previewBackupImport(payload)
+                }
+                pendingBackupImport = payload
+                _settingsUiState.update {
+                    it.copy(
+                        backup = it.backup.copy(
+                            pendingImport = BackupImportPreviewUiState(
+                                exportedAtMillis = payload.exportedAtMillis,
+                                tableCount = summary.tableCount,
+                                rowCount = summary.rowCount
+                            ),
+                            isBusy = false
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                pendingBackupImport = null
+                _settingsUiState.update {
+                    it.copy(backup = it.backup.copy(pendingImport = null, isBusy = false))
+                }
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_backup_invalid)))
+            }
+        }
+    }
+
+    fun confirmBackupImport() {
+        val payload = pendingBackupImport ?: return
+        _settingsUiState.update { it.copy(backup = it.backup.copy(isBusy = true)) }
+        viewModelScope.launch {
+            try {
                 kotlinx.coroutines.withContext(dispatchers.io) {
                     importBackup(payload)
                 }
+                pendingBackupImport = null
+                _settingsUiState.update { it.copy(backup = it.backup.copy(pendingImport = null)) }
                 refreshBackupStatus()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 _settingsUiState.update { it.copy(backup = it.backup.copy(isBusy = false)) }
-                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_backup_import_failed)))
             }
         }
+    }
+
+    fun cancelBackupImportPreview() {
+        pendingBackupImport = null
+        _settingsUiState.update { it.copy(backup = it.backup.copy(pendingImport = null)) }
     }
 
     fun onBackupFileOperationFailed() {
         viewModelScope.launch {
             _settingsUiState.update { it.copy(backup = it.backup.copy(isBusy = false)) }
             _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+        }
+    }
+
+    fun onBackupImportFileReadFailed() {
+        pendingBackupImport = null
+        viewModelScope.launch {
+            _settingsUiState.update {
+                it.copy(backup = it.backup.copy(pendingImport = null, isBusy = false))
+            }
+            _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_backup_invalid)))
         }
     }
 

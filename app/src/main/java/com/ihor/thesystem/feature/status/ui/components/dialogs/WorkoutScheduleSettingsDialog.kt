@@ -96,11 +96,22 @@ fun WorkoutScheduleSettingsScreen(
     onConnectHealthConnect: () -> Unit = {},
     onExportBackup: () -> Unit = {},
     onImportBackup: () -> Unit = {},
+    onConfirmBackupImport: () -> Unit = {},
+    onCancelBackupImport: () -> Unit = {},
     exerciseSearchViewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
     val colors = SystemTheme.colors
     var selectedPane by remember { mutableStateOf(ScheduleSettingsPane.Day) }
     var showExercisePicker by remember { mutableStateOf(false) }
+
+    uiState.backup.pendingImport?.let { preview ->
+        BackupImportConfirmationDialog(
+            preview = preview,
+            isBusy = uiState.backup.isBusy,
+            onConfirm = onConfirmBackupImport,
+            onDismiss = onCancelBackupImport
+        )
+    }
 
     if (showExercisePicker) {
         ExercisePickerScreen(
@@ -209,6 +220,8 @@ fun WorkoutScheduleSettingsDialog(
     onConnectHealthConnect: () -> Unit = {},
     onExportBackup: () -> Unit = {},
     onImportBackup: () -> Unit = {},
+    onConfirmBackupImport: () -> Unit = {},
+    onCancelBackupImport: () -> Unit = {},
     exerciseSearchViewModel: ExerciseSearchViewModel = hiltViewModel()
 ) {
     WorkoutScheduleSettingsScreen(
@@ -229,6 +242,8 @@ fun WorkoutScheduleSettingsDialog(
         onConnectHealthConnect = onConnectHealthConnect,
         onExportBackup = onExportBackup,
         onImportBackup = onImportBackup,
+        onConfirmBackupImport = onConfirmBackupImport,
+        onCancelBackupImport = onCancelBackupImport,
         exerciseSearchViewModel = exerciseSearchViewModel
     )
 }

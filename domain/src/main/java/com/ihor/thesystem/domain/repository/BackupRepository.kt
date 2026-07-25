@@ -6,6 +6,7 @@ import com.ihor.thesystem.domain.model.BackupStatus
 
 interface BackupRepository {
     suspend fun exportBackup(): BackupPayload
+    suspend fun previewImport(payload: BackupPayload): BackupImportSummary
     suspend fun importBackup(payload: BackupPayload): BackupImportSummary
     suspend fun getBackupStatus(): BackupStatus
 }

@@ -34,7 +34,15 @@ data class HealthConnectUiState(
 data class BackupUiState(
     val lastExportedAtMillis: Long? = null,
     val lastImportedAtMillis: Long? = null,
+    val pendingImport: BackupImportPreviewUiState? = null,
     val isBusy: Boolean = false
+)
+
+@Immutable
+data class BackupImportPreviewUiState(
+    val exportedAtMillis: Long,
+    val tableCount: Int,
+    val rowCount: Int
 )
 
 @Immutable

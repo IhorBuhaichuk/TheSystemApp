@@ -6,65 +6,44 @@ THE SYSTEM: LEVEL UP uses Health Connect only to improve fitness planning contex
 
 The app is not a medical product and does not provide diagnosis, treatment, emergency monitoring, or clinical recommendations.
 
-## Requested Permissions
+## Requested Permission
 
-The manifest currently declares:
+The manifest declares only:
 
 - `android.permission.health.READ_SLEEP`
-- `android.permission.health.READ_STEPS`
-- `android.permission.health.READ_HEART_RATE`
-- `android.permission.health.READ_EXERCISE`
 
-The app maps domain permissions through `HealthConnectPermissions.kt`:
+The app maps the domain permission through `HealthConnectPermissions.kt`:
 
 - `SLEEP` -> `SleepSessionRecord`
-- `STEPS` -> `StepsRecord`
-- `HEART_RATE` -> `HeartRateRecord`
-- `EXERCISE_SESSIONS` -> `ExerciseSessionRecord`
 
-## Why Each Permission Exists
+## Why This Permission Exists
 
-### Sleep
+Sleep-session data is used for readiness and recovery context. Fresh sleep can influence Today Order and readiness scoring. If sleep is missing, the system uses manual readiness inputs or a neutral fallback.
 
-Used for readiness and recovery context. Fresh sleep can influence Today Order and readiness scoring. If sleep is missing, the system uses manual readiness inputs or neutral fallback.
-
-### Steps
-
-Used as general movement/load context. Steps can help the system understand whether the day already contains meaningful physical activity.
-
-### Heart Rate
-
-Used as workout/recovery context when available. The current implementation estimates a low/resting heart-rate value from available samples for context only.
-
-### Exercise Sessions
-
-Used to understand whether workouts were already recorded in Health Connect and to support recent activity context.
+The app does not request steps, heart-rate, or exercise-session access because these data types are not used by the shipped core loop or user interface.
 
 ## Data Handling
 
-`HealthConnectSignalsRepositoryImpl` reads signals through the Health Connect client and returns a `HealthSignals` model:
+`HealthConnectSignalsRepositoryImpl` reads the Health Connect signal through the Health Connect client and returns a `HealthSignals` model:
 
 - `sleepDurationMinutes`
-- `stepsToday`
-- `restingHeartRate`
-- `workoutSessions`
 - `sourceFreshness`
 
-The repository returns unavailable/null values when Health Connect is unavailable, permissions are missing, reads fail, or data does not exist. The app should show fallback behavior rather than blocking the user.
+The repository returns unavailable/null values when Health Connect is unavailable, permission is missing, reads fail, or data does not exist. The app shows fallback behavior rather than blocking the user.
 
 ## User-Facing Permission Copy
 
 Suggested rationale text:
 
-> THE SYSTEM can read selected Health Connect signals to improve readiness and training context. Sleep helps recovery decisions, steps and exercise sessions help understand daily load, and heart-rate data can provide extra workout context. This is optional; the app still works without Health Connect.
+> THE SYSTEM can read sleep sessions from Health Connect to improve readiness and recovery context. This is optional; the app still works without Health Connect.
 
 ## Release Checklist
 
 - Permission request screen explains the benefit before the Android permission prompt.
-- Privacy Policy lists each Health Connect data type and purpose.
-- Play Console Data safety matches these permissions.
+- Privacy Policy lists the Health Connect data type and purpose.
+- Play Console Data safety matches this permission.
 - Store listing avoids medical claims.
-- App handles denied permissions and missing Health Connect gracefully.
+- App handles denied permission and missing Health Connect gracefully.
 - Sensitive fitness data is not silently included in Android automatic backup.
 
 ## References
@@ -72,4 +51,3 @@ Suggested rationale text:
 - Android Health Connect: https://developer.android.com/health-and-fitness/health-connect
 - Google Play Health apps policy: https://support.google.com/googleplay/android-developer/answer/14738291
 - Google Play User Data policy: https://support.google.com/googleplay/android-developer/answer/10144311
-
