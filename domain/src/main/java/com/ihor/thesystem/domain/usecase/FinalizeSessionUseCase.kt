@@ -107,7 +107,7 @@ class FinalizeSessionUseCase @Inject constructor(
         if (localData.systemTemplateType != null) {
             return Result.Success(
                 AiArchitectReport(
-                    architectFeedback = MessageText.DynamicString("${localData.systemTemplateType.questTitle} logged."),
+                    architectFeedback = MessageText.DynamicString("Тренування записано."),
                     currentStageStatus = "[ SYSTEM_PROTOCOL ]",
                     completedExercises = completedExerciseIds,
                     pendingExercises = emptyList(),

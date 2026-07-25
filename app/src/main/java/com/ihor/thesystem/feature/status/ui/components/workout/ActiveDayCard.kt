@@ -319,7 +319,7 @@ private fun ActiveExerciseLoggerCard(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
-                    contentDescription = "Налаштування прогресії",
+                    contentDescription = "Налаштувати ціль",
                     tint = colors.textSecondary,
                     modifier = Modifier.size(19.dp)
                 )
@@ -423,9 +423,9 @@ private fun WorkoutSetGroupRow(
         else -> colors.textMuted
     }
     val stateText = when {
-        ready -> "done"
+        ready -> "Виконано"
         hasInput -> "$completedCount/${group.sets.size}"
-        else -> "empty"
+        else -> "Не заповнено"
     }
 
     Row(

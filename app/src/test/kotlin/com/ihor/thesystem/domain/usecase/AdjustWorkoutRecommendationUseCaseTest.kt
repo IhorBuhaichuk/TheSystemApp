@@ -49,7 +49,7 @@ class AdjustWorkoutRecommendationUseCaseTest {
         assertEquals(80.0, adjusted.adjustedWeight, 0.001)
         assertEquals(2, adjusted.adjustedSets)
         assertEquals(8, adjusted.adjustedReps)
-        assertTrue(adjusted.adjustmentReason.contains("Deload"))
+        assertTrue(adjusted.adjustmentReason.contains("для відновлення"))
     }
 
     @Test
@@ -84,7 +84,7 @@ class AdjustWorkoutRecommendationUseCaseTest {
         assertEquals(102.5, adjusted.adjustedWeight, 0.001)
         assertEquals(3, adjusted.adjustedSets)
         assertEquals(8, adjusted.adjustedReps)
-        assertTrue(adjusted.adjustmentReason.contains("matrix target"))
+        assertTrue(adjusted.adjustmentReason.contains("в межах вашої цілі"))
     }
 
     private fun recommendation(

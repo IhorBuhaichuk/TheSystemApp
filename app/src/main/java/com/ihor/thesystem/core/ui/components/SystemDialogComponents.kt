@@ -96,7 +96,7 @@ fun SystemDialogScaffold(
                 Spacer(modifier = Modifier.width(12.dp))
                 SystemIconButton(
                     icon = Icons.Default.Close,
-                    contentDescription = "Close",
+                    contentDescription = "Закрити",
                     accent = accent,
                     onClick = onDismiss
                 )

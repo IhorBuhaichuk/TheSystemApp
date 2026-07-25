@@ -66,7 +66,7 @@ fun ExerciseAnimationPlayer(
                     .data(targetUrl)
                     .crossfade(true)
                     .build(),
-                contentDescription = "Exercise Animation Frame",
+                contentDescription = "Кадр анімації вправи",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit,
                 loading = {

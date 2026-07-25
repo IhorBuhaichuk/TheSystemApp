@@ -136,7 +136,7 @@ internal fun ExerciseInfoDialog(
             }
 
             Text(
-                text = "Довідка винесена окремо, щоб під час тренування основний екран лишався швидким журналом підходів.",
+                text = "Тут можна переглянути техніку виконання та орієнтири вправи.",
                 style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
             )
 

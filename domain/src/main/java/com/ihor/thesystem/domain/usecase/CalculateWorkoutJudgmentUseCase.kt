@@ -179,7 +179,7 @@ class CalculateWorkoutJudgmentUseCase @Inject constructor() {
             WorkoutProgressionDecision.REDUCE ->
                 "Знизити навантаження або обсяг на наступній сесії."
             WorkoutProgressionDecision.DELOAD_RECOMMENDED ->
-                "Запланувати deload або легшу сесію перед наступним прогресом."
+                "Запланувати легше тренування перед наступним підвищенням навантаження."
         }
 
     private fun Double.isSameLoadAs(other: Double): Boolean =

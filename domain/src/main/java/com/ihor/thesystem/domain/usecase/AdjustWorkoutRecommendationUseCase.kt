@@ -25,9 +25,9 @@ class AdjustWorkoutRecommendationUseCase @Inject constructor() {
                     sets = baseSets,
                     reps = baseReps,
                     reason = if (recommendation.isProgression) {
-                        "Progression kept; base recommendation is already capped by matrix target."
+                        "Поточну рекомендацію збережено в межах вашої цілі."
                     } else {
-                        "Progression allowed; no extra load added without a matrix-capped progression."
+                        "Навантаження можна підвищити, але додаткову вагу поза планом не додано."
                     }
                 )
             TodayTrainingDecisionType.STANDARD_TRAINING ->
@@ -35,42 +35,42 @@ class AdjustWorkoutRecommendationUseCase @Inject constructor() {
                     weight = baseWeight,
                     sets = baseSets,
                     reps = baseReps,
-                    reason = "Standard training: recommendation unchanged."
+                    reason = "Звичайне тренування: план не змінено."
                 )
             TodayTrainingDecisionType.REDUCED_LOAD ->
                 Adjustment(
                     weight = adjustedLoad(baseWeight, trackingMode, decision.loadMultiplier),
                     sets = adjustedSets(baseSets, decision.volumeMultiplier, minSets = 2),
                     reps = baseReps,
-                    reason = "Reduced load from today's readiness and recovery state."
+                    reason = "Навантаження зменшено з урахуванням готовності та відновлення."
                 )
             TodayTrainingDecisionType.ACTIVE_RECOVERY ->
                 Adjustment(
                     weight = adjustedLoad(baseWeight, trackingMode, ACTIVE_RECOVERY_LOAD_MULTIPLIER),
                     sets = 1,
                     reps = adjustedReps(baseReps, trackingMode, ACTIVE_RECOVERY_VOLUME_MULTIPLIER),
-                    reason = "Active recovery: heavy work removed or strongly reduced."
+                    reason = "Активне відновлення: важке навантаження прибрано."
                 )
             TodayTrainingDecisionType.NO_EXCUSE ->
                 Adjustment(
                     weight = adjustedLoad(baseWeight, trackingMode, NO_EXCUSE_LOAD_MULTIPLIER),
                     sets = baseSets.coerceIn(1, 2),
                     reps = baseReps,
-                    reason = "No-excuse mode: short simple work block."
+                    reason = "Коротке тренування допоможе зберегти ритм."
                 )
             TodayTrainingDecisionType.DELOAD ->
                 Adjustment(
                     weight = adjustedLoad(baseWeight, trackingMode, decision.loadMultiplier.coerceAtMost(0.8f)),
                     sets = adjustedSets(baseSets, decision.volumeMultiplier.coerceAtMost(0.7f), minSets = 2),
                     reps = baseReps,
-                    reason = "Deload: load and volume reduced to manage recovery debt."
+                    reason = "Вагу й кількість підходів зменшено для відновлення."
                 )
             TodayTrainingDecisionType.REST ->
                 Adjustment(
                     weight = 0.0,
                     sets = 0,
                     reps = 0,
-                    reason = "Rest day: no workout recommendation."
+                    reason = "День відпочинку: тренування не заплановано."
                 )
         }
 

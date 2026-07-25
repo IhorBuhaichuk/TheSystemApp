@@ -40,7 +40,7 @@ internal fun ExerciseWorkoutUiModel.techniqueCheckText(): String? {
 
     if (tips.isEmpty()) return null
 
-    return "Чек техніки: ${tips.joinToString(" · ")}"
+    return "Перевірте техніку: ${tips.joinToString(" · ")}"
 }
 
 internal fun ActiveSetInput.isReadyForCompletion(

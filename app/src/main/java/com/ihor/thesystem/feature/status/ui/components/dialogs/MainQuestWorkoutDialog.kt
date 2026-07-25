@@ -157,7 +157,7 @@ private fun WorkoutLoggingSummaryPanel(
                 )
             }
             SystemStatusChip(
-                text = if (summary.canFinish) "Ready" else "Log set",
+                text = if (summary.canFinish) "Можна завершити" else "Запишіть підхід",
                 accent = accent,
                 active = summary.canFinish
             )

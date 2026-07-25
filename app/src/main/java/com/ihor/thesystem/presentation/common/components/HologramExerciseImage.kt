@@ -48,7 +48,7 @@ fun HologramExerciseImage(
     SubcomposeAsyncImage(
         model = imageRequest,
         imageLoader = imageLoader,
-        contentDescription = "Exercise Animation",
+        contentDescription = "Ілюстрація вправи",
         modifier = modifier,
         contentScale = ContentScale.Fit,
         loading = {

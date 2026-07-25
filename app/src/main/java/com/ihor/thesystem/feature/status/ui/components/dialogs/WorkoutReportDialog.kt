@@ -122,7 +122,7 @@ fun WorkoutReportDialog(
 
                 if (report.isFallback) {
                     Text(
-                        text = "AI тимчасово недоступний. Тренування збережено, verdict сформовано локально.",
+                        text = "ШІ тимчасово недоступний. Тренування збережено, а підсумок сформовано на пристрої.",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = colors.textSecondary,
                             fontWeight = FontWeight.Bold
@@ -176,7 +176,7 @@ private fun WorkoutCompletionBlock(
                 )
             }
             SystemStatusChip(
-                text = judgment?.progressionDecision?.progressLabel() ?: "Logged",
+                text = judgment?.progressionDecision?.progressLabel() ?: "Записано",
                 accent = progressAccent,
                 active = true
             )
@@ -271,9 +271,9 @@ private fun NextWorkoutBlock(
         judgment != null ->
             judgment.nextAction
         else ->
-            "Система збереже результат і підхопить його в наступному Today Order."
+            "Система збереже результат і врахує його в наступному плані на сьогодні."
     }.ifBlank {
-        "Система збереже результат і підхопить його в наступному Today Order."
+        "Система збереже результат і врахує його в наступному плані на сьогодні."
     }
 
     Row(
@@ -344,7 +344,7 @@ private fun WorkoutProgressionDecision.label(): String =
         WorkoutProgressionDecision.INCREASE_ALLOWED -> "можна підвищувати"
         WorkoutProgressionDecision.HOLD -> "вага не підвищується"
         WorkoutProgressionDecision.REDUCE -> "знизити навантаження"
-        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "deload рекомендовано"
+        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "рекомендовано легше тренування"
     }
 
 @Composable
@@ -358,8 +358,8 @@ private fun WorkoutProgressionDecision.progressColor(): Color =
 
 private fun WorkoutProgressionDecision.progressLabel(): String =
     when (this) {
-        WorkoutProgressionDecision.INCREASE_ALLOWED -> "Progress"
-        WorkoutProgressionDecision.HOLD -> "Hold"
-        WorkoutProgressionDecision.REDUCE -> "Reduce"
-        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "Deload"
+        WorkoutProgressionDecision.INCREASE_ALLOWED -> "Підвищення"
+        WorkoutProgressionDecision.HOLD -> "Без змін"
+        WorkoutProgressionDecision.REDUCE -> "Зменшення"
+        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "Розвантаження"
     }
