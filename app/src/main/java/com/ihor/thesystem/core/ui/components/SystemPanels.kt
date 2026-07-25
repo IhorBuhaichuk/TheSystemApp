@@ -173,7 +173,7 @@ fun Modifier.techSurface(
         )
         role == TechSurfaceRole.Hero -> Brush.linearGradient(
             listOf(
-                accent.copy(alpha = if (active) 0.085f else 0.035f),
+                accent.copy(alpha = if (active) 0.050f else 0.025f),
                 material.panelTop,
                 material.panelMid,
                 material.panelBottom
@@ -204,9 +204,15 @@ fun Modifier.techSurface(
     }
     val borderBrush = Brush.linearGradient(
         listOf(
-            material.edgeHighlight.copy(alpha = if (enabled) 0.26f else 0.10f),
+            material.edgeHighlight.copy(alpha = if (enabled) 0.20f else 0.10f),
             if (enabled && active) {
-                accent.copy(alpha = 0.34f)
+                accent.copy(
+                    alpha = when (role) {
+                        TechSurfaceRole.Hero -> 0.16f
+                        TechSurfaceRole.Button -> 0.28f
+                        else -> 0.22f
+                    }
+                )
             } else {
                 colors.borderSubtle.copy(alpha = 0.11f)
             },
@@ -218,7 +224,7 @@ fun Modifier.techSurface(
     )
     val reflectedAlpha = when {
         !enabled -> 0.012f
-        role == TechSurfaceRole.Hero -> if (active) 0.10f else 0.065f
+        role == TechSurfaceRole.Hero -> if (active) 0.065f else 0.045f
         active -> glow.activeAlpha
         role == TechSurfaceRole.Button -> 0.050f
         role == TechSurfaceRole.Navigation -> 0.040f

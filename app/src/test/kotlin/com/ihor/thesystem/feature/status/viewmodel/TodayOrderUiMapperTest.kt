@@ -85,7 +85,7 @@ class TodayOrderUiMapperTest {
         assertEquals(TodayOrderDayType.REST, rest.dayType)
         assertEquals("Відпочинок", rest.dayTypeLabel)
         assertEquals("Відкрити план дня", rest.primaryActionLabel)
-        assertEquals("Відновлення без штрафу", rest.outcomeText)
+        assertEquals("Без штрафу", rest.outcomeText)
         assertEquals(TodayOrderAccent.AI, rest.accent)
     }
 

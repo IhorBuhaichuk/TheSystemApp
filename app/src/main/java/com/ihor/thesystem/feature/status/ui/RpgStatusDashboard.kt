@@ -132,7 +132,7 @@ fun RpgStatusDashboard(
     onRemoveTask: (Int) -> Unit
 ) {
     val colors = SystemTheme.colors
-    val pinnedWeekHeight = 132.dp
+    val pinnedWeekHeight = 116.dp
     val transitionOffsetPx = with(LocalDensity.current) { 24.dp.roundToPx() }
     var dashboardState by remember { mutableStateOf(StatusDashboardState.ACTIONS) }
 
@@ -1312,7 +1312,7 @@ private fun WeekPreviewBlock(
     if (days.isEmpty()) {
         Box(
             modifier = modifier
-                .height(112.dp)
+                .height(96.dp)
                 .techSurface(
                     shape = cardShape,
                     active = false,
@@ -1328,15 +1328,10 @@ private fun WeekPreviewBlock(
         }
     } else {
         val models = days.map { it.toSystemWeekDayModel() }
-        val progressIndex = remember(models) {
-            models.indexOfFirst { it.isToday }
-                .takeIf { it >= 0 }
-                ?: models.indexOfLast { !it.date.isAfter(LocalDate.now()) }
-        }
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .height(112.dp)
+                .height(96.dp)
                 .techSurface(
                     shape = cardShape,
                     active = false,
@@ -1344,20 +1339,23 @@ private fun WeekPreviewBlock(
                     role = TechSurfaceRole.Panel
                 )
                 .systemClickable(onClick = onOpenCalendar)
-                .padding(start = 13.dp, top = 19.dp, end = 13.dp, bottom = 15.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(start = 13.dp, top = 13.dp, end = 13.dp, bottom = 11.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth()) {
-                models.forEachIndexed { index, day ->
-                    val active = index <= progressIndex
+                models.forEach { day ->
                     Text(
                         text = day.date.ukrainianWeekLabelReadable(),
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.labelMedium.copy(
-                            color = if (active) colors.accentWarning else colors.textMuted,
+                            color = when {
+                                day.isToday -> colors.accentPrimary
+                                day.date.dayOfWeek == java.time.DayOfWeek.SATURDAY -> colors.accentWarning
+                                else -> colors.textMuted
+                            },
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
-                            lineHeight = 15.sp,
+                            fontSize = 12.sp,
+                            lineHeight = 14.sp,
                             textAlign = TextAlign.Center
                         ),
                         maxLines = 1
@@ -1381,13 +1379,8 @@ private fun WeekPreviewBlock(
                         repeat(nodeCount - 1) { index ->
                             val startX = nodeX(index) + nodeRadius
                             val endX = nodeX(index + 1) - nodeRadius
-                            val segmentColor = if (index < progressIndex) {
-                                colors.accentWarning
-                            } else {
-                                colors.accentPrimary
-                            }
                             drawLine(
-                                color = segmentColor.copy(alpha = 0.72f),
+                                color = colors.borderSubtle.copy(alpha = 0.42f),
                                 start = Offset(startX, nodeY),
                                 end = Offset(endX, nodeY),
                                 strokeWidth = 1.2.dp.toPx(),
@@ -1401,31 +1394,25 @@ private fun WeekPreviewBlock(
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    models.forEachIndexed { index, day ->
-                        val isPastOrToday = index <= progressIndex
-                        val isNextDay = index == progressIndex + 1
-                        val dayAccent = when {
-                            isPastOrToday -> colors.accentWarning
-                            isNextDay -> colors.accentPrimary
-                            else -> colors.statusNeutral
-                        }
+                    models.forEach { day ->
+                        val dayAccent = if (day.isToday) colors.accentPrimary else colors.statusNeutral
                         Box(
                             modifier = Modifier.weight(1f),
                             contentAlignment = Alignment.Center
                         ) {
-                            val dayShape = systemPlateShape()
+                            val dayShape = RoundedCornerShape(12.dp)
                             Box(
                                 modifier = Modifier
-                                    .size(if (day.isToday) 44.dp else 40.dp)
+                                    .size(if (day.isToday) 42.dp else 40.dp)
                                     .techSurface(
                                         shape = dayShape,
-                                        active = day.isToday || isNextDay,
+                                        active = day.isToday,
                                         accent = dayAccent,
                                         role = TechSurfaceRole.Plate
                                     )
                                     .border(
-                                        width = if (day.isToday) 1.4.dp else 0.8.dp,
-                                        color = dayAccent.copy(alpha = if (isPastOrToday || isNextDay) 0.90f else 0.46f),
+                                        width = if (day.isToday) 1.4.dp else 0.7.dp,
+                                        color = dayAccent.copy(alpha = if (day.isToday) 0.90f else 0.28f),
                                         shape = dayShape
                                     ),
                                 contentAlignment = Alignment.Center
@@ -1433,10 +1420,10 @@ private fun WeekPreviewBlock(
                                 Text(
                                     text = day.dayNumber,
                                     style = MaterialTheme.typography.titleLarge.copy(
-                                        color = if (day.isToday) dayAccent else colors.textPrimary,
+                                        color = colors.textPrimary,
                                         fontWeight = FontWeight.Black,
-                                        fontSize = 20.sp,
-                                        lineHeight = 22.sp,
+                                        fontSize = 19.sp,
+                                        lineHeight = 21.sp,
                                         textAlign = TextAlign.Center
                                     ),
                                     maxLines = 1

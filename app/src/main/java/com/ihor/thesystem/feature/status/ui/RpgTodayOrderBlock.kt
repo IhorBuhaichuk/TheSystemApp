@@ -73,7 +73,7 @@ internal fun TodayOrderBlock(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 334.dp)
+            .heightIn(min = 316.dp)
             .testTag(SystemUiTestTags.TODAY_ORDER)
             .techSurface(
                 shape = cardShape,
@@ -90,7 +90,7 @@ internal fun TodayOrderBlock(
                 .fillMaxWidth()
                 .padding(
                     start = horizontalPadding,
-                    top = if (compact) 24.dp else 30.dp,
+                    top = if (compact) 22.dp else 24.dp,
                     end = horizontalPadding,
                     bottom = 22.dp
                 )
@@ -98,7 +98,7 @@ internal fun TodayOrderBlock(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = if (compact) 184.dp else 146.dp),
+                    .heightIn(min = if (compact) 176.dp else 138.dp),
                 horizontalArrangement = Arrangement.spacedBy(if (compact) 10.dp else 18.dp),
                 verticalAlignment = Alignment.Top
             ) {
@@ -109,14 +109,14 @@ internal fun TodayOrderBlock(
                     verticalArrangement = Arrangement.Top
                 ) {
                     Text(
-                        text = "План на сьогодні · ${order.dayTypeLabel.toSystemSentenceCase()}",
+                        text = "Сьогодні · ${order.dayTypeLabel.toSystemSentenceCase()}",
                         style = MaterialTheme.typography.labelLarge.copy(
                             color = accent,
                             fontFamily = SystemDisplayFamily,
                             fontWeight = FontWeight.Bold,
-                            fontSize = if (compact) 12.sp else 14.sp,
-                            lineHeight = if (compact) 14.sp else 16.sp,
-                            letterSpacing = if (compact) 0.8.sp else 1.2.sp
+                            fontSize = if (compact) 12.sp else 13.sp,
+                            lineHeight = if (compact) 14.sp else 15.sp,
+                            letterSpacing = if (compact) 0.6.sp else 0.8.sp
                         ),
                         maxLines = if (compact) 3 else 2,
                         overflow = TextOverflow.Ellipsis
@@ -128,8 +128,8 @@ internal fun TodayOrderBlock(
                             color = colors.textPrimary,
                             fontFamily = SystemDisplayFamily,
                             fontWeight = FontWeight.Black,
-                            fontSize = if (compact) 27.sp else 31.sp,
-                            lineHeight = if (compact) 29.sp else 33.sp,
+                            fontSize = if (compact) 26.sp else 29.sp,
+                            lineHeight = if (compact) 28.sp else 31.sp,
                             letterSpacing = 0.sp
                         ),
                         maxLines = if (compact) 3 else 2,
@@ -141,8 +141,8 @@ internal fun TodayOrderBlock(
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = colors.textSecondary,
                             fontWeight = FontWeight.Medium,
-                            fontSize = if (compact) 13.sp else 14.sp,
-                            lineHeight = if (compact) 17.sp else 18.sp
+                            fontSize = 13.sp,
+                            lineHeight = 17.sp
                         ),
                         maxLines = if (compact) 5 else 4,
                         overflow = TextOverflow.Ellipsis
@@ -155,7 +155,7 @@ internal fun TodayOrderBlock(
                     compact = compact,
                     modifier = Modifier
                         .padding(top = 6.dp)
-                        .size(if (compact) 96.dp else 110.dp)
+                        .size(if (compact) 92.dp else 104.dp)
                 )
             }
 
@@ -187,7 +187,7 @@ internal fun TodayOrderBlock(
                     QuestXpBadge(accent = accent)
                 }
             }
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             QuestPrimaryButton(
                 text = order.primaryActionLabel,
