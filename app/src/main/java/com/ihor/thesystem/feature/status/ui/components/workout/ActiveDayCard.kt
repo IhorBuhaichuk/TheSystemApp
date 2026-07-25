@@ -404,16 +404,38 @@ private fun WorkoutSetGroupRow(
 ) {
     val colors = SystemTheme.colors
     val shapes = SystemTheme.shapes
-    val ready = group.sets.all { it.isCompleted } && group.sets.isNotEmpty()
+    val completedCount = group.sets.count { it.isCompleted }
+    val ready = completedCount == group.sets.size && group.sets.isNotEmpty()
+    val hasInput = group.sets.any { it.weight.isNotBlank() || it.reps.isNotBlank() }
+    val stateAccent = when {
+        ready -> colors.accentSuccess
+        hasInput -> colors.accentAi
+        else -> colors.textMuted
+    }
+    val stateText = when {
+        ready -> "done"
+        hasInput -> "$completedCount/${group.sets.size}"
+        else -> "empty"
+    }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(shapes.medium))
-            .background(if (ready) colors.accentSuccess.copy(alpha = 0.08f) else colors.surfaceGlassSoft)
+            .background(
+                when {
+                    ready -> colors.accentSuccess.copy(alpha = 0.08f)
+                    hasInput -> colors.accentAi.copy(alpha = 0.055f)
+                    else -> colors.surfaceGlassSoft
+                }
+            )
             .border(
                 1.dp,
-                if (ready) colors.accentSuccess.copy(alpha = 0.28f) else colors.borderSubtle,
+                when {
+                    ready -> colors.accentSuccess.copy(alpha = 0.28f)
+                    hasInput -> colors.accentAi.copy(alpha = 0.22f)
+                    else -> colors.borderSubtle
+                },
                 RoundedCornerShape(shapes.medium)
             )
             .padding(horizontal = 10.dp, vertical = 9.dp),
@@ -423,7 +445,7 @@ private fun WorkoutSetGroupRow(
         Text(
             text = index.toString(),
             style = MaterialTheme.typography.labelMedium.copy(
-                color = if (ready) colors.accentSuccess else colors.textMuted,
+                color = stateAccent,
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center
             ),
@@ -485,6 +507,18 @@ private fun WorkoutSetGroupRow(
                 )
             }
         }
+
+        Text(
+            text = stateText,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = stateAccent,
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.End
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.width(38.dp)
+        )
     }
 }
 

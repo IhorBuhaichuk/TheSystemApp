@@ -30,6 +30,8 @@ import com.ihor.thesystem.core.theme.SystemColorTokens
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
+import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.NutritionFloorStatus
 import com.ihor.thesystem.domain.model.NutritionFloorTargetStatus
 import com.ihor.thesystem.domain.model.NutritionGoalMode
@@ -153,9 +155,12 @@ private fun SummaryMetricCell(
     Column(
         modifier = modifier
             .height(92.dp)
-            .clip(shape)
-            .background(colors.overlayLight)
-            .border(1.dp, accent.copy(alpha = 0.16f), shape)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
             .padding(11.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
@@ -227,9 +232,12 @@ private fun ProgressProofRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(colors.overlayLight)
-            .border(1.dp, accent.copy(alpha = 0.16f), shape)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically

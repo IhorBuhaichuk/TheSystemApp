@@ -173,6 +173,16 @@ fun Modifier.techSurface(
         active -> 0.14f
         else -> 0.065f
     }
+    val reflectedColor = when (accent) {
+        colors.accentAi -> material.reflectedAi
+        colors.accentPrimary -> material.reflectedPrimary
+        else -> accent
+    }
+    val textureAlpha = when (role) {
+        TechSurfaceRole.Panel -> 0.030f
+        TechSurfaceRole.Plate -> 0.022f
+        TechSurfaceRole.Button -> 0.038f
+    }
 
     return this
         .shadow(
@@ -201,16 +211,28 @@ fun Modifier.techSurface(
                     end = Offset(size.width, size.height)
                 )
             )
+            val textureStroke = 0.55.dp.toPx()
+            val textureSpacing = 18.dp.toPx()
+            var textureX = -size.height
+            while (textureX < size.width + size.height) {
+                drawLine(
+                    color = material.edgeHighlight.copy(alpha = textureAlpha),
+                    start = Offset(textureX, size.height),
+                    end = Offset(textureX + size.height, 0f),
+                    strokeWidth = textureStroke
+                )
+                textureX += textureSpacing
+            }
             drawRect(
                 brush = Brush.radialGradient(
-                    colors = listOf(accent.copy(alpha = reflectedAlpha), Color.Transparent),
+                    colors = listOf(reflectedColor.copy(alpha = reflectedAlpha), Color.Transparent),
                     center = Offset(size.width * 0.18f, size.height * 0.10f),
                     radius = size.maxDimension * 0.62f
                 )
             )
             drawRect(
                 brush = Brush.radialGradient(
-                    colors = listOf(accent.copy(alpha = reflectedAlpha * 0.58f), Color.Transparent),
+                    colors = listOf(reflectedColor.copy(alpha = reflectedAlpha * 0.58f), Color.Transparent),
                     center = Offset(size.width * 0.90f, size.height * 0.82f),
                     radius = size.maxDimension * 0.52f
                 )
@@ -352,11 +374,15 @@ fun SystemMetricBlock(
     subtitle: String? = null
 ) {
     val colors = SystemTheme.colors
+    val shape = SystemCutCornerShape(10.dp)
     Column(
         modifier = modifier
-            .clip(SystemCutCornerShape(10.dp))
-            .background(colors.overlayLight)
-            .border(1.dp, accent.copy(alpha = 0.18f), SystemCutCornerShape(10.dp))
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
             .padding(horizontal = 9.dp, vertical = 7.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -661,12 +687,16 @@ fun SystemSettingsRow(
     onClick: () -> Unit
 ) {
     val colors = SystemTheme.colors
+    val shape = SystemCutCornerShape(10.dp)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(SystemCutCornerShape(10.dp))
-            .background(colors.overlayLight)
-            .border(1.dp, colors.borderSubtle, SystemCutCornerShape(10.dp))
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

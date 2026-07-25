@@ -264,7 +264,7 @@ class WorkoutViewModel @Inject constructor(
                 } ?: ex
             }.toImmutableList(),
             matrixEntries = stats.matrixEntries.map { it.toMatrixEntryUiModel() }.toImmutableList()
-        )
+        )?.withLoggingSummary()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), null)
 
     fun onSetWeightChanged(exerciseId: Int, setId: Long, weight: String) {
@@ -310,9 +310,15 @@ class WorkoutViewModel @Inject constructor(
 
     fun onFinishWorkout() {
         val currentWorkout = activeWorkoutState.value ?: return
+        val summary = currentWorkout.loggingSummary
         val questId = currentWorkout.dailyTasks.firstOrNull()?.id?.toLong() ?: 0L
         
         viewModelScope.launch {
+            if (!summary.canFinish) {
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_no_completed_exercises)))
+                return@launch
+            }
+
             val allSessionSets = currentWorkout.exercises.flatMap { exercise ->
                 exercise.sets.mapNotNull { setInput ->
                     setInput.toExerciseSetOrNull(
@@ -335,11 +341,6 @@ class WorkoutViewModel @Inject constructor(
                 .filter { it.trackingMode.usesWeightInput }
                 .map { it.exerciseId }
                 .toSet()
-
-            if (completedSessionSets.isEmpty()) {
-                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_no_completed_exercises)))
-                return@launch
-            }
 
             val session = WorkoutSession(
                 questId = questId,
@@ -874,4 +875,44 @@ class WorkoutViewModel @Inject constructor(
         _dialogState.value = StatusDialogState.None
     }
 
+}
+
+fun ActiveDayUiModel.withLoggingSummary(): ActiveDayUiModel =
+    copy(loggingSummary = buildWorkoutLoggingSummary(this))
+
+fun buildWorkoutLoggingSummary(workout: ActiveDayUiModel): WorkoutLoggingSummaryUiModel {
+    val totalSets = workout.exercises.sumOf { it.sets.size }.coerceAtLeast(0)
+    val completedSets = workout.exercises.sumOf { exercise -> exercise.sets.count { it.isCompleted } }
+    val completedExercises = workout.exercises.count { exercise -> exercise.sets.any { it.isCompleted } }
+    val totalExercises = workout.exercises.size
+    val remainingSets = (totalSets - completedSets).coerceAtLeast(0)
+    val canFinish = completedSets > 0
+    val progressText = "$completedSets/$totalSets підх."
+    val exerciseText = "$completedExercises/$totalExercises вправ"
+    val helperText = when {
+        completedSets == 0 ->
+            "Заповни перший підхід, щоб система могла зберегти тренування."
+        remainingSets == 0 && totalSets > 0 ->
+            "План закрито. Можна завершувати без зайвих кроків."
+        else ->
+            "Можна завершити зараз або дозаписати ще $remainingSets підх."
+    }
+    val finishCtaText = if (canFinish) {
+        "Завершити · $progressText"
+    } else {
+        "Завершити тренування"
+    }
+
+    return WorkoutLoggingSummaryUiModel(
+        completedSets = completedSets,
+        totalSets = totalSets,
+        completedExercises = completedExercises,
+        totalExercises = totalExercises,
+        remainingSets = remainingSets,
+        canFinish = canFinish,
+        progressText = progressText,
+        exerciseText = exerciseText,
+        helperText = helperText,
+        finishCtaText = finishCtaText
+    )
 }

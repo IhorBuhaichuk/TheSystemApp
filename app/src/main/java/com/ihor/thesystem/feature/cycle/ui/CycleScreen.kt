@@ -744,12 +744,16 @@ private fun BonusLine(
     value: String
 ) {
     val colors = SystemTheme.colors
+    val shape = SystemCutCornerShape(8.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(SystemCutCornerShape(8.dp))
-            .background(colors.accentSuccess.copy(alpha = 0.08f))
-            .border(1.dp, colors.accentSuccess.copy(alpha = 0.18f), SystemCutCornerShape(8.dp))
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentSuccess,
+                role = TechSurfaceRole.Plate
+            )
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -852,9 +856,12 @@ private fun CompactActionButton(
     Box(
         modifier = Modifier
             .size(38.dp)
-            .clip(shape)
-            .background(colors.overlayLight)
-            .border(1.dp, colors.borderSubtle, shape)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Plate
+            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {

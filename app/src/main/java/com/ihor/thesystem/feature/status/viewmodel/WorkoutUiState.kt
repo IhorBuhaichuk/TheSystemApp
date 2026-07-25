@@ -44,7 +44,8 @@ data class ActiveDayUiModel(
     val workoutName: String?,
     val exercises: ImmutableList<ExerciseWorkoutUiModel>,
     val adjustmentReason: String? = null,
-    val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf()
+    val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf(),
+    val loggingSummary: WorkoutLoggingSummaryUiModel = WorkoutLoggingSummaryUiModel()
 )
 
 @Immutable
@@ -66,6 +67,20 @@ data class ExerciseWorkoutUiModel(
     val substitutionExternalIds: ImmutableList<String> = persistentListOf(),
     val techniqueCheckEmphasized: Boolean = false,
     val sets: ImmutableList<ActiveSetInput> = persistentListOf()
+)
+
+@Immutable
+data class WorkoutLoggingSummaryUiModel(
+    val completedSets: Int = 0,
+    val totalSets: Int = 0,
+    val completedExercises: Int = 0,
+    val totalExercises: Int = 0,
+    val remainingSets: Int = 0,
+    val canFinish: Boolean = false,
+    val progressText: String = "0/0 підх.",
+    val exerciseText: String = "0 вправ",
+    val helperText: String = "Заповни перший підхід, щоб система могла зберегти тренування.",
+    val finishCtaText: String = "Завершити тренування"
 )
 
 @Immutable

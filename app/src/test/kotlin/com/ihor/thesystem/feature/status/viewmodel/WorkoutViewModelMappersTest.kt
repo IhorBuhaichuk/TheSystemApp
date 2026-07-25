@@ -1,5 +1,6 @@
 package com.ihor.thesystem.feature.status.viewmodel
 
+import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
 import com.ihor.thesystem.domain.model.QuestTask
 import com.ihor.thesystem.domain.model.ReadinessLevel
@@ -7,8 +8,11 @@ import com.ihor.thesystem.domain.model.RecoveryDebt
 import com.ihor.thesystem.domain.model.RecoveryDebtLevel
 import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WorkoutViewModelMappersTest {
@@ -71,6 +75,64 @@ class WorkoutViewModelMappersTest {
         assertEquals("24.5", 24.5f.formatEquipmentNumber())
     }
 
+    @Test
+    fun `workout logging summary blocks finish before first completed set`() {
+        val summary = buildWorkoutLoggingSummary(
+            workout(
+                exercise(
+                    ActiveSetInput(weight = "80", reps = "8", isCompleted = false),
+                    ActiveSetInput()
+                )
+            )
+        )
+
+        assertFalse(summary.canFinish)
+        assertEquals(0, summary.completedSets)
+        assertEquals(2, summary.totalSets)
+        assertEquals("0/2 підх.", summary.progressText)
+        assertEquals("Завершити тренування", summary.finishCtaText)
+    }
+
+    @Test
+    fun `workout logging summary enables finish with partial logged workout`() {
+        val summary = buildWorkoutLoggingSummary(
+            workout(
+                exercise(
+                    ActiveSetInput(weight = "80", reps = "8", isCompleted = true),
+                    ActiveSetInput(weight = "80", reps = "8", isCompleted = false)
+                ),
+                exercise(
+                    ActiveSetInput(weight = "60", reps = "10", isCompleted = false)
+                )
+            )
+        )
+
+        assertTrue(summary.canFinish)
+        assertEquals(1, summary.completedSets)
+        assertEquals(3, summary.totalSets)
+        assertEquals(1, summary.completedExercises)
+        assertEquals(2, summary.totalExercises)
+        assertEquals(2, summary.remainingSets)
+        assertEquals("Завершити · 1/3 підх.", summary.finishCtaText)
+    }
+
+    @Test
+    fun `workout logging summary marks fully logged plan`() {
+        val summary = buildWorkoutLoggingSummary(
+            workout(
+                exercise(
+                    ActiveSetInput(weight = "80", reps = "8", isCompleted = true),
+                    ActiveSetInput(weight = "80", reps = "8", isCompleted = true)
+                )
+            )
+        )
+
+        assertTrue(summary.canFinish)
+        assertEquals(0, summary.remainingSets)
+        assertEquals("План закрито. Можна завершувати без зайвих кроків.", summary.helperText)
+        assertEquals("1/1 вправ", summary.exerciseText)
+    }
+
     private fun decision(
         type: TodayTrainingDecisionType,
         reason: String = "readiness"
@@ -93,5 +155,24 @@ class WorkoutViewModelMappersTest {
             warnings = emptyList(),
             selectedWorkoutTemplateId = 1,
             isTrainingAllowed = type != TodayTrainingDecisionType.REST
+        )
+
+    private fun workout(
+        vararg exercises: ExerciseWorkoutUiModel
+    ): ActiveDayUiModel =
+        ActiveDayUiModel(
+            dayNumber = 1,
+            dailyTasks = persistentListOf(),
+            workoutName = "Workout A",
+            exercises = persistentListOf(*exercises)
+        )
+
+    private fun exercise(
+        vararg sets: ActiveSetInput
+    ): ExerciseWorkoutUiModel =
+        ExerciseWorkoutUiModel(
+            exerciseId = 42,
+            name = "Bench Press",
+            sets = persistentListOf(*sets)
         )
 }

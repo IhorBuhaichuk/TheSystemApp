@@ -39,6 +39,8 @@ import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
+import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
 import com.ihor.thesystem.feature.statistics.viewmodel.SystemInsightUiModel
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
@@ -197,9 +199,12 @@ private fun KeyExerciseRow(entry: MatrixEntryUiModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(colors.overlayLight)
-            .border(1.dp, status.color.copy(alpha = 0.16f), shape)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = status.color,
+                role = TechSurfaceRole.Plate
+            )
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -283,9 +288,12 @@ private fun InsightLine(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(accent.copy(alpha = 0.075f))
-            .border(1.dp, accent.copy(alpha = 0.16f), shape)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.Top
@@ -329,9 +337,12 @@ private fun AiLabel(text: String) {
     val shape = RoundedCornerShape(SystemTheme.shapes.pill)
     Box(
         modifier = Modifier
-            .clip(shape)
-            .background(colors.accentAiSoft)
-            .border(1.dp, colors.accentAi.copy(alpha = 0.24f), shape)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentAi,
+                role = TechSurfaceRole.Plate
+            )
             .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
         Text(

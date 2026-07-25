@@ -11,19 +11,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -33,6 +40,9 @@ import com.ihor.thesystem.core.ui.asString
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemGhostButton
 import com.ihor.thesystem.core.ui.components.SystemIconButton
+import com.ihor.thesystem.core.ui.components.SystemStatusChip
+import com.ihor.thesystem.core.ui.components.TechSurfaceRole
+import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.AiArchitectReport
 import com.ihor.thesystem.domain.model.SystemWorkoutGrade
 import com.ihor.thesystem.domain.model.SystemWorkoutJudgment
@@ -68,7 +78,7 @@ fun WorkoutReportDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Звіт архітектора",
+                        text = "Звіт тренування",
                         style = MaterialTheme.typography.headlineSmall.copy(
                             color = colors.accentAi,
                             fontWeight = FontWeight.ExtraBold
@@ -90,6 +100,8 @@ fun WorkoutReportDialog(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    WorkoutCompletionBlock(report = report)
+
                     report.judgment?.let { judgment ->
                         SystemJudgmentBlock(judgment = judgment)
                     }
@@ -111,9 +123,11 @@ fun WorkoutReportDialog(
                         )
                     )
 
+                    NextWorkoutBlock(report = report)
+
                     if (report.isFallback) {
                         Text(
-                            text = "AI тимчасово недоступний. Тренування збережено, цілі виставлено обережно.",
+                            text = "AI тимчасово недоступний. Тренування збережено, verdict сформовано локально.",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = colors.textSecondary,
                                 fontWeight = FontWeight.Bold
@@ -142,6 +156,64 @@ fun WorkoutReportDialog(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun WorkoutCompletionBlock(
+    report: AiArchitectReport,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    val judgment = report.judgment
+    val progressAccent = judgment?.progressionDecision?.progressColor() ?: colors.accentPrimary
+    val completedText = "${report.completedExercises.size} вправ · ${judgment?.completionPercent ?: 0}% плану"
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .reportPlate(progressAccent),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CheckCircle,
+                    contentDescription = null,
+                    tint = colors.accentSuccess,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = "Виконано",
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        color = colors.textPrimary,
+                        fontWeight = FontWeight.Black
+                    )
+                )
+            }
+            SystemStatusChip(
+                text = judgment?.progressionDecision?.progressLabel() ?: "LOGGED",
+                accent = progressAccent,
+                active = true
+            )
+        }
+
+        Text(
+            text = completedText,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = colors.textSecondary,
+                fontWeight = FontWeight.SemiBold
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -207,6 +279,71 @@ private fun SystemJudgmentBlock(
 }
 
 @Composable
+private fun NextWorkoutBlock(
+    report: AiArchitectReport,
+    modifier: Modifier = Modifier
+) {
+    val colors = SystemTheme.colors
+    val judgment = report.judgment
+    val targetText = when {
+        report.nextWorkoutDirectives.isNotEmpty() ->
+            "Оновлено цілі для ${report.nextWorkoutDirectives.size} вправ. ${judgment?.nextAction.orEmpty()}"
+        judgment != null ->
+            judgment.nextAction
+        else ->
+            "Система збереже результат і підхопить його в наступному Today Order."
+    }.ifBlank {
+        "Система збереже результат і підхопить його в наступному Today Order."
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .reportPlate(colors.accentPrimary),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+            contentDescription = null,
+            tint = colors.accentPrimary,
+            modifier = Modifier.size(18.dp)
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = "Наступного разу",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.Black
+                )
+            )
+            Text(
+                text = targetText,
+                style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+private fun Modifier.reportPlate(accent: Color): Modifier {
+    val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    return this
+        .techSurface(
+            shape = shape,
+            active = false,
+            accent = accent,
+            role = TechSurfaceRole.Plate
+        )
+        .padding(14.dp)
+}
+
+@Composable
 private fun SystemWorkoutGrade.gradeColor() =
     when (this) {
         SystemWorkoutGrade.S,
@@ -229,4 +366,21 @@ private fun WorkoutProgressionDecision.label(): String =
         WorkoutProgressionDecision.HOLD -> "вага не підвищується"
         WorkoutProgressionDecision.REDUCE -> "знизити навантаження"
         WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "deload рекомендовано"
+    }
+
+@Composable
+private fun WorkoutProgressionDecision.progressColor(): Color =
+    when (this) {
+        WorkoutProgressionDecision.INCREASE_ALLOWED -> SystemTheme.colors.accentSuccess
+        WorkoutProgressionDecision.HOLD -> SystemTheme.colors.accentPrimary
+        WorkoutProgressionDecision.REDUCE,
+        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> SystemTheme.colors.accentWarning
+    }
+
+private fun WorkoutProgressionDecision.progressLabel(): String =
+    when (this) {
+        WorkoutProgressionDecision.INCREASE_ALLOWED -> "PROGRESS"
+        WorkoutProgressionDecision.HOLD -> "HOLD"
+        WorkoutProgressionDecision.REDUCE -> "REDUCE"
+        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "DELOAD"
     }

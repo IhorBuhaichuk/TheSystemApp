@@ -147,9 +147,12 @@ fun SystemIconButton(
     Box(
         modifier = modifier
             .size(SystemControlHeight)
-            .clip(shape)
-            .background(if (active) accent.copy(alpha = 0.12f) else colors.overlayLight)
-            .border(1.dp, if (active) accent.copy(alpha = 0.34f) else colors.borderSubtle, shape)
+            .techSurface(
+                shape = shape,
+                active = active,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -276,9 +279,12 @@ fun SystemStatusChip(
     val shape = RoundedCornerShape(SystemRadiusPill)
     Row(
         modifier = modifier
-            .clip(shape)
-            .background(if (active) accent.copy(alpha = 0.12f) else colors.overlayLight)
-            .border(1.dp, if (active) accent.copy(alpha = 0.38f) else colors.borderSubtle, shape)
+            .techSurface(
+                shape = shape,
+                active = active,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -484,9 +490,12 @@ fun SystemInsightBlock(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(accent.copy(alpha = 0.08f))
-            .border(1.dp, accent.copy(alpha = 0.18f), shape)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
             .padding(SystemItemSpacing),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.Top
@@ -704,9 +713,12 @@ fun SystemBottomNav(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surfaceGlassStrong)
-            .border(1.dp, colors.borderSubtle, shape)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Panel
+            )
             .padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,
@@ -726,8 +738,12 @@ fun SystemExerciseRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(colors.overlayLight.copy(alpha = 0.035f))
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Plate
+            )
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -754,11 +770,12 @@ private fun SystemIconBubble(
     Box(
         modifier = modifier
             .size(38.dp)
-            .clip(shape)
-            .background(
-                if (accent == colors.accentAi) colors.accentAiSoft else colors.accentPrimarySoft
-            )
-            .border(1.dp, accent.copy(alpha = 0.28f), shape),
+            .techSurface(
+                shape = shape,
+                active = accent == colors.accentAi,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            ),
         contentAlignment = Alignment.Center
     ) {
         Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(19.dp))
