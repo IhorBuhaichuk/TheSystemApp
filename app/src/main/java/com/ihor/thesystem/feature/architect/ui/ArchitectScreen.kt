@@ -145,7 +145,7 @@ private fun AiHeader() {
     val colors = SystemTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(
-            text = "AI",
+            text = "ШІ",
             style = MaterialTheme.typography.headlineMedium.copy(
                 color = colors.textPrimary,
                 fontWeight = FontWeight.Black
@@ -170,7 +170,7 @@ private fun AiModulesBlock(
     Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
         AiModuleCard(
             title = "План річної прогресії",
-            description = "Прогноз на 12 місяців по вибраних вправах",
+            description = "Прогноз на 12 місяців для вибраних вправ",
             icon = Icons.Filled.BarChart,
             status = "Графік",
             enabled = true,
@@ -178,12 +178,12 @@ private fun AiModulesBlock(
         )
         AiModuleCard(
             title = "Аналіз тренування",
-            description = "Фідбек, рекомендації ваги та повторень",
+            description = "Підсумок і рекомендації щодо ваги та повторень",
             icon = Icons.Filled.Psychology,
             status = when {
                 !aiAvailable -> aiAvailability.shortStatus()
                 hasWorkoutContext -> "Готово"
-                else -> "Немає логу"
+                else -> "Немає завершеного тренування"
             },
             enabled = aiAvailable && hasWorkoutContext && !isLoading,
             onClick = onAnalyzeWorkout
@@ -192,7 +192,7 @@ private fun AiModulesBlock(
             title = "Корекція циклу",
             description = "Перебудова навантаження після пропусків",
             icon = Icons.Filled.Loop,
-            status = "Потрібен backend",
+            status = "Поки недоступно",
             enabled = false,
             onClick = {}
         )
@@ -200,7 +200,7 @@ private fun AiModulesBlock(
             title = "План на завтра",
             description = "Рекомендований фокус на наступний день",
             icon = Icons.Filled.CalendarMonth,
-            status = "Потрібен backend",
+            status = "Поки недоступно",
             enabled = false,
             onClick = {}
         )
@@ -303,8 +303,8 @@ private fun ArchitectBriefBlock(
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Weekly insight",
-                subtitle = if (aiAvailable) "AI explains, System decides" else "Local system fallback"
+                title = "Підсумок тижня",
+                subtitle = if (aiAvailable) "ШІ пояснює, система ухвалює рішення" else "Працює аналіз на пристрої"
             )
             if (state.isLoading) {
                 Row(
@@ -317,7 +317,7 @@ private fun ArchitectBriefBlock(
                         strokeWidth = 2.dp
                     )
                     Text(
-                        text = "System reads metrics",
+                        text = "Система аналізує показники",
                         style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
                     )
                 }
@@ -330,7 +330,7 @@ private fun ArchitectBriefBlock(
                     )
                 }
                 SystemInsightText(
-                    text = weeklyInsight.ifBlank { "Not enough data for a weekly insight yet." },
+                    text = weeklyInsight.ifBlank { "Поки недостатньо даних для підсумку тижня." },
                     icon = Icons.Filled.AutoAwesome
                 )
                 if (recoveryRisk.isNotBlank()) {
@@ -361,7 +361,7 @@ private fun AiSuggestionList(suggestions: List<String>) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Actions",
+            text = "Рекомендовані дії",
             style = MaterialTheme.typography.labelSmall.copy(
                 color = colors.accentAi,
                 fontWeight = FontWeight.Bold
@@ -403,7 +403,7 @@ private fun ShortConclusionBlock(state: AiDashboardUiState) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Короткий висновок",
-                subtitle = "На основі системних метрик"
+                subtitle = "На основі ваших показників"
             )
             if (state.isLoading) {
                 Row(
@@ -416,7 +416,7 @@ private fun ShortConclusionBlock(state: AiDashboardUiState) {
                         strokeWidth = 2.dp
                     )
                     Text(
-                        text = "Система читає метрики",
+                        text = "Система аналізує показники",
                         style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
                     )
                 }
@@ -438,10 +438,10 @@ private fun LastRecommendationBlock(recommendation: AiRecommendationUiModel?) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Остання рекомендація",
-                subtitle = "Збережена в матриці прогресії"
+                subtitle = "Збережена в цілях вправ"
             )
             if (recommendation == null) {
-                EmptyAiBlock(text = "Історії AI-рекомендацій ще немає.")
+                EmptyAiBlock(text = "Історії рекомендацій ШІ ще немає.")
             } else {
                 Row(
                     modifier = Modifier
@@ -558,22 +558,22 @@ internal fun AiAvailabilityState.shortStatus(): String =
     when (this) {
         AiAvailabilityState.CONFIGURED -> "Готово"
         AiAvailabilityState.UNCONFIGURED -> "Локальний режим"
-        AiAvailabilityState.RATE_LIMITED -> "Ліміт AI"
-        AiAvailabilityState.OVERLOADED -> "AI перевантажений"
-        AiAvailabilityState.MALFORMED -> "AI відхилено"
+        AiAvailabilityState.RATE_LIMITED -> "Ліміт запитів до ШІ"
+        AiAvailabilityState.OVERLOADED -> "ШІ перевантажений"
+        AiAvailabilityState.MALFORMED -> "Відповідь ШІ відхилено"
     }
 
 internal fun AiAvailabilityState.unavailableDescription(): String =
     when (this) {
         AiAvailabilityState.CONFIGURED -> ""
         AiAvailabilityState.UNCONFIGURED ->
-            "AI Architect не налаштований у цій збірці. Логування, Today Order, прогрес і system verdict працюють локально."
+            "Функції ШІ зараз недоступні. Тренування, план на сьогодні та прогрес продовжують працювати на пристрої."
         AiAvailabilityState.RATE_LIMITED ->
-            "Ліміт AI-запитів вичерпано. Система не змінює план за AI і продовжує локальну логіку."
+            "Ліміт запитів до ШІ вичерпано. План не змінено, спробуйте аналіз пізніше."
         AiAvailabilityState.OVERLOADED ->
-            "AI тимчасово перевантажений. Локальні модулі залишаються активними, повторіть AI-аналіз пізніше."
+            "ШІ тимчасово перевантажений. Тренування та прогрес працюють як завжди; повторіть аналіз пізніше."
         AiAvailabilityState.MALFORMED ->
-            "AI повернув некоректну відповідь. Система її не застосувала і залишила локальні рішення активними."
+            "Відповідь ШІ не вдалося перевірити, тому план не змінено."
     }
 
 @Composable
@@ -611,13 +611,13 @@ private fun formatRecommendationTarget(recommendation: AiRecommendationUiModel):
     val weight = recommendation.recommendedWeight?.let { "${formatWeight(it)} кг" }
     val scheme = when {
         recommendation.recommendedSets != null && !recommendation.recommendedReps.isNullOrBlank() ->
-            "${recommendation.recommendedSets} x ${recommendation.recommendedReps}"
+            "${recommendation.recommendedSets} × ${recommendation.recommendedReps}"
         recommendation.recommendedSets != null -> "${recommendation.recommendedSets} підх."
         !recommendation.recommendedReps.isNullOrBlank() -> recommendation.recommendedReps
         else -> null
     }
 
-    return listOfNotNull(weight, scheme).joinToString(" · ").ifBlank { "Рекомендація без числового таргета" }
+    return listOfNotNull(weight, scheme).joinToString(" · ").ifBlank { "Рекомендація без числової цілі" }
 }
 
 private fun formatWeight(value: Double): String {

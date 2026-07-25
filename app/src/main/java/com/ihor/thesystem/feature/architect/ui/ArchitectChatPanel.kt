@@ -323,7 +323,7 @@ private fun ArchitectChatBubble(
                     )
                 } else if (message.role == ChatRole.AI) {
                     SystemButton(
-                        text = "Інтегрувати в систему",
+                        text = "Застосувати рекомендації",
                         onClick = { onApplyClick(message.recommendations) },
                         icon = Icons.AutoMirrored.Filled.ArrowForward,
                         accent = colors.accentPrimary,
@@ -344,14 +344,14 @@ private fun ArchitectInsightPayload(insight: AiArchitectInsight) {
     val colors = SystemTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (insight.weeklyInsight.isNotBlank()) {
-            InsightLine(label = "Trend", text = insight.weeklyInsight, accent = colors.accentAi)
+            InsightLine(label = "Тенденція", text = insight.weeklyInsight, accent = colors.accentAi)
         }
         if (insight.recoveryRisk.isNotBlank()) {
-            InsightLine(label = "Risk", text = insight.recoveryRisk, accent = colors.accentWarning)
+            InsightLine(label = "Ризик", text = insight.recoveryRisk, accent = colors.accentWarning)
         }
         insight.actionableSuggestions.take(3).forEachIndexed { index, suggestion ->
             InsightLine(
-                label = "Action ${index + 1}",
+                label = "Дія ${index + 1}",
                 text = suggestion,
                 accent = colors.accentPrimary
             )
@@ -404,7 +404,7 @@ private fun RecommendationList(recommendations: List<AiWorkoutRecommendation>) {
                         .background(colors.accentPrimary)
                 )
                 Text(
-                    text = "Вправа #${recommendation.exerciseId}: ${formatWeight(recommendation.weight)} кг · ${recommendation.sets} x ${recommendation.reps}",
+                    text = "Вправа №${recommendation.exerciseId}: ${formatWeight(recommendation.weight)} кг · ${recommendation.sets} × ${recommendation.reps}",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = colors.textSecondary,
                         fontWeight = FontWeight.SemiBold
@@ -425,4 +425,4 @@ private fun formatWeight(value: Float): String {
     }
 }
 
-private const val SYSTEM_AI_CORRECTION_TEXT = "Система скоригувала рекомендацію AI"
+private const val SYSTEM_AI_CORRECTION_TEXT = "Система скоригувала рекомендацію ШІ"

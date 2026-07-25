@@ -242,7 +242,7 @@ class ArchitectViewModel @Inject constructor(
                 val systemMsg = ChatMessage(
                     role = ChatRole.SYSTEM,
                     text = if (applicationResult.hasSystemCorrections) {
-                        MessageText.DynamicString("Система скоригувала рекомендацію AI")
+                        MessageText.DynamicString("Система скоригувала рекомендацію ШІ")
                     } else {
                         MessageText.Resource(MessageTextKey.ARCHITECT_DIRECTIVES_APPLIED)
                     }

@@ -10,7 +10,7 @@ object WorkoutAnalysisUiTextMapper {
             "• особистий прогрес від стартового результату;\n" +
             "• виконання плану річної прогресії;\n" +
             "• стабільність тренувань за останні тижні;\n" +
-            "• силовий показник відносно доступного benchmark.\n\n" +
+            "• силовий показник відносно доступного орієнтира.\n\n" +
             "Якщо частини даних ще немає, система використовує нейтральне значення, щоб не занижувати оцінку."
 
     fun motivationBreakdown(result: MotivationLevelResult): List<Pair<String, Int>> =
@@ -18,7 +18,7 @@ object WorkoutAnalysisUiTextMapper {
             "Особистий прогрес" to result.componentScores.personalProgressScore,
             "План прогресії" to result.componentScores.planProgressScore,
             "Стабільність" to result.componentScores.consistencyScore,
-            "Силовий benchmark" to result.componentScores.strengthBenchmarkScore
+            "Силовий орієнтир" to result.componentScores.strengthBenchmarkScore
         )
 
     fun exerciseStatusLabel(status: ExerciseProgressStatus): String =

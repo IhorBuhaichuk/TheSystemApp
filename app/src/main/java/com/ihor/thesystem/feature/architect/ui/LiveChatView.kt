@@ -103,7 +103,7 @@ fun LiveChatView(
                 modifier = Modifier.weight(1f),
                 placeholder = {
                     Text(
-                        text = if (enabled) "Запит до тренера" else "AI недоступний",
+                        text = if (enabled) "Запит до тренера" else "ШІ недоступний",
                         style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
                     )
                 },

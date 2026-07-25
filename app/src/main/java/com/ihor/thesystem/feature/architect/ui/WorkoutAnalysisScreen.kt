@@ -248,8 +248,8 @@ private fun MotivationLevelBlock(
     DarkGlassCard(active = true) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Мотиваційний рівень",
-                subtitle = "Domain score за реальними метриками",
+                title = "Загальна оцінка",
+                subtitle = "Розраховано за вашими результатами",
                 trailing = {
                     SmallInfoButton(onClick = onInfoClick)
                 }
@@ -376,7 +376,7 @@ private fun ExerciseProgressBlock(
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Прогрес",
+                title = "Силовий прогрес",
                 subtitle = if (isInitialDataCollection) {
                     "Стартова база без критики"
                 } else {
@@ -384,14 +384,14 @@ private fun ExerciseProgressBlock(
                 }
             )
             if (progress.isEmpty()) {
-                EmptyAnalysisText(text = "Вагових підходів для 1RM у цьому тренуванні немає.")
+                EmptyAnalysisText(text = "У цьому тренуванні немає вагових підходів для розрахунку максимуму.")
             }
             progress.forEach { item ->
                 val hideCriticism = isInitialDataCollection && item.status == ExerciseProgressStatus.Decreased
                 val previousOneRepMax = item.previousEstimatedOneRepMax
                 AnalysisRow(
                     title = item.exerciseName,
-                    primary = "Поточний 1RM: ${item.currentEstimatedOneRepMax.formatWeight()} кг",
+                    primary = "Розрахунковий максимум: ${item.currentEstimatedOneRepMax.formatWeight()} кг",
                     secondary = when {
                         hideCriticism ->
                             "Це корисна стартова точка для майбутнього графіка."
@@ -422,22 +422,22 @@ private fun AnnualProgressBlock(
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Відносно річної прогресії",
+                title = "Порівняння з річним планом",
                 subtitle = if (isInitialDataCollection) {
                     "Збір бази, ще ${adaptationRemainingDays} дн."
                 } else {
-                    "Факт проти збереженого плану"
+                    "Результат проти збереженого плану"
                 }
             )
             if (progress.isEmpty()) {
-                EmptyAnalysisText(text = "Вагового факту для річного плану в цьому тренуванні немає.")
+                EmptyAnalysisText(text = "У цьому тренуванні немає вагового результату для порівняння з річним планом.")
             }
             progress.forEach { item ->
                 val isCollectingBase = isInitialDataCollection && item.status == AnnualProgressStatus.NoPlan
                 val plannedWeight = item.plannedWeight
                 AnalysisRow(
                     title = item.exerciseName,
-                    primary = "Факт: ${item.factWeight.formatWeight()} кг",
+                    primary = "Результат: ${item.factWeight.formatWeight()} кг",
                     secondary = when {
                         plannedWeight != null ->
                             "План: ${plannedWeight.formatWeight()} кг · зміна ${item.difference.formatSignedWeight()}"
@@ -465,7 +465,7 @@ private fun RecommendationsBlock(recommendations: List<NextWorkoutRecommendation
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Рекомендації на наступне",
-                subtitle = "Вага і повторення з існуючої логіки"
+                subtitle = "На основі ваших попередніх результатів"
             )
             if (recommendations.isEmpty()) {
                 EmptyAnalysisText(text = "Вагових рекомендацій для цього тренування немає.")
@@ -473,9 +473,9 @@ private fun RecommendationsBlock(recommendations: List<NextWorkoutRecommendation
             recommendations.forEach { recommendation ->
                 AnalysisRow(
                     title = recommendation.exerciseName,
-                    primary = "${recommendation.recommendedWeight.formatWeight()} кг · ${recommendation.recommendedSets} x ${recommendation.recommendedReps}",
+                    primary = "${recommendation.recommendedWeight.formatWeight()} кг · ${recommendation.recommendedSets} × ${recommendation.recommendedReps}",
                     secondary = recommendation.reason,
-                    status = "Наступний сет",
+                    status = "Наступний підхід",
                     accent = colors.accentAi
                 )
             }
@@ -490,8 +490,8 @@ private fun SystemInsightBlock(text: String) {
     DarkGlassCard {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
-                title = "Системний фідбек",
-                subtitle = "Збережений AI-висновок"
+                title = "Підсумок системи",
+                subtitle = "Збережений висновок ШІ"
             )
             Row(
                 modifier = Modifier
