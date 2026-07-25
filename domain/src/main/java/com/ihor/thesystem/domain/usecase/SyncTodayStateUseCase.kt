@@ -33,15 +33,19 @@ class SyncTodayStateUseCase @Inject constructor(
                 return finalizeDay(forceComplete = false)
             }
 
+            val requiresDailyInitialization =
+                config.needsDailyInit || config.lastInitEpochDay <= 0L
             val result = transactionProvider.runInTransaction {
-                if (config.needsDailyInit || config.lastInitEpochDay <= 0L) {
+                if (requiresDailyInitialization) {
                     configRepo.setNeedsDailyInit(true)
                 }
 
                 generateDailyQuests()
-                when (val attributesResult = calculateAttributes()) {
-                    is Result.Success -> Unit
-                    is Result.Error -> throw TransactionRollbackException(attributesResult.error)
+                if (requiresDailyInitialization) {
+                    when (val attributesResult = calculateAttributes()) {
+                        is Result.Success -> Unit
+                        is Result.Error -> throw TransactionRollbackException(attributesResult.error)
+                    }
                 }
 
                 configRepo.saveLastInitDate(todayEpochDay)

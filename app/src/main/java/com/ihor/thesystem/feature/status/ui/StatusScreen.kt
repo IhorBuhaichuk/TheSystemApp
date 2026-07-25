@@ -1,6 +1,7 @@
 ﻿package com.ihor.thesystem.feature.status.ui
 
 import androidx.compose.foundation.background
+import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +51,10 @@ fun StatusScreen(
     val uiState by statusViewModel.uiState.collectAsStateWithLifecycle()
     val statusDialogState by statusViewModel.dialogState.collectAsStateWithLifecycle()
     val colors = SystemTheme.colors
+
+    ReportDrawnWhen {
+        uiState is UiState.Content<*> || uiState is UiState.Error
+    }
 
     var levelUpEvent by remember { mutableStateOf<StatusOneOffEvent.ShowLevelUp?>(null) }
 

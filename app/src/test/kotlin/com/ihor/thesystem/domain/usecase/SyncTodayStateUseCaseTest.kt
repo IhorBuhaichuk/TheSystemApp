@@ -41,10 +41,11 @@ class SyncTodayStateUseCaseTest {
         assertTrue(second is Result.Success)
         coVerify(exactly = 0) { finalizeDay(false) }
         coVerify(exactly = 2) { generateDailyQuests() }
+        coVerify(exactly = 1) { calculateAttributes() }
     }
 
     @Test
-    fun `same day sync does not finalize again`() = runTest {
+    fun `same day sync refreshes quests without recalculating stable attributes`() = runTest {
         config = SystemConfig(lastInitEpochDay = TODAY.toEpochDay())
         arrangeConfig()
         val useCase = useCase()
@@ -53,6 +54,23 @@ class SyncTodayStateUseCaseTest {
         useCase()
 
         coVerify(exactly = 0) { finalizeDay(false) }
+        coVerify(exactly = 2) { generateDailyQuests() }
+        coVerify(exactly = 0) { calculateAttributes() }
+    }
+
+    @Test
+    fun `explicit daily init recalculates attributes on the same day`() = runTest {
+        config = SystemConfig(
+            lastInitEpochDay = TODAY.toEpochDay(),
+            needsDailyInit = true
+        )
+        arrangeConfig()
+        val useCase = useCase()
+
+        useCase()
+
+        coVerify(exactly = 1) { generateDailyQuests() }
+        coVerify(exactly = 1) { calculateAttributes() }
     }
 
     @Test

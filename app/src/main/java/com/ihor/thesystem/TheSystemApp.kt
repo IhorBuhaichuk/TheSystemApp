@@ -6,10 +6,13 @@ import coil.ImageLoaderFactory
 import androidx.work.Configuration
 import androidx.hilt.work.HiltWorkerFactory
 import com.ihor.thesystem.core.worker.DailyResetWorker
+import dagger.Lazy
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -18,12 +21,12 @@ class TheSystemApp : Application(), ImageLoaderFactory, Configuration.Provider {
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     @Inject
-    lateinit var imageLoader: ImageLoader
+    lateinit var imageLoader: Lazy<ImageLoader>
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
-    override fun newImageLoader(): ImageLoader = imageLoader
+    override fun newImageLoader(): ImageLoader = imageLoader.get()
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -36,10 +39,17 @@ class TheSystemApp : Application(), ImageLoaderFactory, Configuration.Provider {
             Timber.plant(Timber.DebugTree())
         }
         
-        try {
-            DailyResetWorker.scheduleIfNotRunning(this)
-        } catch (e: Exception) {
-            Timber.e(e, "Unable to schedule daily reset worker during app startup")
+        applicationScope.launch {
+            delay(NON_CRITICAL_STARTUP_DELAY_MILLIS)
+            try {
+                DailyResetWorker.scheduleIfNotRunning(this@TheSystemApp)
+            } catch (e: Exception) {
+                Timber.e(e, "Unable to schedule daily reset worker after startup")
+            }
         }
+    }
+
+    private companion object {
+        const val NON_CRITICAL_STARTUP_DELAY_MILLIS = 10_000L
     }
 }

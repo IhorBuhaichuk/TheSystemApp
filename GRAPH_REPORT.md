@@ -62,11 +62,14 @@ Main database:
 
 - File: `app/src/main/java/com/ihor/thesystem/data/local/room/database/AppDatabase.kt`
 - Database name: `the_system_db`
-- Version: `APP_DATABASE_VERSION = 50`
+- Version: `APP_DATABASE_VERSION = 51`
 - `exportSchema = true`
 - Type converters: `Converters.kt`
 - Migrations: `DatabaseMigrations.kt`
-- Seed/population: `DatabasePopulator.kt`
+- Supported pre-release migration floor: schema 48; instrumented migration tests
+  package the exported schemas and validate every beta schema from 48 to latest.
+- Seed/population: `DatabasePopulator.kt`; core exercise metadata uses a row-level
+  version gate so unchanged metadata is not rewritten on every process start.
 
 DAO surface exposed by `AppDatabase`:
 

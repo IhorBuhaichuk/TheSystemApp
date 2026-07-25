@@ -1,5 +1,6 @@
 package com.ihor.thesystem.feature.onboarding.ui
 
+import androidx.activity.compose.ReportDrawn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -70,6 +71,8 @@ fun OnboardingScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = SystemTheme.colors
+
+    ReportDrawn()
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->

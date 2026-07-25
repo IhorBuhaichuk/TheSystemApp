@@ -20,6 +20,14 @@ interface WorkoutDao {
     @Query("SELECT COUNT(*) FROM exercises")
     suspend fun getExerciseCount(): Int
 
+    @Query(
+        """
+        SELECT COUNT(*) FROM exercises
+        WHERE isCoreSystemExercise = 1 AND coreMetadataVersion = :version
+        """
+    )
+    suspend fun getCurrentCoreMetadataCount(version: Int): Int
+
     @Query("SELECT * FROM exercises WHERE id = :id")
     suspend fun getExerciseById(id: Int): ExerciseEntity?
 
@@ -56,6 +64,7 @@ interface WorkoutDao {
         UPDATE exercises
         SET
             isCoreSystemExercise = 0,
+            coreMetadataVersion = 0,
             movementPattern = NULL,
             techniqueTips = '[]',
             commonMistakes = '[]',
@@ -67,6 +76,7 @@ interface WorkoutDao {
         UPDATE exercises
         SET
             isCoreSystemExercise = 1,
+            coreMetadataVersion = :metadataVersion,
             movementPattern = :movementPattern,
             techniqueTips = :techniqueTips,
             commonMistakes = :commonMistakes,
@@ -75,6 +85,7 @@ interface WorkoutDao {
     """)
     suspend fun updateCoreExerciseMetadata(
         externalId: String,
+        metadataVersion: Int,
         movementPattern: String?,
         techniqueTips: String,
         commonMistakes: String,

@@ -32,6 +32,7 @@ data class ExerciseEntity(
     val gifUrl: String? = null,
     val trackingMode: String? = null,
     val isCoreSystemExercise: Boolean = false,
+    val coreMetadataVersion: Int = 0,
     val movementPattern: String? = null,
     val techniqueTips: List<String> = emptyList(),
     val commonMistakes: List<String> = emptyList(),

@@ -22,10 +22,11 @@ class AppDatabaseMigrationTest {
     )
 
     @Test
-    fun migratesEveryExportedSchemaToLatestVersion() {
+    fun migratesEverySupportedBetaSchemaToLatestVersion() {
         val schemaVersions = exportedSchemaVersions()
+            .filter { it >= MIN_SUPPORTED_BETA_SCHEMA_VERSION }
 
-        assertTrue("Room schema assets must be packaged for migration tests", schemaVersions.isNotEmpty())
+        assertTrue("Supported Room schema assets must be packaged for migration tests", schemaVersions.isNotEmpty())
         assertEquals(APP_DATABASE_VERSION, schemaVersions.last())
 
         for (startVersion in schemaVersions.dropLast(1)) {
@@ -71,7 +72,8 @@ class AppDatabaseMigrationTest {
             migrated.query(
                 """
                 SELECT `name`, `nameUk`, `isCoreSystemExercise`, `movementPattern`,
-                       `techniqueTips`, `commonMistakes`, `substitutionExternalIds`
+                       `techniqueTips`, `commonMistakes`, `substitutionExternalIds`,
+                       `coreMetadataVersion`
                 FROM `exercises`
                 WHERE `externalId` = 'legacy-pushup'
                 """.trimIndent()
@@ -84,6 +86,50 @@ class AppDatabaseMigrationTest {
                 assertEquals("[]", cursor.getString(cursor.getColumnIndexOrThrow("techniqueTips")))
                 assertEquals("[]", cursor.getString(cursor.getColumnIndexOrThrow("commonMistakes")))
                 assertEquals("[]", cursor.getString(cursor.getColumnIndexOrThrow("substitutionExternalIds")))
+                assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("coreMetadataVersion")))
+            }
+        } finally {
+            migrated.close()
+        }
+    }
+
+    @Test
+    fun migratesFrom50To51PreservingExercisesAndMarkingMetadataStale() {
+        val databaseName = "migration-50-to-51-preserves-exercises"
+        helper.createDatabase(databaseName, 50).apply {
+            execSQL(
+                """
+                INSERT INTO `exercises` (
+                    `id`, `externalId`, `name`, `nameUk`, `category`, `muscleGroups`,
+                    `equipment`, `level`, `mechanic`, `force`, `instructions`, `gifUrl`,
+                    `trackingMode`, `isCoreSystemExercise`, `movementPattern`,
+                    `techniqueTips`, `commonMistakes`, `substitutionExternalIds`
+                ) VALUES (
+                    8, 'Barbell_Squat', 'Barbell Squat', NULL, 'STRENGTH', '["QUADS"]',
+                    'barbell', 'beginner', 'compound', 'push', NULL, NULL,
+                    'WEIGHT_REPS', 1, 'squat', '["Brace"]', '[]', '[]'
+                )
+                """.trimIndent()
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            databaseName,
+            APP_DATABASE_VERSION,
+            true,
+            *DatabaseMigrations.ALL_MIGRATIONS
+        )
+
+        try {
+            migrated.query(
+                "SELECT `name`, `isCoreSystemExercise`, `coreMetadataVersion` " +
+                    "FROM `exercises` WHERE `externalId` = 'Barbell_Squat'"
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("Barbell Squat", cursor.getString(cursor.getColumnIndexOrThrow("name")))
+                assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("isCoreSystemExercise")))
+                assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("coreMetadataVersion")))
             }
         } finally {
             migrated.close()
@@ -141,5 +187,9 @@ class AppDatabaseMigrationTest {
             .orEmpty()
             .mapNotNull { fileName -> fileName.removeSuffix(".json").toIntOrNull() }
             .sorted()
+    }
+
+    private companion object {
+        const val MIN_SUPPORTED_BETA_SCHEMA_VERSION = 48
     }
 }

@@ -64,6 +64,9 @@ android {
         compose = true
         buildConfig = true
     }
+    sourceSets {
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
 }
 
 tasks.withType<KotlinCompile>().configureEach {

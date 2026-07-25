@@ -20,6 +20,9 @@ import kotlin.system.measureTimeMillis
 
 object DatabasePopulator {
 
+    internal const val CORE_METADATA_VERSION = 1
+    internal const val CORE_METADATA_EXERCISE_COUNT = 120
+
     private val json = Json { ignoreUnknownKeys = true }
 
     class DatabasePopulationException(
@@ -64,12 +67,26 @@ object DatabasePopulator {
 
         withContext(ioDispatcher) {
             val totalTime = measureTimeMillis {
-                val existingExerciseCount = db.withTransaction {
+                val populationState = db.withTransaction {
                     ensureRequiredSingletonRows(db)
-                    workoutDao.getExerciseCount()
+                    PopulationState(
+                        exerciseCount = workoutDao.getExerciseCount(),
+                        currentCoreMetadataCount = workoutDao.getCurrentCoreMetadataCount(
+                            CORE_METADATA_VERSION
+                        )
+                    )
                 }
+                val existingExerciseCount = populationState.exerciseCount
 
                 if (existingExerciseCount > 0) {
+                    if (!shouldApplyCoreMetadata(populationState)) {
+                        Timber.d(
+                            "Database already has $existingExerciseCount exercises and core metadata " +
+                                "v$CORE_METADATA_VERSION. Skipping seed assets."
+                        )
+                        return@measureTimeMillis
+                    }
+
                     val coreSeed = readOptionalCoreExerciseMetadata(context)
                     db.withTransaction {
                         applyCoreExerciseMetadata(workoutDao, coreSeed)
@@ -123,6 +140,15 @@ object DatabasePopulator {
             Timber.d("Database population check/completion took ${totalTime}ms.")
         }
     }
+
+    internal data class PopulationState(
+        val exerciseCount: Int,
+        val currentCoreMetadataCount: Int
+    )
+
+    internal fun shouldApplyCoreMetadata(state: PopulationState): Boolean =
+        state.exerciseCount > 0 &&
+            state.currentCoreMetadataCount != CORE_METADATA_EXERCISE_COUNT
 
     private suspend fun ensureRequiredSingletonRows(db: AppDatabase) {
         if (db.playerDao().getPlayerSync() == null) {
@@ -197,6 +223,7 @@ object DatabasePopulator {
         seed.exercises.forEach { metadata ->
             workoutDao.updateCoreExerciseMetadata(
                 externalId = metadata.externalId,
+                metadataVersion = CORE_METADATA_VERSION,
                 movementPattern = metadata.movementPattern,
                 techniqueTips = metadata.resolvedTechniqueTips(seed.patternDefaults).toJsonText(),
                 commonMistakes = metadata.resolvedCommonMistakes(seed.patternDefaults).toJsonText(),
@@ -213,6 +240,7 @@ object DatabasePopulator {
 
         return copy(
             isCoreSystemExercise = true,
+            coreMetadataVersion = CORE_METADATA_VERSION,
             movementPattern = metadata.movementPattern,
             techniqueTips = metadata.resolvedTechniqueTips(patternDefaults),
             commonMistakes = metadata.resolvedCommonMistakes(patternDefaults),
