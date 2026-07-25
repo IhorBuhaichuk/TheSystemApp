@@ -1297,7 +1297,7 @@ private fun QuestUiModel.protocolActionText(): String =
     when (title.uppercase()) {
         "NO EXCUSE PROTOCOL" -> "Почати 7 хв"
         "RECOVERY PROTOCOL" -> "Почати відновлення"
-        "DELOAD SESSION" -> "Почати deload"
+        "DELOAD SESSION" -> "Почати легке тренування"
         else -> "Почати тренування"
     }
 

@@ -40,10 +40,10 @@ internal fun formatRecommendation(
     trackingMode: ExerciseTrackingMode
 ): String =
     when (trackingMode) {
-        ExerciseTrackingMode.WEIGHT_REPS -> "${sets}x${reps} @ ${weight}kg"
-        ExerciseTrackingMode.BODYWEIGHT_REPS -> "${sets}x${reps} повт."
-        ExerciseTrackingMode.TIME_SECONDS -> "${sets}x${reps} сек"
-        ExerciseTrackingMode.TIME_MINUTES -> "${sets}x${(reps / 60).coerceAtLeast(1)} хв"
+        ExerciseTrackingMode.WEIGHT_REPS -> "$sets × $reps · ${weight.formatInputWeight()} кг"
+        ExerciseTrackingMode.BODYWEIGHT_REPS -> "$sets × $reps повт."
+        ExerciseTrackingMode.TIME_SECONDS -> "$sets × $reps сек"
+        ExerciseTrackingMode.TIME_MINUTES -> "$sets × ${(reps / 60).coerceAtLeast(1)} хв"
     }
 
 internal fun TodayTrainingDecision.toWorkoutAdjustmentReason(): String? =
@@ -51,7 +51,7 @@ internal fun TodayTrainingDecision.toWorkoutAdjustmentReason(): String? =
         TodayTrainingDecisionType.REDUCED_LOAD,
         TodayTrainingDecisionType.ACTIVE_RECOVERY,
         TodayTrainingDecisionType.DELOAD ->
-            "Система знизила навантаження через readiness $readinessScore% і recovery debt ${recoveryDebt.level.name}."
+            "Готовність — $readinessScore%. Через накопичену втому навантаження зменшено."
         TodayTrainingDecisionType.NO_EXCUSE ->
             if (reason.contains("missed", ignoreCase = true)) {
                 "Система зафіксувала пропуск. План перераховано. Наступна оптимальна дія: коротке тренування."

@@ -129,7 +129,7 @@
     <string name="muscle_group_arms">Руки</string>
     <string name="muscle_group_abs">Прес</string>
     <string name="muscle_group_legs">Ноги</string>
-    <string name="muscle_group_core">Кор</string>
+    <string name="muscle_group_core">М’язи корпуса</string>
 
     <!-- Player Ranks -->
     <string name="rank_novice">Новачок</string>
@@ -203,7 +203,7 @@
     <!-- Filter Categories -->
     <string name="filter_category_strength">Сила</string>
     <string name="filter_category_endurance">Витривалість</string>
-    <string name="filter_category_hypertrophy">Гіпертрофія</string>
+    <string name="filter_category_hypertrophy">Набір м’язової маси</string>
     <string name="filter_category_flexibility">Гнучкість</string>
     <string name="filter_category_balance">Баланс</string>
 
@@ -216,19 +216,19 @@
     <string name="filter_muscle_arms">Руки</string>
     <string name="filter_muscle_abs">Прес</string>
     <string name="filter_muscle_legs">Ноги</string>
-    <string name="filter_muscle_core">Кор</string>
+    <string name="filter_muscle_core">М’язи корпуса</string>
 
     <!-- Filter Equipment -->
     <string name="filter_equipment_body_only">Власна вага</string>
     <string name="filter_equipment_machine">Тренажер</string>
     <string name="filter_equipment_dumbbell">Гантелі</string>
     <string name="filter_equipment_barbell">Штанга</string>
-    <string name="filter_equipment_cable">Кабель / Кросовер</string>
+    <string name="filter_equipment_cable">Блочний тренажер / кросовер</string>
     <string name="filter_equipment_bands">Еспандер</string>
     <string name="filter_equipment_kettlebell">Гиря</string>
-    <string name="filter_equipment_medicine_ball">Медбол</string>
+    <string name="filter_equipment_medicine_ball">Набивний м’яч</string>
     <string name="filter_equipment_exercise_ball">Фітбол</string>
-    <string name="filter_equipment_e_z_curl_bar">EZ-штанга</string>
+    <string name="filter_equipment_e_z_curl_bar">Штанга з вигнутим грифом</string>
     <string name="filter_equipment_foam_roll">Масажний рол</string>
     <string name="filter_equipment_other">Інше</string>
 
@@ -239,7 +239,7 @@
 
     <!-- Filter Mechanics -->
     <string name="filter_mechanic_compound">Базова (Багатосуглобова)</string>
-    <string name="filter_mechanic_isolation">Ізолююча (Односуглобова)</string>
+    <string name="filter_mechanic_isolation">Ізоляційна (для однієї групи м’язів)</string>
     <string name="filter_mechanic_na">Не вказано</string>
 
     <!-- Filter Forces -->

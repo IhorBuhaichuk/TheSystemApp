@@ -85,4 +85,4 @@ class SendArchitectAnalysisUseCase @Inject constructor(
 }
 
 private const val ARCHITECT_ANALYSIS_SESSION_ID = 0L
-private const val ARCHITECT_ANALYSIS_FALLBACK_TEXT = "AI analysis complete"
+private const val ARCHITECT_ANALYSIS_FALLBACK_TEXT = "Аналіз завершено."

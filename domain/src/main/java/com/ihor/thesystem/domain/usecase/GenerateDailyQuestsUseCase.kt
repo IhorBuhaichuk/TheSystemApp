@@ -177,7 +177,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             ExerciseRecommendation(
                 exerciseId = SYSTEM_NO_EXCUSE_PUSH_UP_ID,
                 exerciseName = "Knee Push-up",
-                exerciseNameUk = "Knee Push-up",
+                exerciseNameUk = "Віджимання з колін",
                 weight = BODYWEIGHT_TARGET,
                 sets = 1,
                 reps = 8
@@ -185,7 +185,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             ExerciseRecommendation(
                 exerciseId = SYSTEM_NO_EXCUSE_SQUAT_ID,
                 exerciseName = "Bodyweight Squat",
-                exerciseNameUk = "Bodyweight Squat",
+                exerciseNameUk = "Присідання з власною вагою",
                 weight = BODYWEIGHT_TARGET,
                 sets = 1,
                 reps = 12
@@ -193,7 +193,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             ExerciseRecommendation(
                 exerciseId = SYSTEM_NO_EXCUSE_PLANK_ID,
                 exerciseName = "Plank Hold",
-                exerciseNameUk = "Plank Hold",
+                exerciseNameUk = "Планка",
                 weight = BODYWEIGHT_TARGET,
                 sets = 1,
                 reps = 30
@@ -201,7 +201,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             ExerciseRecommendation(
                 exerciseId = SYSTEM_NO_EXCUSE_MOBILITY_ID,
                 exerciseName = "Mobility Hold",
-                exerciseNameUk = "Mobility Hold",
+                exerciseNameUk = "Вправа на рухливість",
                 weight = BODYWEIGHT_TARGET,
                 sets = 1,
                 reps = 60
@@ -213,7 +213,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             ExerciseRecommendation(
                 exerciseId = SYSTEM_RECOVERY_WALK_ID,
                 exerciseName = "Walking",
-                exerciseNameUk = "Walking",
+                exerciseNameUk = "Ходьба",
                 weight = BODYWEIGHT_TARGET,
                 sets = 1,
                 reps = 420
@@ -221,7 +221,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             ExerciseRecommendation(
                 exerciseId = SYSTEM_RECOVERY_MOBILITY_ID,
                 exerciseName = "Mobility Hold",
-                exerciseNameUk = "Mobility Hold",
+                exerciseNameUk = "Вправа на рухливість",
                 weight = BODYWEIGHT_TARGET,
                 sets = 2,
                 reps = 45
@@ -229,7 +229,7 @@ class GenerateDailyQuestsUseCase @Inject constructor(
             ExerciseRecommendation(
                 exerciseId = SYSTEM_RECOVERY_CORE_ID,
                 exerciseName = "Light Core Hold",
-                exerciseNameUk = "Light Core Hold",
+                exerciseNameUk = "Легка вправа для м’язів корпуса",
                 weight = BODYWEIGHT_TARGET,
                 sets = 1,
                 reps = 30

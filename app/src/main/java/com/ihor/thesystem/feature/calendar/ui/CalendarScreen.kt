@@ -590,7 +590,7 @@ private fun SelectedDayDetailsPanel(
             if (!hasAnyPlan) {
                 CalendarEmptyEventRow(
                     title = "Нічого не заплановано",
-                    subtitle = "День без тренування і задач",
+                    subtitle = "День без тренування і завдань",
                     accent = colors.textMuted
                 )
             }
@@ -616,9 +616,9 @@ private fun SelectedDayDetailsPanel(
                 }
                 if (hasLogs) {
                     CalendarEventRow(
-                        title = "Логи дня",
+                        title = "Записи за день",
                         subtitle = "${uiState.workoutResults.size} результатів · ${uiState.dailyLogs.size} записів",
-                        meta = "Факт",
+                        meta = "Результат",
                         icon = Icons.AutoMirrored.Filled.Notes,
                         accent = colors.accentPrimary
                     )

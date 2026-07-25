@@ -36,7 +36,7 @@ class SendLiveCoachMessageUseCaseTest {
         val result = useCase(sessionId = SESSION_ID, userMessage = USER_MESSAGE)
 
         val text = (result.text as MessageText.DynamicString).value
-        assertTrue(text.contains("локально"))
+        assertTrue(text.contains("Спробуйте ще раз пізніше"))
         assertFalse(text.contains("RAW_SECRET_503"))
         coVerify(exactly = 1) {
             chatRepository.saveChatMessage(SESSION_ID, ChatRole.USER, USER_MESSAGE)

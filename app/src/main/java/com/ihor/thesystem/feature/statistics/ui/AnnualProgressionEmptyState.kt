@@ -55,9 +55,9 @@ internal fun AnnualProgressionEmptyState(
         Spacer(modifier = Modifier.height(8.dp))
         AnnualCreateOptionCard(
             icon = Icons.Filled.AutoAwesome,
-            title = "Створити за допомогою AI",
-            text = "AI сформує місячні цілі за вибраними вправами і збереже їх у річний графік.",
-            buttonText = "Створити в AI",
+            title = "Створити за допомогою ШІ",
+            text = "ШІ запропонує місячні цілі для вибраних вправ і збереже їх у річний план.",
+            buttonText = "Створити з ШІ",
             onClick = onCreateInAi,
             active = true
         )

@@ -51,7 +51,7 @@ fun AddTaskDialog(
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
     titleText: String? = null,
-    subtitleText: String = "To-do",
+    subtitleText: String = "Завдання",
     placeholderText: String? = null
 ) {
     var taskName by remember { mutableStateOf("") }

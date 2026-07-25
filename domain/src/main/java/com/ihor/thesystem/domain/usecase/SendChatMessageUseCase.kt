@@ -91,7 +91,7 @@ class SendChatMessageUseCase @Inject constructor(
                 liveCoachRepository.sendMessage(history.dropLast(1), userMessage)
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                "AI-наставник зараз недоступний. Система продовжує працювати локально."
+                "ШІ-тренер зараз недоступний. Спробуйте ще раз пізніше."
             }
 
             // 5. Зберігаємо відповідь через репозиторій

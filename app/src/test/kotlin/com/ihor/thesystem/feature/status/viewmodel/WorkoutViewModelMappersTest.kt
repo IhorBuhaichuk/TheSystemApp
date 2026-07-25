@@ -20,19 +20,19 @@ class WorkoutViewModelMappersTest {
     @Test
     fun `formats recommendations by tracking mode`() {
         assertEquals(
-            "3x8 @ 42.5kg",
+            "3 × 8 · 42.5 кг",
             formatRecommendation(42.5, reps = 8, sets = 3, trackingMode = ExerciseTrackingMode.WEIGHT_REPS)
         )
         assertEquals(
-            "3x12 повт.",
+            "3 × 12 повт.",
             formatRecommendation(0.0, reps = 12, sets = 3, trackingMode = ExerciseTrackingMode.BODYWEIGHT_REPS)
         )
         assertEquals(
-            "2x45 сек",
+            "2 × 45 сек",
             formatRecommendation(0.0, reps = 45, sets = 2, trackingMode = ExerciseTrackingMode.TIME_SECONDS)
         )
         assertEquals(
-            "1x2 хв",
+            "1 × 2 хв",
             formatRecommendation(0.0, reps = 120, sets = 1, trackingMode = ExerciseTrackingMode.TIME_MINUTES)
         )
     }
@@ -55,7 +55,7 @@ class WorkoutViewModelMappersTest {
     @Test
     fun `maps workout adjustment reason only for blocking decisions`() {
         assertEquals(
-            "Система знизила навантаження через readiness 62% і recovery debt HIGH.",
+            "Готовність — 62%. Через накопичену втому навантаження зменшено.",
             decision(TodayTrainingDecisionType.REDUCED_LOAD).toWorkoutAdjustmentReason()
         )
         assertEquals(

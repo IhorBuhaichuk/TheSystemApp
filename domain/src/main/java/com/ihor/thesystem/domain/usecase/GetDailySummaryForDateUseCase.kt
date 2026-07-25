@@ -48,7 +48,7 @@ class GetDailySummaryForDateUseCase @Inject constructor(
                     )
                     CalendarLogItem(
                         type = LogType.WORKOUT,
-                        title = "Workout Session",
+                        title = "Тренування",
                         subtitle = buildWorkoutSubtitle(
                             exerciseName = exerciseName,
                             trackingMode = trackingMode,
@@ -64,7 +64,7 @@ class GetDailySummaryForDateUseCase @Inject constructor(
             quests.map { quest ->
                 CalendarLogItem(
                     type = LogType.QUEST,
-                    title = if (quest.type == DomainQuestType.MAIN) "Main Quest" else "Daily",
+                    title = if (quest.type == DomainQuestType.MAIN) "Головний квест" else "Щоденне завдання",
                     subtitle = quest.title,
                     isCompleted = quest.isCompleted
                 )

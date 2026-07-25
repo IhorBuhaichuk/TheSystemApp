@@ -231,7 +231,7 @@ private fun ExercisePickerFilters(
     DarkGlassCard(modifier = Modifier.fillMaxWidth(), contentPadding = SystemCardPadding) {
         Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
             PickerFilterChip(
-                text = "System Core",
+                text = "Основні вправи",
                 selected = state.systemCoreOnly,
                 onClick = { onEvent(ExerciseSearchEvent.ToggleSystemCore) }
             )
@@ -507,7 +507,7 @@ private val muscleFilters = listOf(
     PickerMuscleFilter(label = "Ноги", muscles = setOf("QUADS", "HAMSTRINGS_GLUTES", "LEGS")),
     PickerMuscleFilter(label = "Плечі", muscles = setOf("SHOULDERS")),
     PickerMuscleFilter(label = "Руки", muscles = setOf("ARMS")),
-    PickerMuscleFilter(label = "Кор", muscles = setOf("ABS", "CORE"))
+    PickerMuscleFilter(label = "М’язи корпуса", muscles = setOf("ABS", "CORE"))
 )
 
 private val equipmentFilters = listOf(
