@@ -9,19 +9,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.unit.dp
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.glassCard
 import java.time.LocalDate
 import java.time.format.TextStyle
-import java.util.Locale
 
 @Composable
 fun CurrentDateBlock(modifier: Modifier = Modifier) {
     val colors = SystemTheme.colors
+    val locale = LocalLocale.current.platformLocale
     val today = LocalDate.now()
     val day = today.dayOfMonth
-    val monthName = today.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+    val monthName = today.month.getDisplayName(TextStyle.FULL, locale)
     val dateDisplay = "$day $monthName"
 
     Box(
@@ -32,7 +33,7 @@ fun CurrentDateBlock(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = dateDisplay.uppercase(),
+            text = dateDisplay.uppercase(locale),
             style = MaterialTheme.typography.labelLarge.copy(
                 color = colors.accentPrimary,
                 fontWeight = FontWeight.Bold
