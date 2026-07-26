@@ -42,7 +42,7 @@ class TechniqueCheckTextTest {
         )
 
         assertEquals(
-            "Чек техніки: Brace · Knees stable · Control down",
+            "Перевірте техніку: Brace · Knees stable · Control down",
             exercise.techniqueCheckText()
         )
     }

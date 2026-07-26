@@ -38,6 +38,7 @@ interface WorkoutAnalyticsRepository {
     suspend fun deleteSetsBySession(sessionId: Long)
     suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSet>
     suspend fun getLastSetsForExercise(exerciseId: Int): List<ExerciseSet>
+    suspend fun getLastSetsForExercises(exerciseIds: List<Int>): Map<Int, List<ExerciseSet>>
 
     // Методи для роботи з сесіями (Business logic move)
     suspend fun updateSessionLog(session: WorkoutSession)

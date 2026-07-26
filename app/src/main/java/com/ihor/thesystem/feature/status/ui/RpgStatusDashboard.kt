@@ -38,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -131,6 +132,11 @@ fun RpgStatusDashboard(
     val density = LocalDensity.current
     val pinnedWeekHeight = if (density.fontScale >= 1.2f) 132.dp else 112.dp
     var dashboardState by remember { mutableStateOf(StatusDashboardState.ACTIONS) }
+    var hasPresentedInitialState by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        hasPresentedInitialState = true
+    }
 
     Box(
         modifier = Modifier
@@ -147,7 +153,8 @@ fun RpgStatusDashboard(
                     .fillMaxSize()
                     .padding(top = pinnedWeekHeight + 8.dp, bottom = 20.dp)
                     .systemStateEnterMotion(
-                        enterFromEnd = dashboardState == StatusDashboardState.STATUS
+                        enterFromEnd = dashboardState == StatusDashboardState.STATUS,
+                        animate = hasPresentedInitialState
                     )
             ) {
                 when (dashboardState) {

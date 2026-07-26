@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
@@ -91,17 +92,19 @@ fun SystemBottomNavBar(navController: NavHostController) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                items.forEach { item ->
-                    NavIconButton(
-                        modifier = Modifier.weight(1f),
-                        item = item,
-                        activeColor = colors.accentPrimary,
-                        onClick = {
-                            if (!item.isSelected) {
-                                navController.navigateTopLevel(item.route)
+                key(destination?.route) {
+                    items.forEach { item ->
+                        NavIconButton(
+                            modifier = Modifier.weight(1f),
+                            item = item,
+                            activeColor = colors.accentPrimary,
+                            onClick = {
+                                if (!item.isSelected) {
+                                    navController.navigateTopLevel(item.route)
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }

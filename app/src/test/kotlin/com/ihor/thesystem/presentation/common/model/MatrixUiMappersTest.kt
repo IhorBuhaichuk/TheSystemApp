@@ -59,6 +59,23 @@ class MatrixUiMappersTest {
         assertEquals("Keep the bar speed steady", uiModel.lastAiFeedback)
     }
 
+    @Test
+    fun `direct matrix mapping keeps workout setup fields without statistics aggregation`() {
+        val uiModel = entry(
+            exerciseName = "Bench press",
+            trackingMode = ExerciseTrackingMode.WEIGHT_REPS,
+            nextRecommendedWeight = 62.5,
+            lastAiFeedback = "Steady"
+        ).toMatrixEntryUiModel()
+
+        assertEquals(1, uiModel.exerciseId)
+        assertEquals(50f, uiModel.startWeight)
+        assertEquals(100f, uiModel.targetWeight)
+        assertEquals(60f, uiModel.currentWeight)
+        assertEquals(62.5, uiModel.nextRecommendedWeight ?: 0.0, 0.001)
+        assertTrue(uiModel.weightHistory.isEmpty())
+    }
+
     private fun entry(
         exerciseName: String,
         trackingMode: ExerciseTrackingMode,

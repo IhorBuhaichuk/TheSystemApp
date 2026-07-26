@@ -1,10 +1,9 @@
 package com.ihor.thesystem.feature.statistics.ui.components
 
-import android.graphics.BlurMaskFilter
-import android.graphics.Paint as AndroidPaint
 import androidx.compose.foundation.Canvas
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
@@ -37,7 +36,9 @@ fun RadarChartCanvas(
     )
 
     // Pre-resolve names to use in drawing
-    val labelNames = labels.map { it.asUiText().asString(context).toSystemSentenceCase() }
+    val labelNames = remember(context) {
+        labels.map { it.asUiText().asString(context).toSystemSentenceCase() }
+    }
 
     Canvas(modifier = modifier) {
         val center = Offset(size.width / 2f, size.height / 2f)
@@ -103,16 +104,11 @@ fun RadarChartCanvas(
                 color = colors.accentPrimary.copy(alpha = 0.15f)
             )
 
-            // Stroke with Glow effect using native canvas
-            drawContext.canvas.nativeCanvas.apply {
-                val paint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
-                    color = colors.accentPrimary.toArgb()
-                    strokeWidth = 4f
-                    style = android.graphics.Paint.Style.STROKE
-                    maskFilter = BlurMaskFilter(15f, BlurMaskFilter.Blur.NORMAL)
-                }
-                drawPath(progressPath.asAndroidPath(), paint)
-            }
+            drawPath(
+                path = progressPath,
+                color = colors.accentPrimary.copy(alpha = 0.22f),
+                style = Stroke(width = 6.dp.toPx())
+            )
 
             drawPath(
                 path = progressPath,

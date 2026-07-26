@@ -1,6 +1,7 @@
 package com.ihor.thesystem.domain.usecase
 
 import com.ihor.thesystem.domain.model.ExerciseSet
+import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.ProgressionMatrixRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import javax.inject.Inject
@@ -29,6 +30,15 @@ class CalculateRecommendedSetUseCase @Inject constructor(
         sets: List<ExerciseSet>
     ): SetRecommendation {
         val entry = matrixRepo.getEntrySync(exerciseId)
+        return fromSets(exerciseId, exerciseName, sets, entry)
+    }
+
+    fun fromSets(
+        exerciseId: Int,
+        exerciseName: String,
+        sets: List<ExerciseSet>,
+        entry: ProgressionMatrixEntry?
+    ): SetRecommendation {
         val startWeight = entry?.startWeight?.toDouble() ?: 0.0
         val progressionStep = entry?.weeklyStep
             ?.takeIf { it > 0f }

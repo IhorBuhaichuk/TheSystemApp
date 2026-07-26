@@ -73,6 +73,27 @@ class WorkoutAnalyticsQueryGuardTest {
         )
     }
 
+    @Test
+    fun `last workout sets support one batch query for all displayed exercises`() {
+        val daoSource = projectRoot()
+            .resolve("src/main/java/com/ihor/thesystem/data/local/room/dao/WorkoutAnalyticsDao.kt")
+            .readText()
+        val repositorySource = projectRoot()
+            .resolve("src/main/java/com/ihor/thesystem/data/repository_impl/WorkoutAnalyticsRepositoryImpl.kt")
+            .readText()
+
+        assertTrue(
+            "Displayed workout recommendations must load previous sets with one IN query.",
+            "getLastSetsForExercises" in daoSource &&
+                "e.exerciseId IN (:exerciseIds)" in daoSource
+        )
+        assertTrue(
+            "The repository must group the single batch result by exercise.",
+            "dao.getLastSetsForExercises(exerciseIds.distinct())" in repositorySource &&
+                ".groupBy { it.exerciseId }" in repositorySource
+        )
+    }
+
     private fun projectRoot(): File =
         File(requireNotNull(System.getProperty("user.dir"))).absoluteFile
 }

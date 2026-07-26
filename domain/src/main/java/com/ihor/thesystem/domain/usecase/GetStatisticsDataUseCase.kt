@@ -7,6 +7,8 @@ import com.ihor.thesystem.domain.util.AppLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import java.time.DayOfWeek
 import java.time.Instant
@@ -103,19 +105,19 @@ class GetStatisticsDataUseCase @Inject constructor(
                 val xpPerLevel = progressionConfig.xpPerLevel
                 val derivedLevel = progressionConfig.levelForXp(player.xpTotal)
                 val xpProgress = (player.xpTotal % xpPerLevel).coerceIn(0, xpPerLevel)
-                val weeklySummary = buildWeeklySummary(workoutLogs)
-                val progressProofs = buildProgressProofs(
+                val supplemental = loadSupplementalStatistics(
                     workoutLogs = workoutLogs,
                     matrixEntries = matrix,
                     bodyWeightHistory = weightHistory
                 )
+                val weeklySummary = supplemental.weeklySummary
+                val progressProofs = supplemental.progressProofs
                 val weeklySystemReport = buildWeeklySystemReport(
                     weeklySummary = weeklySummary,
                     matrixEntries = updatedEntries,
                     progressProofs = progressProofs,
-                    readinessEntries = loadWeeklyReadinessEntries()
+                    readinessEntries = supplemental.readinessEntries
                 )
-                val nutritionFloorStatus = getNutritionFloorStatus()
 
                 StatisticsData(
                     playerName      = player.name,
@@ -141,7 +143,7 @@ class GetStatisticsDataUseCase @Inject constructor(
                     weeklySummary   = weeklySummary,
                     progressProofs  = progressProofs,
                     weeklySystemReport = weeklySystemReport,
-                    nutritionFloorStatus = nutritionFloorStatus,
+                    nutritionFloorStatus = supplemental.nutritionFloorStatus,
                     systemInsight   = buildSystemInsight(
                         matrixEntries = updatedEntries,
                         weeklySummary = weeklySummary,
@@ -156,6 +158,28 @@ class GetStatisticsDataUseCase @Inject constructor(
             logger.e(e, "Failed to build statistics data")
             emit(StatisticsData())
         }.flowOn(Dispatchers.Default)
+    }
+
+    private suspend fun loadSupplementalStatistics(
+        workoutLogs: List<WorkoutLog>,
+        matrixEntries: List<ProgressionMatrixEntry>,
+        bodyWeightHistory: List<BodyWeightLog>
+    ): SupplementalStatistics = coroutineScope {
+        val readinessEntries = async { loadWeeklyReadinessEntries() }
+        val nutritionFloorStatus = async { getNutritionFloorStatus() }
+        val weeklySummary = buildWeeklySummary(workoutLogs)
+        val progressProofs = buildProgressProofs(
+            workoutLogs = workoutLogs,
+            matrixEntries = matrixEntries,
+            bodyWeightHistory = bodyWeightHistory
+        )
+
+        SupplementalStatistics(
+            weeklySummary = weeklySummary,
+            progressProofs = progressProofs,
+            readinessEntries = readinessEntries.await(),
+            nutritionFloorStatus = nutritionFloorStatus.await()
+        )
     }
 
     private suspend fun loadWeeklyReadinessEntries(): List<ReadinessEntry> {
@@ -331,4 +355,11 @@ class GetStatisticsDataUseCase @Inject constructor(
     private companion object {
         const val HIGH_WEEKLY_TONNAGE = 20_000.0
     }
+
+    private data class SupplementalStatistics(
+        val weeklySummary: WeeklyTrainingSummary,
+        val progressProofs: List<ProgressProof>,
+        val readinessEntries: List<ReadinessEntry>,
+        val nutritionFloorStatus: NutritionFloorStatus
+    )
 }

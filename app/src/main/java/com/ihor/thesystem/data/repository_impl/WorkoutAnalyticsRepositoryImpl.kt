@@ -110,6 +110,15 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         return dao.getLastSetsForExercise(exerciseId).map { it.toDomain() }
     }
 
+    override suspend fun getLastSetsForExercises(
+        exerciseIds: List<Int>
+    ): Map<Int, List<ExerciseSet>> {
+        if (exerciseIds.isEmpty()) return emptyMap()
+        return dao.getLastSetsForExercises(exerciseIds.distinct())
+            .map { it.toDomain() }
+            .groupBy { it.exerciseId }
+    }
+
     override suspend fun updateSessionLog(session: WorkoutSession) {
         dao.insertSessionLog(session.toEntity())
     }

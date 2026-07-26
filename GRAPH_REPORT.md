@@ -93,6 +93,8 @@ Repository implementation layer:
 - Local data repositories live in `app/src/main/java/com/ihor/thesystem/data/repository_impl`.
 - Repository contracts live in `domain/src/main/java/com/ihor/thesystem/domain/repository`.
 - Mappers near repository implementations translate Room entities/DTOs into domain models.
+- Workout recommendation loading batches the latest logged sets for all displayed exercises through
+  `WorkoutAnalyticsDao.getLastSetsForExercises`, avoiding per-exercise Room queries.
 - `BetaMetricsRepositoryImpl` stores local beta event snapshots in SharedPreferences, not Room; it does not require a database migration.
 
 ## Compose Screen and Navigation Map

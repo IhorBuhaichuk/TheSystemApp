@@ -60,11 +60,9 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 MuscleGroup.CORE              to player.coreAttr.toFloat()
             )
             
-            val scheduleFlows = (1..cycleDays).map { scheduleRepo.getScheduleForDay(it) }
-            val schedulesFlow = if (scheduleFlows.isEmpty()) flowOf(emptyList<ScheduleDay>()) 
-                               else combine(scheduleFlows) { it.filterIsInstance<ScheduleDay>() }
             val zoneId = clock.zoneId()
-            val currentDate = java.time.Instant.ofEpochMilli(clock.now())
+            val now = clock.now()
+            val currentDate = java.time.Instant.ofEpochMilli(now)
                 .atZone(zoneId)
                 .toLocalDate()
             val monthStart = currentDate.withDayOfMonth(1)
@@ -77,17 +75,38 @@ class GetStatusScreenDataUseCase @Inject constructor(
                 .toInstant()
                 .toEpochMilli() - 1
             
-            combine(
+            val dailySnapshotFlow = combine(
                 questRepo.getQuestsByDate(
-                    dateMillis = clock.now()
+                    dateMillis = now
                 ),
                 todoRepository.getTodosForDate(currentDate),
                 playerRepo.getLatestWeight(),
-                questRepo.getSuccessfulQuestCount(DomainQuestType.MAIN, monthStart, monthEnd),
-                schedulesFlow
-            ) { dailyQuestsForDate, todos, weight, completedMainThisMonth, schedules ->
-                val daily = dailyQuestsForDate.find { it.type == DomainQuestType.DAILY }
-                val main = dailyQuestsForDate.find { it.type == DomainQuestType.MAIN }
+                questRepo.getSuccessfulQuestCount(DomainQuestType.MAIN, monthStart, monthEnd)
+            ) { dailyQuestsForDate, todos, weight, completedMainThisMonth ->
+                StatusDailySnapshot(
+                    dailyQuest = dailyQuestsForDate.find { it.type == DomainQuestType.DAILY },
+                    mainQuest = dailyQuestsForDate.find { it.type == DomainQuestType.MAIN },
+                    todos = todos,
+                    weight = weight,
+                    completedMainThisMonth = completedMainThisMonth
+                )
+            }
+
+            val schedulesAndDecisionFlow = scheduleRepo
+                .getSchedulesForDays((1..cycleDays).toList())
+                .mapLatest { schedules ->
+                    val todayDecision = decideTodayWorkout(currentDate)
+                    recordTodayOrderDecision(todayDecision)
+                    SchedulesAndDecision(
+                        schedules = schedules,
+                        todayDecision = todayDecision
+                    )
+                }
+
+            combine(
+                dailySnapshotFlow,
+                schedulesAndDecisionFlow
+            ) { snapshot, plan ->
                 val promotions = activeQuests.filter { it.type == DomainQuestType.PROMOTION }
                 val matrixEntriesByExercise = matrixEntries.associateBy { it.exerciseId }
                 val activeBossFight = promotions.firstNotNullOfOrNull { quest ->
@@ -99,15 +118,12 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     }
                 }
 
-                val trainingDaysPerCycle = schedules.count { it.workoutTemplateName != null }
+                val trainingDaysPerCycle = plan.schedules.count { it.workoutTemplateName != null }
                 val monthWorkoutsTotal = trainingDaysPerCycle * config.microCyclesPerMonth
                 
                 val xpPerLevel = progressionConfig.xpPerLevel
                 val derivedLevel = progressionConfig.levelForXp(player.xpTotal)
                 val xpProgress = (player.xpTotal % xpPerLevel).coerceIn(0, xpPerLevel)
-                val todayDecision = decideTodayWorkout(currentDate)
-                recordTodayOrderDecision(todayDecision)
-
                 StatusData(
                     playerName             = player.name,
                     playerClass            = player.playerClass,
@@ -116,14 +132,14 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     xpMax                  = xpPerLevel,
                     currentMonth           = player.currentMonth,
                     totalMonths            = 12,
-                    currentWeight          = weight,
+                    currentWeight          = snapshot.weight,
                     height                 = player.height.takeIf { it > 0f },
                     cycleDay               = currentCycleDay,
-                    monthWorkoutsCompleted = completedMainThisMonth,
+                    monthWorkoutsCompleted = snapshot.completedMainThisMonth,
                     monthWorkoutsTotal     = monthWorkoutsTotal,
-                    todos                  = todos,
-                    dailyQuest             = daily,
-                    mainQuest              = main,
+                    todos                  = snapshot.todos,
+                    dailyQuest             = snapshot.dailyQuest,
+                    mainQuest              = snapshot.mainQuest,
                     promotionQuests        = promotions,
                     activeBossFight        = activeBossFight,
                     globalRank             = player.globalRank,
@@ -132,7 +148,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     maxStreak              = player.maxStreak,
                     xpThisWeek             = player.xpThisWeek,
                     avatarUri              = player.avatarUri,
-                    todayDecision          = todayDecision
+                    todayDecision          = plan.todayDecision
                 )
             }
         }
@@ -143,4 +159,17 @@ private data class DataContainer(
     val config: SystemConfig,
     val activeQuests: List<Quest>,
     val matrixEntries: List<ProgressionMatrixEntry>
+)
+
+private data class StatusDailySnapshot(
+    val dailyQuest: Quest?,
+    val mainQuest: Quest?,
+    val todos: List<TodoItem>,
+    val weight: Float?,
+    val completedMainThisMonth: Int
+)
+
+private data class SchedulesAndDecision(
+    val schedules: List<ScheduleDay>,
+    val todayDecision: TodayTrainingDecision
 )

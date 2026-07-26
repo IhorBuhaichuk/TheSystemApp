@@ -129,6 +129,23 @@ abstract class WorkoutAnalyticsDao {
 
     @Query("""
         SELECT e.* FROM exercise_set_logs e
+        INNER JOIN workout_session_logs s ON e.sessionId = s.sessionId
+        WHERE e.exerciseId IN (:exerciseIds)
+          AND s.sessionId = (
+              SELECT s2.sessionId FROM workout_session_logs s2
+              INNER JOIN exercise_set_logs e2 ON e2.sessionId = s2.sessionId
+              WHERE e2.exerciseId = e.exerciseId
+              ORDER BY s2.timestamp DESC
+              LIMIT 1
+          )
+        ORDER BY e.exerciseId ASC, e.setId ASC
+    """)
+    abstract suspend fun getLastSetsForExercises(
+        exerciseIds: List<Int>
+    ): List<ExerciseSetLogEntity>
+
+    @Query("""
+        SELECT e.* FROM exercise_set_logs e
         JOIN workout_session_logs s ON e.sessionId = s.sessionId
         WHERE e.exerciseId = :exerciseId 
         ORDER BY s.timestamp DESC 

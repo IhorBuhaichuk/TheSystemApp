@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
@@ -29,6 +30,17 @@ fun TonnageChartCanvas(
     val colors = SystemTheme.colors
     val textMeasurer = rememberTextMeasurer()
     val labelStyle = MaterialTheme.typography.labelSmall.copy(color = colors.textSecondary)
+    val locale = Locale.getDefault()
+    val dateLabels = remember(entries, locale) {
+        val formatter = SimpleDateFormat("dd.MM", locale)
+        entries.map { entry -> formatter.format(Date(entry.dateUnixTimestamp)) }
+    }
+    val maxTonnage = remember(entries) {
+        entries.maxOfOrNull { it.totalTonnage }?.toFloat()?.coerceAtLeast(1f) ?: 1f
+    }
+    val yLabels = remember(maxTonnage) {
+        listOf(maxTonnage, maxTonnage / 2, 0f)
+    }
 
     Canvas(
         modifier = modifier
@@ -39,7 +51,6 @@ fun TonnageChartCanvas(
     ) {
         if (entries.isEmpty()) return@Canvas
 
-        val maxTonnage = entries.maxOfOrNull { it.totalTonnage }?.toFloat() ?: 1f
         val paddingX = 100f // Простір зліва для підписів осі Y
         val paddingY = 60f  // Простір знизу для підписів осі X
 
@@ -83,11 +94,9 @@ fun TonnageChartCanvas(
 
             // Підписи для вісі X (малюємо перший, останній або кожен 3-й день, щоб текст не зливався)
             if (index == 0 || index == entries.lastIndex || entries.size <= 5 || index % 3 == 0) {
-                val date = Date(entry.dateUnixTimestamp * 1000)
-                val dateString = SimpleDateFormat("dd.MM", Locale.getDefault()).format(date)
                 drawText(
                     textMeasurer = textMeasurer,
-                    text = dateString,
+                    text = dateLabels[index],
                     topLeft = Offset(x - 30f, chartHeight + 15f),
                     style = labelStyle
                 )
@@ -102,7 +111,6 @@ fun TonnageChartCanvas(
         )
 
         // Підписи для вісі Y (0, половина максимуму, максимум)
-        val yLabels = listOf(maxTonnage, maxTonnage / 2, 0f)
         yLabels.forEach { value ->
             val y = chartHeight - ((value / maxTonnage) * chartHeight)
             drawText(

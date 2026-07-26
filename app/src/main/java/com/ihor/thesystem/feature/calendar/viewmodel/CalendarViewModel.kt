@@ -11,6 +11,7 @@ import com.ihor.thesystem.domain.model.CalendarDayCompletionStatus
 import com.ihor.thesystem.domain.model.Player
 import com.ihor.thesystem.domain.model.PlayerRank
 import com.ihor.thesystem.domain.model.Rank
+import com.ihor.thesystem.domain.model.ScheduleDay
 import com.ihor.thesystem.domain.model.SystemConfig
 import com.ihor.thesystem.domain.model.TodoItem
 import com.ihor.thesystem.domain.repository.*
@@ -20,6 +21,7 @@ import com.ihor.thesystem.domain.usecase.GetTodoStatsForMonthUseCase
 import com.ihor.thesystem.domain.usecase.CalendarLogItem
 import com.ihor.thesystem.domain.usecase.ResolveTrainingCycleDayUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -108,19 +110,27 @@ private data class CalendarSelectionData(
 
 private data class CalendarBaseData(
     val monthData: Triple<YearMonth, Map<LocalDate, Pair<Int, Int>>, Set<LocalDate>>,
-    val config: SystemConfig,
     val selectedDate: LocalDate?,
     val selectionData: CalendarSelectionData,
-    val player: Player
+    val monthPlan: CalendarMonthPlanData
 )
 
+private data class CalendarMonthPlanData(
+    val month: YearMonth,
+    val config: SystemConfig,
+    val player: Player,
+    val datesInMonth: List<LocalDate>,
+    val cycleDayByDate: Map<LocalDate, Int>,
+    val schedulesByCycleDay: Map<Int, ScheduleDay>
+)
+
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val configRepo: SystemConfigRepository,
     private val scheduleRepo: ScheduleRepository,
     private val analyticsRepo: WorkoutAnalyticsRepository,
     private val matrixRepo: ProgressionMatrixRepository,
-    private val workoutRepo: WorkoutRepository,
     private val resolveTrainingCycleDay: ResolveTrainingCycleDayUseCase,
     private val viewingDateRepo: ViewingDateRepository,
     private val playerRepo: PlayerRepository,
@@ -213,38 +223,12 @@ class CalendarViewModel @Inject constructor(
         Triple(monthData.first, monthData.second, workoutDates)
     }
 
-    private val baseData: Flow<CalendarBaseData> = combine(
-        monthCalendarData,
+    private val monthPlanData: Flow<CalendarMonthPlanData> = combine(
+        _currentMonth,
         configRepo.getConfigFlow().filterNotNull(),
-        _selectedDate,
-        selectionData,
         playerRepo.getPlayer().filterNotNull()
-    ) { monthData, config, selectedDate, data, player ->
-        CalendarBaseData(
-            monthData = monthData,
-            config = config,
-            selectedDate = selectedDate,
-            selectionData = data,
-            player = player
-        )
-    }
-
-    val uiState: StateFlow<CalendarUiState> = combine(
-        baseData,
-        calendarCycleRepository.getCalendarCycle(),
-        _refreshRequests
-    ) { baseData, calendarCycle, _ ->
-        val month = baseData.monthData.first
-        val monthTaskStats = baseData.monthData.second
-        val monthWorkoutDates = baseData.monthData.third
-        val config = baseData.config
-        val selectedDate = baseData.selectedDate
-        val data = baseData.selectionData
-        val player = baseData.player
-        val daysInMonth = month.lengthOfMonth()
-        val todayDate = today()
-
-        val datesInMonth = (1..daysInMonth).map { month.atDay(it) }
+    ) { month, config, player ->
+        val datesInMonth = (1..month.lengthOfMonth()).map { month.atDay(it) }
         val cycleDayByDate = datesInMonth.associateWith { date ->
             resolveTrainingCycleDay(
                 targetDate = date,
@@ -252,11 +236,59 @@ class CalendarViewModel @Inject constructor(
                 fallbackCurrentCycleDay = player.currentCycleDay
             )
         }
-        val schedulesByCycleDay = scheduleRepo
-            .getSchedulesForDays(cycleDayByDate.values.distinct())
-            .firstOrNull()
-            .orEmpty()
-            .associateBy { it.cycleDay }
+        Triple(
+            month,
+            config to player,
+            datesInMonth to cycleDayByDate
+        )
+    }.flatMapLatest { (month, configAndPlayer, datesAndCycleDays) ->
+        val (config, player) = configAndPlayer
+        val (datesInMonth, cycleDayByDate) = datesAndCycleDays
+        scheduleRepo.getSchedulesForDays(cycleDayByDate.values.distinct())
+            .map { schedules ->
+                CalendarMonthPlanData(
+                    month = month,
+                    config = config,
+                    player = player,
+                    datesInMonth = datesInMonth,
+                    cycleDayByDate = cycleDayByDate,
+                    schedulesByCycleDay = schedules.associateBy { it.cycleDay }
+                )
+            }
+    }
+
+    private val baseData: Flow<CalendarBaseData> = combine(
+        monthCalendarData,
+        _selectedDate,
+        selectionData,
+        monthPlanData
+    ) { monthData, selectedDate, data, monthPlan ->
+        CalendarBaseData(
+            monthData = monthData,
+            selectedDate = selectedDate,
+            selectionData = data,
+            monthPlan = monthPlan
+        )
+    }.filter { it.monthData.first == it.monthPlan.month }
+
+    val uiState: StateFlow<CalendarUiState> = combine(
+        baseData,
+        calendarCycleRepository.getCalendarCycle(),
+        _refreshRequests
+    ) { baseData, calendarCycle, _ ->
+        val monthPlan = baseData.monthPlan
+        val month = monthPlan.month
+        val monthTaskStats = baseData.monthData.second
+        val monthWorkoutDates = baseData.monthData.third
+        val config = monthPlan.config
+        val selectedDate = baseData.selectedDate
+        val data = baseData.selectionData
+        val player = monthPlan.player
+        val todayDate = today()
+
+        val datesInMonth = monthPlan.datesInMonth
+        val cycleDayByDate = monthPlan.cycleDayByDate
+        val schedulesByCycleDay = monthPlan.schedulesByCycleDay
         
         val calendarDays = datesInMonth.map { date ->
             val cycleDay = cycleDayByDate.getValue(date)
@@ -383,8 +415,9 @@ class CalendarViewModel @Inject constructor(
         dailyTaskSnapshotJob = viewModelScope.launch {
             getTodosForDate(date).collectLatest { tasks ->
                 val allTasks = tasks.flatMapWithMicrotasks()
-                val completed = allTasks.filter { it.isCompleted }.map { it.title }
-                val failed = allTasks.filter { !it.isCompleted }.map { it.title }
+                val (completedItems, failedItems) = allTasks.partition { it.isCompleted }
+                val completed = completedItems.map { it.title }
+                val failed = failedItems.map { it.title }
 
                 val total = allTasks.size
                 val completedPercent = if (total > 0) (completed.size * 100 / total) else 0
@@ -405,11 +438,19 @@ class CalendarViewModel @Inject constructor(
         workoutResultsJob?.cancel()
         workoutResultsJob = viewModelScope.launch {
             analyticsRepo.getSessionsByDate(millis).collect { sessions ->
+                val hasCompletedSets = sessions.any { session ->
+                    session.sets.any { it.isCompleted }
+                }
+                val exerciseNames = if (hasCompletedSets) {
+                    analyticsRepo.getAllExercisesMap()
+                } else {
+                    emptyMap()
+                }
                 val results = sessions.flatMap { session ->
                     session.sets.filter { it.isCompleted }.groupBy { it.exerciseId }.map { (id, sets) ->
                         WorkoutResultUiModel(
                             id,
-                            workoutRepo.getExerciseNameById(id) ?: "Вправа",
+                            exerciseNames[id] ?: "Вправа",
                             sets.map { SetResultUiModel(it.weight, it.reps) }
                         )
                     }
@@ -433,10 +474,10 @@ class CalendarViewModel @Inject constructor(
             
             val schedule = scheduleRepo.getScheduleForDay(cycleDay).firstOrNull()
             if (schedule?.workoutTemplateId != null) {
-                val exerciseIds = schedule.exercises.map { it.id }
+                val exerciseIds = schedule.exercises.mapTo(mutableSetOf()) { it.id }
                 matrixRepo.getAllEntries().first().let { allEntries ->
                     _recommendations.value = allEntries.filter { 
-                        exerciseIds.contains(it.exerciseId) &&
+                        it.exerciseId in exerciseIds &&
                             it.usesExternalLoad() &&
                             it.nextRecommendedWeight != null
                     }

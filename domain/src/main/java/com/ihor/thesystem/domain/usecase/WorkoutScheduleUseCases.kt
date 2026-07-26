@@ -71,6 +71,13 @@ class GetLastSetsForExerciseUseCase @Inject constructor(
         workoutAnalyticsRepository.getLastSetsForExercise(exerciseId)
 }
 
+class GetLastSetsForExercisesUseCase @Inject constructor(
+    private val workoutAnalyticsRepository: WorkoutAnalyticsRepository
+) {
+    suspend operator fun invoke(exerciseIds: List<Int>): Map<Int, List<ExerciseSet>> =
+        workoutAnalyticsRepository.getLastSetsForExercises(exerciseIds)
+}
+
 class GetSelectedViewingDateUseCase @Inject constructor(
     private val viewingDateRepository: ViewingDateRepository
 ) {

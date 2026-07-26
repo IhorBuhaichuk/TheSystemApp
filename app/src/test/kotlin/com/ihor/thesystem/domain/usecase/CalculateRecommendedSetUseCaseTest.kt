@@ -100,6 +100,25 @@ class CalculateRecommendedSetUseCaseTest {
         coVerify(exactly = 0) { analyticsRepo.getLastSetsForExercise(1) }
     }
 
+    @Test
+    fun `provided matrix entry avoids per exercise matrix lookup`() = runTest {
+        val result = useCase.fromSets(
+            exerciseId = 1,
+            exerciseName = "Bench",
+            sets = listOf(
+                set(weight = 55.0, reps = 12),
+                set(weight = 55.0, reps = 12),
+                set(weight = 55.0, reps = 12)
+            ),
+            entry = entry(targetWeight = 70f)
+        )
+
+        assertEquals(57.5, result.weight, 0.001)
+        assertTrue(result.isProgression)
+        coVerify(exactly = 0) { matrixRepo.getEntrySync(any()) }
+        coVerify(exactly = 0) { analyticsRepo.getLastSetsForExercise(any()) }
+    }
+
     private fun entry(
         startWeight: Float = 40f,
         targetWeight: Float = 60f,

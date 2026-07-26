@@ -2,11 +2,25 @@ package com.ihor.thesystem.presentation.common.model
 
 import com.ihor.thesystem.domain.model.MatrixEntryData
 import com.ihor.thesystem.domain.model.WeightHistoryEntry
+import com.ihor.thesystem.domain.repository.ProgressionMatrixEntry
 import com.ihor.thesystem.domain.repository.usesExternalLoad
 import kotlinx.collections.immutable.toImmutableList
 
 fun MatrixEntryData.toMatrixEntryUiModel(): MatrixEntryUiModel {
     val source = entry
+    return source.toMatrixEntryUiModel(
+        isActive = isActive,
+        orderIndex = orderIndex,
+        weightHistory = weightHistory
+    )
+}
+
+fun ProgressionMatrixEntry.toMatrixEntryUiModel(
+    isActive: Boolean = true,
+    orderIndex: Int = 999,
+    weightHistory: List<WeightHistoryEntry> = emptyList()
+): MatrixEntryUiModel {
+    val source = this
     val canShowWeightMetrics = source.usesExternalLoad()
     return MatrixEntryUiModel(
         exerciseId = source.exerciseId,

@@ -176,7 +176,11 @@ fun AppNavGraph(
             }
             composable<Routes.ExercisePicker> { backStackEntry ->
                 val route = backStackEntry.toRoute<Routes.ExercisePicker>()
-                val workoutViewModel: WorkoutViewModel = hiltViewModel()
+                val workoutViewModel = if (route.source == Routes.PICKER_SOURCE_CYCLE) {
+                    hiltViewModel<WorkoutViewModel>()
+                } else {
+                    null
+                }
                 ExercisePickerScreen(
                     onBack = { navController.popBackStack() },
                     actionLabel = when (route.source) {
@@ -186,7 +190,7 @@ fun AppNavGraph(
                     onSelectExercise = { exercise ->
                         when (route.source) {
                             Routes.PICKER_SOURCE_CYCLE -> {
-                                workoutViewModel.onAddExerciseToDay(
+                                workoutViewModel?.onAddExerciseToDay(
                                     exerciseId = exercise.id,
                                     cycleDay = route.cycleDay.takeIf { it > 0 } ?: 1
                                 )

@@ -147,19 +147,24 @@ fun Modifier.systemEnterMotion(
 @Composable
 fun Modifier.systemStateEnterMotion(
     enterFromEnd: Boolean,
-    initialOffset: Dp = 14.dp
+    initialOffset: Dp = 14.dp,
+    animate: Boolean = true
 ): Modifier {
     val motion = SystemTheme.motion
-    val progress = remember { Animatable(0f) }
+    val progress = remember { Animatable(if (animate) 0f else 1f) }
 
-    LaunchedEffect(Unit) {
-        progress.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = motion.effectsDampingRatio,
-                stiffness = motion.effectsStiffness
+    LaunchedEffect(animate) {
+        if (animate && progress.value < 1f) {
+            progress.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = motion.effectsDampingRatio,
+                    stiffness = motion.effectsStiffness
+                )
             )
-        )
+        } else {
+            progress.snapTo(1f)
+        }
     }
 
     return graphicsLayer {

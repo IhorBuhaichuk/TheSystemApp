@@ -84,21 +84,6 @@ class WorkoutViewModel @Inject constructor(
     private val _userEdits = MutableStateFlow<Map<Int, List<ActiveSetInput>>>(emptyMap())
     private val _selectedCycleDayOverride = MutableStateFlow<Int?>(null)
 
-    init {
-        viewModelScope.launch {
-            useCases.getEquipmentProfile().collectLatest { profile ->
-                _settingsUiState.update {
-                    it.copy(
-                        equipmentProfile = profile,
-                        dumbbellMaxKgDraft = profile.dumbbellMaxKg?.formatEquipmentNumber().orEmpty()
-                    )
-                }
-            }
-        }
-        refreshHealthConnectStatus()
-        refreshBackupStatus()
-    }
-
     private val cycleDay: Flow<Int> = combine(
         useCases.selectedDate.filterNotNull(),
         getSystemConfig().filterNotNull(),
@@ -147,6 +132,14 @@ class WorkoutViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), emptyList())
 
+    private val progressionMatrixFlow = useCases.getProgressionMatrix()
+        .distinctUntilChanged()
+        .shareIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            replay = 1
+        )
+
     private val displayedWorkoutFlow: Flow<ActiveDayUiModel?> = displayedCycleDay
         .flatMapLatest { day ->
             useCases.getSchedulesForDays(listOf(day))
@@ -172,11 +165,21 @@ class WorkoutViewModel @Inject constructor(
                             }
                             ?: schedule.exercises
                         val todayDecision = runCatching { useCases.decideTodayWorkout() }.getOrNull()
+                        val matrixEntriesByExercise = progressionMatrixFlow.first()
+                            .associateBy { it.exerciseId }
+                        val lastSetsByExercise = useCases.getLastSetsForExercises(
+                            displayedExercises.map { it.id }.filter { it > 0 }
+                        )
 
                         val exercisesWithRecs = displayedExercises.map { ex ->
                             val trackingMode = resolveTrackingMode(ex)
                             val fallbackRec = try {
-                                useCases.calculateRecommendation(ex.id, ex.name)
+                                useCases.calculateRecommendation.fromSets(
+                                    exerciseId = ex.id,
+                                    exerciseName = ex.name,
+                                    sets = lastSetsByExercise[ex.id].orEmpty(),
+                                    entry = matrixEntriesByExercise[ex.id]
+                                )
                             } catch (e: Exception) {
                                 if (e is CancellationException) throw e
                                 SetRecommendation(
@@ -253,20 +256,18 @@ class WorkoutViewModel @Inject constructor(
             emit(null)
         }
 
-    private val statsFlow = useCases.getStatisticsData()
-
     val activeWorkoutState: StateFlow<ActiveDayUiModel?> = combine(
         displayedWorkoutFlow,
-        statsFlow,
+        progressionMatrixFlow,
         _userEdits
-    ) { workout, stats, edits ->
+    ) { workout, matrixEntries, edits ->
         workout?.copy(
             exercises = workout.exercises.map { ex ->
                 edits[ex.exerciseId]?.let { editedSets ->
                     ex.copy(sets = editedSets.toImmutableList())
                 } ?: ex
             }.toImmutableList(),
-            matrixEntries = stats.matrixEntries.map { it.toMatrixEntryUiModel() }.toImmutableList()
+            matrixEntries = matrixEntries.map { it.toMatrixEntryUiModel() }.toImmutableList()
         )?.withLoggingSummary()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), null)
 
@@ -465,6 +466,7 @@ class WorkoutViewModel @Inject constructor(
                 )
             }
             _dialogState.value = StatusDialogState.WorkoutScheduleSettings
+            refreshEquipmentProfile()
             refreshHealthConnectStatus()
             refreshBackupStatus()
             loadSettingsForDay(selectedDay)
@@ -476,6 +478,18 @@ class WorkoutViewModel @Inject constructor(
 
     fun onHealthConnectPermissionsChanged() {
         refreshHealthConnectStatus()
+    }
+
+    private fun refreshEquipmentProfile() {
+        viewModelScope.launch(dispatchers.io) {
+            val profile = useCases.getEquipmentProfile().first()
+            _settingsUiState.update {
+                it.copy(
+                    equipmentProfile = profile,
+                    dumbbellMaxKgDraft = profile.dumbbellMaxKg?.formatEquipmentNumber().orEmpty()
+                )
+            }
+        }
     }
 
     private fun refreshHealthConnectStatus() {
