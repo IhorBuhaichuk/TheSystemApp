@@ -42,7 +42,12 @@ class BetaMetricsRepositoryImpl @Inject constructor(
 
     @Synchronized
     private fun updateState(transform: (BetaMetricsEventState) -> BetaMetricsEventState) {
-        val next = transform(loadState())
+        val current = loadState()
+        val next = transform(current)
+        if (next == current) {
+            state.value = current
+            return
+        }
         saveState(next)
         state.value = next
     }

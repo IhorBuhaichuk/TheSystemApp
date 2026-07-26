@@ -35,8 +35,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.ihor.thesystem.core.theme.SystemColorTokens
 import com.ihor.thesystem.core.theme.SystemTheme
@@ -293,6 +296,27 @@ private fun SummaryMetricCell(
 ) {
     val colors = SystemTheme.colors
     val shape = RoundedCornerShape(SystemTheme.shapes.medium)
+    val valueAndSubtitle = buildAnnotatedString {
+        withStyle(
+            SpanStyle(
+                color = colors.textPrimary,
+                fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                fontWeight = FontWeight.Black
+            )
+        ) {
+            append(value)
+        }
+        append('\n')
+        withStyle(
+            SpanStyle(
+                color = accent,
+                fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                fontWeight = FontWeight.SemiBold
+            )
+        ) {
+            append(subtitle)
+        }
+    }
     Column(
         modifier = modifier
             .heightIn(min = 92.dp)
@@ -314,27 +338,16 @@ private fun SummaryMetricCell(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineSmall.copy(
-                color = colors.textPrimary,
-                fontWeight = FontWeight.Black
-            ),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Bottom
         ) {
             Text(
-                text = subtitle,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    color = accent,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                maxLines = 1,
+                text = valueAndSubtitle,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
             if (icon != null) {
@@ -514,6 +527,27 @@ private fun ReportLine(
     icon: ImageVector
 ) {
     val colors = SystemTheme.colors
+    val reportText = buildAnnotatedString {
+        withStyle(
+            SpanStyle(
+                color = accent,
+                fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                fontWeight = FontWeight.Bold
+            )
+        ) {
+            append(title)
+        }
+        append('\n')
+        withStyle(
+            SpanStyle(
+                color = colors.textSecondary,
+                fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                fontWeight = FontWeight.Medium
+            )
+        ) {
+            append(text.ifBlank { "Даних поки недостатньо." })
+        }
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -553,29 +587,13 @@ private fun ReportLine(
                 modifier = Modifier.size(18.dp)
             )
         }
-        Column(
+        Text(
+            text = reportText,
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    color = accent,
-                    fontWeight = FontWeight.Bold
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = text.ifBlank { "Даних поки недостатньо." },
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = colors.textSecondary,
-                    fontWeight = FontWeight.Medium
-                ),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

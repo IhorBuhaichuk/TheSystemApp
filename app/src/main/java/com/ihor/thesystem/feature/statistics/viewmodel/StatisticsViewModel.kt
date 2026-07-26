@@ -7,21 +7,22 @@ import com.ihor.thesystem.core.ui.UiEvent
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
 import com.ihor.thesystem.core.ui.asUiText
+import com.ihor.thesystem.core.util.DispatcherProvider
+import com.ihor.thesystem.domain.model.ActiveSetInput
+import com.ihor.thesystem.domain.model.BetaMetrics
+import com.ihor.thesystem.domain.model.DomainError
+import com.ihor.thesystem.domain.model.ValidationError
 import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.domain.usecase.GetBetaMetricsUseCase
 import com.ihor.thesystem.domain.usecase.GetStatisticsDataUseCase
 import com.ihor.thesystem.domain.usecase.LogWorkoutSetsUseCase
 import com.ihor.thesystem.domain.usecase.LogWeightUseCase
-import com.ihor.thesystem.domain.usecase.RecordBetaAppOpenUseCase
 import com.ihor.thesystem.domain.usecase.RecalculateGlobalRankUseCase
 import com.ihor.thesystem.domain.usecase.SelectViewingDateUseCase
 import com.ihor.thesystem.domain.usecase.UpdateMatrixGoalsUseCase
 import com.ihor.thesystem.domain.usecase.UpdatePlayerAgeUseCase
 import com.ihor.thesystem.domain.usecase.UpdatePlayerHeightUseCase
-import com.ihor.thesystem.domain.model.ActiveSetInput
-import com.ihor.thesystem.domain.model.DomainError
-import com.ihor.thesystem.domain.model.ValidationError
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -43,22 +44,35 @@ class StatisticsViewModel @Inject constructor(
     private val logWeightUseCase: LogWeightUseCase,
     private val updatePlayerHeightUseCase: UpdatePlayerHeightUseCase,
     private val updatePlayerAgeUseCase: UpdatePlayerAgeUseCase,
-    private val recordBetaAppOpen: RecordBetaAppOpenUseCase,
-    private val clock: AppClock
+    private val clock: AppClock,
+    private val dispatchers: DispatcherProvider
 ) : ViewModel() {
 
-    private val _refreshRequests = MutableStateFlow(0L)
+    private val loadBetaMetrics = MutableStateFlow(false)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiState: StateFlow<UiState<StatisticsUiData>> = _refreshRequests
-        .flatMapLatest {
-            combine(
-                getStatisticsDataUseCase(),
-                getBetaMetricsUseCase()
-            ) { statisticsData, betaMetrics ->
-                statisticsData.toStatisticsUiData(betaMetrics)
-            }
+    private val betaMetrics = loadBetaMetrics
+        .filter { shouldLoad -> shouldLoad }
+        .take(1)
+        .flatMapLatest { getBetaMetricsUseCase() }
+        .map(BetaMetrics::toBetaMetricsUiModel)
+        .onStart { emit(BetaMetricsUiModel()) }
+        .catch { e ->
+            if (e is CancellationException) throw e
+            Timber.w(e, "Failed to load supplemental beta metrics")
+            emit(BetaMetricsUiModel())
         }
+        .distinctUntilChanged()
+
+    val uiState: StateFlow<UiState<StatisticsUiData>> = combine(
+        getStatisticsDataUseCase()
+            .map { data -> data.toStatisticsUiData() }
+            .distinctUntilChanged(),
+        betaMetrics
+    ) { statisticsData, betaMetrics ->
+        statisticsData.copy(betaMetrics = betaMetrics)
+    }
+        .flowOn(dispatchers.default)
         .map<StatisticsUiData, UiState<StatisticsUiData>> { UiState.Content(it) }
         .catch { e ->
             if (e is CancellationException) throw e
@@ -79,14 +93,12 @@ class StatisticsViewModel @Inject constructor(
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents = _uiEvents.asSharedFlow()
 
-    init {
-        recordAppOpen()
-    }
-
     fun refreshForCurrentDay() {
         selectViewingDateUseCase(todayDate())
-        recordAppOpen()
-        _refreshRequests.value = clock.now()
+    }
+
+    fun loadSupplementalMetrics() {
+        loadBetaMetrics.value = true
     }
 
     fun onOpenSetup(entry: MatrixEntryUiModel) {
@@ -216,17 +228,6 @@ class StatisticsViewModel @Inject constructor(
         Instant.ofEpochMilli(clock.now())
             .atZone(clock.zoneId())
             .toLocalDate()
-
-    private fun recordAppOpen() {
-        viewModelScope.launch {
-            try {
-                recordBetaAppOpen()
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                Timber.w(e, "Failed to record beta app open metric")
-            }
-        }
-    }
 
     private suspend fun handleProfileUpdate(result: Result<Unit, DomainError>, fallback: UiText) {
         when (result) {

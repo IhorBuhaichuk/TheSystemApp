@@ -13,11 +13,15 @@ import com.ihor.thesystem.domain.repository.ScheduleRepository
 import com.ihor.thesystem.domain.repository.SystemConfigRepository
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.domain.util.AppClock
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import java.time.Instant
 import javax.inject.Inject
 
@@ -33,6 +37,14 @@ class GetBetaMetricsUseCase @Inject constructor(
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(): Flow<BetaMetrics> {
+        val schedulesFlow = systemConfigRepository.getConfigFlow()
+            .filterNotNull()
+            .map { config -> config.cycleDaysPerMicrocycle.coerceAtLeast(1) }
+            .distinctUntilChanged()
+            .flatMapLatest { cycleDays ->
+                scheduleRepository.getSchedulesForDays((1..cycleDays).toList())
+            }
+
         val baseFlow = combine(
             onboardingRepository.isOnboardingCompleted(),
             workoutAnalyticsRepository.getAllLogs(),
@@ -49,16 +61,7 @@ class GetBetaMetricsUseCase @Inject constructor(
             )
         }
 
-        return baseFlow.flatMapLatest { base ->
-            val cycleDays = base.config.cycleDaysPerMicrocycle.coerceAtLeast(1)
-            val dayNumbers = (1..cycleDays).toList()
-            val schedulesFlow = if (dayNumbers.isEmpty()) {
-                flowOf(emptyList())
-            } else {
-                scheduleRepository.getSchedulesForDays(dayNumbers)
-            }
-
-            schedulesFlow.combine(flowOf(base)) { schedules, currentBase ->
+        return combine(baseFlow, schedulesFlow) { currentBase, schedules ->
                 val zoneId = clock.zoneId()
                 val today = Instant.ofEpochMilli(clock.now()).atZone(zoneId).toLocalDate()
                 val schedulesByCycleDay: Map<Int, ScheduleDay> = schedules.associateBy { it.cycleDay }
@@ -80,7 +83,8 @@ class GetBetaMetricsUseCase @Inject constructor(
                     }
                 )
             }
-        }
+            .distinctUntilChanged()
+            .flowOn(Dispatchers.Default)
     }
 }
 

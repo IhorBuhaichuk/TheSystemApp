@@ -2,7 +2,7 @@
 
 Graphify-style architecture map for **THE SYSTEM: LEVEL UP**.
 
-Generated from the current repository structure on 2026-07-25. Use this file as the first context checkpoint before refactoring or adding features, then read only the target files needed for the task.
+Generated from the current repository structure on 2026-07-26. Use this file as the first context checkpoint before refactoring or adding features, then read only the target files needed for the task.
 
 ## High-Level Modules
 
@@ -13,12 +13,15 @@ settings.gradle.kts
 │   ├── repository/     Repository contracts owned by domain
 │   ├── usecase/        Business actions, orchestration, calculations
 │   └── util/           Domain utilities, clocks, logging abstractions
-└── :app
+├── :app
     ├── core/           Android app shell: DI, navigation, theme, UI primitives, workers
     ├── data/           Room, repository implementations, remote AI adapters
     ├── feature/        Compose screens and Hilt ViewModels by feature
     ├── health/         Health Connect permission integration
     └── presentation/   Shared presentation models/components
+└── :baselineprofile
+    ├── generators/     Startup and critical-user-journey Baseline Profile rules
+    └── benchmarks/     Cold-start and Statistics navigation macrobenchmarks
 ```
 
 ## Clean Architecture Flow
@@ -37,6 +40,7 @@ Rules of ownership:
 
 - `:domain` must stay free of Android, Room, Compose, Hilt UI concerns, and resource access.
 - `:app` owns Android integration: Room database, Hilt modules, Compose UI, navigation, workers, Health Connect, AI clients, and repository implementations.
+- `:baselineprofile` is an Android test-only module targeting `:app`; it owns UIAutomator journeys, generated profile rules, and repeatable macrobenchmarks, but no production behavior.
 - Business decisions belong in `domain/usecase` or `domain/model`; persistence details belong in `app/data`.
 - Compose screens should talk to ViewModels and UI state, not directly to DAOs or concrete repository implementations.
 
@@ -138,7 +142,8 @@ Shared UI foundation:
 - Onboarding is isolated in `feature/onboarding`; domain owns first-launch state and completion rules through `OnboardingRepository`, `ObserveAppStartDestinationUseCase`, and `CompleteOnboardingUseCase`. App/data persists the completion flag through `OnboardingRepositoryImpl`.
 - Calendar tab reads date summaries, todo stats, training/rest markers, and cycle state.
 - System tab (`CycleScreen`) presents cycle overview and edits training schedules through `WorkoutViewModel`.
-- Statistics tab reads progression matrix, body logs, annual progression, quest and workout proof data. It also displays local beta metrics built by `GetBetaMetricsUseCase` from onboarding state, workout logs, player streak, schedule/config, and `BetaMetricsRepository` event snapshots.
+- Statistics tab reads progression matrix, body-weight history, annual progression, quest and workout proof data. Its critical flow no longer loads per-exercise weight-history joins that are not rendered by the current dashboard.
+- Supplemental beta metrics are deferred until the bottom `LazyColumn` item is composed. Their schedule flow keys only on distinct cycle day, and failures degrade to an empty beta block instead of failing the main Statistics state.
 - Local beta metrics are first-party only: no Firebase/Amplitude/Segment. `AppEntryViewModel` records unique opened days through `RecordBetaAppOpenUseCase`; Status/Statistics refreshes also mark the current day idempotently. `RecordTodayOrderDecisionUseCase` records one Today Order decision type per epoch day.
 - Architect screens use AI repositories through domain use cases and validation logic. AI Architect v2 returns structured weekly insight, 1-3 suggestions, recovery/readiness risk, and optional workout targets. AI output must stay constrained by `ValidateDirectivesUseCase` before mutating plans.
 - Exercise picker is shared by cycle editing and annual progression planning through route source parameters.

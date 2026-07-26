@@ -63,11 +63,11 @@ fun StatisticsData.toStatisticsUiData(
         weakPoint = systemInsight.weakPoint,
         recommendation = systemInsight.recommendation
     ),
-    betaMetrics = betaMetrics.toUiModel(),
+    betaMetrics = betaMetrics.toBetaMetricsUiModel(),
     avatarUri = avatarUri
 )
 
-private fun BetaMetrics.toUiModel(): BetaMetricsUiModel =
+fun BetaMetrics.toBetaMetricsUiModel(): BetaMetricsUiModel =
     BetaMetricsUiModel(
         onboardingCompleted = onboardingCompleted,
         firstWorkoutLogged = firstWorkoutLogged,

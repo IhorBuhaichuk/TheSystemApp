@@ -14,6 +14,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,7 +80,8 @@ fun StatisticsScreen(
                 AnalyticsDashboard(
                     data = state.data,
                     onOpenAnnualProgression = { navController.navigate(Routes.AnnualProgressionDetails) },
-                    onLogWorkout = { navController.navigate(Routes.Cycle) }
+                    onLogWorkout = { navController.navigate(Routes.Cycle) },
+                    onLoadSupplementalMetrics = viewModel::loadSupplementalMetrics
                 )
             }
 
@@ -110,7 +112,8 @@ fun StatisticsScreen(
 private fun AnalyticsDashboard(
     data: StatisticsUiData,
     onOpenAnnualProgression: () -> Unit,
-    onLogWorkout: () -> Unit
+    onLogWorkout: () -> Unit,
+    onLoadSupplementalMetrics: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -129,7 +132,6 @@ private fun AnalyticsDashboard(
             WeeklySystemReportBlock(report = data.weeklySystemReport)
         }
         item(key = "summary") { AnalyticsSummaryBlock(data) }
-        item(key = "usage") { BetaMetricsBlock(metrics = data.betaMetrics) }
         item(key = "weekly_summary") {
             WeeklySummaryBlock(
                 days = data.weeklySummary.days,
@@ -145,6 +147,12 @@ private fun AnalyticsDashboard(
         }
         item(key = "system_insight") {
             DeterministicSystemInsightBlock(insight = data.systemInsight)
+        }
+        item(key = "usage") {
+            LaunchedEffect(Unit) {
+                onLoadSupplementalMetrics()
+            }
+            BetaMetricsBlock(metrics = data.betaMetrics)
         }
     }
 }

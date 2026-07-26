@@ -63,29 +63,23 @@ class GetStatisticsDataUseCase @Inject constructor(
             combine(
                 playerRepo.getPlayer().filterNotNull(),
                 matrixRepo.getAllEntries(),
-                analyticsRepo.getAllWeightHistories(),
                 scheduleRepo.getScheduleForDay(cycleDay),
                 bodyWeightAndWorkoutLogs
-            ) { player, matrix, allHistories, schedule, weightAndLogs ->
+            ) { player, matrix, schedule, weightAndLogs ->
                 val (weightHistory, workoutLogs) = weightAndLogs
                 val activeExerciseIds = schedule?.exercises?.map { it.id }.orEmpty()
                 val activeExerciseOrder = activeExerciseIds.withIndex()
                     .associate { (index, exerciseId) -> exerciseId to index }
-                val historiesMap = allHistories.groupBy { it.exerciseId }
 
                 val updatedEntries = matrix.map { entry ->
                     val orderIndex = activeExerciseOrder[entry.exerciseId] ?: 999
                     val isExerciseActive = orderIndex != 999
-                    
-                    val history = historiesMap[entry.exerciseId]?.map { 
-                        WeightHistoryEntry(it.weight, it.timestamp) 
-                    } ?: emptyList()
 
                     MatrixEntryData(
                         entry = entry,
                         isActive = isExerciseActive,
                         orderIndex = orderIndex,
-                        weightHistory = history
+                        weightHistory = emptyList()
                     )
                 }.sortedWith(compareBy({ !it.isActive }, { it.orderIndex }, { it.entry.exerciseName }))
 
