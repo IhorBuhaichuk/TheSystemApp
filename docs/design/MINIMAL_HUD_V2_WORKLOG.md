@@ -4,7 +4,8 @@
 
 Bring the real Kotlin + Jetpack Compose UI toward the five approved concepts in
 `artifacts/design-concepts/minimal-hud-v2/` while improving rendering performance.
-Do not change business logic, navigation, product copy, data, or workout behavior.
+Do not change business logic, navigation, data, or workout behavior. Plain-language
+Ukrainian product copy is in scope after the user's follow-up approval.
 
 ## Context entry point
 
@@ -92,14 +93,14 @@ animation behavior; remove or replace only decorative work that is proven unnece
 |---|---|---|---|
 | 0 | Baseline and measurement | Complete | this file, ADB artifacts |
 | 1 | Shared tonal surfaces and tokens | Complete | `SystemTokens.kt`, `SystemPanels.kt` |
-| 2 | Shared interaction and progress motion | In progress | `SystemMotion.kt`, `SystemGlassComponents.kt`, `SystemBottomNavBar.kt` |
+| 2 | Shared interaction and progress motion | Complete | `SystemMotion.kt`, `SystemGlassComponents.kt`, `SystemBottomNavBar.kt` |
 | 3 | Status | Complete | `StatusScreen.kt`, `RpgStatusDashboard.kt`, `RpgTodayOrderBlock.kt`, `RpgTodoBlock.kt` |
 | 4 | Calendar | Top-level complete | `CalendarScreen.kt` |
 | 5 | System/Cycle | Top-level complete | `CycleScreen.kt` |
 | 6 | Statistics | Top-level complete | `StatisticsScreen.kt`, overview sections, chart components |
 | 7 | Profile | Top-level complete | `ProfileScreen.kt` |
-| 8 | Dialogs and state panels | In progress | shared dialogs and changed workout/report dialogs |
-| 9 | Accessibility/performance regression | Pending | tests and screenshot artifacts |
+| 8 | Dialogs and state panels | Representative states complete; live report pending | shared dialogs and changed workout/report dialogs |
+| 9 | Accessibility/performance regression | Complete | tests and screenshot artifacts |
 | 10 | Plain-language Ukrainian copy | Complete | presentation mappers, top-level screens, dialogs |
 
 ## Verification ledger
@@ -115,7 +116,23 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - [x] font scale 1.3
 - [x] five after screenshots and changed dialogs
 - [x] `git diff --check`
-- [ ] requirement-by-requirement completion audit
+- [x] requirement-by-requirement completion audit
+
+## Completion audit
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| Native Kotlin + Compose only | Pass | `ComposeOnlyUiGuardTest` passes; no web UI dependency added |
+| Five approved visual targets | Pass | concept and `review/01-status.png` through `review/05-profile.png` |
+| Existing contracts preserved | Pass | no route, action, persistence, or workout calculation changes |
+| Sentence case and Roboto | Pass | shared typography and `SystemTextCaseTest` |
+| Plain Ukrainian UI | Pass | static-copy audit plus `UserFacingTextMappersTest`; custom user data remains unchanged |
+| Functional, finite interaction motion | Pass | press, selection, progress, dialog entrance, and reward motion use draw/graphics layers |
+| No continuous top-level decoration | Pass | no infinite top-level transition; exercise frame loop remains functional and scoped |
+| Small/normal phone and font scale 1.3 | Pass | screenshots show no clipping or overlap |
+| Performance regression check | Pass with follow-up | primary-tab slow UI/draw frames improved; release-profile validation remains useful |
+| Physical-device review build | Pass | installed with `adb install -r`; data preserved; cold launch smoke-check succeeded |
+| Real completed-workout report | Deferred | requires a genuine completed workout from user testing; no data was fabricated |
 
 ## Decision log
 
@@ -184,6 +201,9 @@ animation behavior; remove or replace only decorative work that is proven unnece
   do not animate layout. The exercise demonstration keeps its functional two-frame
   loop, but now uses one crossfade layer instead of stacking Compose and Coil
   crossfades; changing the exercise also resets the frame deterministically.
+- 2026-07-26: The final debug APK was installed with app data preserved. A cold-start
+  smoke-check resumed `MainActivity` in about 1.0 s on the Realme, with the physical
+  1080 × 2400 size and original 0.9 font scale intact.
 
 ## Current checkpoint
 
