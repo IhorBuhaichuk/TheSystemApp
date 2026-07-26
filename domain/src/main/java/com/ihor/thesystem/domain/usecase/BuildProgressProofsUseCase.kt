@@ -19,6 +19,9 @@ import kotlin.math.abs
 class BuildProgressProofsUseCase @Inject constructor(
     private val clock: AppClock
 ) {
+    fun relevantPeriodStartMillis(): Long =
+        comparisonPeriod().previousStartMillis
+
     operator fun invoke(
         workoutLogs: List<WorkoutLog>,
         matrixEntries: List<ProgressionMatrixEntry>,
@@ -185,8 +188,8 @@ class BuildProgressProofsUseCase @Inject constructor(
 
     private fun comparisonPeriod(): ComparisonPeriod {
         val today = Instant.ofEpochMilli(clock.now()).atZone(clock.zoneId()).toLocalDate()
-        val currentStart = today.minusDays(CURRENT_PERIOD_DAYS).startOfDayMillis()
-        val previousStart = today.minusDays(CURRENT_PERIOD_DAYS * 2).startOfDayMillis()
+        val currentStart = today.minusDays(PROGRESS_PROOF_PERIOD_DAYS).startOfDayMillis()
+        val previousStart = today.minusDays(PROGRESS_PROOF_PERIOD_DAYS * 2).startOfDayMillis()
         return ComparisonPeriod(
             previousStartMillis = previousStart,
             currentStartMillis = currentStart
@@ -236,7 +239,6 @@ class BuildProgressProofsUseCase @Inject constructor(
     )
 
     private companion object {
-        const val CURRENT_PERIOD_DAYS = 28L
         const val MAX_PROOFS = 4
         const val MIN_SETS_FOR_PROOF = 2
         const val MIN_POSITIVE_PERCENT_CHANGE = 0.5f
@@ -245,3 +247,5 @@ class BuildProgressProofsUseCase @Inject constructor(
         const val SECONDS_IN_MINUTE = 60
     }
 }
+
+private const val PROGRESS_PROOF_PERIOD_DAYS = 28L

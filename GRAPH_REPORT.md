@@ -99,6 +99,10 @@ Repository implementation layer:
 - Mappers near repository implementations translate Room entities/DTOs into domain models.
 - Workout recommendation loading batches the latest logged sets for all displayed exercises through
   `WorkoutAnalyticsDao.getLastSetsForExercises`, avoiding per-exercise Room queries.
+- Statistics workout proof/weekly summary loading is bounded to the relevant 56-day comparison window
+  through the indexed workout-session timestamp query, with a defensive 200-session cap.
+- Annual progression history starts at the earliest active plan and keeps only one pre-plan baseline
+  per exercise; Room also collapses same-session sets to the maximum exercise weight.
 - `BetaMetricsRepositoryImpl` stores local beta event snapshots in SharedPreferences, not Room; it does not require a database migration.
 
 ## Compose Screen and Navigation Map

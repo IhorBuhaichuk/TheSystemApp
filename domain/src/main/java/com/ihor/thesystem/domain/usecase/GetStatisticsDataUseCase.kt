@@ -53,9 +53,14 @@ class GetStatisticsDataUseCase @Inject constructor(
         }.distinctUntilChanged()
 
         return cycleDayFlow.flatMapLatest { cycleDay ->
+            val workoutLogStart = buildProgressProofs.relevantPeriodStartMillis()
+            val workoutLogEndExclusive = nextDayStartMillis()
             val bodyWeightAndWorkoutLogs = combine(
                 playerRepo.getWeightHistory(),
-                analyticsRepo.getAllLogs()
+                analyticsRepo.getLogsBetween(
+                    startInclusive = workoutLogStart,
+                    endExclusive = workoutLogEndExclusive
+                )
             ) { weightHistory, workoutLogs ->
                 weightHistory to workoutLogs
             }
@@ -320,6 +325,15 @@ class GetStatisticsDataUseCase @Inject constructor(
 
     private fun Long.toLocalDate(): LocalDate =
         Instant.ofEpochMilli(this).atZone(clock.zoneId()).toLocalDate()
+
+    private fun nextDayStartMillis(): Long =
+        Instant.ofEpochMilli(clock.now())
+            .atZone(clock.zoneId())
+            .toLocalDate()
+            .plusDays(1)
+            .atStartOfDay(clock.zoneId())
+            .toInstant()
+            .toEpochMilli()
 
     private fun LocalDate.shortDayName(): String =
         when (dayOfWeek) {

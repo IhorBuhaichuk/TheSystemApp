@@ -57,6 +57,18 @@ abstract class WorkoutAnalyticsDao {
     @Transaction
     @Query("""
         SELECT * FROM workout_session_logs
+        WHERE timestamp >= :startInclusive AND timestamp < :endExclusive
+        ORDER BY timestamp DESC
+        LIMIT 200
+    """)
+    abstract fun getSessionLogsForStatistics(
+        startInclusive: Long,
+        endExclusive: Long
+    ): Flow<List<SessionWithSets>>
+
+    @Transaction
+    @Query("""
+        SELECT * FROM workout_session_logs
         WHERE timestamp BETWEEN :startInclusive AND :endInclusive
         ORDER BY timestamp ASC
         LIMIT 50
@@ -70,12 +82,41 @@ abstract class WorkoutAnalyticsDao {
      * Отримання історії ваги для всіх вправ одним запитом
      */
     @Query("""
-        SELECT e.weight, s.timestamp, e.exerciseId
+        SELECT
+            MAX(e.weight) AS weight,
+            s.timestamp AS timestamp,
+            e.exerciseId AS exerciseId
         FROM exercise_set_logs e
         JOIN workout_session_logs s ON e.sessionId = s.sessionId
-        ORDER BY s.timestamp ASC
+        WHERE s.timestamp >= :startInclusive AND s.timestamp < :endExclusive
+        GROUP BY e.exerciseId, s.timestamp
+
+        UNION ALL
+
+        SELECT
+            MAX(e.weight) AS weight,
+            s.timestamp AS timestamp,
+            e.exerciseId AS exerciseId
+        FROM exercise_set_logs e
+        JOIN workout_session_logs s ON e.sessionId = s.sessionId
+        JOIN (
+            SELECT
+                e2.exerciseId AS exerciseId,
+                MAX(s2.timestamp) AS latestTimestamp
+            FROM exercise_set_logs e2
+            JOIN workout_session_logs s2 ON e2.sessionId = s2.sessionId
+            WHERE s2.timestamp < :startInclusive
+            GROUP BY e2.exerciseId
+        ) previous
+            ON previous.exerciseId = e.exerciseId
+            AND previous.latestTimestamp = s.timestamp
+        GROUP BY e.exerciseId, s.timestamp
+        ORDER BY timestamp ASC, exerciseId ASC
     """)
-    abstract fun getAllWeightHistories(): Flow<List<ExerciseWeightHistoryWithId>>
+    abstract fun getWeightHistoriesBetween(
+        startInclusive: Long,
+        endExclusive: Long
+    ): Flow<List<ExerciseWeightHistoryWithId>>
 
     @Query("""
         SELECT

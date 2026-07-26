@@ -16,8 +16,10 @@ Branch: `codex/overnight-premium-hud-polish`
 - Added a `:baselineprofile` module, generated release baseline/startup profiles, and added repeatable cold-start and Statistics navigation macrobenchmarks.
 - Reduced first-screen Statistics text layout nodes by combining styled title/body and value/subtitle pairs.
 - Removed the full `StatisticsViewModel` from `ProfileScreen`; personal metrics now reuse the existing Status flow and update use cases instead of starting Statistics history and aggregation streams.
+- Bounded Statistics workout sessions to the 56-day progress-proof window with a 200-session safety cap, using the indexed timestamp range.
+- Bounded annual progression history to the earliest active plan through today, while preserving one pre-plan baseline per exercise and collapsing same-session sets to their maximum weight.
 
-Latest verification: `:app:compileDebugKotlin` passed; 297 local unit/guard tests passed with 0 failures (1 skipped); both Baseline Profile benchmark variants compile.
+Latest verification: `:app:compileDebugKotlin` and focused Room checks passed; 299 local unit/guard tests passed with 0 failures (1 skipped); both Baseline Profile benchmark variants compile.
 
 ## Current benchmark baseline
 
@@ -30,12 +32,16 @@ Macrobenchmark target: non-minified release, 5 iterations unless the OEM metric 
 | Open Statistics | None | p50 121 ms | p90 250 ms; jank 75% |
 | Open Statistics | Baseline Profile | p50 69 ms | p90 121 ms; jank 40% |
 | Open Statistics after text-layout optimization | Baseline Profile | p50 61 ms | p90 117 ms; jank 40%; worst p90 129 ms |
+| Open Profile after removing Statistics pipeline | None | p50 69 ms | p90 150 ms; jank 69.23% |
+| Open Profile after removing Statistics pipeline | Baseline Profile | p50 29 ms | p90 93 ms; jank 21.43% |
 
 Interpretation:
 
 - Cold start is comfortably below Android Vitals' excessive cold-start threshold of 5 seconds, but the profile does not show a reliable cold-start improvement on this device.
 - The profile is valuable for Statistics: p50 improved by 43%, p90 by 52%, and median jank by 47% compared with no compilation.
+- The profile is also valuable for Profile navigation: p50 improved by 58%, p90 by 38%, and median jank by 69% compared with no compilation.
 - Statistics is still not smooth. At 60 Hz the frame budget is about 16.7 ms; current 61/117 ms percentiles are slow frames, though far below the 700 ms frozen-frame threshold.
+- Profile is materially better with compilation but is not yet smooth at 29/93 ms. Its worst measured Baseline trace is dominated by a 52.6 ms Compose recompose, 39.5 ms measure, 19.3 ms draw, and concurrent GC pressure.
 
 ## Trace findings
 
@@ -57,11 +63,10 @@ This points to first Compose measurement, text layout, allocation pressure, and 
 
 ## Next work
 
-1. Run the new repeatable Profile navigation macrobenchmark and measure the removed Statistics pipeline on the physical device when it is connected.
+1. Defer `WorkoutViewModel` creation on Profile until workout settings are actually opened; re-run the Profile benchmark after the change.
 2. Continue reducing first-screen Statistics measure cost without hiding report content; validate every UI experiment with the existing macrobenchmark.
-3. Add bounded/date-range workout-log queries for weekly and annual analytics, with DAO indexes/query-plan checks and Room tests.
-4. Add release CI performance runs on a stable emulator/reference device; the Realme OEM Perfetto trace lacks some modern frame slices, so the local suite uses legacy startup and `gfxinfo` frame metrics.
-5. Re-check profile size/coverage after the next architecture changes and regenerate with `:app:generateBaselineProfile`.
+3. Add release CI performance runs on a stable emulator/reference device; the Realme OEM Perfetto trace lacks some modern frame slices, so the local suite uses legacy startup and `gfxinfo` frame metrics.
+4. Re-check profile size/coverage after the next architecture changes and regenerate with `:app:generateBaselineProfile`.
 
 ## Commands
 

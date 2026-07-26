@@ -63,6 +63,15 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getLogsBetween(
+        startInclusive: Long,
+        endExclusive: Long
+    ): Flow<List<WorkoutLog>> {
+        return dao.getSessionLogsForStatistics(startInclusive, endExclusive).map { list ->
+            list.map { it.toDomain() }
+        }
+    }
+
     override fun getWeightHistory(exerciseId: Int): Flow<List<WeightHistoryEntry>> {
         return dao.getWeightHistoryForExercise(exerciseId).map { list ->
             WorkoutAnalyticsLocalDayGrouper.dailyMaxWeightHistory(
@@ -72,8 +81,11 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getAllWeightHistories(): Flow<List<WeightHistoryWithId>> {
-        return dao.getAllWeightHistories().map { list ->
+    override fun getWeightHistoriesBetween(
+        startInclusive: Long,
+        endExclusive: Long
+    ): Flow<List<WeightHistoryWithId>> {
+        return dao.getWeightHistoriesBetween(startInclusive, endExclusive).map { list ->
             list.map { WeightHistoryWithId(it.weight, it.timestamp, it.exerciseId) }
         }
     }

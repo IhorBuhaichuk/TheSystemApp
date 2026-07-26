@@ -13,7 +13,9 @@ import com.ihor.thesystem.domain.repository.usesExternalLoad
 import com.ihor.thesystem.domain.util.AnnualProgressionPlanNoteParser
 import com.ihor.thesystem.domain.util.ParsedAnnualProgressionPlanNote
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
@@ -24,24 +26,43 @@ class GetAnnualProgressionDetailsUseCase @Inject constructor(
     private val clock: AppClock
 ) {
     operator fun invoke(): Flow<AnnualProgressionDetailsData> =
-        combine(
-            progressionMatrixRepository.getAllEntries(),
-            workoutAnalyticsRepository.getAllWeightHistories()
-        ) { entries, histories ->
-            val historiesByExercise = histories.groupBy { it.exerciseId }
-            AnnualProgressionDetailsData(
-                exercises = entries
-                    .filter { it.usesExternalLoad() }
-                    .mapNotNull { entry ->
-                        val parsedPlan = AnnualProgressionPlanNoteParser.parse(entry.targetWeightNote)
-                            ?: return@mapNotNull null
-                        entry.toDetails(
-                            parsedPlan = parsedPlan,
-                            histories = historiesByExercise[entry.exerciseId].orEmpty()
-                        )
-                    }
-                    .sortedBy { it.exerciseName }
-            )
+        progressionMatrixRepository.getAllEntries().flatMapLatest { entries ->
+            val plannedEntries = entries
+                .filter { it.usesExternalLoad() }
+                .mapNotNull { entry ->
+                    val parsedPlan = AnnualProgressionPlanNoteParser.parse(entry.targetWeightNote)
+                        ?: return@mapNotNull null
+                    PlannedEntry(entry = entry, parsedPlan = parsedPlan)
+                }
+            val earliestPlanStart = plannedEntries.minOfOrNull { it.parsedPlan.startDate }
+            val historiesFlow = earliestPlanStart?.let { startDate ->
+                workoutAnalyticsRepository.getWeightHistoriesBetween(
+                    startInclusive = startDate.atStartOfDay(clock.zoneId())
+                        .toInstant()
+                        .toEpochMilli(),
+                    endExclusive = Instant.ofEpochMilli(clock.now())
+                        .atZone(clock.zoneId())
+                        .toLocalDate()
+                        .plusDays(1)
+                        .atStartOfDay(clock.zoneId())
+                        .toInstant()
+                        .toEpochMilli()
+                )
+            } ?: flowOf(emptyList())
+
+            historiesFlow.map { histories ->
+                val historiesByExercise = histories.groupBy { it.exerciseId }
+                AnnualProgressionDetailsData(
+                    exercises = plannedEntries
+                        .map { plannedEntry ->
+                            plannedEntry.entry.toDetails(
+                                parsedPlan = plannedEntry.parsedPlan,
+                                histories = historiesByExercise[plannedEntry.entry.exerciseId].orEmpty()
+                            )
+                        }
+                        .sortedBy { it.exerciseName }
+                )
+            }
         }
 
     private fun ProgressionMatrixEntry.toDetails(
@@ -131,6 +152,11 @@ class GetAnnualProgressionDetailsUseCase @Inject constructor(
         val monthDelta = date.monthValue - startDate.monthValue
         return yearDelta * 12 + monthDelta
     }
+
+    private data class PlannedEntry(
+        val entry: ProgressionMatrixEntry,
+        val parsedPlan: ParsedAnnualProgressionPlanNote
+    )
 }
 
 private const val ANNUAL_MONTHS = 12

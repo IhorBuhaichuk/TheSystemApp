@@ -94,6 +94,65 @@ class WorkoutAnalyticsQueryGuardTest {
         )
     }
 
+    @Test
+    fun `statistics workout logs are bounded by the relevant time window`() {
+        val daoSource = projectRoot()
+            .resolve("src/main/java/com/ihor/thesystem/data/local/room/dao/WorkoutAnalyticsDao.kt")
+            .readText()
+        val repositorySource = projectRoot()
+            .resolve("src/main/java/com/ihor/thesystem/data/repository_impl/WorkoutAnalyticsRepositoryImpl.kt")
+            .readText()
+        val useCaseSource = projectRoot().parentFile
+            .resolve("domain/src/main/java/com/ihor/thesystem/domain/usecase/GetStatisticsDataUseCase.kt")
+            .readText()
+
+        assertTrue(
+            "Statistics sessions must use the indexed timestamp range and a hard row cap.",
+            "getSessionLogsForStatistics" in daoSource &&
+                "timestamp >= :startInclusive AND timestamp < :endExclusive" in daoSource &&
+                "LIMIT 200" in daoSource
+        )
+        assertTrue(
+            "The repository must forward the Statistics time window to Room.",
+            "dao.getSessionLogsForStatistics(startInclusive, endExclusive)" in repositorySource
+        )
+        assertFalse(
+            "The Statistics critical flow must not load the general session history.",
+            "analyticsRepo.getAllLogs()" in useCaseSource
+        )
+        assertTrue(
+            "The Statistics critical flow must request only its relevant comparison window.",
+            "analyticsRepo.getLogsBetween(" in useCaseSource &&
+                "buildProgressProofs.relevantPeriodStartMillis()" in useCaseSource
+        )
+    }
+
+    @Test
+    fun `annual progression history is bounded and preserves one prior baseline`() {
+        val daoSource = projectRoot()
+            .resolve("src/main/java/com/ihor/thesystem/data/local/room/dao/WorkoutAnalyticsDao.kt")
+            .readText()
+        val annualUseCaseSource = projectRoot().parentFile
+            .resolve("domain/src/main/java/com/ihor/thesystem/domain/usecase/GetAnnualProgressionDetailsUseCase.kt")
+            .readText()
+
+        assertTrue(
+            "Annual history must load records from the earliest active plan start.",
+            "getWeightHistoriesBetween" in daoSource &&
+                "WHERE s.timestamp >= :startInclusive AND s.timestamp < :endExclusive" in daoSource &&
+                "getWeightHistoriesBetween(" in annualUseCaseSource
+        )
+        assertTrue(
+            "Annual history must preserve one pre-plan baseline per exercise.",
+            "MAX(s2.timestamp) AS latestTimestamp" in daoSource &&
+                "WHERE s2.timestamp < :startInclusive" in daoSource
+        )
+        assertFalse(
+            "Annual progression must not observe the unbounded all-history query.",
+            "getAllWeightHistories()" in annualUseCaseSource
+        )
+    }
+
     private fun projectRoot(): File =
         File(requireNotNull(System.getProperty("user.dir"))).absoluteFile
 }

@@ -7,6 +7,7 @@ import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
 import com.ihor.thesystem.domain.util.AppClock
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -49,12 +50,26 @@ class GetAnnualProgressionDetailsUseCaseTest {
                 )
             )
         )
-        every { workoutAnalyticsRepository.getAllWeightHistories() } returns flowOf(emptyList())
+        every {
+            workoutAnalyticsRepository.getWeightHistoriesBetween(any(), any())
+        } returns flowOf(emptyList())
 
         val data = useCase().first()
 
         assertEquals(1, data.exercises.size)
         assertEquals("Bench press", data.exercises.single().exerciseName)
+        verify(exactly = 1) {
+            workoutAnalyticsRepository.getWeightHistoriesBetween(
+                LocalDate.of(2026, 1, 1)
+                    .atStartOfDay(clock.zoneId())
+                    .toInstant()
+                    .toEpochMilli(),
+                LocalDate.of(2026, 5, 15)
+                    .atStartOfDay(clock.zoneId())
+                    .toInstant()
+                    .toEpochMilli()
+            )
+        }
     }
 
     private fun matrixEntry(

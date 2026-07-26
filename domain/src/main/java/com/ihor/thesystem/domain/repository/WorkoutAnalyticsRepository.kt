@@ -23,12 +23,16 @@ interface WorkoutAnalyticsRepository {
     fun getSessionById(sessionId: Long): Flow<WorkoutLog?>
     fun getSessionsByDate(dateMillis: Long): Flow<List<WorkoutLog>>
     fun getAllLogs(): Flow<List<WorkoutLog>>
+    fun getLogsBetween(startInclusive: Long, endExclusive: Long): Flow<List<WorkoutLog>>
     
     // Отримання історії для однієї вправи
     fun getWeightHistory(exerciseId: Int): Flow<List<WeightHistoryEntry>>
     
     // ОПТИМІЗАЦІЯ: Отримання всього списку історій за раз
-    fun getAllWeightHistories(): Flow<List<WeightHistoryWithId>>
+    fun getWeightHistoriesBetween(
+        startInclusive: Long,
+        endExclusive: Long
+    ): Flow<List<WeightHistoryWithId>>
 
     // Нові методи для фіксу дублікатів та контексту
     suspend fun getLogsForExerciseOnDate(exerciseId: Int, startOfDay: Long, endOfDay: Long): List<ExerciseSet>
