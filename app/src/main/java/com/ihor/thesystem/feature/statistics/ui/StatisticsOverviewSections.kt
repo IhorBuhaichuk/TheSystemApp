@@ -18,8 +18,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,40 +58,41 @@ import java.util.Locale
 @Composable
 fun AnalyticsSummaryBlock(data: StatisticsUiData) {
     val colors = SystemTheme.colors
-    DarkGlassCard(active = true) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            SystemSectionHeader(
-                title = "Поточний період",
-                subtitle = "Тиждень ${data.currentWeek}",
-                icon = Icons.Filled.CalendarToday
-            )
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SystemSectionHeader(
+            title = "Поточний період",
+            subtitle = "Тиждень ${data.currentWeek}",
+            icon = Icons.Filled.CalendarToday
+        )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SummaryMetricCell(
-                    label = "Тренування",
-                    value = data.weeklySummary.workoutCount.toString(),
-                    subtitle = "за тиждень",
-                    accent = colors.accentPrimary,
-                    modifier = Modifier.weight(1f)
-                )
-                SummaryMetricCell(
-                    label = "Серія",
-                    value = data.currentStreak.toString(),
-                    subtitle = "днів",
-                    accent = colors.accentSuccess,
-                    modifier = Modifier.weight(1f)
-                )
-                SummaryMetricCell(
-                    label = "Досвід",
-                    value = data.xpThisWeek.toString(),
-                    subtitle = "за період",
-                    accent = colors.accentWarning,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SummaryMetricCell(
+                label = "Тренування",
+                value = data.weeklySummary.workoutCount.toString(),
+                subtitle = "за тиждень",
+                accent = colors.accentPrimary,
+                icon = Icons.Filled.FitnessCenter,
+                modifier = Modifier.weight(1f)
+            )
+            SummaryMetricCell(
+                label = "Серія",
+                value = data.currentStreak.toString(),
+                subtitle = "днів",
+                accent = colors.accentSuccess,
+                icon = Icons.Filled.LocalFireDepartment,
+                modifier = Modifier.weight(1f)
+            )
+            SummaryMetricCell(
+                label = "Досвід",
+                value = data.xpThisWeek.toString(),
+                subtitle = "за період",
+                accent = colors.accentWarning,
+                icon = Icons.Filled.Star,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -94,115 +102,119 @@ fun BetaMetricsBlock(metrics: BetaMetricsUiModel) {
     if (!metrics.hasSignal) return
 
     val colors = SystemTheme.colors
-    DarkGlassCard {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SystemSectionHeader(
-                title = "Використання застосунку",
-                subtitle = "Основні дії та регулярність",
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SystemSectionHeader(
+            title = "Використання застосунку",
+            subtitle = "Основні дії та регулярність",
+            icon = Icons.Filled.Settings,
+            accent = colors.accentAi
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SummaryMetricCell(
+                label = "Початкове налаштування",
+                value = if (metrics.onboardingCompleted) "Так" else "Ні",
+                subtitle = "завершено",
+                accent = if (metrics.onboardingCompleted) colors.accentSuccess else colors.textMuted,
                 icon = Icons.Filled.Settings,
-                accent = colors.accentAi
+                modifier = Modifier.weight(1f)
             )
+            SummaryMetricCell(
+                label = "Перше тренування",
+                value = if (metrics.firstWorkoutLogged) "Так" else "Ні",
+                subtitle = "записано",
+                accent = if (metrics.firstWorkoutLogged) colors.accentPrimary else colors.textMuted,
+                icon = Icons.Filled.FitnessCenter,
+                modifier = Modifier.weight(1f)
+            )
+            SummaryMetricCell(
+                label = "Дні використання",
+                value = metrics.daysAppOpenedOrRefreshed.toString(),
+                subtitle = "усього",
+                accent = colors.accentAi,
+                icon = Icons.Filled.CalendarToday,
+                modifier = Modifier.weight(1f)
+            )
+        }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SummaryMetricCell(
-                    label = "Початкове налаштування",
-                    value = if (metrics.onboardingCompleted) "Так" else "Ні",
-                    subtitle = "завершено",
-                    accent = if (metrics.onboardingCompleted) colors.accentSuccess else colors.textMuted,
-                    modifier = Modifier.weight(1f)
-                )
-                SummaryMetricCell(
-                    label = "Перше тренування",
-                    value = if (metrics.firstWorkoutLogged) "Так" else "Ні",
-                    subtitle = "записано",
-                    accent = if (metrics.firstWorkoutLogged) colors.accentPrimary else colors.textMuted,
-                    modifier = Modifier.weight(1f)
-                )
-                SummaryMetricCell(
-                    label = "Дні використання",
-                    value = metrics.daysAppOpenedOrRefreshed.toString(),
-                    subtitle = "усього",
-                    accent = colors.accentAi,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SummaryMetricCell(
+                label = "За планом",
+                value = metrics.plannedCompletedThisWeek.toString(),
+                subtitle = "цього тижня",
+                accent = colors.accentSuccess,
+                icon = Icons.Filled.CheckCircle,
+                modifier = Modifier.weight(1f)
+            )
+            SummaryMetricCell(
+                label = "Пропущено",
+                value = metrics.plannedMissedThisWeek.toString(),
+                subtitle = "цього тижня",
+                accent = if (metrics.plannedMissedThisWeek > 0) colors.accentWarning else colors.textMuted,
+                icon = Icons.Filled.Close,
+                modifier = Modifier.weight(1f)
+            )
+            SummaryMetricCell(
+                label = "Серія",
+                value = metrics.currentStreak.toString(),
+                subtitle = "днів",
+                accent = colors.accentWarning,
+                icon = Icons.Filled.LocalFireDepartment,
+                modifier = Modifier.weight(1f)
+            )
+        }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                SummaryMetricCell(
-                    label = "За планом",
-                    value = metrics.plannedCompletedThisWeek.toString(),
-                    subtitle = "цього тижня",
-                    accent = colors.accentSuccess,
-                    modifier = Modifier.weight(1f)
-                )
-                SummaryMetricCell(
-                    label = "Пропущено",
-                    value = metrics.plannedMissedThisWeek.toString(),
-                    subtitle = "цього тижня",
-                    accent = if (metrics.plannedMissedThisWeek > 0) colors.accentWarning else colors.textMuted,
-                    modifier = Modifier.weight(1f)
-                )
-                SummaryMetricCell(
-                    label = "Серія",
-                    value = metrics.currentStreak.toString(),
-                    subtitle = "днів",
-                    accent = colors.accentWarning,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            if (metrics.decisionDistribution.isNotEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .techSurface(
-                            shape = RoundedCornerShape(SystemTheme.shapes.medium),
-                            active = false,
-                            accent = colors.accentPrimary,
-                            role = TechSurfaceRole.Plate
-                        )
-                        .padding(11.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Як змінювався план на сьогодні",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = colors.textSecondary,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+        if (metrics.decisionDistribution.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .techSurface(
+                        shape = RoundedCornerShape(SystemTheme.shapes.medium),
+                        active = false,
+                        accent = colors.accentPrimary,
+                        role = TechSurfaceRole.Plate
                     )
-                    metrics.decisionDistribution.take(4).forEach { item ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = item.label,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = colors.textPrimary,
-                                    fontWeight = FontWeight.SemiBold
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = item.count.toString(),
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = colors.accentPrimary,
-                                    fontWeight = FontWeight.Black
-                                ),
-                                maxLines = 1
-                            )
-                        }
+                    .padding(11.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Як змінювався план на сьогодні",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = colors.textSecondary,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                metrics.decisionDistribution.take(4).forEach { item ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = item.label,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = colors.textPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = item.count.toString(),
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = colors.accentPrimary,
+                                fontWeight = FontWeight.Black
+                            ),
+                            maxLines = 1
+                        )
                     }
                 }
             }
@@ -276,20 +288,21 @@ private fun SummaryMetricCell(
     value: String,
     subtitle: String,
     accent: Color,
+    icon: ImageVector? = null,
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
     val shape = RoundedCornerShape(SystemTheme.shapes.medium)
     Column(
         modifier = modifier
-            .heightIn(min = 104.dp)
+            .heightIn(min = 92.dp)
             .techSurface(
                 shape = shape,
                 active = false,
                 accent = accent,
                 role = TechSurfaceRole.Plate
             )
-            .padding(11.dp),
+            .padding(10.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
@@ -310,15 +323,29 @@ private fun SummaryMetricCell(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = accent,
-                fontWeight = FontWeight.SemiBold
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = accent,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(17.dp)
+                )
+            }
+        }
     }
 }
 
@@ -327,8 +354,8 @@ fun ProgressProofsBlock(
     proofs: List<ProgressProofUiModel>
 ) {
     val colors = SystemTheme.colors
-    DarkGlassCard {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    DarkGlassCard(contentPadding = 14.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SystemSectionHeader(
                 title = "Доказ прогресу",
             subtitle = "Короткі факти із записаних тренувань"
@@ -437,19 +464,44 @@ fun WeeklySystemReportBlock(
     report: WeeklySystemReportUiModel
 ) {
     val colors = SystemTheme.colors
-    DarkGlassCard {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    DarkGlassCard(contentPadding = 14.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             SystemSectionHeader(
                 title = "Тижневий звіт системи",
-            subtitle = "Підсумок за вашими даними",
+                subtitle = "Підсумок за вашими даними",
                 icon = Icons.Filled.AutoAwesome,
                 accent = colors.accentAi
             )
-            ReportLine("Найкращий день", report.bestTrainingDay, colors.accentSuccess)
-            ReportLine("Слабке місце", report.weakestPattern, colors.accentWarning)
-            ReportLine("Найбільший прогрес", report.biggestProgress, colors.accentPrimary)
-            ReportLine("Відновлення", report.recoveryIssue, colors.accentAi)
-            ReportLine("Наступний тиждень", report.nextWeekDecision, colors.textPrimary)
+            ReportLine(
+                title = "Найкращий день",
+                text = report.bestTrainingDay,
+                accent = colors.accentSuccess,
+                icon = Icons.Filled.AutoAwesome
+            )
+            ReportLine(
+                title = "Слабке місце",
+                text = report.weakestPattern,
+                accent = colors.accentWarning,
+                icon = Icons.Filled.TrendingDown
+            )
+            ReportLine(
+                title = "Найбільший прогрес",
+                text = report.biggestProgress,
+                accent = colors.accentPrimary,
+                icon = Icons.AutoMirrored.Filled.TrendingUp
+            )
+            ReportLine(
+                title = "Відновлення",
+                text = report.recoveryIssue,
+                accent = colors.accentAi,
+                icon = Icons.Filled.Refresh
+            )
+            ReportLine(
+                title = "Наступний тиждень",
+                text = report.nextWeekDecision,
+                accent = colors.textPrimary,
+                icon = Icons.AutoMirrored.Filled.ArrowForward
+            )
         }
     }
 }
@@ -458,21 +510,49 @@ fun WeeklySystemReportBlock(
 private fun ReportLine(
     title: String,
     text: String,
-    accent: Color
+    accent: Color,
+    icon: ImageVector
 ) {
     val colors = SystemTheme.colors
     Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .techSurface(
+                shape = RoundedCornerShape(SystemTheme.shapes.medium),
+                active = false,
+                accent = accent,
+                role = TechSurfaceRole.Plate
+            )
+            .padding(9.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .padding(top = 2.dp)
                 .width(3.dp)
-                .height(32.dp)
+                .height(38.dp)
                 .clip(RoundedCornerShape(1.dp))
                 .background(accent.copy(alpha = 0.90f))
         )
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(SystemTheme.shapes.small))
+                .background(accent.copy(alpha = 0.10f))
+                .border(
+                    width = 1.dp,
+                    color = accent.copy(alpha = 0.28f),
+                    shape = RoundedCornerShape(SystemTheme.shapes.small)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(18.dp)
+            )
+        }
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(3.dp)

@@ -206,7 +206,7 @@ class GetStatisticsDataUseCase @Inject constructor(
         val lowestReadiness = readinessEntries.minByOrNull { it.score }
 
         val bestTrainingDay = bestDay?.let { day ->
-            "${day.date.shortDayName()}: ${day.workoutCount} трен., ${day.totalTonnage.formatTonnage()}"
+            "${day.date.shortDayName()}: ${day.workoutCount} тренувань, ${day.totalTonnage.formatTonnage()}"
         } ?: "Немає зафіксованого тренувального дня."
 
         val weakestPattern = when {
@@ -215,21 +215,21 @@ class GetStatisticsDataUseCase @Inject constructor(
                 val percent = (weakestEntry.entry.progressPercent.coerceIn(0f, 1f) * 100f).roundToInt()
                 "${weakestEntry.entry.exerciseName}: нижче плану ($percent%)."
             }
-            else -> "Критичного просідання по матриці не видно."
+            else -> "Помітного відставання від цілей немає."
         }
 
         val biggestProgress = biggestProof?.let { proof ->
             "${proof.exerciseName}: ${proof.previousLabel} -> ${proof.currentLabel} (${proof.deltaText})."
-        } ?: "Поки недостатньо логів для короткого доказу."
+        } ?: "Поки недостатньо записаних тренувань, щоб показати прогрес."
 
         val recoveryIssue = when {
             lowestReadiness != null && lowestReadiness.score < 45 ->
-                "Readiness падала до ${lowestReadiness.score}%. Наступний тиждень почати легше."
+                "Готовність знижувалася до ${lowestReadiness.score}%. Наступний тиждень варто почати легше."
             lowestReadiness != null && lowestReadiness.score < 65 ->
-                "Readiness нижче стандарту: мінімум ${lowestReadiness.score}%."
+                "Готовність була нижчою за звичайну: мінімум ${lowestReadiness.score}%."
             weeklySummary.totalTonnage > HIGH_WEEKLY_TONNAGE ->
-                "Тоннаж високий. Контролюй сон і відновлення."
-            else -> "Критичних сигналів відновлення не видно."
+                "Загальне навантаження високе. Зверніть увагу на сон і відновлення."
+            else -> "Ознак проблем із відновленням не виявлено."
         }
 
         val nextWeekDecision = when {
@@ -240,9 +240,9 @@ class GetStatisticsDataUseCase @Inject constructor(
             weakestEntry != null && weakestEntry.entry.progressPercent < 0.75f ->
                 "Тримати фокус на ${weakestEntry.entry.exerciseName}, без різкого підвищення."
             biggestProof != null ->
-                "Закріпити прогрес і не піднімати обсяг різко."
+                "Закріпити прогрес і не підвищувати навантаження різко."
             else ->
-                "Підтримати поточний план і збирати логи після кожного тренування."
+                "Підтримувати поточний план і записувати результати після кожного тренування."
         }
 
         return WeeklySystemReport(

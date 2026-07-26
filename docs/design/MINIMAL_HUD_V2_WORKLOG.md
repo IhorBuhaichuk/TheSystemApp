@@ -35,7 +35,8 @@ are the implementation baseline, not the target.
 - Native Kotlin + Jetpack Compose only.
 - Keep current screen, section, navigation, dialog, action, and workout contracts.
 - Compose consumes prepared UI state; no product decisions in Composables.
-- Keep Roboto and sentence case. Preserve legitimate abbreviations such as XP and AI.
+- Keep Roboto and sentence case. Use plain Ukrainian for visible XP/AI wording while
+  preserving established internal model, persistence, and serialization names.
 - Keep stable status meanings: progress, recovery, danger, reward, neutral.
 - Support normal phones, small phones, and font scale 1.3 without overlap or clipping.
 - Do not push, merge, or install a review build unless the user has authorized it.
@@ -92,14 +93,14 @@ animation behavior; remove or replace only decorative work that is proven unnece
 | 0 | Baseline and measurement | Complete | this file, ADB artifacts |
 | 1 | Shared tonal surfaces and tokens | Complete | `SystemTokens.kt`, `SystemPanels.kt` |
 | 2 | Shared interaction and progress motion | In progress | `SystemMotion.kt`, `SystemGlassComponents.kt`, `SystemBottomNavBar.kt` |
-| 3 | Status | In progress | `StatusScreen.kt`, `RpgStatusDashboard.kt`, `RpgTodayOrderBlock.kt`, `RpgTodoBlock.kt` |
-| 4 | Calendar | In progress | `CalendarScreen.kt` |
-| 5 | System/Cycle | In progress | `CycleScreen.kt` |
-| 6 | Statistics | In progress | `StatisticsScreen.kt`, overview sections, chart components |
-| 7 | Profile | In progress | `ProfileScreen.kt` |
+| 3 | Status | Complete | `StatusScreen.kt`, `RpgStatusDashboard.kt`, `RpgTodayOrderBlock.kt`, `RpgTodoBlock.kt` |
+| 4 | Calendar | Top-level complete | `CalendarScreen.kt` |
+| 5 | System/Cycle | Top-level complete | `CycleScreen.kt` |
+| 6 | Statistics | Top-level complete | `StatisticsScreen.kt`, overview sections, chart components |
+| 7 | Profile | Top-level complete | `ProfileScreen.kt` |
 | 8 | Dialogs and state panels | Pending | shared dialogs and changed workout/report dialogs |
 | 9 | Accessibility/performance regression | Pending | tests and screenshot artifacts |
-| 10 | Plain-language Ukrainian copy | In progress | presentation mappers, top-level screens, dialogs |
+| 10 | Plain-language Ukrainian copy | Active UI complete | presentation mappers, top-level screens, dialogs |
 
 ## Verification ledger
 
@@ -110,8 +111,8 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - [x] `scripts/check-web-ui-guard.cmd`
 - [ ] relevant unit and Compose/UI tests
 - [ ] small phone
-- [ ] normal phone
-- [ ] font scale 1.3
+- [x] normal phone
+- [x] font scale 1.3
 - [ ] five after screenshots and changed dialogs
 - [ ] `git diff --check`
 - [ ] requirement-by-requirement completion audit
@@ -142,6 +143,12 @@ animation behavior; remove or replace only decorative work that is proven unnece
   longer writes a redundant navigation entry; the Realme rendered zero app frames
   for that no-op tap instead of one 200 ms frame. System scroll remains a debug-build
   hotspot (23.33% jank, 48 ms median) and needs release-profile validation.
+- 2026-07-26: Status and System density passes match their approved concept hierarchy
+  while retaining existing actions and UI contracts. Calendar, Statistics, and Profile
+  received the same top-level pass: compact calendar controls, concept-structured
+  statistics rows and metric icons, grouped profile metrics, and quieter white section
+  headings. Realme screenshots at font scales 0.9 and 1.3 show no clipping; the scale
+  was restored to 0.9 after verification.
 
 ## Current checkpoint
 
@@ -149,6 +156,6 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - Base product commit: `78ccd52`
 - Concept commit: `be7172b`
 - Baseline: `artifacts/design-implementation/minimal-hud-v2/baseline/`
-- Next action: finish the Status density/motion pass, then remove screen-specific
-  blur and repeating decorative work before rolling the surface hierarchy across
-  the remaining tabs.
+- Next action: polish representative workout/report dialogs and shared
+  loading/empty/error panels, then measure the remaining screen-specific Canvas,
+  blur, and repeating decorative work before any wider rollout.

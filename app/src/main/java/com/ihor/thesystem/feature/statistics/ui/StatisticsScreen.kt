@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -32,9 +33,6 @@ import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.UiState
-import com.ihor.thesystem.core.ui.components.DarkGlassCard
-import com.ihor.thesystem.core.ui.components.SystemButton
-import com.ihor.thesystem.core.ui.components.SystemPanel
 import com.ihor.thesystem.core.ui.components.SystemStateKind
 import com.ihor.thesystem.core.ui.components.SystemStatePanel
 import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
@@ -149,24 +147,25 @@ private fun AnalyticsDashboard(
 @Composable
 private fun AnalyticsHeader() {
     val colors = SystemTheme.colors
-    SystemPanel(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .testTag(SystemUiTestTags.STATISTICS_HEADER),
-        contentPadding = 12.dp
+            .testTag(SystemUiTestTags.STATISTICS_HEADER)
+            .padding(horizontal = 4.dp, vertical = 2.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(
-                        text = "Статистика",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    color = colors.textPrimary,
-                    fontWeight = FontWeight.Black
-                )
+        Text(
+            text = "Статистика",
+            style = MaterialTheme.typography.headlineMedium.copy(
+                color = colors.textPrimary,
+                fontWeight = FontWeight.Black,
+                fontSize = 26.sp,
+                lineHeight = 30.sp
             )
-            Text(
-                text = "Підсумок і прогрес",
-                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
-            )
-        }
+        )
+        Text(
+            text = "Підсумок і прогрес",
+            style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
+        )
     }
 }

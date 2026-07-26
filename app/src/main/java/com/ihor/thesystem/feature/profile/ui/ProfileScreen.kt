@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -231,6 +232,7 @@ private fun ProfileHeroPanel(
 
     SystemPanel(
         active = true,
+        contentPadding = 14.dp,
         modifier = Modifier
             .fillMaxWidth()
             .testTag(SystemUiTestTags.PROFILE_HERO)
@@ -357,7 +359,7 @@ private fun RankMiniBox(
     SystemMetricBlock(
         label = label,
         value = value,
-        modifier = modifier.heightIn(min = 74.dp)
+        modifier = modifier.heightIn(min = 64.dp)
     )
 }
 
@@ -374,28 +376,45 @@ private fun PersonalMetricsPanel(
     val height = statisticsData?.currentHeight?.takeIf { it > 0f } ?: statusData.height
     val age = statisticsData?.age?.takeIf { it > 0 }
 
-    SystemPanel(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
-            SystemSectionTitle(title = "Особисті показники")
+    SystemPanel(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = 14.dp
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            SystemSectionTitle(
+                title = "Особисті показники",
+                titleColor = colors.textPrimary
+            )
             SystemSettingsRow(
                 title = "Поточна вага",
                 subtitle = weight?.let { "${it.formatCompact()} кг" } ?: "Не задано",
                 icon = Icons.Filled.FitnessCenter,
                 accent = colors.accentPrimary,
+                showSurface = false,
                 onClick = onOpenWeight
+            )
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 50.dp),
+                color = colors.borderSubtle.copy(alpha = 0.45f)
             )
             SystemSettingsRow(
                 title = "Зріст",
                 subtitle = height?.let { "${it.formatCompact()} см" } ?: "Не задано",
                 icon = Icons.Filled.Height,
                 accent = colors.accentAi,
+                showSurface = false,
                 onClick = onOpenHeight
+            )
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 50.dp),
+                color = colors.borderSubtle.copy(alpha = 0.45f)
             )
             SystemSettingsRow(
                 title = "Вік",
                 subtitle = age?.let { "$it" } ?: "Не задано",
                 icon = Icons.Filled.Cake,
                 accent = colors.accentSuccess,
+                showSurface = false,
                 onClick = onOpenAge
             )
         }
@@ -407,7 +426,10 @@ private fun AchievementsPanel(statusData: StatusUiData) {
     val colors = SystemTheme.colors
     SystemPanel(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(SystemItemSpacing)) {
-            SystemSectionTitle(title = "Досягнення")
+            SystemSectionTitle(
+                title = "Досягнення",
+                titleColor = colors.textPrimary
+            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -447,7 +469,10 @@ private fun SettingsPanel(
     val colors = SystemTheme.colors
     SystemPanel(modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            SystemSectionTitle(title = "Налаштування")
+            SystemSectionTitle(
+                title = "Налаштування",
+                titleColor = colors.textPrimary
+            )
             SystemSettingsRow(
                 title = "Налаштування тренувань",
                 subtitle = "Цикл, вправи, обладнання, дані сну та резервна копія",

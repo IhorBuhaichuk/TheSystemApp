@@ -869,21 +869,30 @@ fun SystemSettingsRow(
     subtitle: String? = null,
     icon: ImageVector? = null,
     accent: Color = SystemTheme.colors.textSecondary,
+    showSurface: Boolean = true,
     onClick: () -> Unit
 ) {
     val colors = SystemTheme.colors
     val shape = systemPlateShape()
+    val surfaceModifier = if (showSurface) {
+        Modifier.techSurface(
+            shape = shape,
+            active = false,
+            accent = accent,
+            role = TechSurfaceRole.Plate
+        )
+    } else {
+        Modifier
+    }
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .techSurface(
-                shape = shape,
-                active = false,
-                accent = accent,
-                role = TechSurfaceRole.Plate
-            )
+            .then(surfaceModifier)
             .systemClickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 12.dp),
+            .padding(
+                horizontal = if (showSurface) 12.dp else 4.dp,
+                vertical = if (showSurface) 12.dp else 10.dp
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(SystemItemSpacing)
     ) {
@@ -891,7 +900,7 @@ fun SystemSettingsRow(
             SystemHexIcon(
                 icon = icon,
                 accent = accent,
-                modifier = Modifier.size(42.dp)
+                modifier = Modifier.size(if (showSurface) 42.dp else 38.dp)
             )
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

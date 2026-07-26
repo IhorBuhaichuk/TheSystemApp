@@ -252,7 +252,7 @@ private fun CalendarHeaderStats(
     ) {
         CalendarHeaderStat(
             value = activeDays.toString(),
-            label = "активних днів",
+            label = "виконано",
             modifier = Modifier.weight(1f)
         )
         HeaderDot(colors.accentPrimary)
@@ -265,7 +265,7 @@ private fun CalendarHeaderStats(
         HeaderDot(colors.accentWarning)
         CalendarHeaderStat(
             value = missedDays.toString(),
-            label = "пропуски",
+            label = "пропущено",
             accent = colors.accentWarning,
             modifier = Modifier.weight(1f)
         )
@@ -792,9 +792,18 @@ private fun CalendarMonthArrowButton(
     onClick: () -> Unit
 ) {
     val colors = SystemTheme.colors
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier.size(48.dp)
+    val shape = systemControlShape()
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Plate
+            )
+            .systemClickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,
