@@ -1,7 +1,7 @@
 package com.ihor.thesystem.core.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -29,6 +29,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
@@ -141,12 +143,18 @@ private fun NavIconButton(
     val interactionSource = remember { MutableInteractionSource() }
     val selection = animateFloatAsState(
         targetValue = if (item.isSelected) 1f else 0f,
-        animationSpec = tween(durationMillis = motion.quickStateMillis),
+        animationSpec = spring(
+            dampingRatio = motion.spatialDampingRatio,
+            stiffness = motion.spatialStiffness
+        ),
         label = "bottom_nav_selection"
     )
     val iconScale = animateFloatAsState(
-        targetValue = if (item.isSelected) 1.08f else 1f,
-        animationSpec = tween(durationMillis = motion.stateMillis),
+        targetValue = if (item.isSelected) 1.06f else 1f,
+        animationSpec = spring(
+            dampingRatio = motion.spatialDampingRatio,
+            stiffness = motion.spatialStiffness
+        ),
         label = "bottom_nav_icon_scale"
     )
     val iconColor = if (item.isSelected) activeColor else colors.textSecondary.copy(alpha = 0.76f)
@@ -178,6 +186,25 @@ private fun NavIconButton(
                 modifier = Modifier.size(35.dp),
                 contentAlignment = Alignment.Center
             ) {
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .graphicsLayer {
+                            alpha = selection.value
+                            val scale = 0.84f + (0.16f * selection.value)
+                            scaleX = scale
+                            scaleY = scale
+                        }
+                        .background(
+                            color = activeColor.copy(alpha = 0.08f),
+                            shape = CircleShape
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = activeColor.copy(alpha = 0.30f),
+                            shape = CircleShape
+                        )
+                )
                 SystemNavGlyph(
                     glyph = item.glyph,
                     color = iconColor,
@@ -209,17 +236,19 @@ private fun NavIconButton(
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 2.dp)
-                .size(width = 28.dp, height = 3.dp)
+                .padding(bottom = 1.dp)
+                .size(5.dp)
                 .graphicsLayer {
                     alpha = selection.value
-                    scaleX = 0.55f + (0.45f * selection.value)
+                    val scale = 0.55f + (0.45f * selection.value)
+                    scaleX = scale
+                    scaleY = scale
                 }
-                .background(activeColor, RoundedCornerShape(999.dp))
+                .background(activeColor, CircleShape)
                 .border(
                     width = 0.5.dp,
                     color = colors.textPrimary.copy(alpha = 0.22f),
-                    shape = RoundedCornerShape(999.dp)
+                    shape = CircleShape
                 )
         )
     }
@@ -262,18 +291,22 @@ private fun SystemNavGlyph(
         when (glyph) {
             NavGlyph.Status -> {
                 val path = Path().apply {
-                    moveTo(size.width * 0.50f, size.height * 0.05f)
-                    lineTo(size.width * 0.90f, size.height * 0.88f)
-                    lineTo(size.width * 0.10f, size.height * 0.88f)
-                    close()
+                    moveTo(size.width * 0.07f, size.height * 0.54f)
+                    lineTo(size.width * 0.27f, size.height * 0.54f)
+                    lineTo(size.width * 0.37f, size.height * 0.27f)
+                    lineTo(size.width * 0.51f, size.height * 0.77f)
+                    lineTo(size.width * 0.63f, size.height * 0.42f)
+                    lineTo(size.width * 0.73f, size.height * 0.54f)
+                    lineTo(size.width * 0.93f, size.height * 0.54f)
                 }
-                drawPath(path, color.copy(alpha = 0.18f))
-                drawPath(path, color, style = Stroke(width = stroke))
-                drawLine(
+                drawPath(
+                    path = path,
                     color = color,
-                    start = Offset(size.width * 0.34f, size.height * 0.67f),
-                    end = Offset(size.width * 0.66f, size.height * 0.67f),
-                    strokeWidth = thinStroke
+                    style = Stroke(
+                        width = stroke,
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round
+                    )
                 )
             }
             NavGlyph.Calendar -> {

@@ -4,14 +4,6 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
@@ -34,6 +26,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Settings
@@ -45,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -94,6 +89,7 @@ import com.ihor.thesystem.core.ui.components.TechSurfaceRole
 import com.ihor.thesystem.core.ui.components.systemLargePanelShape
 import com.ihor.thesystem.core.ui.components.systemClickable
 import com.ihor.thesystem.core.ui.components.systemPlateShape
+import com.ihor.thesystem.core.ui.components.systemStateEnterMotion
 import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.domain.model.BossFight
 import com.ihor.thesystem.domain.model.BossFightStatus
@@ -132,8 +128,8 @@ fun RpgStatusDashboard(
     onRemoveTask: (Int) -> Unit
 ) {
     val colors = SystemTheme.colors
-    val pinnedWeekHeight = 116.dp
-    val transitionOffsetPx = with(LocalDensity.current) { 24.dp.roundToPx() }
+    val density = LocalDensity.current
+    val pinnedWeekHeight = if (density.fontScale >= 1.2f) 132.dp else 112.dp
     var dashboardState by remember { mutableStateOf(StatusDashboardState.ACTIONS) }
 
     Box(
@@ -145,62 +141,63 @@ fun RpgStatusDashboard(
                 onStateChange = { dashboardState = it }
             )
     ) {
-        AnimatedContent(
-            targetState = dashboardState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = pinnedWeekHeight + 8.dp, bottom = 20.dp),
-            transitionSpec = {
-                val enteringStatus = targetState == StatusDashboardState.STATUS
-                (
-                    fadeIn(animationSpec = tween(durationMillis = 160)) +
-                        slideInHorizontally(
-                            animationSpec = tween(durationMillis = 280),
-                            initialOffsetX = { if (enteringStatus) transitionOffsetPx else -transitionOffsetPx }
-                        )
-                    ).togetherWith(
-                    fadeOut(animationSpec = tween(durationMillis = 140)) +
-                        slideOutHorizontally(
-                            animationSpec = tween(durationMillis = 280),
-                            targetOffsetX = { if (enteringStatus) -transitionOffsetPx else transitionOffsetPx }
-                        )
-                ).using(SizeTransform(clip = false))
-            },
-            label = "status_dashboard_state"
-        ) { state ->
-            when (state) {
-                StatusDashboardState.ACTIONS -> StatusActionsContent(
-                    data = data,
-                    onStartWorkout = onStartWorkout,
-                    onTaskToggled = onTaskToggled,
-                    onAddTask = onAddTask,
-                    onAddMicrotask = onAddMicrotask,
-                    onTodosReordered = onTodosReordered,
-                    onRemoveTask = onRemoveTask
-                )
+        key(dashboardState) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = pinnedWeekHeight + 8.dp, bottom = 20.dp)
+                    .systemStateEnterMotion(
+                        enterFromEnd = dashboardState == StatusDashboardState.STATUS
+                    )
+            ) {
+                when (dashboardState) {
+                    StatusDashboardState.ACTIONS -> StatusActionsContent(
+                        data = data,
+                        onStartWorkout = onStartWorkout,
+                        onTaskToggled = onTaskToggled,
+                        onAddTask = onAddTask,
+                        onAddMicrotask = onAddMicrotask,
+                        onTodosReordered = onTodosReordered,
+                        onRemoveTask = onRemoveTask
+                    )
 
-                StatusDashboardState.STATUS -> StatusInfoContent(
-                    data = data,
-                    onAvatarSelected = onAvatarSelected,
-                    onEditNameTap = onEditNameTap,
-                    onOpenCalendar = onOpenCalendar
-                )
+                    StatusDashboardState.STATUS -> StatusInfoContent(
+                        data = data,
+                        onAvatarSelected = onAvatarSelected,
+                        onEditNameTap = onEditNameTap,
+                        onOpenCalendar = onOpenCalendar
+                    )
+                }
             }
         }
 
-        Box(
+        Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .height(pinnedWeekHeight)
                 .padding(horizontal = SystemScreenPadding)
-                .padding(top = 12.dp, bottom = 8.dp),
-            contentAlignment = Alignment.Center
+                .padding(top = 6.dp, bottom = 3.dp)
         ) {
+            Text(
+                text = "Статус",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    color = colors.textPrimary,
+                    fontFamily = SystemDisplayFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = if (density.fontScale >= 1.2f) 27.sp else 30.sp,
+                    lineHeight = if (density.fontScale >= 1.2f) 31.sp else 34.sp,
+                    letterSpacing = (-0.4).sp
+                ),
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.height(3.dp))
             WeekPreviewBlock(
                 days = data.weekPreview,
                 onOpenCalendar = onOpenCalendar,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             )
         }
     }
@@ -1304,129 +1301,92 @@ private fun WeekPreviewBlock(
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    val cardShape = systemLargePanelShape()
+    val density = LocalDensity.current
     if (days.isEmpty()) {
         Box(
             modifier = modifier
-                .height(96.dp)
-                .techSurface(
-                    shape = cardShape,
-                    active = false,
-                    accent = colors.accentPrimary,
-                    role = TechSurfaceRole.Panel
-                ),
+                .systemClickable(onClick = onOpenCalendar),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "Готуємо календарний цикл.",
-                style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
+                style = MaterialTheme.typography.bodyMedium.copy(color = colors.textMuted)
             )
         }
     } else {
-        val models = days.map { it.toSystemWeekDayModel() }
-        Column(
+        Row(
             modifier = modifier
                 .fillMaxWidth()
-                .height(96.dp)
-                .techSurface(
-                    shape = cardShape,
-                    active = false,
-                    accent = colors.accentPrimary,
-                    role = TechSurfaceRole.Panel
-                )
                 .systemClickable(onClick = onOpenCalendar)
-                .padding(start = 13.dp, top = 13.dp, end = 13.dp, bottom = 11.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 1.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                models.forEach { day ->
+            days.forEach { day ->
+                val isSaturday = day.date.dayOfWeek == java.time.DayOfWeek.SATURDAY
+                val labelColor = when {
+                    day.isToday -> colors.accentPrimary
+                    isSaturday -> colors.accentWarning
+                    else -> colors.textMuted
+                }
+                val dotColor = when {
+                    day.isToday -> colors.accentPrimary
+                    day.status == StatusWeekDayStatus.COMPLETED -> colors.accentSuccess
+                    day.status == StatusWeekDayStatus.MISSED -> colors.accentError
+                    isSaturday -> colors.accentWarning
+                    else -> colors.statusNeutral
+                }
+                val dayShape = RoundedCornerShape(20.dp)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(if (density.fontScale >= 1.2f) 72.dp else 64.dp)
+                        .then(
+                            if (day.isToday) {
+                                Modifier.techSurface(
+                                    shape = dayShape,
+                                    active = true,
+                                    accent = colors.accentPrimary,
+                                    role = TechSurfaceRole.Plate
+                                )
+                            } else {
+                                Modifier
+                            }
+                        )
+                        .padding(vertical = 3.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceEvenly
+                ) {
                     Text(
                         text = day.date.ukrainianWeekLabelReadable(),
-                        modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.labelMedium.copy(
-                            color = when {
-                                day.isToday -> colors.accentPrimary
-                                day.date.dayOfWeek == java.time.DayOfWeek.SATURDAY -> colors.accentWarning
-                                else -> colors.textMuted
-                            },
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
+                            color = labelColor,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 11.sp,
                             lineHeight = 14.sp,
                             textAlign = TextAlign.Center
                         ),
                         maxLines = 1
                     )
-                }
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val nodeCount = models.size.coerceAtLeast(1)
-                    val nodeY = size.height * 0.50f
-                    val nodeRadius = 20.dp.toPx()
-                    fun nodeX(index: Int): Float =
-                        size.width * ((index + 0.5f) / nodeCount.toFloat())
-
-                    if (nodeCount > 1) {
-                        repeat(nodeCount - 1) { index ->
-                            val startX = nodeX(index) + nodeRadius
-                            val endX = nodeX(index + 1) - nodeRadius
-                            drawLine(
-                                color = colors.borderSubtle.copy(alpha = 0.42f),
-                                start = Offset(startX, nodeY),
-                                end = Offset(endX, nodeY),
-                                strokeWidth = 1.2.dp.toPx(),
-                                cap = StrokeCap.Square
+                    Text(
+                        text = day.dayNumber,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = colors.textPrimary,
+                            fontWeight = if (day.isToday) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = if (day.isToday) 20.sp else 18.sp,
+                            lineHeight = 22.sp,
+                            textAlign = TextAlign.Center
+                        ),
+                        maxLines = 1
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(if (day.isToday) 5.dp else 4.dp)
+                            .background(
+                                color = dotColor.copy(alpha = if (day.isToday) 1f else 0.72f),
+                                shape = androidx.compose.foundation.shape.CircleShape
                             )
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    models.forEach { day ->
-                        val dayAccent = if (day.isToday) colors.accentPrimary else colors.statusNeutral
-                        Box(
-                            modifier = Modifier.weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            val dayShape = RoundedCornerShape(12.dp)
-                            Box(
-                                modifier = Modifier
-                                    .size(if (day.isToday) 42.dp else 40.dp)
-                                    .techSurface(
-                                        shape = dayShape,
-                                        active = day.isToday,
-                                        accent = dayAccent,
-                                        role = TechSurfaceRole.Plate
-                                    )
-                                    .border(
-                                        width = if (day.isToday) 1.4.dp else 0.7.dp,
-                                        color = dayAccent.copy(alpha = if (day.isToday) 0.90f else 0.28f),
-                                        shape = dayShape
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = day.dayNumber,
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        color = colors.textPrimary,
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 19.sp,
-                                        lineHeight = 21.sp,
-                                        textAlign = TextAlign.Center
-                                    ),
-                                    maxLines = 1
-                                )
-                            }
-                        }
-                    }
+                    )
                 }
             }
         }
@@ -1439,33 +1399,22 @@ private fun ActionsSwipeHint() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 3.dp, bottom = 2.dp),
+            .padding(top = 7.dp, bottom = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Canvas(modifier = Modifier.size(width = 15.dp, height = 24.dp)) {
-            val stroke = 2.1.dp.toPx()
-            drawLine(
-                color = colors.textMuted.copy(alpha = 0.72f),
-                start = Offset(size.width * 0.74f, size.height * 0.18f),
-                end = Offset(size.width * 0.28f, size.height * 0.50f),
-                strokeWidth = stroke,
-                cap = StrokeCap.Round
-            )
-            drawLine(
-                color = colors.textMuted.copy(alpha = 0.72f),
-                start = Offset(size.width * 0.28f, size.height * 0.50f),
-                end = Offset(size.width * 0.74f, size.height * 0.82f),
-                strokeWidth = stroke,
-                cap = StrokeCap.Round
-            )
-        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+            contentDescription = null,
+            tint = colors.textMuted.copy(alpha = 0.78f),
+            modifier = Modifier.size(22.dp)
+        )
         Text(
             text = "Проведіть вліво — показати прогрес",
             style = MaterialTheme.typography.bodySmall.copy(
                 color = colors.textMuted.copy(alpha = 0.88f),
-                fontSize = 14.sp,
-                lineHeight = 16.sp,
+                fontSize = 12.sp,
+                lineHeight = 15.sp,
                 textAlign = TextAlign.Center
             ),
             maxLines = 1,
@@ -1484,29 +1433,18 @@ private fun StatusSwipeHint() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
-        Canvas(modifier = Modifier.size(width = 15.dp, height = 24.dp)) {
-            val stroke = 2.1.dp.toPx()
-            drawLine(
-                color = colors.accentPrimary.copy(alpha = 0.88f),
-                start = Offset(size.width * 0.26f, size.height * 0.18f),
-                end = Offset(size.width * 0.72f, size.height * 0.50f),
-                strokeWidth = stroke,
-                cap = StrokeCap.Round
-            )
-            drawLine(
-                color = colors.accentPrimary.copy(alpha = 0.88f),
-                start = Offset(size.width * 0.72f, size.height * 0.50f),
-                end = Offset(size.width * 0.26f, size.height * 0.82f),
-                strokeWidth = stroke,
-                cap = StrokeCap.Round
-            )
-        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = colors.textMuted.copy(alpha = 0.78f),
+            modifier = Modifier.size(22.dp)
+        )
         Text(
             text = "Проведіть вправо — повернутись до завдань",
             style = MaterialTheme.typography.bodySmall.copy(
                 color = colors.textMuted.copy(alpha = 0.88f),
-                fontSize = 14.sp,
-                lineHeight = 16.sp,
+                fontSize = 12.sp,
+                lineHeight = 15.sp,
                 textAlign = TextAlign.Center
             ),
             maxLines = 1,

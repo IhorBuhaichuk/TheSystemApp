@@ -1,5 +1,15 @@
 package com.ihor.thesystem.feature.status.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,11 +23,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,15 +44,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
@@ -46,21 +54,18 @@ import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.ihor.thesystem.core.ui.components.SystemCutCornerShape
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
-import com.ihor.thesystem.core.ui.components.systemControlShape
 import com.ihor.thesystem.core.ui.components.systemClickable
-import com.ihor.thesystem.core.ui.components.systemLargePanelShape
+import com.ihor.thesystem.core.ui.components.systemEnterMotion
 import com.ihor.thesystem.core.ui.components.systemToggleable
 import com.ihor.thesystem.core.ui.components.techSurface
 import com.ihor.thesystem.core.theme.SystemTheme
-import com.ihor.thesystem.core.theme.SystemDisplayFamily
 import com.ihor.thesystem.feature.status.viewmodel.TodoUiModel
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -74,53 +79,82 @@ internal fun TodoBlock(
     onRemoveTask: (Int) -> Unit
 ) {
     val colors = SystemTheme.colors
-    val cardShape = systemLargePanelShape()
-    Box(
+    val motion = SystemTheme.motion
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .techSurface(
-                shape = cardShape,
-                active = false,
-                accent = colors.accentPrimary,
-                role = TechSurfaceRole.Panel
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = motion.spatialDampingRatio,
+                    stiffness = motion.spatialStiffness
+                )
+            )
+            .systemEnterMotion(
+                initialScale = 0.995f,
+                initialOffset = 10.dp
             )
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 22.dp, top = 20.dp, end = 22.dp, bottom = 22.dp)
+                .heightIn(min = 52.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                        text = "Завдання",
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        color = colors.accentPrimary,
-                        fontFamily = SystemDisplayFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        lineHeight = 18.sp,
-                        letterSpacing = 3.0.sp
-                    ),
-                    maxLines = 1
+            Text(
+                text = "Завдання",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 25.sp,
+                    lineHeight = 29.sp,
+                    letterSpacing = (-0.2).sp
+                ),
+                maxLines = 1
+            )
+            TodoAddButton(onClick = { onAddTask(0) })
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AnimatedContent(
+            targetState = todos,
+            transitionSpec = {
+                (
+                    fadeIn() +
+                        expandVertically(
+                            expandFrom = Alignment.Top,
+                            animationSpec = spring(
+                                dampingRatio = motion.spatialDampingRatio,
+                                stiffness = motion.spatialStiffness
+                            )
+                        )
+                    ).togetherWith(
+                    fadeOut() +
+                        shrinkVertically(
+                            shrinkTowards = Alignment.Top,
+                            animationSpec = spring(
+                                dampingRatio = motion.spatialDampingRatio,
+                                stiffness = motion.spatialStiffness
+                            )
+                        )
                 )
-                TodoAddButton(onClick = { onAddTask(0) })
+            },
+            contentKey = { list -> list.map(TodoUiModel::id) },
+            label = "todo_list_content"
+        ) { visibleTodos ->
+            Column {
+                if (visibleTodos.isNotEmpty()) {
+                    ReorderableTodoList(
+                        todos = visibleTodos,
+                        onTaskToggled = onTaskToggled,
+                        onTodosReordered = onTodosReordered,
+                        onRemoveTask = onRemoveTask
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+                TodoAddTaskRow(onClick = { onAddTask(visibleTodos.size) })
             }
-            Spacer(modifier = Modifier.height(14.dp))
-            if (todos.isNotEmpty()) {
-                ReorderableTodoList(
-                    todos = todos,
-                    onTaskToggled = onTaskToggled,
-                    onTodosReordered = onTodosReordered,
-                    onRemoveTask = onRemoveTask
-                )
-                Spacer(modifier = Modifier.height(13.dp))
-            }
-            TodoAddTaskRow(onClick = { onAddTask(todos.size) })
         }
     }
 }
@@ -137,8 +171,8 @@ private fun ReorderableTodoList(
     var draggedCenterY by remember { mutableStateOf<Float?>(null) }
     val itemBounds = remember { mutableStateMapOf<Int, Rect>() }
 
-    Column {
-        visibleTodos.forEachIndexed { index, task ->
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        visibleTodos.forEach { task ->
             key(task.id) {
                 val isDragging = draggingTodoId == task.id
                 val dragTranslationY = if (isDragging) {
@@ -154,7 +188,6 @@ private fun ReorderableTodoList(
                 }
                 TodoListItem(
                     task = task,
-                    isLast = index == visibleTodos.lastIndex,
                     onTaskToggled = onTaskToggled,
                     onRemoveTask = onRemoveTask,
                     modifier = Modifier
@@ -213,51 +246,53 @@ private fun ReorderableTodoList(
 @Composable
 private fun TodoListItem(
     task: TodoUiModel,
-    isLast: Boolean,
     onTaskToggled: (TodoUiModel) -> Unit,
     onRemoveTask: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = SystemTheme.colors
-    Box(
+    val titleColor by animateColorAsState(
+        targetValue = if (task.isCompleted) {
+            colors.textMuted
+        } else {
+            colors.textSecondary
+        },
+        label = "todo_title_color"
+    )
+    val shape = RoundedCornerShape(16.dp)
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .heightIn(min = 58.dp)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Plate
+            )
+            .padding(start = 3.dp, end = 5.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.spacedBy(13.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TodoCheckBox(
-                checked = task.isCompleted,
-                onClick = { onTaskToggled(task) }
-            )
-            Text(
-                text = task.title,
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    color = colors.textSecondary,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 17.sp,
-                    lineHeight = 21.sp
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            TodoDeleteButton(onClick = { onRemoveTask(task.id) })
-            TodoDragHandle(modifier = Modifier.size(width = 29.dp, height = 24.dp))
-        }
-        if (!isLast) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 43.dp, end = 42.dp)
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(colors.overlayStrong.copy(alpha = 0.32f))
-            )
-        }
+        TodoCheckBox(
+            checked = task.isCompleted,
+            onClick = { onTaskToggled(task) }
+        )
+        Text(
+            text = task.title,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = titleColor,
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                lineHeight = 20.sp,
+                textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        TodoDeleteButton(onClick = { onRemoveTask(task.id) })
+        TodoDragHandle(modifier = Modifier.size(width = 24.dp, height = 24.dp))
     }
 }
 
@@ -268,8 +303,8 @@ private fun TodoAddButton(onClick: () -> Unit) {
         modifier = Modifier
             .size(48.dp)
             .techSurface(
-                shape = systemControlShape(),
-                active = true,
+                shape = CircleShape,
+                active = false,
                 accent = colors.accentPrimary,
                 role = TechSurfaceRole.Button
             )
@@ -283,14 +318,14 @@ private fun TodoAddButton(onClick: () -> Unit) {
                 start = Offset(size.width * 0.50f, size.height * 0.14f),
                 end = Offset(size.width * 0.50f, size.height * 0.86f),
                 strokeWidth = 2.dp.toPx(),
-                cap = StrokeCap.Square
+                cap = StrokeCap.Round
             )
             drawLine(
                 color = colors.accentPrimary,
                 start = Offset(size.width * 0.14f, size.height * 0.50f),
                 end = Offset(size.width * 0.86f, size.height * 0.50f),
                 strokeWidth = 2.dp.toPx(),
-                cap = StrokeCap.Square
+                cap = StrokeCap.Round
             )
         }
     }
@@ -299,56 +334,64 @@ private fun TodoAddButton(onClick: () -> Unit) {
 @Composable
 private fun TodoAddTaskRow(onClick: () -> Unit) {
     val colors = SystemTheme.colors
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(18.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .clip(shape)
-            .drawBehind {
-                val stroke = Stroke(
-                    width = 1.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 8.dp.toPx()))
-                )
-                drawRoundRect(
-                    color = colors.accentPrimary.copy(alpha = 0.28f),
-                    topLeft = Offset(0.5.dp.toPx(), 0.5.dp.toPx()),
-                    size = Size(size.width - 1.dp.toPx(), size.height - 1.dp.toPx()),
-                    cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx()),
-                    style = stroke
-                )
-            }
+            .heightIn(min = 60.dp)
+            .techSurface(
+                shape = shape,
+                active = false,
+                accent = colors.accentPrimary,
+                role = TechSurfaceRole.Plate
+            )
             .systemClickable(onClick = onClick)
-            .padding(horizontal = 18.dp),
-        horizontalArrangement = Arrangement.spacedBy(18.dp),
+            .padding(horizontal = 15.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Canvas(modifier = Modifier.size(20.dp)) {
-            drawLine(
-                color = colors.accentPrimary,
-                start = Offset(size.width * 0.50f, size.height * 0.08f),
-                end = Offset(size.width * 0.50f, size.height * 0.92f),
-                strokeWidth = 2.dp.toPx(),
-                cap = StrokeCap.Square
-            )
-            drawLine(
-                color = colors.accentPrimary,
-                start = Offset(size.width * 0.08f, size.height * 0.50f),
-                end = Offset(size.width * 0.92f, size.height * 0.50f),
-                strokeWidth = 2.dp.toPx(),
-                cap = StrokeCap.Square
-            )
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clip(CircleShape)
+                .background(colors.overlayLight)
+                .border(1.dp, colors.borderSubtle, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.size(18.dp)) {
+                drawLine(
+                    color = colors.accentPrimary,
+                    start = Offset(size.width * 0.50f, size.height * 0.12f),
+                    end = Offset(size.width * 0.50f, size.height * 0.88f),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = colors.accentPrimary,
+                    start = Offset(size.width * 0.12f, size.height * 0.50f),
+                    end = Offset(size.width * 0.88f, size.height * 0.50f),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+            }
         }
         Text(
             text = "Додати завдання",
+            modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleMedium.copy(
-                color = colors.accentPrimary,
+                color = colors.textPrimary,
                 fontWeight = FontWeight.Medium,
-                fontSize = 18.sp,
-                lineHeight = 22.sp
+                fontSize = 16.sp,
+                lineHeight = 20.sp
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = colors.textMuted,
+            modifier = Modifier.size(24.dp)
         )
     }
 }
@@ -358,8 +401,8 @@ private fun TodoDeleteButton(onClick: () -> Unit) {
     val colors = SystemTheme.colors
     Box(
         modifier = Modifier
-            .size(48.dp)
-            .clip(SystemCutCornerShape(6.dp))
+            .size(44.dp)
+            .clip(CircleShape)
             .systemClickable(onClick = onClick)
             .semantics { contentDescription = "Видалити завдання" },
         contentAlignment = Alignment.Center
@@ -371,14 +414,14 @@ private fun TodoDeleteButton(onClick: () -> Unit) {
                 start = Offset(size.width * 0.20f, size.height * 0.20f),
                 end = Offset(size.width * 0.80f, size.height * 0.80f),
                 strokeWidth = 1.9.dp.toPx(),
-                cap = StrokeCap.Square
+                cap = StrokeCap.Round
             )
             drawLine(
                 color = deleteColor,
                 start = Offset(size.width * 0.80f, size.height * 0.20f),
                 end = Offset(size.width * 0.20f, size.height * 0.80f),
                 strokeWidth = 1.9.dp.toPx(),
-                cap = StrokeCap.Square
+                cap = StrokeCap.Round
             )
         }
     }
@@ -390,10 +433,31 @@ private fun TodoCheckBox(
     onClick: () -> Unit
 ) {
     val colors = SystemTheme.colors
-    val shape = SystemCutCornerShape(3.dp)
+    val motion = SystemTheme.motion
+    val shape = RoundedCornerShape(8.dp)
+    val fillColor by animateColorAsState(
+        targetValue = if (checked) {
+            colors.accentPrimary.copy(alpha = 0.18f)
+        } else {
+            colors.background.copy(alpha = 0.28f)
+        },
+        label = "todo_checkbox_fill"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (checked) colors.accentPrimary else colors.textSecondary.copy(alpha = 0.56f),
+        label = "todo_checkbox_border"
+    )
+    val checkProgress by animateFloatAsState(
+        targetValue = if (checked) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = motion.spatialDampingRatio,
+            stiffness = motion.spatialStiffness
+        ),
+        label = "todo_checkbox_check"
+    )
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(44.dp)
             .systemToggleable(
                 value = checked,
                 onValueChange = { onClick() }
@@ -402,33 +466,40 @@ private fun TodoCheckBox(
     ) {
         Box(
             modifier = Modifier
-                .size(27.dp)
+                .size(26.dp)
                 .clip(shape)
-                .background(if (checked) colors.accentPrimary.copy(alpha = 0.16f) else Color.Transparent)
+                .background(fillColor)
                 .border(
                     width = 1.5.dp,
-                    color = if (checked) colors.accentPrimary else colors.textSecondary.copy(alpha = 0.72f),
+                    color = borderColor,
                     shape = shape
                 ),
             contentAlignment = Alignment.Center
         ) {
-            if (checked) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawLine(
-                        color = colors.accentPrimary,
-                        start = Offset(size.width * 0.22f, size.height * 0.53f),
-                        end = Offset(size.width * 0.42f, size.height * 0.73f),
-                        strokeWidth = 3.dp.toPx(),
-                        cap = StrokeCap.Round
-                    )
-                    drawLine(
-                        color = colors.accentPrimary,
-                        start = Offset(size.width * 0.42f, size.height * 0.73f),
-                        end = Offset(size.width * 0.80f, size.height * 0.27f),
-                        strokeWidth = 3.dp.toPx(),
-                        cap = StrokeCap.Round
-                    )
-                }
+            Canvas(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        alpha = checkProgress
+                        val scale = 0.68f + (0.32f * checkProgress)
+                        scaleX = scale
+                        scaleY = scale
+                    }
+            ) {
+                drawLine(
+                    color = colors.accentPrimary,
+                    start = Offset(size.width * 0.22f, size.height * 0.53f),
+                    end = Offset(size.width * 0.42f, size.height * 0.73f),
+                    strokeWidth = 2.7.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = colors.accentPrimary,
+                    start = Offset(size.width * 0.42f, size.height * 0.73f),
+                    end = Offset(size.width * 0.80f, size.height * 0.27f),
+                    strokeWidth = 2.7.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
             }
         }
     }
@@ -447,7 +518,7 @@ private fun TodoDragHandle(modifier: Modifier = Modifier) {
                 start = Offset(startX, y),
                 end = Offset(endX, y),
                 strokeWidth = 1.8.dp.toPx(),
-                cap = StrokeCap.Square
+                cap = StrokeCap.Round
             )
         }
     }

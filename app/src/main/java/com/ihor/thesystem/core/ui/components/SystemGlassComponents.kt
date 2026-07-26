@@ -103,6 +103,11 @@ fun SystemCard(
     )
 }
 
+enum class SystemButtonStyle {
+    Tonal,
+    Filled
+}
+
 @Composable
 fun SystemButton(
     text: String,
@@ -111,7 +116,9 @@ fun SystemButton(
     icon: ImageVector? = null,
     accent: Color = SystemTheme.colors.accentPrimary,
     enabled: Boolean = true,
-    glow: Boolean = false
+    glow: Boolean = false,
+    style: SystemButtonStyle = SystemButtonStyle.Tonal,
+    trailingIcon: ImageVector? = null
 ) {
     val colors = SystemTheme.colors
     val shape = systemControlShape()
@@ -119,15 +126,19 @@ fun SystemButton(
     val iconTint = if (enabled) accent else colors.textMuted
     val contentColor = if (enabled) colors.textPrimary else colors.textMuted
 
-    Row(
+    Box(
         modifier = modifier
-            .heightIn(min = 52.dp)
+            .heightIn(min = if (style == SystemButtonStyle.Filled) 56.dp else 52.dp)
             .systemPressMotion(interactionSource = interactionSource, enabled = enabled)
             .techSurface(
                 shape = shape,
-                active = glow && enabled,
+                active = (glow || style == SystemButtonStyle.Filled) && enabled,
                 accent = accent,
-                role = TechSurfaceRole.Button,
+                role = if (style == SystemButtonStyle.Filled) {
+                    TechSurfaceRole.PrimaryAction
+                } else {
+                    TechSurfaceRole.Button
+                },
                 enabled = enabled
             )
             .clickable(
@@ -138,23 +149,43 @@ fun SystemButton(
                 onClick = onClick
             )
             .padding(horizontal = 18.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+        contentAlignment = Alignment.Center
     ) {
-        if (icon != null) {
-            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge.copy(
-                color = contentColor,
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center
+        Row(
+            modifier = Modifier.padding(
+                start = if (trailingIcon != null) 22.dp else 0.dp,
+                end = if (trailingIcon != null) 22.dp else 0.dp
             ),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = contentColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = if (style == SystemButtonStyle.Filled) 16.sp else 13.sp,
+                    lineHeight = if (style == SystemButtonStyle.Filled) 20.sp else 16.sp,
+                    textAlign = TextAlign.Center
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        if (trailingIcon != null) {
+            Icon(
+                imageVector = trailingIcon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(24.dp)
+            )
+        }
     }
 }
 

@@ -94,8 +94,8 @@ fun Modifier.systemPressMotion(
             tween(durationMillis = motion.pressMillis, easing = EaseOutCubic)
         } else {
             spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessHigh
+                dampingRatio = motion.spatialDampingRatio,
+                stiffness = motion.spatialStiffness
             )
         },
         label = "system_press_progress"
@@ -137,6 +137,37 @@ fun Modifier.systemEnterMotion(
         scaleX = scale
         scaleY = scale
         translationY = initialOffset.toPx() * (1f - value)
+    }
+}
+
+/**
+ * One-layer directional state transition. The previous state is removed before this modifier
+ * animates the incoming state, avoiding the cost of drawing two full dashboards at once.
+ */
+@Composable
+fun Modifier.systemStateEnterMotion(
+    enterFromEnd: Boolean,
+    initialOffset: Dp = 14.dp
+): Modifier {
+    val motion = SystemTheme.motion
+    val progress = remember { Animatable(0f) }
+
+    LaunchedEffect(Unit) {
+        progress.animateTo(
+            targetValue = 1f,
+            animationSpec = spring(
+                dampingRatio = motion.effectsDampingRatio,
+                stiffness = motion.effectsStiffness
+            )
+        )
+    }
+
+    return graphicsLayer {
+        val value = progress.value
+        alpha = 0.94f + (0.06f * value)
+        translationX = initialOffset.toPx() *
+            (if (enterFromEnd) 1f else -1f) *
+            (1f - value)
     }
 }
 

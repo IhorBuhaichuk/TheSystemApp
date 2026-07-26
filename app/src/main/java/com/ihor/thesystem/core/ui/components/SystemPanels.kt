@@ -128,9 +128,11 @@ fun systemDialogShape(): Shape =
 
 enum class TechSurfaceRole {
     Hero,
+    Content,
     Panel,
     Plate,
     Button,
+    PrimaryAction,
     Dialog,
     Navigation
 }
@@ -148,6 +150,15 @@ fun Modifier.techSurface(
     val depth = SystemTheme.depth
     val glow = SystemTheme.glow
     val baseBrush = when {
+        role == TechSurfaceRole.PrimaryAction && enabled -> Brush.linearGradient(
+            listOf(
+                accent.copy(alpha = if (active) 0.68f else 0.52f),
+                accent.copy(alpha = if (active) 0.48f else 0.36f),
+                material.buttonBottom
+            ),
+            start = Offset.Zero,
+            end = Offset.Infinite
+        )
         role == TechSurfaceRole.Button && enabled -> Brush.linearGradient(
             listOf(
                 accent.copy(alpha = if (active) 0.17f else 0.08f),
@@ -171,6 +182,15 @@ fun Modifier.techSurface(
             start = Offset.Zero,
             end = Offset.Infinite
         )
+        role == TechSurfaceRole.Content -> Brush.linearGradient(
+            listOf(
+                material.panelTop.copy(alpha = 0.96f),
+                material.panelMid.copy(alpha = 0.98f),
+                material.panelBottom.copy(alpha = 0.99f)
+            ),
+            start = Offset.Zero,
+            end = Offset.Infinite
+        )
         role == TechSurfaceRole.Hero -> Brush.linearGradient(
             listOf(
                 accent.copy(alpha = if (active) 0.050f else 0.025f),
@@ -190,7 +210,8 @@ fun Modifier.techSurface(
     val elevation = when {
         !enabled -> 0.dp
         role == TechSurfaceRole.Dialog -> depth.dialogElevation
-        active && role == TechSurfaceRole.Button -> depth.buttonActiveElevation
+        active && (role == TechSurfaceRole.Button || role == TechSurfaceRole.PrimaryAction) ->
+            depth.buttonActiveElevation
         active -> depth.activeElevation
         role == TechSurfaceRole.Button -> depth.buttonElevation
         role == TechSurfaceRole.Plate -> depth.plateElevation
@@ -204,20 +225,35 @@ fun Modifier.techSurface(
     }
     val borderBrush = Brush.linearGradient(
         listOf(
-            material.edgeHighlight.copy(alpha = if (enabled) 0.20f else 0.10f),
+            material.edgeHighlight.copy(
+                alpha = when {
+                    !enabled -> 0.10f
+                    role == TechSurfaceRole.Content -> 0.14f
+                    else -> 0.20f
+                }
+            ),
             if (enabled && active) {
                 accent.copy(
                     alpha = when (role) {
                         TechSurfaceRole.Hero -> 0.16f
-                        TechSurfaceRole.Button -> 0.28f
+                        TechSurfaceRole.Button,
+                        TechSurfaceRole.PrimaryAction -> 0.28f
                         else -> 0.22f
                     }
                 )
             } else {
-                colors.borderSubtle.copy(alpha = 0.11f)
+                colors.borderSubtle.copy(
+                    alpha = if (role == TechSurfaceRole.Content) 0.07f else 0.11f
+                )
             },
             colors.borderMuted.copy(alpha = if (enabled) 0.07f else 0.035f),
-            material.edgeShade.copy(alpha = if (enabled) 0.38f else 0.18f)
+            material.edgeShade.copy(
+                alpha = when {
+                    !enabled -> 0.18f
+                    role == TechSurfaceRole.Content -> 0.26f
+                    else -> 0.38f
+                }
+            )
         ),
         start = Offset.Zero,
         end = Offset.Infinite
@@ -225,6 +261,8 @@ fun Modifier.techSurface(
     val reflectedAlpha = when {
         !enabled -> 0.012f
         role == TechSurfaceRole.Hero -> if (active) 0.065f else 0.045f
+        role == TechSurfaceRole.Content -> 0.018f
+        role == TechSurfaceRole.PrimaryAction -> if (active) 0.10f else 0.06f
         active -> glow.activeAlpha
         role == TechSurfaceRole.Button -> 0.050f
         role == TechSurfaceRole.Navigation -> 0.040f
