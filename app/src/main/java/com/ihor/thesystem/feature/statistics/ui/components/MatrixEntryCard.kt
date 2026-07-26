@@ -156,7 +156,7 @@ fun MatrixEntryCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Psychology,
-                    contentDescription = "Порада ШІ-тренера",
+            contentDescription = "Порада тренера",
                     tint = colors.accentPrimary,
                     modifier = Modifier.size(16.dp)
                 )

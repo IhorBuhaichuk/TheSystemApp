@@ -425,4 +425,4 @@ private fun formatWeight(value: Float): String {
     }
 }
 
-private const val SYSTEM_AI_CORRECTION_TEXT = "Система скоригувала рекомендацію ШІ"
+private const val SYSTEM_AI_CORRECTION_TEXT = "Система скоригувала пораду тренера"

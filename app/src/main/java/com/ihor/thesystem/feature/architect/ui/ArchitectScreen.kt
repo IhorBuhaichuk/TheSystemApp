@@ -145,7 +145,7 @@ private fun AiHeader() {
     val colors = SystemTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(
-            text = "ШІ",
+                    text = "Помічник",
             style = MaterialTheme.typography.headlineMedium.copy(
                 color = colors.textPrimary,
                 fontWeight = FontWeight.Black
@@ -304,7 +304,7 @@ private fun ArchitectBriefBlock(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Підсумок тижня",
-                subtitle = if (aiAvailable) "ШІ пояснює, система ухвалює рішення" else "Працює аналіз на пристрої"
+            subtitle = if (aiAvailable) "Помічник пояснює, система ухвалює рішення" else "Працює аналіз на пристрої"
             )
             if (state.isLoading) {
                 Row(
@@ -441,7 +441,7 @@ private fun LastRecommendationBlock(recommendation: AiRecommendationUiModel?) {
                 subtitle = "Збережена в цілях вправ"
             )
             if (recommendation == null) {
-                EmptyAiBlock(text = "Історії рекомендацій ШІ ще немає.")
+        EmptyAiBlock(text = "Історії розумних рекомендацій ще немає.")
             } else {
                 Row(
                     modifier = Modifier
@@ -558,22 +558,22 @@ internal fun AiAvailabilityState.shortStatus(): String =
     when (this) {
         AiAvailabilityState.CONFIGURED -> "Готово"
         AiAvailabilityState.UNCONFIGURED -> "Локальний режим"
-        AiAvailabilityState.RATE_LIMITED -> "Ліміт запитів до ШІ"
-        AiAvailabilityState.OVERLOADED -> "ШІ перевантажений"
-        AiAvailabilityState.MALFORMED -> "Відповідь ШІ відхилено"
+        AiAvailabilityState.RATE_LIMITED -> "Ліміт запитів до помічника"
+        AiAvailabilityState.OVERLOADED -> "Помічник перевантажений"
+        AiAvailabilityState.MALFORMED -> "Відповідь помічника відхилено"
     }
 
 internal fun AiAvailabilityState.unavailableDescription(): String =
     when (this) {
         AiAvailabilityState.CONFIGURED -> ""
         AiAvailabilityState.UNCONFIGURED ->
-            "Функції ШІ зараз недоступні. Тренування, план на сьогодні та прогрес продовжують працювати на пристрої."
+            "Розумний помічник зараз недоступний. Тренування, план на сьогодні та прогрес продовжують працювати на пристрої."
         AiAvailabilityState.RATE_LIMITED ->
-            "Ліміт запитів до ШІ вичерпано. План не змінено, спробуйте аналіз пізніше."
+            "Ліміт запитів до помічника вичерпано. План не змінено, спробуйте аналіз пізніше."
         AiAvailabilityState.OVERLOADED ->
-            "ШІ тимчасово перевантажений. Тренування та прогрес працюють як завжди; повторіть аналіз пізніше."
+            "Помічник тимчасово перевантажений. Тренування та прогрес працюють як завжди; повторіть аналіз пізніше."
         AiAvailabilityState.MALFORMED ->
-            "Відповідь ШІ не вдалося перевірити, тому план не змінено."
+            "Відповідь помічника не вдалося перевірити, тому план не змінено."
     }
 
 @Composable

@@ -1072,7 +1072,7 @@ private fun ArchitectCalloutPanel(
                 )
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     SystemSectionTitle(
-                        title = "ШІ-архітектор",
+        title = "Архітектор",
                         subtitle = "Система може проаналізувати прогрес і запропонувати наступний крок."
                     )
                 }

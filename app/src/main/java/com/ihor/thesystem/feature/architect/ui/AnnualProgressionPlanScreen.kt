@@ -61,6 +61,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.UkrainianLocale
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
@@ -676,7 +677,7 @@ private fun EmptyAnnualBlock(text: String) {
 }
 
 private fun LocalDate.formatDate(): String =
-    format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
+    format(DateTimeFormatter.ofPattern("d MMM yyyy", UkrainianLocale))
 
 private fun LocalDate.toEpochMillis(): Long =
     atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()

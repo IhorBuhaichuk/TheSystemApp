@@ -12,23 +12,23 @@
     <string name="text_day">День</string>
     <string name="text_penalty">Штраф</string>
     <string name="text_statistics">Статистика</string>
-    <string name="text_matrix_progression">Матриця прогресії</string>
+    <string name="text_matrix_progression">Цілі вправ</string>
     <string name="text_start">Старт</string>
     <string name="text_weight">Поточна вага</string>
     <string name="text_height">Зріст</string>
-    <string name="text_matrix_empty">Матриця порожня</string>
+    <string name="text_matrix_empty">Цілі вправ ще не налаштовані</string>
 
     <string name="text_loading">Завантаження системи&#8230;</string>
     <string name="text_error">Помилка</string>
-    <string name="text_annual_matrix">Річна матриця прогресії</string>
+    <string name="text_annual_matrix">Річний план прогресу</string>
     <string name="text_tap_log_flag_setup">Торкніться, щоб записати; прапорець — щоб налаштувати</string>
     <string name="system_loading">Завантаження системи&#8230;</string>
     <string name="text_critical_error_capital">Критична помилка системи</string>
     <string name="text_terminate_system">Закрити застосунок</string>
-    <string name="text_db_init_failed">Ініціалізація бази даних не вдалася:</string>
+    <string name="text_db_init_failed">Не вдалося підготувати дані застосунку:</string>
     <string name="text_restart">Перезапустити</string>
 
-    <string name="text_ai_recommendation_note">Рекомендація ШІ: %1$d підходів, %2$s повторень</string>
+    <string name="text_ai_recommendation_note">Рекомендація тренера: %1$d підходів, %2$s повторень</string>
     <string name="text_label_weight">Вага</string>
     <string name="text_label_height">Зріст</string>
     <string name="text_unit_kg">кг</string>
@@ -83,13 +83,13 @@
     <string name="architect_initial_message">Є збережені результати останнього тренування. Надіслати їх Архітектору для короткого аналізу?</string>
     <string name="architect_no_data">Поки що немає збереженого тренування для аналізу. Завершіть перше тренування, і Архітектор почне збирати базу.</string>
     <string name="architect_btn_send_analysis">Надіслати результати на аналіз</string>
-    <string name="architect_directives_applied">Директиви отримано. Матрицю прогресії оновлено. Ваші цілі на наступне тренування скориговано.</string>
+    <string name="architect_directives_applied">Рекомендації застосовано. Цілі наступного тренування оновлено.</string>
 
     <!-- Error Messages -->
-    <string name="error_invalid_name">Некоректне значення: ім\'я має бути від 1 до 50 символів</string>
-    <string name="error_invalid_weight">Некоректне значення: допустима вага від 20 до 500 кг</string>
-    <string name="error_invalid_height">Некоректне значення: допустимий зріст від 50 до 300 см</string>
-    <string name="error_invalid_age">Некоректне значення: допустимий вік від 1 до 120 років</string>
+    <string name="error_invalid_name">Введіть ім\'я довжиною від 1 до 50 символів</string>
+    <string name="error_invalid_weight">Введіть вагу від 20 до 500 кг</string>
+    <string name="error_invalid_height">Введіть зріст від 50 до 300 см</string>
+    <string name="error_invalid_age">Введіть вік від 1 до 120 років</string>
     <string name="error_unknown">Невідома помилка</string>
     <string name="error_disk_full">Пам’ять пристрою заповнена</string>
     <string name="error_saving">Помилка збереження</string>
@@ -97,7 +97,7 @@
     <string name="error_weight_update">Помилка оновлення ваги</string>
     <string name="error_height_update">Помилка оновлення зросту</string>
     <string name="error_age_update">Помилка оновлення віку</string>
-    <string name="error_ai_parsing">ШІ надіслав відповідь, яку не вдалося перевірити. План не змінено.</string>
+    <string name="error_ai_parsing">Не вдалося перевірити отриману рекомендацію. План не змінено.</string>
     <string name="error_generic">Помилка</string>
     <string name="error_operation_failed">Помилка операції</string>
     <string name="error_backup_invalid">Не вдалося перевірити резервну копію. Поточні дані не змінено.</string>
@@ -108,15 +108,15 @@
     <string name="error_annual_progression_external_load_required">Річний ваговий графік доступний тільки для вправ із зовнішньою вагою.</string>
     <string name="annual_progression_adaptation_required">Річний графік відкриється після перших 2 тижнів збору даних.</string>
     <string name="error_annual_progression_input_required">Для кожної вправи потрібна поточна вага, ціль через 12 місяців і крок інвентарю.</string>
-    <string name="annual_progression_plan_saved">План збережено. Аналітика підхопить його з матриці прогресії.</string>
-    <string name="error_annual_progression_save_failed">Не вдалося зберегти річний план прогресії.</string>
+    <string name="annual_progression_plan_saved">Річний план збережено. Нові цілі з’являться у статистиці та тренуваннях.</string>
+    <string name="error_annual_progression_save_failed">Не вдалося зберегти річний план прогресу.</string>
     <string name="calendar_error_min_cycle_length">Цикл має містити щонайменше один день.</string>
     <string name="calendar_error_invalid_start_date">Вкажіть дату початку, наприклад 2026-07-25.</string>
     <string name="calendar_error_empty_cycle_days">Додайте хоча б один день циклу.</string>
     <string name="calendar_error_save_failed">Не вдалося зберегти календарний цикл.</string>
     <string name="error_no_completed_exercises">Завершіть хоча б один підхід</string>
-    <string name="error_ai_generic">ШІ зараз не відповідає. Тренування та прогрес продовжують зберігатися на пристрої.</string>
-    <string name="error_ai_unconfigured">Функції ШІ не налаштовані в цій версії. Тренування та прогрес доступні без них.</string>
+    <string name="error_ai_generic">Помічник зараз не відповідає. Тренування та прогрес продовжують зберігатися на пристрої.</string>
+    <string name="error_ai_unconfigured">Розумний помічник не налаштований у цій версії. Тренування та прогрес доступні без нього.</string>
     <string name="ai_analysis_complete">Аналіз завершено.</string>
     <string name="ai_fallback_activated">Тренування збережено. Підсумок сформовано на пристрої, а цілі залишено без змін.</string>
 
@@ -139,10 +139,10 @@
     <string name="rank_master">Майстер</string>
     <string name="rank_the_system">Система</string>
 
-    <string name="error_ai_overloaded">ШІ тимчасово перевантажений. Застосунок продовжує працювати, спробуйте аналіз пізніше.</string>
-    <string name="error_ai_rate_limit">Ліміт запитів до ШІ вичерпано. План не змінено, спробуйте пізніше.</string>
-    <string name="error_network_architect">Аналіз ШІ зараз недоступний. Тренування та прогрес працюють як завжди.</string>
-    <string name="error_unknown_architect">Не вдалося зв’язатися з ШІ-тренером</string>
+    <string name="error_ai_overloaded">Помічник тимчасово перевантажений. Застосунок продовжує працювати, спробуйте аналіз пізніше.</string>
+    <string name="error_ai_rate_limit">Ліміт запитів до помічника вичерпано. План не змінено, спробуйте пізніше.</string>
+    <string name="error_network_architect">Розумний аналіз зараз недоступний. Тренування та прогрес працюють як завжди.</string>
+    <string name="error_unknown_architect">Не вдалося зв’язатися з тренером</string>
     <string name="error_apply_recommendations_failed">Не вдалося застосувати рекомендації</string>
     <string name="error_no_internet">Немає з’єднання з інтернетом</string>
     <string name="error_server_error">Сервіс тимчасово недоступний</string>
@@ -151,13 +151,13 @@
     <string name="text_level_label">Рівень %1$d</string>
     <string name="text_next_xp">До наступного рівня: %1$d досвіду</string>
     <string name="text_character">Персонаж</string>
-    <string name="text_matrix">Матриця</string>
+    <string name="text_matrix">Цілі вправ</string>
     <string name="text_analytics">Аналітика</string>
     <string name="text_calendar_title">Календар</string>
     <string name="text_character_stats_capital">Характеристики персонажа</string>
     <string name="text_progress_30_days">Прогрес за 30 днів</string>
     <string name="text_exercise_label">Вправа %1$d</string>
-    <string name="text_workout_results_header">Результати останнього тренувального дня (Тоннаж: %1$dкг):</string>
+    <string name="text_workout_results_header">Останнє тренування · загальна піднята вага: %1$d кг</string>
     <string name="text_workout_results_item">%2$s: %3$.1f кг × %4$d</string>
 
     <array name="com_google_android_gms_fonts_certs">
@@ -238,14 +238,14 @@
     <string name="filter_level_expert">Експерт</string>
 
     <!-- Filter Mechanics -->
-    <string name="filter_mechanic_compound">Базова (Багатосуглобова)</string>
+    <string name="filter_mechanic_compound">Базова (працює кілька суглобів)</string>
     <string name="filter_mechanic_isolation">Ізоляційна (для однієї групи м’язів)</string>
     <string name="filter_mechanic_na">Не вказано</string>
 
     <!-- Filter Forces -->
     <string name="filter_force_pull">Тяга</string>
     <string name="filter_force_push">Жим</string>
-    <string name="filter_force_static">Статична</string>
+    <string name="filter_force_static">Утримання</string>
 
     <!-- Empty States -->
     <string name="text_no_exercises_found">Вправ не знайдено</string>

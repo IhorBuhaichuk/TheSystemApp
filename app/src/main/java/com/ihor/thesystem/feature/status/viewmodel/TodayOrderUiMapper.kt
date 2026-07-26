@@ -12,9 +12,9 @@ internal fun TodayTrainingDecision?.toTodayOrderUiModel(
         dayType = TodayOrderDayType.TRAINING,
         dayTypeLabel = "Тренування",
         title = fallbackMainQuest?.title?.toUserFacingWorkoutName()
-            ?: "План синхронізується",
+            ?: "Готуємо план на сьогодні",
         reason = "Показник готовності ще оновлюється. Поки показано звичайний план без підвищення навантаження.",
-        primaryActionLabel = "План формується",
+        primaryActionLabel = "План ще готується",
         outcomeText = fallbackMainQuest.rewardText("Безпечний варіант"),
         durationText = fallbackMainQuest.durationText("План"),
         readinessProgress = 0f,

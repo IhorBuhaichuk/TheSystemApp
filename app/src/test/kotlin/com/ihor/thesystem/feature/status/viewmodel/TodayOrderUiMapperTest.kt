@@ -98,7 +98,7 @@ class TodayOrderUiMapperTest {
         assertEquals("Тренування", order.dayTypeLabel)
         assertEquals("Тренування Б", order.title)
         assertTrue(order.reason.contains("Показник готовності ще оновлюється"))
-        assertEquals("План формується", order.primaryActionLabel)
+        assertEquals("План ще готується", order.primaryActionLabel)
         assertEquals("+60 досвіду", order.outcomeText)
         assertEquals("38 хв", order.durationText)
         assertEquals(0f, order.readinessProgress, 0.001f)

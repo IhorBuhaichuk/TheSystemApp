@@ -95,7 +95,7 @@ private fun TodayTrainingDecisionType.betaLabel(): String =
         TodayTrainingDecisionType.REDUCED_LOAD -> "Легше тренування"
         TodayTrainingDecisionType.ACTIVE_RECOVERY -> "Відновлення"
         TodayTrainingDecisionType.NO_EXCUSE -> "Коротке тренування"
-        TodayTrainingDecisionType.DELOAD -> "Розвантаження"
+        TodayTrainingDecisionType.DELOAD -> "Легше тренування"
         TodayTrainingDecisionType.REST -> "Відпочинок"
     }
 

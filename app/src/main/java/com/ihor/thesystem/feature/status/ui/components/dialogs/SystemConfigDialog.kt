@@ -81,7 +81,7 @@ fun SystemConfigDialog(
                     onChange = { reps = it }
                 )
                 ConfigField(
-                    label = "Тижнів у матриці",
+                    label = "Тижнів у плані",
                     value = weeks,
                     onChange = { weeks = it }
                 )

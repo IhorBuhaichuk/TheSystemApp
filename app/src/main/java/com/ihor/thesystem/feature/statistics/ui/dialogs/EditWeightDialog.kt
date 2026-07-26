@@ -129,7 +129,7 @@ fun EditWeightDialog(
                     )
                 } else {
                     Text(
-                        text = "Для цієї вправи поточна вага не редагується. Використовуй логування підходів, щоб фіксувати повторення або час.",
+                        text = "Для цієї вправи поточна вага не редагується. Записуйте підходи, щоб зберігати повторення або час.",
                         style = MaterialTheme.typography.bodyMedium.copy(color = colors.textSecondary)
                     )
                 }

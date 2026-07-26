@@ -2,6 +2,8 @@ package com.ihor.thesystem.core.ui
 
 import java.util.Locale
 
+internal val UkrainianLocale: Locale = Locale.forLanguageTag("uk-UA")
+
 /**
  * Display casing for product labels: the first letter is uppercase and
  * subsequent letters are lowercase. Leading numbers and punctuation are kept.

@@ -18,7 +18,7 @@ object WorkoutAnalysisUiTextMapper {
             "Особистий прогрес" to result.componentScores.personalProgressScore,
             "План прогресії" to result.componentScores.planProgressScore,
             "Стабільність" to result.componentScores.consistencyScore,
-            "Силовий орієнтир" to result.componentScores.strengthBenchmarkScore
+            "Рівень сили" to result.componentScores.strengthBenchmarkScore
         )
 
     fun exerciseStatusLabel(status: ExerciseProgressStatus): String =

@@ -66,6 +66,7 @@ import com.ihor.thesystem.core.theme.SystemColorTokens
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.UkrainianLocale
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemGhostButton
@@ -593,7 +594,7 @@ private fun AnnualProgressionDetailStatus.statusColor(colors: SystemColorTokens)
     }
 
 private fun LocalDate.formatDate(): String =
-    format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
+    format(DateTimeFormatter.ofPattern("d MMM yyyy", UkrainianLocale))
 
 private fun Double.formatWeight(): String =
     if (this % 1.0 == 0.0) {

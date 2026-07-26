@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.UkrainianLocale
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemSectionHeader
@@ -56,7 +57,6 @@ import com.ihor.thesystem.feature.statistics.viewmodel.AnnualProgressionManualEd
 import com.ihor.thesystem.feature.statistics.viewmodel.AnnualProgressionManualExerciseUiModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 internal fun AnnualProgressionManualEditorScreen(
@@ -550,7 +550,7 @@ private fun EmptyManualScheduleBlock(modifier: Modifier = Modifier) {
 }
 
 private fun buildManualMonthLabels(currentDate: LocalDate): List<String> {
-    val formatter = DateTimeFormatter.ofPattern("LLL yyyy", Locale.getDefault())
+    val formatter = DateTimeFormatter.ofPattern("LLL yyyy", UkrainianLocale)
     return (0 until 12).map { index ->
         currentDate.plusMonths(index.toLong()).format(formatter)
     }

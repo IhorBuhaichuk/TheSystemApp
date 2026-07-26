@@ -1318,7 +1318,7 @@ private fun WeekPreviewBlock(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Календарний цикл синхронізується.",
+                text = "Готуємо календарний цикл.",
                 style = MaterialTheme.typography.bodySmall.copy(color = colors.textMuted)
             )
         }

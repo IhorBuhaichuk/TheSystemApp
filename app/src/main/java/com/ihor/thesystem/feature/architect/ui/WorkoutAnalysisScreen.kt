@@ -47,6 +47,7 @@ import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemItemSpacing
 import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
+import com.ihor.thesystem.core.ui.UkrainianLocale
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
@@ -491,7 +492,7 @@ private fun SystemInsightBlock(text: String) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SystemSectionHeader(
                 title = "Підсумок системи",
-                subtitle = "Збережений висновок ШІ"
+                subtitle = "Збережений висновок помічника"
             )
             Row(
                 modifier = Modifier
@@ -671,7 +672,7 @@ private fun AnnualProgressStatus.statusAccent(): Color {
 private fun Long.formatDate(): String =
     Instant.ofEpochMilli(this)
         .atZone(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
+        .format(DateTimeFormatter.ofPattern("d MMM yyyy", UkrainianLocale))
 
 private fun Double?.formatSignedWeight(): String =
     this?.let {

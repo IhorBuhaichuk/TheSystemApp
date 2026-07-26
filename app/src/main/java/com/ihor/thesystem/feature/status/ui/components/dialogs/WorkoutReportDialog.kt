@@ -122,7 +122,7 @@ fun WorkoutReportDialog(
 
                 if (report.isFallback) {
                     Text(
-                        text = "ШІ тимчасово недоступний. Тренування збережено, а підсумок сформовано на пристрої.",
+                    text = "Розумний аналіз тимчасово недоступний. Тренування збережено, а підсумок сформовано на пристрої.",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = colors.textSecondary,
                             fontWeight = FontWeight.Bold
@@ -361,5 +361,5 @@ private fun WorkoutProgressionDecision.progressLabel(): String =
         WorkoutProgressionDecision.INCREASE_ALLOWED -> "Підвищення"
         WorkoutProgressionDecision.HOLD -> "Без змін"
         WorkoutProgressionDecision.REDUCE -> "Зменшення"
-        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "Розвантаження"
+        WorkoutProgressionDecision.DELOAD_RECOMMENDED -> "Легше тренування"
     }
