@@ -100,7 +100,7 @@ animation behavior; remove or replace only decorative work that is proven unnece
 | 7 | Profile | Top-level complete | `ProfileScreen.kt` |
 | 8 | Dialogs and state panels | In progress | shared dialogs and changed workout/report dialogs |
 | 9 | Accessibility/performance regression | Pending | tests and screenshot artifacts |
-| 10 | Plain-language Ukrainian copy | Active UI complete | presentation mappers, top-level screens, dialogs |
+| 10 | Plain-language Ukrainian copy | Complete | presentation mappers, top-level screens, dialogs |
 
 ## Verification ledger
 
@@ -109,12 +109,12 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - [x] Baseline `gfxinfo` captured on Realme
 - [x] `scripts/check-quick.cmd`
 - [x] `scripts/check-web-ui-guard.cmd`
-- [ ] relevant unit and Compose/UI tests
-- [ ] small phone
+- [x] relevant unit and Compose/UI tests
+- [x] small phone
 - [x] normal phone
 - [x] font scale 1.3
-- [ ] five after screenshots and changed dialogs
-- [ ] `git diff --check`
+- [x] five after screenshots and changed dialogs
+- [x] `git diff --check`
 - [ ] requirement-by-requirement completion audit
 
 ## Decision log
@@ -157,6 +157,24 @@ animation behavior; remove or replace only decorative work that is proven unnece
   titles and explanations by default. Top-level loading/error containers use a
   compact content-driven height instead of filling an arbitrary percentage of the
   screen; retry callbacks and UI-state ownership remain unchanged.
+- 2026-07-26: The full-screen 260 ms slide between the five primary tabs was removed.
+  It forced the outgoing and incoming destinations to draw together and consistently
+  added three slow draw frames per switch on the Realme. The warmed minified release
+  pass reduced total slow UI-thread frames from 19 to 13 and slow draw frames from
+  20 to 15. Selection and press feedback stays in the bottom navigation; hierarchical
+  destinations retain a short fade.
+- 2026-07-26: The active UI copy audit found no remaining static English display
+  strings or all-caps labels. English template keys, exercise filter keys, test tags,
+  logs, file formats, and the Health Connect product name remain intentionally
+  unchanged. Visible date formatters now use the Ukrainian locale independently of
+  the device language. Focused mapper, sentence-case, and Compose-only guard tests
+  pass.
+- 2026-07-26: The debug review build was installed over the existing app without
+  clearing data. All five tabs were captured at the normal device size and at a
+  temporary 320 dp logical width. Long titles wrap without overlap, bottom-navigation
+  labels remain visible, and the device size and 0.9 font scale were restored after
+  verification. Bottom-navigation press, selection, and settled frames are stored in
+  `review/motion-frames/`.
 
 ## Current checkpoint
 
@@ -164,6 +182,6 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - Base product commit: `78ccd52`
 - Concept commit: `be7172b`
 - Baseline: `artifacts/design-implementation/minimal-hud-v2/baseline/`
-- Next action: measure the remaining screen-specific Canvas, blur, and repeating
-  decorative work, then remove only effects with a demonstrated rendering cost.
-  Capture a real workout report after the user creates a workout during testing.
+- Next action: inspect the remaining reachable dialogs and workout states against
+  the same density rules. Capture a real workout report after the user creates a
+  workout during testing.
