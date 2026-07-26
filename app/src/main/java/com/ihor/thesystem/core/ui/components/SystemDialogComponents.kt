@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
 import com.ihor.thesystem.core.theme.SystemCardPadding
 import com.ihor.thesystem.core.theme.SystemControlHeight
 import com.ihor.thesystem.core.theme.SystemScreenPadding
@@ -156,6 +157,122 @@ fun SystemDialogContainer(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             content = content
         )
+    }
+}
+
+@Composable
+fun SystemDialogHeader(
+    title: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    accent: Color = SystemTheme.colors.accentPrimary
+) {
+    val colors = SystemTheme.colors
+    val iconShape = RoundedCornerShape(SystemTheme.shapes.medium)
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(iconShape)
+                .background(accent.copy(alpha = 0.10f))
+                .border(1.dp, accent.copy(alpha = 0.30f), iconShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.Black
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = colors.textSecondary,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SystemDialogActions(
+    cancelText: String,
+    confirmText: String,
+    onCancel: () -> Unit,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+    confirmEnabled: Boolean = true,
+    accent: Color = SystemTheme.colors.accentPrimary,
+    confirmIcon: ImageVector? = null,
+    confirmGlow: Boolean = confirmEnabled
+) {
+    val stacked = LocalDensity.current.fontScale >= 1.2f
+
+    if (stacked) {
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            SystemGhostButton(
+                text = cancelText,
+                onClick = onCancel,
+                modifier = Modifier.fillMaxWidth()
+            )
+            SystemButton(
+                text = confirmText,
+                icon = confirmIcon,
+                onClick = onConfirm,
+                enabled = confirmEnabled,
+                accent = accent,
+                glow = confirmGlow,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    } else {
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            SystemGhostButton(
+                text = cancelText,
+                onClick = onCancel,
+                modifier = Modifier.weight(1f)
+            )
+            SystemButton(
+                text = confirmText,
+                icon = confirmIcon,
+                onClick = onConfirm,
+                enabled = confirmEnabled,
+                accent = accent,
+                glow = confirmGlow,
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 

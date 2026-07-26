@@ -63,7 +63,7 @@
     <string name="text_add_task_cancel">Скасувати</string>
     <string name="text_confirm">Підтвердити</string>
     <string name="text_cancel">Скасувати</string>
-    <string name="text_edit_name_title">[ Редагувати ім\'я ]</string>
+    <string name="text_edit_name_title">Змінити ім\'я</string>
     <string name="text_new_name">Нове ім\'я</string>
 
     <string name="quest_progress">Прогрес: %1$d/%2$d</string>

@@ -98,14 +98,14 @@ animation behavior; remove or replace only decorative work that is proven unnece
 | 5 | System/Cycle | Top-level complete | `CycleScreen.kt` |
 | 6 | Statistics | Top-level complete | `StatisticsScreen.kt`, overview sections, chart components |
 | 7 | Profile | Top-level complete | `ProfileScreen.kt` |
-| 8 | Dialogs and state panels | Pending | shared dialogs and changed workout/report dialogs |
+| 8 | Dialogs and state panels | In progress | shared dialogs and changed workout/report dialogs |
 | 9 | Accessibility/performance regression | Pending | tests and screenshot artifacts |
 | 10 | Plain-language Ukrainian copy | Active UI complete | presentation mappers, top-level screens, dialogs |
 
 ## Verification ledger
 
 - [x] Baseline screenshots for five tabs
-- [ ] Baseline screenshots for representative dialogs
+- [x] Baseline screenshots for representative dialogs
 - [x] Baseline `gfxinfo` captured on Realme
 - [x] `scripts/check-quick.cmd`
 - [x] `scripts/check-web-ui-guard.cmd`
@@ -149,6 +149,10 @@ animation behavior; remove or replace only decorative work that is proven unnece
   statistics rows and metric icons, grouped profile metrics, and quieter white section
   headings. Realme screenshots at font scales 0.9 and 1.3 show no clipping; the scale
   was restored to 0.9 after verification.
+- 2026-07-26: Compact edit and add-task dialogs now share one sentence-case header
+  and responsive actions. At font scale 1.3 actions stack vertically instead of
+  clipping; the add-task dialog remains above the software keyboard through
+  `imePadding`. The Realme scale was restored to 0.9 after both checks.
 
 ## Current checkpoint
 
@@ -156,6 +160,6 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - Base product commit: `78ccd52`
 - Concept commit: `be7172b`
 - Baseline: `artifacts/design-implementation/minimal-hud-v2/baseline/`
-- Next action: polish representative workout/report dialogs and shared
+- Next action: inspect and polish the full-screen workout report plus shared
   loading/empty/error panels, then measure the remaining screen-specific Canvas,
   blur, and repeating decorative work before any wider rollout.

@@ -127,7 +127,7 @@ fun QuestChecklistSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                    text = "[ Список порожній ]",
+                    text = "Список поки порожній",
                         style = MaterialTheme.typography.bodySmall.copy(color = colors.textSecondary)
                     )
                 }
