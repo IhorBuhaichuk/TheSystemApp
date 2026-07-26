@@ -63,9 +63,6 @@ import com.ihor.thesystem.feature.statistics.ui.components.dialogs.EditNameDialo
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogAgeDialog
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogHeightDialog
 import com.ihor.thesystem.feature.statistics.ui.components.dialogs.LogWeightDialog
-import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsDialogState
-import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsUiData
-import com.ihor.thesystem.feature.statistics.viewmodel.StatisticsViewModel
 import com.ihor.thesystem.feature.status.ui.WorkoutDialogHost
 import com.ihor.thesystem.feature.status.viewmodel.StatusDialogState
 import com.ihor.thesystem.feature.status.viewmodel.StatusUiData
@@ -78,22 +75,17 @@ import kotlin.math.roundToInt
 fun ProfileScreen(
     navController: NavHostController,
     statusViewModel: StatusViewModel = hiltViewModel(),
-    statisticsViewModel: StatisticsViewModel = hiltViewModel(),
     workoutViewModel: WorkoutViewModel = hiltViewModel()
 ) {
     val statusState by statusViewModel.uiState.collectAsStateWithLifecycle()
     val statusDialogState by statusViewModel.dialogState.collectAsStateWithLifecycle()
-    val statisticsState by statisticsViewModel.uiState.collectAsStateWithLifecycle()
-    val statisticsDialogState by statisticsViewModel.dialogState.collectAsStateWithLifecycle()
     val activeWorkout by workoutViewModel.activeWorkoutState.collectAsStateWithLifecycle()
     val workoutDialogState by workoutViewModel.dialogState.collectAsStateWithLifecycle()
     val settingsUiState by workoutViewModel.settingsUiState.collectAsStateWithLifecycle()
     val colors = SystemTheme.colors
     val statusData = (statusState as? UiState.Content<StatusUiData>)?.data
-    val statisticsData = (statisticsState as? UiState.Content<StatisticsUiData>)?.data
 
     RefreshOnResume(statusViewModel::refreshForCurrentDay)
-    RefreshOnResume(statisticsViewModel::refreshForCurrentDay)
     RefreshOnResume(workoutViewModel::refreshForCurrentDay)
 
     Box(
@@ -120,12 +112,11 @@ fun ProfileScreen(
         } else {
             ProfileDashboard(
                 statusData = statusData,
-                statisticsData = statisticsData,
                 onAvatarSelected = statusViewModel::updateAvatarUri,
                 onEditName = statusViewModel::onEditNameTap,
-                onOpenWeight = statisticsViewModel::onOpenLogWeight,
-                onOpenHeight = statisticsViewModel::onOpenEditHeight,
-                onOpenAge = statisticsViewModel::onOpenEditAge,
+                onOpenWeight = statusViewModel::onOpenLogWeight,
+                onOpenHeight = statusViewModel::onOpenEditHeight,
+                onOpenAge = statusViewModel::onOpenEditAge,
                 onOpenWorkoutSettings = workoutViewModel::onOpenWorkoutSettings,
                 onOpenCalendarSettings = { navController.navigate(Routes.CalendarSettings) },
                 onOpenStatistics = { navController.navigate(Routes.Statistics) }
@@ -140,13 +131,13 @@ fun ProfileScreen(
             )
         }
 
-        ProfileStatisticsDialogs(
-            dialogState = statisticsDialogState,
-            data = statisticsData,
-            onWeightConfirmed = statisticsViewModel::onWeightConfirmed,
-            onHeightConfirmed = statisticsViewModel::onHeightConfirmed,
-            onAgeConfirmed = statisticsViewModel::onAgeConfirmed,
-            onDismiss = statisticsViewModel::onDismissDialog
+        ProfileMetricsDialogs(
+            dialogState = statusDialogState,
+            data = statusData,
+            onWeightConfirmed = statusViewModel::onWeightConfirmed,
+            onHeightConfirmed = statusViewModel::onHeightConfirmed,
+            onAgeConfirmed = statusViewModel::onAgeConfirmed,
+            onDismiss = statusViewModel::onDismissDialog
         )
 
         WorkoutDialogHost(
@@ -164,7 +155,6 @@ fun ProfileScreen(
 @Composable
 private fun ProfileDashboard(
     statusData: StatusUiData,
-    statisticsData: StatisticsUiData?,
     onAvatarSelected: (android.net.Uri) -> Unit,
     onEditName: () -> Unit,
     onOpenWeight: () -> Unit,
@@ -196,7 +186,6 @@ private fun ProfileDashboard(
         item(key = "personal_metrics") {
             PersonalMetricsPanel(
                 statusData = statusData,
-                statisticsData = statisticsData,
                 onOpenWeight = onOpenWeight,
                 onOpenHeight = onOpenHeight,
                 onOpenAge = onOpenAge
@@ -368,15 +357,14 @@ private fun RankMiniBox(
 @Composable
 private fun PersonalMetricsPanel(
     statusData: StatusUiData,
-    statisticsData: StatisticsUiData?,
     onOpenWeight: () -> Unit,
     onOpenHeight: () -> Unit,
     onOpenAge: () -> Unit
 ) {
     val colors = SystemTheme.colors
-    val weight = statisticsData?.currentWeight?.takeIf { it > 0f } ?: statusData.currentWeight
-    val height = statisticsData?.currentHeight?.takeIf { it > 0f } ?: statusData.height
-    val age = statisticsData?.age?.takeIf { it > 0 }
+    val weight = statusData.currentWeight
+    val height = statusData.height
+    val age = statusData.age
 
     SystemPanel(
         modifier = Modifier.fillMaxWidth(),
@@ -501,26 +489,26 @@ private fun SettingsPanel(
 }
 
 @Composable
-private fun ProfileStatisticsDialogs(
-    dialogState: StatisticsDialogState,
-    data: StatisticsUiData?,
+private fun ProfileMetricsDialogs(
+    dialogState: StatusDialogState,
+    data: StatusUiData?,
     onWeightConfirmed: (Float) -> Unit,
     onHeightConfirmed: (Float) -> Unit,
     onAgeConfirmed: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
     when (dialogState) {
-        is StatisticsDialogState.LogWeight -> LogWeightDialog(
+        is StatusDialogState.LogWeight -> LogWeightDialog(
             currentWeight = data?.currentWeight ?: 0f,
             onConfirm = onWeightConfirmed,
             onDismiss = onDismiss
         )
-        is StatisticsDialogState.EditHeight -> LogHeightDialog(
-            currentHeight = data?.currentHeight ?: 0f,
+        is StatusDialogState.EditHeight -> LogHeightDialog(
+            currentHeight = data?.height ?: 0f,
             onConfirm = onHeightConfirmed,
             onDismiss = onDismiss
         )
-        is StatisticsDialogState.EditAge -> LogAgeDialog(
+        is StatusDialogState.EditAge -> LogAgeDialog(
             currentAge = data?.age ?: 0,
             onConfirm = onAgeConfirmed,
             onDismiss = onDismiss

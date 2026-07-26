@@ -10,6 +10,7 @@ data class StatusData(
     val totalMonths: Int = 12,
     val currentWeight: Float? = null,
     val height: Float? = null,
+    val age: Int? = null,
     val cycleDay: Int = 1,
     val monthWorkoutsCompleted: Int = 0,
     val monthWorkoutsTotal: Int = 0,

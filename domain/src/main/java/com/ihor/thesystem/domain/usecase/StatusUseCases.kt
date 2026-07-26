@@ -7,6 +7,7 @@ data class StatusUseCases @Inject constructor(
     val updatePlayerName: UpdatePlayerNameUseCase,
     val logWeight: LogWeightUseCase,
     val updateHeight: UpdatePlayerHeightUseCase,
+    val updateAge: UpdatePlayerAgeUseCase,
     val addTodayTodo: AddTodayTodoUseCase,
     val addTodayMicrotask: AddTodayMicrotaskUseCase,
     val toggleTodo: ToggleTodoUseCase,

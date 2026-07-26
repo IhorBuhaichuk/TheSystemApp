@@ -49,6 +49,20 @@ class StartupBenchmarks {
         )
     }
 
+    @Test
+    fun profileNavigationWithoutCompilation() {
+        measureProfileNavigation(CompilationMode.None())
+    }
+
+    @Test
+    fun profileNavigationWithBaselineProfile() {
+        measureProfileNavigation(
+            CompilationMode.Partial(
+                baselineProfileMode = BaselineProfileMode.Require
+            )
+        )
+    }
+
     private fun measureStatisticsNavigation(compilationMode: CompilationMode) {
         benchmarkRule.measureRepeated(
             packageName = TARGET_PACKAGE,
@@ -81,6 +95,24 @@ class StartupBenchmarks {
             },
             measureBlock = {
                 startActivityAndWait()
+            }
+        )
+    }
+
+    private fun measureProfileNavigation(compilationMode: CompilationMode) {
+        benchmarkRule.measureRepeated(
+            packageName = TARGET_PACKAGE,
+            metrics = listOf(FrameTimingGfxInfoMetric()),
+            compilationMode = compilationMode,
+            iterations = 5,
+            setupBlock = {
+                pressHome()
+                killProcess()
+                startActivityAndWait()
+                ensureReturningUser()
+            },
+            measureBlock = {
+                openProfile()
             }
         )
     }

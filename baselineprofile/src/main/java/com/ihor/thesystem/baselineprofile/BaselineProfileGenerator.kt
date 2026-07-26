@@ -36,6 +36,7 @@ class BaselineProfileGenerator {
             ensureReturningUser()
             openStatistics()
             scrollStatistics()
+            openProfile()
         }
     }
 }

@@ -15,6 +15,9 @@ Branch: `codex/overnight-premium-hud-polish`
 - Cached expensive Compose drawing primitives for the status backdrop and annual chart.
 - Added a `:baselineprofile` module, generated release baseline/startup profiles, and added repeatable cold-start and Statistics navigation macrobenchmarks.
 - Reduced first-screen Statistics text layout nodes by combining styled title/body and value/subtitle pairs.
+- Removed the full `StatisticsViewModel` from `ProfileScreen`; personal metrics now reuse the existing Status flow and update use cases instead of starting Statistics history and aggregation streams.
+
+Latest verification: `:app:compileDebugKotlin` passed; 297 local unit/guard tests passed with 0 failures (1 skipped); both Baseline Profile benchmark variants compile.
 
 ## Current benchmark baseline
 
@@ -54,7 +57,7 @@ This points to first Compose measurement, text layout, allocation pressure, and 
 
 ## Next work
 
-1. Remove the full `StatisticsViewModel` from `ProfileScreen`; expose age through the existing lightweight Status flow and reuse Status update use cases/dialog state.
+1. Run the new repeatable Profile navigation macrobenchmark and measure the removed Statistics pipeline on the physical device when it is connected.
 2. Continue reducing first-screen Statistics measure cost without hiding report content; validate every UI experiment with the existing macrobenchmark.
 3. Add bounded/date-range workout-log queries for weekly and annual analytics, with DAO indexes/query-plan checks and Room tests.
 4. Add release CI performance runs on a stable emulator/reference device; the Realme OEM Perfetto trace lacks some modern frame slices, so the local suite uses legacy startup and `gfxinfo` frame metrics.

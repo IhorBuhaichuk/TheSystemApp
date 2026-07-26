@@ -12,6 +12,8 @@ private const val NEXT_LABEL = "Далі"
 private const val FINISH_ONBOARDING_LABEL = "Перейти до плану"
 private const val STATISTICS_LABEL = "Статистика"
 private const val STATISTICS_SUBTITLE = "Підсумок і прогрес"
+private const val PROFILE_LABEL = "Профіль"
+private const val PROFILE_METRICS_TITLE = "Особисті показники"
 private const val UI_TIMEOUT_MILLIS = 20_000L
 
 internal fun MacrobenchmarkScope.ensureReturningUser() {
@@ -56,6 +58,20 @@ internal fun MacrobenchmarkScope.openStatistics() {
 
     check(device.wait(Until.hasObject(By.text(STATISTICS_SUBTITLE)), UI_TIMEOUT_MILLIS)) {
         "Statistics dashboard did not become visible"
+    }
+}
+
+internal fun MacrobenchmarkScope.openProfile() {
+    check(device.wait(Until.hasObject(By.text(PROFILE_LABEL)), UI_TIMEOUT_MILLIS)) {
+        "Profile destination was not found"
+    }
+    val profileDestination = device.findObjects(By.text(PROFILE_LABEL))
+        .maxByOrNull { it.visibleBounds.top }
+    checkNotNull(profileDestination) { "Profile destination disappeared before click" }
+    profileDestination.click()
+
+    check(device.wait(Until.hasObject(By.text(PROFILE_METRICS_TITLE)), UI_TIMEOUT_MILLIS)) {
+        "Profile dashboard did not become visible"
     }
 }
 

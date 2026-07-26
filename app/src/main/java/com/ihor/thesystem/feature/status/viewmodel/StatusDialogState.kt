@@ -9,6 +9,7 @@ sealed class StatusDialogState {
     data object EditName                                                   : StatusDialogState()
     data object LogWeight                                                  : StatusDialogState()
     data object EditHeight                                                 : StatusDialogState()
+    data object EditAge                                                    : StatusDialogState()
     data object EditSystemConfig                                           : StatusDialogState()
     data class QuestChecklist(val questId: Int, val isDaily: Boolean) : StatusDialogState()
     data class AddTask(val questId: Int)                             : StatusDialogState()

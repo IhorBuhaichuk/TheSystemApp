@@ -134,6 +134,7 @@ class GetStatusScreenDataUseCase @Inject constructor(
                     totalMonths            = 12,
                     currentWeight          = snapshot.weight,
                     height                 = player.height.takeIf { it > 0f },
+                    age                    = player.age.takeIf { it > 0 },
                     cycleDay               = currentCycleDay,
                     monthWorkoutsCompleted = snapshot.completedMainThisMonth,
                     monthWorkoutsTotal     = monthWorkoutsTotal,

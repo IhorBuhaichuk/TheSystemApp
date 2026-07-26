@@ -223,6 +223,18 @@ class StatusViewModel @Inject constructor(
         _dialogState.value = StatusDialogState.EditName
     }
 
+    fun onOpenLogWeight() {
+        _dialogState.value = StatusDialogState.LogWeight
+    }
+
+    fun onOpenEditHeight() {
+        _dialogState.value = StatusDialogState.EditHeight
+    }
+
+    fun onOpenEditAge() {
+        _dialogState.value = StatusDialogState.EditAge
+    }
+
     fun onNameConfirmed(newName: String) = launchCatching {
         val player = currentPlayer.value ?: return@launchCatching
         when (val result = useCases.updatePlayerName(player, newName)) {
@@ -240,6 +252,13 @@ class StatusViewModel @Inject constructor(
 
     fun onHeightConfirmed(height: Float) = launchCatching {
         when (val result = useCases.updateHeight(height)) {
+            is Result.Success -> onDismissDialog()
+            is Result.Error -> handleError(result.error)
+        }
+    }
+
+    fun onAgeConfirmed(age: Int) = launchCatching {
+        when (val result = useCases.updateAge(age)) {
             is Result.Success -> onDismissDialog()
             is Result.Error -> handleError(result.error)
         }
@@ -362,6 +381,7 @@ class StatusViewModel @Inject constructor(
             totalMonths = totalMonths,
             currentWeight = currentWeight,
             height = height,
+            age = age,
             cycleDay = cycleDay,
             monthWorkoutsCompleted = monthWorkoutsCompleted,
             monthWorkoutsTotal = monthWorkoutsTotal,
