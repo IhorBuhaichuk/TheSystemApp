@@ -233,40 +233,22 @@ private val topLevelRoutes = listOf(
     Routes.Profile
 )
 
-private const val TOP_LEVEL_SLIDE_MILLIS = 260
-
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.topLevelEnterTransition(): EnterTransition {
     val initialIndex = initialState.destination.topLevelIndex()
     val targetIndex = targetState.destination.topLevelIndex()
-    if (initialIndex == -1 || targetIndex == -1 || initialIndex == targetIndex) {
-        return fadeIn(animationSpec = tween(durationMillis = 120))
+    if (initialIndex != -1 && targetIndex != -1 && initialIndex != targetIndex) {
+        return EnterTransition.None
     }
-    val direction = if (targetIndex > initialIndex) {
-        AnimatedContentTransitionScope.SlideDirection.Left
-    } else {
-        AnimatedContentTransitionScope.SlideDirection.Right
-    }
-    return slideIntoContainer(
-        towards = direction,
-        animationSpec = tween(durationMillis = TOP_LEVEL_SLIDE_MILLIS)
-    ) + fadeIn(animationSpec = tween(durationMillis = 120))
+    return fadeIn(animationSpec = tween(durationMillis = 120))
 }
 
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.topLevelExitTransition(): ExitTransition {
     val initialIndex = initialState.destination.topLevelIndex()
     val targetIndex = targetState.destination.topLevelIndex()
-    if (initialIndex == -1 || targetIndex == -1 || initialIndex == targetIndex) {
-        return fadeOut(animationSpec = tween(durationMillis = 90))
+    if (initialIndex != -1 && targetIndex != -1 && initialIndex != targetIndex) {
+        return ExitTransition.None
     }
-    val direction = if (targetIndex > initialIndex) {
-        AnimatedContentTransitionScope.SlideDirection.Left
-    } else {
-        AnimatedContentTransitionScope.SlideDirection.Right
-    }
-    return slideOutOfContainer(
-        towards = direction,
-        animationSpec = tween(durationMillis = TOP_LEVEL_SLIDE_MILLIS)
-    ) + fadeOut(animationSpec = tween(durationMillis = 120))
+    return fadeOut(animationSpec = tween(durationMillis = 90))
 }
 
 private fun Modifier.topLevelSwipeNavigation(
