@@ -112,7 +112,9 @@ fun ProfileScreen(
             ) {
                 SystemStatePanel(
                     kind = SystemStateKind.Loading,
-                    modifier = Modifier.fillMaxSize(0.42f)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 180.dp)
                 )
             }
         } else {

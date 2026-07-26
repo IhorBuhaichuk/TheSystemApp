@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Icon
@@ -384,6 +385,16 @@ fun SystemStatePanel(
         SystemStateKind.Empty -> colors.statusNeutral
         SystemStateKind.Error -> colors.statusDanger
     }
+    val resolvedTitle = title ?: when (kind) {
+        SystemStateKind.Loading -> "Завантаження"
+        SystemStateKind.Empty -> "Тут поки порожньо"
+        SystemStateKind.Error -> "Не вдалося завантажити дані"
+    }
+    val resolvedMessage = message ?: when (kind) {
+        SystemStateKind.Loading -> "Готуємо дані…"
+        SystemStateKind.Empty -> "Дані з’являться після першого запису."
+        SystemStateKind.Error -> "Спробуйте ще раз за кілька секунд."
+    }
 
     SystemPanel(
         modifier = modifier,
@@ -409,31 +420,27 @@ fun SystemStatePanel(
                     modifier = Modifier.size(28.dp)
                 )
                 SystemStateKind.Error -> Icon(
-                    imageVector = Icons.Filled.Close,
+                    imageVector = Icons.Filled.ErrorOutline,
                     contentDescription = null,
                     tint = accent,
                     modifier = Modifier.size(28.dp)
                 )
             }
-            if (title != null) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = colors.textPrimary,
-                        fontWeight = FontWeight.Black,
-                        textAlign = TextAlign.Center
-                    )
+            Text(
+                text = resolvedTitle,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center
                 )
-            }
-            if (message != null) {
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = colors.textSecondary,
-                        textAlign = TextAlign.Center
-                    )
+            )
+            Text(
+                text = resolvedMessage,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = colors.textSecondary,
+                    textAlign = TextAlign.Center
                 )
-            }
+            )
             if (actionLabel != null && onAction != null) {
                 SystemButton(
                     text = actionLabel,

@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -130,7 +132,9 @@ private fun StatusLoading() {
     ) {
         SystemStatePanel(
             kind = SystemStateKind.Loading,
-            modifier = Modifier.fillMaxSize(0.42f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 180.dp)
         )
     }
 }
@@ -182,11 +186,13 @@ private fun DatabaseErrorScreen(
     ) {
         SystemStatePanel(
             kind = SystemStateKind.Error,
-            title = "Критична помилка системи",
+            title = "Не вдалося завантажити дані",
             message = message.asString(context),
             actionLabel = "Повторити",
             onAction = onRetry,
-            modifier = Modifier.fillMaxSize(0.72f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 200.dp)
         )
     }
 }

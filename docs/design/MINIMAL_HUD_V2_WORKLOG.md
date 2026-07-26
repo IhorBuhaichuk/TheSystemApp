@@ -153,6 +153,10 @@ animation behavior; remove or replace only decorative work that is proven unnece
   and responsive actions. At font scale 1.3 actions stack vertically instead of
   clipping; the add-task dialog remains above the software keyboard through
   `imePadding`. The Realme scale was restored to 0.9 after both checks.
+- 2026-07-26: Shared loading, empty, and error panels now provide plain-language
+  titles and explanations by default. Top-level loading/error containers use a
+  compact content-driven height instead of filling an arbitrary percentage of the
+  screen; retry callbacks and UI-state ownership remain unchanged.
 
 ## Current checkpoint
 
@@ -160,6 +164,6 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - Base product commit: `78ccd52`
 - Concept commit: `be7172b`
 - Baseline: `artifacts/design-implementation/minimal-hud-v2/baseline/`
-- Next action: inspect and polish the full-screen workout report plus shared
-  loading/empty/error panels, then measure the remaining screen-specific Canvas,
-  blur, and repeating decorative work before any wider rollout.
+- Next action: measure the remaining screen-specific Canvas, blur, and repeating
+  decorative work, then remove only effects with a demonstrated rendering cost.
+  Capture a real workout report after the user creates a workout during testing.

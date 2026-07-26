@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
@@ -67,7 +68,9 @@ fun StatisticsScreen(
                 ) {
                     SystemStatePanel(
                         kind = SystemStateKind.Loading,
-                        modifier = Modifier.fillMaxSize(0.42f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 180.dp)
                     )
                 }
             }
@@ -93,7 +96,9 @@ fun StatisticsScreen(
                         message = state.message.asString(context),
                         actionLabel = "Повторити",
                         onAction = viewModel::refreshForCurrentDay,
-                        modifier = Modifier.fillMaxSize(0.72f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 200.dp)
                     )
                 }
             }
