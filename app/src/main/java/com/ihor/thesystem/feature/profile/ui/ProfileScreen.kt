@@ -6,7 +6,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -37,6 +36,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.testTag
@@ -232,6 +232,7 @@ private fun ProfileHeroPanel(
     onEditName: () -> Unit
 ) {
     val colors = SystemTheme.colors
+    val compact = LocalConfiguration.current.screenWidthDp < PROFILE_EXPANDED_HERO_MIN_WINDOW_WIDTH_DP
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri -> uri?.let(onAvatarSelected) }
@@ -249,118 +250,117 @@ private fun ProfileHeroPanel(
             .fillMaxWidth()
             .testTag(SystemUiTestTags.PROFILE_HERO)
     ) {
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            val compact = maxWidth < 400.dp
-            Column(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(SystemCardPadding),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SystemAvatarBadge(
+                    avatarUri = statusData.avatarUri,
+                    modifier = Modifier.size(if (compact) 104.dp else 132.dp),
+                    onClick = {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    }
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SystemSectionTitle(title = "Профіль")
+                    Text(
+                        text = statusData.playerName.toSystemSentenceCase(),
+                        modifier = Modifier.systemClickable(onClick = onEditName),
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            color = colors.textPrimary,
+                            fontWeight = FontWeight.Black
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "Мисливець рангу ${statusData.globalRank.name}",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = colors.textSecondary,
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (!compact) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            RankMiniBox(
+                                label = "Ранг",
+                                value = statusData.globalRank.name,
+                                modifier = Modifier.width(86.dp)
+                            )
+                            RankMiniBox(
+                                label = "Рівень",
+                                value = statusData.level.toString(),
+                                modifier = Modifier.width(86.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (compact) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = SystemCardPadding),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    RankMiniBox(
+                        label = "Ранг",
+                        value = statusData.globalRank.name,
+                        modifier = Modifier.weight(1f)
+                    )
+                    RankMiniBox(
+                        label = "Рівень",
+                        value = statusData.level.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.padding(top = SystemCardPadding),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(SystemCardPadding),
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    SystemAvatarBadge(
-                        avatarUri = statusData.avatarUri,
-                        modifier = Modifier.size(if (compact) 104.dp else 132.dp),
-                        onClick = {
-                            photoPickerLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
-                        }
+                    Text(
+                        text = "${statusData.xpTotal} / ${statusData.xpMax} досвіду",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = colors.accentPrimary,
+                            fontWeight = FontWeight.Black
+                        )
                     )
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SystemSectionTitle(title = "Профіль")
-                        Text(
-                            text = statusData.playerName.toSystemSentenceCase(),
-                            modifier = Modifier.systemClickable(onClick = onEditName),
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                color = colors.textPrimary,
-                                fontWeight = FontWeight.Black
-                            ),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
+                    Text(
+                        text = "${(progress * 100).roundToInt()}%",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = colors.textSecondary,
+                            fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            text = "Мисливець рангу ${statusData.globalRank.name}",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = colors.textSecondary,
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        if (!compact) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                RankMiniBox(
-                                    label = "Ранг",
-                                    value = statusData.globalRank.name,
-                                    modifier = Modifier.width(86.dp)
-                                )
-                                RankMiniBox(
-                                    label = "Рівень",
-                                    value = statusData.level.toString(),
-                                    modifier = Modifier.width(86.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (compact) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = SystemCardPadding),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        RankMiniBox(
-                            label = "Ранг",
-                            value = statusData.globalRank.name,
-                            modifier = Modifier.weight(1f)
-                        )
-                        RankMiniBox(
-                            label = "Рівень",
-                            value = statusData.level.toString(),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                Column(
-                    modifier = Modifier.padding(top = SystemCardPadding),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "${statusData.xpTotal} / ${statusData.xpMax} досвіду",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = colors.accentPrimary,
-                                fontWeight = FontWeight.Black
-                            )
-                        )
-                        Text(
-                            text = "${(progress * 100).roundToInt()}%",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = colors.textSecondary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
-                    SystemProgressBar(
-                        progress = progress,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
                     )
                 }
+                SystemProgressBar(
+                    progress = progress,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                )
             }
         }
     }
 }
+
+private const val PROFILE_EXPANDED_HERO_MIN_WINDOW_WIDTH_DP = 460
 
 @Composable
 private fun RankMiniBox(
