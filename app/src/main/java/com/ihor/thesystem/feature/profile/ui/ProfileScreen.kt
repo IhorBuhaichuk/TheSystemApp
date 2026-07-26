@@ -30,7 +30,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -74,19 +78,15 @@ import kotlin.math.roundToInt
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
-    statusViewModel: StatusViewModel = hiltViewModel(),
-    workoutViewModel: WorkoutViewModel = hiltViewModel()
+    statusViewModel: StatusViewModel = hiltViewModel()
 ) {
     val statusState by statusViewModel.uiState.collectAsStateWithLifecycle()
     val statusDialogState by statusViewModel.dialogState.collectAsStateWithLifecycle()
-    val activeWorkout by workoutViewModel.activeWorkoutState.collectAsStateWithLifecycle()
-    val workoutDialogState by workoutViewModel.dialogState.collectAsStateWithLifecycle()
-    val settingsUiState by workoutViewModel.settingsUiState.collectAsStateWithLifecycle()
+    var workoutSettingsRequestId by rememberSaveable { mutableIntStateOf(0) }
     val colors = SystemTheme.colors
     val statusData = (statusState as? UiState.Content<StatusUiData>)?.data
 
     RefreshOnResume(statusViewModel::refreshForCurrentDay)
-    RefreshOnResume(workoutViewModel::refreshForCurrentDay)
 
     Box(
         modifier = Modifier
@@ -117,7 +117,7 @@ fun ProfileScreen(
                 onOpenWeight = statusViewModel::onOpenLogWeight,
                 onOpenHeight = statusViewModel::onOpenEditHeight,
                 onOpenAge = statusViewModel::onOpenEditAge,
-                onOpenWorkoutSettings = workoutViewModel::onOpenWorkoutSettings,
+                onOpenWorkoutSettings = { workoutSettingsRequestId += 1 },
                 onOpenCalendarSettings = { navController.navigate(Routes.CalendarSettings) },
                 onOpenStatistics = { navController.navigate(Routes.Statistics) }
             )
@@ -140,16 +140,37 @@ fun ProfileScreen(
             onDismiss = statusViewModel::onDismissDialog
         )
 
-        WorkoutDialogHost(
-            dialogState = workoutDialogState,
-            activeDayWorkout = activeWorkout,
-            settingsUiState = settingsUiState,
-            workoutViewModel = workoutViewModel,
-            onOpenWorkoutAnalysis = { sessionId ->
-                navController.navigate(Routes.WorkoutAnalysis(sessionId = sessionId))
-            }
-        )
+        if (workoutSettingsRequestId > 0) {
+            ProfileWorkoutSettingsHost(
+                requestId = workoutSettingsRequestId,
+                navController = navController
+            )
+        }
     }
+}
+
+@Composable
+private fun ProfileWorkoutSettingsHost(
+    requestId: Int,
+    navController: NavHostController
+) {
+    val workoutViewModel: WorkoutViewModel = hiltViewModel()
+    val dialogState by workoutViewModel.dialogState.collectAsStateWithLifecycle()
+    val settingsUiState by workoutViewModel.settingsUiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(requestId) {
+        workoutViewModel.onOpenWorkoutSettings()
+    }
+
+    WorkoutDialogHost(
+        dialogState = dialogState,
+        activeDayWorkout = null,
+        settingsUiState = settingsUiState,
+        workoutViewModel = workoutViewModel,
+        onOpenWorkoutAnalysis = { sessionId ->
+            navController.navigate(Routes.WorkoutAnalysis(sessionId = sessionId))
+        }
+    )
 }
 
 @Composable
