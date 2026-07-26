@@ -175,6 +175,11 @@ animation behavior; remove or replace only decorative work that is proven unnece
   labels remain visible, and the device size and 0.9 font scale were restored after
   verification. Bottom-navigation press, selection, and settled frames are stored in
   `review/motion-frames/`.
+- 2026-07-26: Interaction motion remains finite and draw-phase based. Progress rings,
+  progress bars, cycle-day emphasis, button presses, and bottom-navigation selection
+  do not animate layout. The exercise demonstration keeps its functional two-frame
+  loop, but now uses one crossfade layer instead of stacking Compose and Coil
+  crossfades; changing the exercise also resets the frame deterministically.
 
 ## Current checkpoint
 
@@ -182,6 +187,5 @@ animation behavior; remove or replace only decorative work that is proven unnece
 - Base product commit: `78ccd52`
 - Concept commit: `be7172b`
 - Baseline: `artifacts/design-implementation/minimal-hud-v2/baseline/`
-- Next action: inspect the remaining reachable dialogs and workout states against
-  the same density rules. Capture a real workout report after the user creates a
-  workout during testing.
+- Next action: complete the requirement-by-requirement audit. Capture a real workout
+  report after the user creates a workout during testing.

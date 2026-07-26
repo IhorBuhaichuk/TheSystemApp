@@ -37,7 +37,7 @@ fun ExerciseAnimationPlayer(
 ) {
     if (exerciseExternalId == null) return
 
-    var currentFrame by remember { mutableIntStateOf(0) }
+    var currentFrame by remember(exerciseExternalId) { mutableIntStateOf(0) }
     val context = LocalContext.current
     val colors = SystemTheme.colors
 
@@ -64,7 +64,7 @@ fun ExerciseAnimationPlayer(
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(context)
                     .data(targetUrl)
-                    .crossfade(true)
+                    .crossfade(false)
                     .build(),
                 contentDescription = "Кадр анімації вправи",
                 modifier = Modifier.fillMaxSize(),
