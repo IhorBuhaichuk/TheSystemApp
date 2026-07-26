@@ -206,6 +206,7 @@
     <string name="filter_category_hypertrophy">Набір м’язової маси</string>
     <string name="filter_category_flexibility">Гнучкість</string>
     <string name="filter_category_balance">Баланс</string>
+    <string name="filter_category_other">Інше</string>
 
     <!-- Filter Muscles -->
     <string name="filter_muscle_chest">Груди</string>
@@ -217,6 +218,7 @@
     <string name="filter_muscle_abs">Прес</string>
     <string name="filter_muscle_legs">Ноги</string>
     <string name="filter_muscle_core">М’язи корпуса</string>
+    <string name="filter_muscle_other">Інша група м’язів</string>
 
     <!-- Filter Equipment -->
     <string name="filter_equipment_body_only">Власна вага</string>
@@ -246,6 +248,7 @@
     <string name="filter_force_pull">Тяга</string>
     <string name="filter_force_push">Жим</string>
     <string name="filter_force_static">Утримання</string>
+    <string name="filter_value_not_specified">Не вказано</string>
 
     <!-- Empty States -->
     <string name="text_no_exercises_found">Вправ не знайдено</string>

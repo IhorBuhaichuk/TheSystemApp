@@ -169,6 +169,10 @@ animation behavior; remove or replace only decorative work that is proven unnece
   unchanged. Visible date formatters now use the Ukrainian locale independently of
   the device language. Focused mapper, sentence-case, and Compose-only guard tests
   pass.
+- 2026-07-26: Unknown exercise metadata now falls back to plain Ukrainian labels
+  such as “Інше” or “Не вказано” instead of exposing internal enum or dataset
+  values. User-created exercise names remain unchanged. A focused mapper test guards
+  these presentation-only fallbacks.
 - 2026-07-26: The debug review build was installed over the existing app without
   clearing data. All five tabs were captured at the normal device size and at a
   temporary 320 dp logical width. Long titles wrap without overlap, bottom-navigation

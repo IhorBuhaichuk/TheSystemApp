@@ -12,7 +12,7 @@ fun ExerciseCategory.toUiText(): UiText {
         ExerciseCategory.HYPERTROPHY -> UiText.StringResource(R.string.filter_category_hypertrophy)
         ExerciseCategory.FLEXIBILITY -> UiText.StringResource(R.string.filter_category_flexibility)
         ExerciseCategory.BALANCE -> UiText.StringResource(R.string.filter_category_balance)
-        ExerciseCategory.UNKNOWN -> UiText.DynamicString(this.name)
+        ExerciseCategory.UNKNOWN -> UiText.StringResource(R.string.filter_category_other)
     }
 }
 
@@ -29,7 +29,7 @@ fun String.toMuscleUiText(): UiText {
         "ABS" -> UiText.StringResource(R.string.filter_muscle_abs)
         "LEGS" -> UiText.StringResource(R.string.filter_muscle_legs)
         "CORE" -> UiText.StringResource(R.string.filter_muscle_core)
-        else -> UiText.DynamicString(this)
+        else -> UiText.StringResource(R.string.filter_muscle_other)
     }
 }
 
@@ -47,7 +47,7 @@ fun String.toEquipmentUiText(): UiText {
         "e-z curl bar" -> UiText.StringResource(R.string.filter_equipment_e_z_curl_bar)
         "foam roll" -> UiText.StringResource(R.string.filter_equipment_foam_roll)
         "other" -> UiText.StringResource(R.string.filter_equipment_other)
-        else -> UiText.DynamicString(this)
+        else -> UiText.StringResource(R.string.filter_equipment_other)
     }
 }
 
@@ -56,7 +56,7 @@ fun String.toLevelUiText(): UiText {
         "beginner" -> UiText.StringResource(R.string.filter_level_beginner)
         "intermediate" -> UiText.StringResource(R.string.filter_level_intermediate)
         "expert" -> UiText.StringResource(R.string.filter_level_expert)
-        else -> UiText.DynamicString(this)
+        else -> UiText.StringResource(R.string.filter_value_not_specified)
     }
 }
 
@@ -65,7 +65,7 @@ fun String?.toMechanicUiText(): UiText {
         "compound" -> UiText.StringResource(R.string.filter_mechanic_compound)
         "isolation" -> UiText.StringResource(R.string.filter_mechanic_isolation)
         "n/a", null -> UiText.StringResource(R.string.filter_mechanic_na)
-        else -> UiText.DynamicString(this)
+        else -> UiText.StringResource(R.string.filter_mechanic_na)
     }
 }
 
@@ -74,6 +74,6 @@ fun String.toForceUiText(): UiText {
         "pull" -> UiText.StringResource(R.string.filter_force_pull)
         "push" -> UiText.StringResource(R.string.filter_force_push)
         "static" -> UiText.StringResource(R.string.filter_force_static)
-        else -> UiText.DynamicString(this)
+        else -> UiText.StringResource(R.string.filter_value_not_specified)
     }
 }
