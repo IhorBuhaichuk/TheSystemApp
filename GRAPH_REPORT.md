@@ -1,194 +1,158 @@
-# GRAPH_REPORT.md
+# Architecture Entry Map
 
-Graphify-style architecture map for **THE SYSTEM: LEVEL UP**.
+THE SYSTEM: LEVEL UP. Перевірено 2026-09-18/19 за кодом ревізії
+`184c0044718e22b97d01cee20f0da707a355c8bc`. Це карта реалізації, не специфікація бажаного продукту.
 
-Generated from the current repository structure on 2026-07-26. Use this file as the first context checkpoint before refactoring or adding features, then read only the target files needed for the task.
+## Як читати
 
-## High-Level Modules
+1. Прочитай цю карту, потім потрібний рядок у [FEATURE_MAP](docs/architecture/FEATURE_MAP.md).
+2. Відкрий лише відповідний playbook, use case, repository/DAO, ViewModel/UI та тести.
+3. Зістав карту з поточною ревізією й локальним diff; при розбіжності перевір конкретну ділянку.
+4. Після зміни контрактів, потоків, навігації або persistence онови відповідну частину карти.
 
-```text
-settings.gradle.kts
-├── :domain
-│   ├── model/          Pure Kotlin domain models and policies
-│   ├── repository/     Repository contracts owned by domain
-│   ├── usecase/        Business actions, orchestration, calculations
-│   └── util/           Domain utilities, clocks, logging abstractions
-├── :app
-    ├── core/           Android app shell: DI, navigation, theme, UI primitives, workers
-    ├── data/           Room, repository implementations, remote AI adapters
-    ├── feature/        Compose screens and Hilt ViewModels by feature
-    ├── health/         Health Connect permission integration
-    └── presentation/   Shared presentation models/components
-└── :baselineprofile
-    ├── generators/     Startup and critical-user-journey Baseline Profile rules
-    └── benchmarks/     Cold-start and Statistics navigation macrobenchmarks
+Не обов'язкові для кожної дрібної задачі:
+- [PROJECT_AUDIT](PROJECT_AUDIT.md): докази, ризики, оцінки та актуальні зовнішні вимоги.
+- [DEVELOPMENT_ROADMAP](DEVELOPMENT_ROADMAP.md): порядок робіт і критерії приймання.
+- [PRODUCT_STRATEGY](PRODUCT_STRATEGY.md), [MVP_DEFINITION](MVP_DEFINITION.md): продуктовий намір; реалізацію звіряй із картою.
+
+## Продукт і модулі
+
+Задум: щоденне рішення -> виконання -> запис -> доказ прогресу -> наступне рішення.
+Реалізовано локальний fitness/RPG-додаток, без обов'язкового акаунта або AI.
+Користувацької бази ще немає; існуючі дані розробника все одно не можна знищувати.
+
+```mermaid
+flowchart LR
+  UI[":app / feature: Compose + ViewModel"] --> D[":domain: models, use cases, contracts"]
+  DATA[":app / data: implementations"] --> D
+  UI -. "Hilt bindings" .-> DATA
+  DATA --> ROOM["Room 51"]
+  DATA --> PREF["SharedPreferences"]
+  DATA --> EXT["Health Connect / optional Gemini"]
+  BP[":baselineprofile: test-only"] -. "targets" .-> UI
 ```
 
-## Clean Architecture Flow
+Стрілки до `:domain` означають compile-time залежність; repository interfaces живуть у domain.
+Runtime: Compose -> ViewModel -> use case -> repository interface -> injected implementation -> DAO/API.
+`:domain` не залежить від Android/Room/Compose. `:app` містить UI та data з різною відповідальністю.
+`:baselineprofile` містить генерацію профілів та macrobenchmarks, не production behavior.
 
-```text
-Compose Screen
-  -> Hilt ViewModel
-  -> domain/usecase
-  -> domain/repository interface
-  -> app/data/repository_impl
-  -> Room DAO / remote AI / Android service
-  -> Room Entity / DTO / mapper
-```
+Скорочення шляхів:
+- `A` = `app/src/main/java/com/ihor/thesystem/`
+- `D` = `domain/src/main/java/com/ihor/thesystem/domain/`
+- `T` = `app/src/test/kotlin/com/ihor/thesystem/`
+- `I` = `app/src/androidTest/java/com/ihor/thesystem/`
 
-Rules of ownership:
+## Запуск і DI
 
-- `:domain` must stay free of Android, Room, Compose, Hilt UI concerns, and resource access.
-- `:app` owns Android integration: Room database, Hilt modules, Compose UI, navigation, workers, Health Connect, AI clients, and repository implementations.
-- `:baselineprofile` is an Android test-only module targeting `:app`; it owns UIAutomator journeys, generated profile rules, and repeatable macrobenchmarks, but no production behavior.
-- Business decisions belong in `domain/usecase` or `domain/model`; persistence details belong in `app/data`.
-- Compose screens should talk to ViewModels and UI state, not directly to DAOs or concrete repository implementations.
+- `A/TheSystemApp.kt`: application scope, lazy image loader, відкладене планування DailyResetWorker.
+- `A/MainActivity.kt`: edge-to-edge, тема, NavHost.
+- `A/core/navigation/AppEntryViewModel.kt` -> `D/usecase/OnboardingUseCases.kt`: route за onboarding flag.
+- `A/core/navigation/AppNavGraph.kt`, `Routes.kt`: navigation, Scaffold/insets, tab swipes.
+- `A/core/di/DatabaseModule.kt`: Room + migrations + async seed + DatabaseReadiness.
+- `A/data/local/room/database/DatabasePopulator.kt`: singleton player/config, exercise assets, metadata version gate.
+- `A/core/di/RepositoryModule.kt`: domain contracts -> implementations, включно з preferences.
+- `A/core/di/AiModule.kt`: AI/analytics/live coach bindings і Gemini configuration.
+- `NetworkModule.kt`, `DispatcherModule.kt`, `AppScopeModule.kt`, `TextProviderModule.kt` у тій самій DI-директорії.
 
-## Hilt and App Infrastructure
+Готовність БД і завершення onboarding є різними станами.
+Seed не створює готовий тренувальний розклад. Metadata version = 1, expected core rows = 120.
 
-Key Hilt modules live in `app/src/main/java/com/ihor/thesystem/core/di`:
+## Навігація
 
-- `DatabaseModule.kt`: creates `AppDatabase`, applies `DatabaseMigrations.ALL_MIGRATIONS`, runs `DatabasePopulator`, exposes DAOs, binds `TransactionProvider`.
-- `RepositoryModule.kt`: binds domain repository interfaces to implementations in `data/repository_impl`, including local SharedPreferences-backed lightweight state such as onboarding and beta metrics.
-- `AiModule.kt`: binds `AiArchitectRepository`, `WorkoutAnalyticsRepository`, `LiveCoachRepository`, and provides Gemini models/config.
-- `NetworkModule.kt`: provides `OkHttpClient` and Coil `ImageLoader`.
-- `DispatcherModule.kt`, `AppScopeModule.kt`, `TextProviderModule.kt`: coroutine dispatchers, app scope, and text/context providers.
+| Route | Екран у `A/feature/` | Owner |
+| --- | --- | --- |
+| Onboarding, поза bottom tabs | `onboarding/ui/OnboardingScreen.kt` | OnboardingViewModel -> CompleteOnboardingUseCase |
+| Status | `status/ui/StatusScreen.kt` | StatusViewModel -> GetStatusScreenDataUseCase / DecideTodayWorkoutUseCase |
+| Calendar | `calendar/ui/CalendarScreen.kt` | CalendarViewModel -> date summary / calendar cycle / todos |
+| Cycle, підпис System | `cycle/ui/CycleScreen.kt` | WorkoutViewModel + StatusViewModel; schedule editor, active workout |
+| Statistics | `statistics/ui/StatisticsScreen.kt` | StatisticsViewModel -> GetStatisticsDataUseCase |
+| Profile | `profile/ui/ProfileScreen.kt` | StatusViewModel; WorkoutViewModel для settings/backup |
 
-Entry points:
+Secondary routes: Architect, CalendarSettings, AnnualProgressionPlan, AnnualProgressionDetails,
+WorkoutAnalysis(sessionId), ExercisePicker(source, cycleDay).
+Today Order CTA веде на Cycle; діалог тренування відкривається там.
+ExercisePicker перевикористовується для циклу й річного плану.
 
-- `TheSystemApp.kt`: application class.
-- `MainActivity.kt`: Android entry point.
-- `AppNavGraph.kt`: Compose navigation shell and bottom navigation visibility.
+## Runtime-потоки
 
-## Room Database Map
+| Сценарій | Файли у `D/usecase/` | Важлива межа |
+| --- | --- | --- |
+| Перший запуск | `OnboardingUseCases.kt` | player/equipment/config у Room; completion у prefs |
+| День | `SyncTodayStateUseCase.kt`, `FinalizeDayUseCase.kt`, `GenerateDailyQuestsUseCase.kt` | foreground + worker, clock, quests |
+| Today Order | `DecideTodayWorkoutUseCase.kt`, `CalculateReadinessUseCase.kt`, `CalculateRecoveryDebtUseCase.kt` | schedule + calendar override + readiness/HC + history |
+| Навантаження | `CalculateRecommendedSetUseCase.kt`, `AdjustWorkoutRecommendationUseCase.kt` | equipment, history, matrix, decision |
+| Finish | `FinalizeSessionUseCase.kt`, `CompleteQuestUseCase.kt` | log/progression/XP commit; потім report і AI validation |
+| Edit sets | `StatisticsUseCases.kt`, `LogWorkoutSetsUseCase.kt` | edit вимагає explicit sessionId + exerciseId; Room замінює тільки target sets і перераховує session tonnage |
+| Statistics | `GetStatisticsDataUseCase.kt`, `GetAnnualProgressionDetailsUseCase.kt` | bounded logs, weights, plans, quests |
+| AI | `SendArchitectAnalysisUseCase.kt`, `ApplyAiRecommendationsUseCase.kt`, `ValidateDirectivesUseCase.kt` | AI пропонує, domain допускає зміни |
+| Backup | `BackupUseCases.kt` | preview/confirm, Room transaction; prefs поза payload |
+| Beta | `GetBetaMetricsUseCase.kt`, `BetaMetricsAggregator.kt` | локальні snapshots + logs, не зовнішня аналітика |
 
-Main database:
+## Persistence
 
-- File: `app/src/main/java/com/ihor/thesystem/data/local/room/database/AppDatabase.kt`
-- Database name: `the_system_db`
-- Version: `APP_DATABASE_VERSION = 51`
-- `exportSchema = true`
-- Type converters: `Converters.kt`
-- Migrations: `DatabaseMigrations.kt`
-- Supported pre-release migration floor: schema 48; instrumented migration tests
-  package the exported schemas and validate every beta schema from 48 to latest.
-- Seed/population: `DatabasePopulator.kt`; core exercise metadata uses a row-level
-  version gate so unchanged metadata is not rewritten on every process start.
+`A/data/local/room/database/AppDatabase.kt`: `the_system_db`, schema **51**, exportSchema=true.
+Міграції: `DatabaseMigrations.kt`; підтримуваний pre-release floor **48**.
+Еталон: `app/schemas/com.ihor.thesystem.data.local.room.database.AppDatabase/51.json`.
 
-DAO surface exposed by `AppDatabase`:
+28 таблиць:
+- Профіль: `player`, `weight_log`, `equipment_profile`, `nutrition_entries`.
+- Система: `system_config`, `calendar_cycle_config`, `calendar_cycle_day`, `readiness_entries`, `todo`.
+- Каталог/розклад: `exercises`, `daily_task_template`, `workout_templates`, `workout_exercise_cross_ref`, `schedule`, `schedule_task_cross_ref`.
+- Виконання: `workout_sessions`, `exercise_sets`, `workout_session_logs`, `exercise_set_logs`, `workout_directives`, `exercise_milestones`.
+- Прогрес/квести: `progression_matrix`, `reference_matrix`, `protocol_template`, `quest`, `quest_task`, `quest_log`.
+- AI: `chat_message_table`.
 
-- Player/profile: `PlayerDao`, `WeightLogDao`, `EquipmentProfileDao`, `NutritionDao`
-- System/calendar: `SystemConfigDao`, `CalendarCycleDao`, `ReadinessDao`, `TodoDao`
-- Training: `WorkoutDao`, `ScheduleDao`, `WorkoutAnalyticsDao`, `ProtocolTemplateDao`
-- Progression/quests: `ProgressionMatrixDao`, `QuestDao`, `QuestLogDao`
-- AI/chat: `ChatDao`
+Фактичні FK з CASCADE тільки три: `exercise_sets -> workout_sessions`,
+`exercise_set_logs -> workout_session_logs`, `calendar_cycle_day -> calendar_cycle_config`.
+Інші зв'язки через ID/Room relations логічні, не гарантії SQLite.
+Поточний finish/statistics flow використовує `*_logs`; паралельні `workout_sessions/exercise_sets`
+не видаляти без перевірки всіх читачів, backup та schema.
 
-Room entity groups:
+DAO у `A/data/local/room/dao/`: Player, WeightLog, EquipmentProfile, Nutrition,
+SystemConfig, CalendarCycle, Readiness, Todo, Workout, Schedule, WorkoutAnalytics,
+ProtocolTemplate, ProgressionMatrix, Quest, QuestLog, Chat (суфікс `Dao.kt`).
+Contracts: `D/repository/`; implementations: `A/data/repository_impl/`.
 
-- Player and body state: `PlayerEntity`, `WeightLogEntity`, `EquipmentProfileEntity`, `NutritionEntryEntity`
-- Configuration and daily state: `SystemConfigEntity`, `CalendarCycleConfigEntity`, `CalendarCycleDayEntity`, `ReadinessEntryEntity`, `TodoEntity`
-- Exercises and scheduling: `ExerciseEntity`, `DailyTaskTemplateEntity`, `WorkoutTemplateEntity`, `WorkoutExerciseCrossRef`, `ScheduleEntity`, `ScheduleTaskCrossRef`
-- Workout execution: `WorkoutSessionEntity`, `ExerciseSetEntity`, `WorkoutDirectiveEntity`, `ExerciseMilestoneEntity`, `WorkoutSessionLogEntity`, `ExerciseSetLogEntity`
-- Progression and reference data: `ProgressionMatrixEntity`, `ReferenceMatrixEntity`, `ProtocolTemplateEntity`
-- Quests and AI history: `QuestEntity`, `QuestTaskEntity`, `QuestLogEntity`, `ChatMessageEntity`
+Поза Room: onboarding completion, beta events, backup timestamps у SharedPreferences;
+selected date та незавершені workout edits зараз у пам'яті.
+Android backup виключає DB, але не ці preferences: відомий restore gap, не бажана архітектура.
 
-Repository implementation layer:
+## Зовнішні сервіси й UI
 
-- Local data repositories live in `app/src/main/java/com/ihor/thesystem/data/repository_impl`.
-- Repository contracts live in `domain/src/main/java/com/ihor/thesystem/domain/repository`.
-- Mappers near repository implementations translate Room entities/DTOs into domain models.
-- Workout recommendation loading batches the latest logged sets for all displayed exercises through
-  `WorkoutAnalyticsDao.getLastSetsForExercises`, avoiding per-exercise Room queries.
-- Statistics workout proof/weekly summary loading is bounded to the relevant 56-day comparison window
-  through the indexed workout-session timestamp query, with a defensive 200-session cap.
-- Annual progression history starts at the earliest active plan and keeps only one pre-plan baseline
-  per exercise; Room also collapses same-session sets to the maximum exercise weight.
-- `BetaMetricsRepositoryImpl` stores local beta event snapshots in SharedPreferences, not Room; it does not require a database migration.
+- Health Connect: лише `READ_SLEEP`; інші health permissions для поточного loop не потрібні.
+- Gemini release: key порожній, client AI disabled у `app/build.gradle.kts`; є локальний report.
+- Немає Firebase/Amplitude/Segment або обов'язкового account backend.
+- Manual readiness/nutrition write UI не підключений до наявних domain/data моделей.
 
-## Compose Screen and Navigation Map
+UI: `A/core/theme/SystemTokens.kt`, `Theme.kt`, `Color.kt`, `Dimensions.kt`, `Type.kt`;
+`A/core/ui/components/SystemPanels.kt`, `SystemGlassComponents.kt`, `SystemBottomNavBar.kt`,
+`SystemDialogComponents.kt`; `A/presentation/common/components/RpgStatusBackdrop.kt`.
+Ефекти тільки через shared tokens/primitives, native Compose. Правила: `UI_UX_GUIDELINES.md`.
 
-Top-level bottom tabs in `AppNavGraph.kt`:
+## Перевірки
 
-- `Routes.Status` -> `feature/status/ui/StatusScreen.kt`
-- `Routes.Onboarding` -> `feature/onboarding/ui/OnboardingScreen.kt` (first-launch flow)
-- `Routes.Calendar` -> `feature/calendar/ui/CalendarScreen.kt`
-- `Routes.Cycle` -> `feature/cycle/ui/CycleScreen.kt` (System tab)
-- `Routes.Statistics` -> `feature/statistics/ui/StatisticsScreen.kt`
-- `Routes.Profile` -> `feature/profile/ui/ProfileScreen.kt`
+| Зміна | Мінімальна перевірка |
+| --- | --- |
+| Docs | `scripts/check-doc-only.cmd`, diff |
+| Kotlin/UI | `scripts/check-quick.cmd`, focused tests; UI також runtime |
+| Domain/state | `scripts/check-tests.cmd` або targeted tests + повний gate перед release |
+| Room | `scripts/check-room.cmd` + schema/migration та реальні Room instrumented tests |
+| Native UI policy | `scripts/check-web-ui-guard.cmd` |
+| Release | `:app:lintDebug`, `:app:bundleRelease`; не заміняють signed-device verification |
 
-Secondary routes:
+CI: `.github/workflows/android-ci.yml`, один Linux job, без connected UI/migration tests.
+JDK17, Gradle9.3.1, AGP9.1.1, Kotlin2.1.0; min26/target36/compile36.
+Domain unit tests зараз у `T/domain/`, не окремому `:domain:test` suite.
 
-- `Routes.CalendarSettings` -> `CalendarSettingsScreen`
-- `Routes.Architect` -> `ArchitectScreen`
-- `Routes.AnnualProgressionPlan` -> `AnnualProgressionPlanScreen`
-- `Routes.AnnualProgressionDetails` -> `AnnualProgressionDetailsScreen`
-- `Routes.WorkoutAnalysis` -> `WorkoutAnalysisScreen`
-- `Routes.ExercisePicker` -> `ExercisePickerScreen`
+## Відомі ризики
 
-Main ViewModels:
+Не вважай проблеми виправленими через наявність документації:
+- AUD-01 закрито P01: evidence `docs/implementation/evidence/P01.md`; AUD-02: resume очищає workout draft.
+- AUD-03/04: finish без стійкої idempotency; backup merge/restore не узгоджений.
+- AUD-05/06: onboarding не дає schedule; neutral readiness прихований за впевненим текстом.
+- AUD-07/08/09: REST/quest розходження, lint error, відсутній HC rationale entry.
 
-- Status/System workout flow: `StatusViewModel`, `WorkoutViewModel`
-- First launch: `AppEntryViewModel` selects `Routes.Onboarding` or `Routes.Status`; `OnboardingViewModel` completes initial profile/config setup.
-- Calendar: `CalendarViewModel`, `CalendarSettingsViewModel`
-- Statistics: `StatisticsViewModel`, `AnnualProgressionDetailsViewModel`
-- AI Architect: `ArchitectViewModel`, `WorkoutAnalysisViewModel`, `AnnualProgressionPlanViewModel`
-- Exercise search: `ExerciseSearchViewModel`
-
-Shared UI foundation:
-
-- Theme/tokens: `core/theme/SystemTokens.kt`, `Theme.kt`, `Color.kt`, `Dimensions.kt`, `Type.kt`
-- Material primitives: `core/ui/components/SystemPanels.kt`, `SystemGlassComponents.kt`, `SystemBottomNavBar.kt`, `SystemDialogComponents.kt`
-- Common visual layer: `presentation/common/components/RpgStatusBackdrop.kt`
-
-## Feature Dependency Notes
-
-- Status tab is the daily command center. It combines player status, quests, todos, readiness, workout dialog flow, backup/config dialogs, and today-order logic.
-- Onboarding is isolated in `feature/onboarding`; domain owns first-launch state and completion rules through `OnboardingRepository`, `ObserveAppStartDestinationUseCase`, and `CompleteOnboardingUseCase`. App/data persists the completion flag through `OnboardingRepositoryImpl`.
-- Calendar tab reads date summaries, todo stats, training/rest markers, and cycle state.
-- System tab (`CycleScreen`) presents cycle overview and edits training schedules through `WorkoutViewModel`.
-- Statistics tab reads progression matrix, body-weight history, annual progression, quest and workout proof data. Its critical flow no longer loads per-exercise weight-history joins that are not rendered by the current dashboard.
-- Supplemental beta metrics are deferred until the bottom `LazyColumn` item is composed. Their schedule flow keys only on distinct cycle day, and failures degrade to an empty beta block instead of failing the main Statistics state.
-- Local beta metrics are first-party only: no Firebase/Amplitude/Segment. `AppEntryViewModel` records unique opened days through `RecordBetaAppOpenUseCase`; Status/Statistics refreshes also mark the current day idempotently. `RecordTodayOrderDecisionUseCase` records one Today Order decision type per epoch day.
-- Architect screens use AI repositories through domain use cases and validation logic. AI Architect v2 returns structured weekly insight, 1-3 suggestions, recovery/readiness risk, and optional workout targets. AI output must stay constrained by `ValidateDirectivesUseCase` before mutating plans.
-- Exercise picker is shared by cycle editing and annual progression planning through route source parameters.
-
-## Change Hotspots
-
-Before changing business behavior:
-
-- Read the relevant domain use case first.
-- Check repository contract in `domain/repository`.
-- Check implementation in `app/data/repository_impl`.
-- Check Room schema impact if entities/DAO queries change.
-- Check ViewModel UI state mapping before editing Compose.
-
-Before changing Room:
-
-- Update entity/DAO/database version/migration together.
-- Keep schema export expectations intact.
-- Run Room/schema-related tests where practical.
-
-Before changing Compose UI:
-
-- Read `UI_UX_GUIDELINES.md`.
-- Prefer existing `SystemTheme` tokens and `SystemPanel` / `techSurface` primitives.
-- Do not bypass ViewModel state or introduce web UI patterns.
-
-## Fast Context Rule
-
-For refactoring or feature work, read this file first, then perform targeted file reads. Do not start with a full repository scan unless this report is stale, missing the area in question, or the task explicitly requires a fresh architecture audit.
-
-## Workflow Files
-
-- `AGENTS.md`: agent roles, context rules, token economy, verification defaults.
-- `.codex/instructions.md`: compact boot instructions for Codex sessions.
-- `UI_UX_GUIDELINES.md`: aesthetic reference for native Compose UI only.
-- `docs/playbooks/UI_POLISH.md`: visual polish workflow.
-- `docs/playbooks/ROOM_CHANGE.md`: Room/entity/DAO/migration workflow.
-- `docs/playbooks/NEW_FEATURE.md`: feature planning and implementation workflow.
-- `docs/playbooks/BUGFIX.md`: bugfix/regression workflow.
-- `scripts/check-quick.cmd` / `.ps1`: compile Kotlin quickly.
-- `scripts/check-tests.cmd` / `.ps1`: run unit tests.
-- `scripts/check-room.cmd` / `.ps1`: run focused Room guards.
-- `scripts/check-doc-only.cmd` / `.ps1`: verify documentation-only changes did not touch Kotlin.
-- `scripts/check-web-ui-guard.cmd` / `.ps1`: verify the Compose-only UI rule.
+Докази й наступні файли: [audit](PROJECT_AUDIT.md), [roadmap](DEVELOPMENT_ROADMAP.md).
+Playbooks: `docs/playbooks/BUGFIX.md`, `NEW_FEATURE.md`, `ROOM_CHANGE.md`, `UI_POLISH.md`.
+Пакет адресних задач за аудитом: [IMPLEMENTATION_PROMPTS](IMPLEMENTATION_PROMPTS.md); читати лише обраний prompt, не весь пакет.

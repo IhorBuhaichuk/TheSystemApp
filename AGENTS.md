@@ -8,6 +8,8 @@ Project rules for AI agents working on **THE SYSTEM: LEVEL UP**.
 
 Use targeted follow-up reads after `GRAPH_REPORT.md`: the relevant ViewModel, domain use case, repository contract/implementation, Room entity/DAO, or Compose file. Refresh the graph only when architecture has changed or when the report is clearly stale.
 
+For task routing, use the relevant row in `docs/architecture/FEATURE_MAP.md`; open only that feature's entry points and tests. Check the map's audited revision against current code and local changes before relying on it. Code is the source of truth. Update affected map sections when contracts, navigation, persistence ownership, or cross-feature flows change. Keep `GRAPH_REPORT.md` compact (roughly 200 lines or less); keep detailed evidence and planning in `PROJECT_AUDIT.md` and `DEVELOPMENT_ROADMAP.md`, which are not mandatory context for small tasks. Do not mark documented defects resolved without implementation and verification evidence.
+
 ## Agent Roles
 
 ### Architect

@@ -110,8 +110,16 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         dao.insertSetLogs(logs.map { it.toEntity() })
     }
 
-    override suspend fun deleteSetsBySession(sessionId: Long) {
-        dao.deleteSetsBySession(sessionId)
+    override suspend fun replaceExerciseSets(
+        sessionId: Long,
+        exerciseId: Int,
+        sets: List<ExerciseSet>
+    ) {
+        dao.replaceExerciseSets(
+            sessionId = sessionId,
+            exerciseId = exerciseId,
+            sets = sets.map { it.toEntity() }
+        )
     }
 
     override suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSet> {
@@ -129,10 +137,6 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         return dao.getLastSetsForExercises(exerciseIds.distinct())
             .map { it.toDomain() }
             .groupBy { it.exerciseId }
-    }
-
-    override suspend fun updateSessionLog(session: WorkoutSession) {
-        dao.insertSessionLog(session.toEntity())
     }
 
     override suspend fun saveFullSessionLog(

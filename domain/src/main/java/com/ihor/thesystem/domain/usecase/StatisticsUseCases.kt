@@ -48,6 +48,7 @@ class SaveExerciseSetsUseCase @Inject constructor(
     private val clock: AppClock
 ) {
     suspend operator fun invoke(
+        sessionId: Long?,
         exerciseId: Int,
         sets: List<ActiveSetInput>,
         date: LocalDate,
@@ -61,12 +62,20 @@ class SaveExerciseSetsUseCase @Inject constructor(
         val storedInputs = sets.mapNotNull { it.toStoredActiveSetInputOrNull(trackingMode) }
 
         // 1. Збереження логу підходів
-        matrixRepo.saveExerciseSetsWithDate(exerciseId, storedInputs, timestamp, userFeedback)
+        matrixRepo.saveExerciseSetsWithDate(
+            sessionId = sessionId,
+            exerciseId = exerciseId,
+            sets = storedInputs,
+            timestamp = timestamp,
+            userFeedback = userFeedback
+        )
 
         if (!trackingMode.usesWeightInput) return
 
         // 2. Алгоритм автоматичного підвищення рангу
-        val maxWeight = parsedSets.maxOf { it.weight }
+        val completedSets = parsedSets.filter { it.isCompleted }
+        if (completedSets.isEmpty()) return
+        val maxWeight = completedSets.maxOf { it.weight }
 
         val entry = matrixRepo.getEntrySync(exerciseId) ?: return
 

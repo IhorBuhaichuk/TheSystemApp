@@ -106,7 +106,7 @@ class StatisticsViewModel @Inject constructor(
     }
 
     fun onOpenLogSets(entry: MatrixEntryUiModel) {
-        val initialSets = listOf(ActiveSetInput())
+        val initialSets = listOf(ActiveSetInput(isCompleted = true))
         _currentSetInputs.value = initialSets
         _dialogState.value = StatisticsDialogState.LogWorkoutSets(entry, initialSets)
     }
@@ -119,7 +119,7 @@ class StatisticsViewModel @Inject constructor(
     }
 
     fun addSet() {
-        _currentSetInputs.update { it + ActiveSetInput() }
+        _currentSetInputs.update { it + ActiveSetInput(isCompleted = true) }
         updateLogDialogState()
     }
 
@@ -139,6 +139,7 @@ class StatisticsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 logWorkoutSetsUseCase(
+                    sessionId = null,
                     exerciseId = exerciseId,
                     sets = sets,
                     timestamp = clock.now(),

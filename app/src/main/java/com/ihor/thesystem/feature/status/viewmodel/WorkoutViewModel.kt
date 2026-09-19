@@ -378,6 +378,7 @@ class WorkoutViewModel @Inject constructor(
             try {
                 useCases.selectedDate.value?.let { date ->
                     useCases.saveExerciseSets(
+                        sessionId = null,
                         exerciseId = exerciseId,
                         sets = sets,
                         date = date,
@@ -900,7 +901,7 @@ class WorkoutViewModel @Inject constructor(
             val initialSets = if (lastSets.isNotEmpty()) {
                 lastSets.map { it.toActiveSetInput(trackingMode) }
             } else {
-                listOf(ActiveSetInput())
+                listOf(ActiveSetInput(isCompleted = true))
             }
             _currentLogSets.value = initialSets
             _dialogState.value = StatusDialogState.LogWorkoutSets(
@@ -921,7 +922,7 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun addLogSet() {
-        _currentLogSets.update { it + ActiveSetInput() }
+        _currentLogSets.update { it + ActiveSetInput(isCompleted = true) }
         updateLogDialogState()
     }
 

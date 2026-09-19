@@ -107,10 +107,16 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>) {
-        saveExerciseSetsWithDate(exerciseId, sets, clock.now())
+        saveExerciseSetsWithDate(
+            sessionId = null,
+            exerciseId = exerciseId,
+            sets = sets,
+            timestamp = clock.now()
+        )
     }
 
     override suspend fun saveExerciseSetsWithDate(
+        sessionId: Long?,
         exerciseId: Int,
         sets: List<ActiveSetInput>,
         timestamp: Long,
@@ -119,34 +125,17 @@ class ProgressionMatrixRepositoryImpl @Inject constructor(
         val parsedSets = sets.mapNotNull { it.toValidLoggedSet() }
         if (parsedSets.isEmpty()) return
 
-        val zoneId = clock.zoneId()
-        val date = java.time.Instant.ofEpochMilli(timestamp).atZone(zoneId).toLocalDate()
-        val startOfDay = date.atStartOfDay(zoneId).toInstant().toEpochMilli()
-        val endOfDay = date.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli() - 1
-
-        val weightedSets = parsedSets.filter { it.weight > TECHNICAL_BODYWEIGHT_LOAD }
+        val weightedSets = parsedSets.filter {
+            it.isCompleted && it.weight > TECHNICAL_BODYWEIGHT_LOAD
+        }
         val totalTonnage = weightedSets.sumOf { it.weight * it.reps }
 
         transactionProvider.runInTransaction {
-            val existingLogs = analyticsDao.getLogsForExerciseOnDate(exerciseId, startOfDay, endOfDay)
-
-            if (existingLogs.isNotEmpty()) {
-                val sessionId = existingLogs.first().sessionId
-
-                analyticsDao.insertSessionLog(
-                    WorkoutSessionLogEntity(
-                        sessionId = sessionId,
-                        questId = 0,
-                        timestamp = timestamp,
-                        totalTonnage = totalTonnage,
-                        cycleDay = 0,
-                        durationMinutes = 0
-                    )
-                )
-
-                analyticsDao.deleteSetsBySession(sessionId)
-                analyticsDao.insertSetLogs(
-                    parsedSets.map { input ->
+            if (sessionId != null) {
+                analyticsDao.replaceExerciseSets(
+                    sessionId = sessionId,
+                    exerciseId = exerciseId,
+                    sets = parsedSets.map { input ->
                         input.toEntity(
                             sessionId = sessionId,
                             exerciseId = exerciseId,
@@ -297,7 +286,8 @@ private fun ProgressionMatrixEntity.toDomain(
 
 private data class LoggedSetInput(
     val weight: Double,
-    val reps: Int
+    val reps: Int,
+    val isCompleted: Boolean
 )
 
 private const val TECHNICAL_BODYWEIGHT_LOAD = 1.0
@@ -312,7 +302,8 @@ private fun ActiveSetInput.toValidLoggedSet(): LoggedSetInput? {
 
     return LoggedSetInput(
         weight = parsedWeight,
-        reps = parsedReps
+        reps = parsedReps,
+        isCompleted = isCompleted
     )
 }
 
@@ -325,7 +316,7 @@ private fun LoggedSetInput.toEntity(
     exerciseId = exerciseId,
     weight = weight,
     reps = reps,
-    isCompleted = true,
+    isCompleted = isCompleted,
     userFeedback = userFeedback
 )
 

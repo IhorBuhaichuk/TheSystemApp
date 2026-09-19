@@ -1,6 +1,5 @@
 package com.ihor.thesystem.domain.usecase
 
-import com.ihor.thesystem.domain.util.AppClock
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ExerciseSet
 import com.ihor.thesystem.domain.model.Player
@@ -21,7 +20,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
-import java.time.ZoneId
 
 class LogWorkoutSetsUseCaseTest {
 
@@ -29,19 +27,11 @@ class LogWorkoutSetsUseCaseTest {
     private val matrixRepository: ProgressionMatrixRepository = mockk(relaxed = true)
     private val analyticsRepository: WorkoutAnalyticsRepository = mockk(relaxed = true)
     private val transactionProvider = RecordingTransactionProvider()
-    private val clock = FixedClock(
-        nowMillis = LocalDate.of(2026, 5, 2)
-            .atStartOfDay(TEST_ZONE)
-            .toInstant()
-            .toEpochMilli(),
-        zoneId = TEST_ZONE
-    )
     private val useCase = LogWorkoutSetsUseCase(
         playerRepo = playerRepository,
         matrixRepo = matrixRepository,
         analyticsRepo = analyticsRepository,
-        transactionProvider = transactionProvider,
-        clock = clock
+        transactionProvider = transactionProvider
     )
 
     @Test
@@ -52,7 +42,6 @@ class LogWorkoutSetsUseCaseTest {
             .toEpochMilli()
         val sessionSlot = slot<WorkoutSession>()
         every { playerRepository.getPlayer() } returns flowOf(player(currentCycleDay = 3))
-        coEvery { analyticsRepository.getLogsForExerciseOnDate(7, any(), any()) } returns emptyList()
         coEvery { analyticsRepository.saveFullSessionLog(capture(sessionSlot), any()) } coAnswers {
             assertTrue(transactionProvider.inTransaction)
             100L
@@ -62,43 +51,32 @@ class LogWorkoutSetsUseCaseTest {
         }
 
         useCase(
+            sessionId = null,
             exerciseId = 7,
-            sets = listOf(ActiveSetInput(weight = "80", reps = "5")),
+            sets = listOf(ActiveSetInput(weight = "80", reps = "5", isCompleted = true)),
             timestamp = selectedTimestamp,
             userFeedback = "solid"
         )
 
         assertEquals(selectedTimestamp, sessionSlot.captured.timestamp)
         assertEquals(3, sessionSlot.captured.cycleDay)
+        assertEquals(400.0, sessionSlot.captured.totalTonnage, 0.0)
         assertEquals(1, transactionProvider.calls)
+        coVerify(exactly = 0) { analyticsRepository.getLogsForExerciseOnDate(any(), any(), any()) }
         coVerify { matrixRepository.updateCurrentWeight(7, 80f) }
     }
 
     @Test
-    fun `existing manual log keeps selected timestamp when replacing same-day sets`() = runTest {
+    fun `edit replaces only the requested exercise in the explicit session`() = runTest {
         val selectedTimestamp = LocalDate.of(2026, 4, 20)
             .atStartOfDay(TEST_ZONE)
             .toInstant()
             .toEpochMilli()
-        val sessionSlot = slot<WorkoutSession>()
+        val setsSlot = slot<List<ExerciseSet>>()
         every { playerRepository.getPlayer() } returns flowOf(player(currentCycleDay = 4))
-        coEvery { analyticsRepository.getLogsForExerciseOnDate(7, any(), any()) } returns listOf(
-            ExerciseSet(
-                setId = 1L,
-                sessionId = 77L,
-                exerciseId = 7,
-                weight = 75.0,
-                reps = 5,
-                isCompleted = true
-            )
-        )
-        coEvery { analyticsRepository.updateSessionLog(capture(sessionSlot)) } coAnswers {
-            assertTrue(transactionProvider.inTransaction)
-        }
-        coEvery { analyticsRepository.deleteSetsBySession(77L) } coAnswers {
-            assertTrue(transactionProvider.inTransaction)
-        }
-        coEvery { analyticsRepository.saveSetLogs(any()) } coAnswers {
+        coEvery {
+            analyticsRepository.replaceExerciseSets(77L, 7, capture(setsSlot))
+        } coAnswers {
             assertTrue(transactionProvider.inTransaction)
         }
         coEvery { matrixRepository.updateCurrentWeight(7, 82.5f) } coAnswers {
@@ -106,18 +84,42 @@ class LogWorkoutSetsUseCaseTest {
         }
 
         useCase(
+            sessionId = 77L,
             exerciseId = 7,
-            sets = listOf(ActiveSetInput(weight = "82.5", reps = "3")),
+            sets = listOf(
+                ActiveSetInput(weight = "82.5", reps = "3", isCompleted = true),
+                ActiveSetInput(weight = "75", reps = "5", isCompleted = false)
+            ),
             timestamp = selectedTimestamp,
             userFeedback = null
         )
 
-        assertEquals(77L, sessionSlot.captured.sessionId)
-        assertEquals(selectedTimestamp, sessionSlot.captured.timestamp)
-        assertEquals(4, sessionSlot.captured.cycleDay)
+        assertEquals(listOf(77L, 77L), setsSlot.captured.map { it.sessionId })
+        assertEquals(listOf(7, 7), setsSlot.captured.map { it.exerciseId })
+        assertEquals(listOf(true, false), setsSlot.captured.map { it.isCompleted })
         assertEquals(1, transactionProvider.calls)
-        coVerify { analyticsRepository.deleteSetsBySession(77L) }
+        coVerify(exactly = 1) { analyticsRepository.replaceExerciseSets(77L, 7, any()) }
+        coVerify(exactly = 0) { analyticsRepository.getLogsForExerciseOnDate(any(), any(), any()) }
+        coVerify(exactly = 0) { analyticsRepository.saveFullSessionLog(any(), any()) }
         coVerify { matrixRepository.updateCurrentWeight(7, 82.5f) }
+    }
+
+    @Test
+    fun `incomplete edited sets are persisted but do not advance matrix weight`() = runTest {
+        every { playerRepository.getPlayer() } returns flowOf(player(currentCycleDay = 4))
+        coEvery { analyticsRepository.replaceExerciseSets(91L, 7, any()) } coAnswers {
+            assertTrue(transactionProvider.inTransaction)
+        }
+
+        useCase(
+            sessionId = 91L,
+            exerciseId = 7,
+            sets = listOf(ActiveSetInput(weight = "100", reps = "2", isCompleted = false)),
+            timestamp = 123L
+        )
+
+        coVerify(exactly = 1) { analyticsRepository.replaceExerciseSets(91L, 7, any()) }
+        coVerify(exactly = 0) { matrixRepository.updateCurrentWeight(any(), any()) }
     }
 
     private fun player(currentCycleDay: Int): Player =
@@ -131,14 +133,6 @@ class LogWorkoutSetsUseCaseTest {
             currentWeek = 1,
             currentCycleDay = currentCycleDay
         )
-
-    private class FixedClock(
-        private val nowMillis: Long,
-        private val zoneId: ZoneId
-    ) : AppClock {
-        override fun now(): Long = nowMillis
-        override fun zoneId(): ZoneId = zoneId
-    }
 
     private class RecordingTransactionProvider : TransactionProvider {
         var calls: Int = 0
@@ -159,6 +153,6 @@ class LogWorkoutSetsUseCaseTest {
     }
 
     private companion object {
-        val TEST_ZONE: ZoneId = ZoneId.of("Europe/Kyiv")
+        val TEST_ZONE = java.time.ZoneId.of("Europe/Kyiv")
     }
 }

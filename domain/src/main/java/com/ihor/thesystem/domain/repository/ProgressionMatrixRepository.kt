@@ -20,7 +20,13 @@ interface ProgressionMatrixRepository {
     )
     
     suspend fun saveExerciseSets(exerciseId: Int, sets: List<ActiveSetInput>)
-    suspend fun saveExerciseSetsWithDate(exerciseId: Int, sets: List<ActiveSetInput>, timestamp: Long, userFeedback: String? = null)
+    suspend fun saveExerciseSetsWithDate(
+        sessionId: Long?,
+        exerciseId: Int,
+        sets: List<ActiveSetInput>,
+        timestamp: Long,
+        userFeedback: String? = null
+    )
 
     suspend fun getReferenceForExercise(id: Int): ReferenceMatrix?
     suspend fun getReferenceForExercise(name: String): ReferenceMatrix?

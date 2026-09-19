@@ -21,6 +21,15 @@ abstract class WorkoutAnalyticsDao {
     @Update
     abstract suspend fun updateSetLog(log: ExerciseSetLogEntity)
 
+    @Update
+    abstract suspend fun updateSessionLog(session: WorkoutSessionLogEntity): Int
+
+    @Query("SELECT * FROM workout_session_logs WHERE sessionId = :sessionId LIMIT 1")
+    abstract suspend fun getSessionLogEntityById(sessionId: Long): WorkoutSessionLogEntity?
+
+    @Query("SELECT * FROM exercise_set_logs WHERE sessionId = :sessionId ORDER BY setId ASC")
+    abstract suspend fun getSetLogsBySession(sessionId: Long): List<ExerciseSetLogEntity>
+
     /**
      * Знаходить всі логи вправи за вказаний діапазон часу.
      */
@@ -44,6 +53,39 @@ abstract class WorkoutAnalyticsDao {
         val setsWithId = sets.map { it.copy(sessionId = sessionId) }
         insertSetLogs(setsWithId)
         return sessionId
+    }
+
+    @Transaction
+    open suspend fun replaceExerciseSets(
+        sessionId: Long,
+        exerciseId: Int,
+        sets: List<ExerciseSetLogEntity>
+    ) {
+        require(sessionId > 0L) { "A persisted sessionId is required for an edit" }
+        require(exerciseId > 0) { "A valid exerciseId is required for an edit" }
+        require(sets.isNotEmpty()) { "An exercise edit must contain at least one set" }
+
+        val session = requireNotNull(getSessionLogEntityById(sessionId)) {
+            "Workout session $sessionId does not exist"
+        }
+
+        deleteSetsBySessionAndExercise(sessionId, exerciseId)
+        insertSetLogs(
+            sets.map { set ->
+                set.copy(
+                    setId = 0L,
+                    sessionId = sessionId,
+                    exerciseId = exerciseId
+                )
+            }
+        )
+
+        val recalculatedTonnage = getSetLogsBySession(sessionId)
+            .filter { set -> set.isCompleted && set.weight > TECHNICAL_LOAD_WEIGHT }
+            .sumOf { set -> set.weight * set.reps }
+        check(updateSessionLog(session.copy(totalTonnage = recalculatedTonnage)) == 1) {
+            "Workout session $sessionId disappeared during edit"
+        }
     }
 
     @Transaction
@@ -150,8 +192,8 @@ abstract class WorkoutAnalyticsDao {
     @Query("DELETE FROM workout_directives")
     abstract suspend fun clearDirectives()
 
-    @Query("DELETE FROM exercise_set_logs WHERE sessionId = :sessionId")
-    abstract suspend fun deleteSetsBySession(sessionId: Long)
+    @Query("DELETE FROM exercise_set_logs WHERE sessionId = :sessionId AND exerciseId = :exerciseId")
+    abstract suspend fun deleteSetsBySessionAndExercise(sessionId: Long, exerciseId: Int)
 
     @Query("""
         SELECT e.* FROM exercise_set_logs e
@@ -194,6 +236,8 @@ abstract class WorkoutAnalyticsDao {
     """)
     abstract suspend fun getRecentLogsForExercise(exerciseId: Int): List<ExerciseSetLogEntity>
 }
+
+private const val TECHNICAL_LOAD_WEIGHT = 1.0
 
 data class ExerciseWeightHistoryWithId(
     val weight: Double,
