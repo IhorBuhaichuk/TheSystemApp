@@ -1,287 +1,138 @@
-# PRODUCT_STRATEGY.md
+# THE SYSTEM: продуктова стратегія
 
-Product strategy for **THE SYSTEM: LEVEL UP**.
+Оновлено: 2026-10-12, R01. **Погоджені напрям і конкретний scope SC-R01-v1 A-D.**
+Стан hide/merge/defer рішень: [FEATURE_SCOPE](docs/remaster/FEATURE_SCOPE.md).
+Фактичну реалізацію звіряти з [GRAPH_REPORT](GRAPH_REPORT.md), а порядок роботи з [QUEUE](docs/remaster/QUEUE.md).
+Цей документ не є підтвердженням пройденої beta або готового релізу.
 
-This document defines the product direction. It is not an implementation spec and does not authorize web UI work. All app UI remains native Kotlin + Jetpack Compose.
+## Обіцянка
 
-## Product Thesis
+> Я знаю, що зробити сьогодні, можу легко це виконати й бачу свій розвиток.
 
-THE SYSTEM: LEVEL UP is not primarily a workout tracker.
+THE SYSTEM: LEVEL UP є персональною системою для зрозумілих щоденних дій.
+У першому запуску тренування мають найглибше предметне ядро: план, виконання, журнал,
+пояснений результат і наступна дія. Прості справи/звички підтримують ширшу концепцію.
+Покращення інших сфер життя починаються з цього компактного списку, а не з набору нових модулів.
 
-It is a **daily decision engine** for personal physical progression:
+Натхнення персональною системою з Solo Leveling залишається в принципі розвитку.
+Знання аніме не потрібне. Гейміфікація другорядна; головні слова, дії й результати зрозумілі
+людині, яка не цікавиться RPG. Використовуємо оригінальні назви й assets.
 
-> What should I do today, why exactly this, and how does it move me one level higher?
+## Аудиторія і перша потреба
 
-The app combines training plans, readiness, recovery debt, quests, calendar rhythm, progression proof, and optional AI analysis into one tactical daily command center.
+Основний користувач MVP: доросла людина початкового/середнього тренувального досвіду,
+якій потрібні посильний план, просте логування і ясність після пропуску або зміни обставин.
+Це робоча продуктова гіпотеза, а не виміряна сегментація ринку.
 
-## Positioning
+Другий сценарій: особисті справи та легкі звички поруч із тренуваннями. Можна користуватися
+ними без RPG-знань, проте MVP не обіцяє окремі системи навчання, фінансів або харчування.
+Новачок не має самостійно складати програму з усього каталогу до першої користі.
 
-**One-line positioning:**
+Спеціалізована професійна періодизація, медична діагностика, social-first сценарій і
+повний task manager не є ціллю першого релізу. Обов'язковий логін або зовнішній AI не потрібні.
 
-THE SYSTEM is an anime/RPG-inspired training operating system that turns workouts, recovery, and habits into clear daily missions.
+## Конкурентна можливість і новизна
 
-**Category:**
+Гіпотеза переваги: короткий шлях від поясненого рішення на сьогодні до надійного запису
+та реального доказу прогресу, з корисним offline досвідом і необов'язковим емоційним оформленням.
 
-- Primary: fitness decision engine.
-- Secondary: workout logger, gamified habit system, training planner, AI-assisted coach.
+Розглядати альтернативи за роботою користувача: звичайний workout logger добре зберігає
+виконане; planner допомагає планувати; habit list підтримує регулярність. THE SYSTEM має
+довести, що їхній узгоджений шлях знижує плутанину та зусилля, а не просто додає показники.
 
-**Market contrast:**
+Окремі компоненти не заявляються як винахід. Поєднання також не доводить унікальності
+або market fit. У R01 використовуємо датований внутрішній огляд, без нових тверджень про
+актуальні можливості конкурентів. Такі порівняння потребують окремої перевірки джерел.
 
-- Not just a gym log like Strong or Hevy.
-- Not just an AI workout generator like Fitbod-style products.
-- Not just habit gamification like Habitica.
-- Not just a calendar or wellness tracker.
+## Основний цикл
 
-THE SYSTEM wins when the user opens the app and immediately understands the next action the system recommends.
+1. Коротке налаштування створює придатний початковий план.
+2. Today Order показує тип дня, коротке пояснення, одну головну дію й очікуваний результат.
+3. Людина виконує workout, поважає плановий rest/recovery або добровільно коригує план.
+4. Completed sets і результат зберігаються локально; draft та повторний finish захищені.
+5. Короткий report показує виконане, підтверджений прогрес або недостатність даних, наступний крок.
+6. History/weekly summary пояснюють зміни; календар і наступне рішення використовують ту саму правду.
 
-## Target User
+Прості справи мають власне виконання, але не стають силовим прогресом. Main quest є подачею
+реальної дії, а не другим планувальником. Local Architect перевикористовує короткі пояснення,
+зовнішній AI може лише запропонувати зміни через ValidateDirectivesUseCase.
 
-Primary user:
+## Продуктові інваріанти
 
-- Trains consistently or wants to become consistent.
-- Likes RPG/anime/system-progression aesthetics.
-- Wants structure, not just a blank logging tool.
-- Wants the app to make today's training decision easier.
-- Is motivated by ranks, XP, quests, streaks, visible proof, and clear feedback.
+- No-plan і missing data не маскуються під впевнене рішення про відпочинок або readiness.
+- Відпочинок/recovery не обходяться коротким workout заради XP чи streak.
+- Один workout дає один canonical запис/нагороду; draft не дає тренувального прогресу.
+- Виправлення цільової вправи не змінює інші; зміна майбутнього плану не переписує history.
+- Гейміфікація не є вимірюванням здоров'я, мотивації або інтелекту.
+- Дані розробника та майбутніх користувачів збережені; restore має узгодити DB/setup/route.
+- UI споживає domain/UI state; спільні tokens і нативний Compose залишаються основою.
 
-Secondary user:
+Це бажані критерії; відкриті P-задачі та runtime gates не закриваються зміною документа.
 
-- Beginner/intermediate lifter who needs guided routine setup.
-- Solo trainee who wants a coach-like system but may not pay for a human coach.
-- Productivity/gamification user who wants physical progress tied to daily discipline.
+## Мінімальний продуктовий фокус
 
-Not the current target:
+Першими доводимо стартовий план, правдивий Today, швидкий logging, draft/finish/history,
+Calendar consistency, короткий локальний report і backup. Optional check-in/HC та прості
+справи не повинні блокувати цей шлях. Власні дані й базова користь завжди доступні Free.
 
-- Elite athlete needing sport-specific periodization.
-- User who only wants a minimalist stopwatch/logbook.
-- User who wants medical recovery diagnosis.
-- User who wants social feed/community first.
+Погоджений пакет SC-R01-v1 передбачає прибрати недоступні F45/F46 entry cards, приховати окремий F38,
+зменшити абстрактні F37 та дублювання F39, змінити каральну подачу F36, спростити доступ F35/F52.
+F23/F33/F42/F43/F51 не розширюємо до beta. Конкретний scope схвалено 2026-10-12;
+зміни UI/actions реалізуються у відповідних prompts із перевірками. Повна таблиця F01-F53 живе лише у FEATURE_SCOPE.
 
-## Competitive Niche
+## Free і майбутній Pro
 
-The strongest niche is:
+Free: увесь базовий цикл, сигнали/відмова від permissions, каталог і базовий цикл, власна
+історія та її виправлення, основні charts/weekly summary, local brief, draft/finish,
+backup/export/import і доступність. Прогрес не купується; раніше збережені дані не закриваються.
 
-**"A training OS that decides today's action from readiness, recovery debt, planned cycle, quests, and progression proof."**
+Pro кандидат: одна регулярна додаткова користь понад Free, наприклад глибше пояснене
+порівняння періодів. Доказ потреби R17 передує реалізації R18 і billing R19-R24.
+Ціна, trial, provider та sales scope відкриті. Деталі: [MONETIZATION_STRATEGY](MONETIZATION_STRATEGY.md).
+AI/annual plan/cosmetics не стають платними автоматично. Free beta можлива без продажів.
 
-Competitors can be stronger in single lanes:
+## Метрика користі
 
-- Workout logging simplicity.
-- AI-generated plans.
-- Habit gamification.
-- Exercise library polish.
-- Wearable/health aggregation.
+Запропонована north-star для тренувального MVP: **виконання актуального посильного плану за тиждень**.
 
-THE SYSTEM should not fight them feature-for-feature. It should win by combining:
+Чисельник: заплановані тренувальні дні із canonical committed workout, який відповідає
+плану/погодженій заміні. Один день не множиться кількістю логів, XP чи натискань.
+Знаменник: актуальні допустимі тренувальні дні за зафіксованим історичним планом.
+OFF/recovery виключаються окремо з причиною; no-plan/unknown не зараховуються як виконання.
+Тиждень без допустимих workouts має N/A та пояснення, не 0% або 100%.
 
-1. Daily decision clarity.
-2. RPG motivation.
-3. Real workout logging.
-4. Recovery-aware adjustment.
-5. System validation over AI.
-6. A strong dark sci-fi/anime identity.
+Зміни плану зберігають контекст; завершені дні не оцінюються заднім числом за новим шаблоном.
+Показувати абсолютні кількості, часовий пояс і період. Training, recovery та todos не змішуються
+в один completion rate. Це замінює старий Weekly Planned Mission Completion Rate.
 
-## Product Promise
+Допоміжні сигнали: setup -> готовий план -> перший commit; корисна дія наступного тижня;
+повернення після паузи; розуміння причини Today; logging friction; втрати/дублі/restore failures.
+Відкриття app, XP і streak не дорівнюють retention. Самі metrics не стимулюють більше навантаження.
 
-Every day, THE SYSTEM should answer:
+Це визначення для P10-P12/P17/P25-P27. Наявні local beta metrics не вважаються повною
+реалізацією цієї формули; події/aggregation і спосіб добровільного збору узгодити там із тестами.
 
-1. **Today:** train, recover, deload, no-excuse protocol, or rest.
-2. **Why:** readiness, recovery debt, calendar cycle, missed sessions, quest state.
-3. **Action:** one clear primary CTA.
-4. **Reward:** XP, streak, quest progress, rank/progression proof.
-5. **Next:** what this changes for the next session.
+## Beta і реліз
 
-If any screen does not support that promise, it is secondary.
+Ранній prototype check R06: 3-5 добровільних людей без аніме-контексту до R07.
+Це перевірка ясності, не beta або доказ попиту. Спостереження не вигадуються агентами.
 
-## Core Loop
+Beta proposal: 8-12 дорослих різного досвіду, приблизно два тижні після data-safety gates.
+Розмір/період остаточно визначає P25; числа є якісним планом, не статистичним прогнозом.
+Спостерігати перший запуск, перший workout, planned rest, повернення, backup і no-AI;
+фіксувати виконання з допомогою/без, конкретні зупинки та зайві блоки. Збирати feedback добровільно.
 
-```text
-Open app
-  -> Today Order tells the user what to do
-  -> User starts or adjusts the session
-  -> User logs workout / recovery / task progress
-  -> System finalizes local data
-  -> System validates AI/fallback recommendations
-  -> XP, quest progress, rank/progression proof update
-  -> Tomorrow's decision becomes sharper
-```
+Продуктова користь і technical readiness перевіряються окремо. P26 робить незалежний beta audit;
+P27 закриває знайдені проблеми, R25 готує підтримку. P28 оцінює actual Free/Paid candidate,
+public docs/assets, artifact, owner/Console gates. Не називати кількість закритих prompts оцінкою 10/10.
 
-The loop must work without AI. AI Architect is an amplifier, not the spine.
+## Не розширюємо зараз
 
-## North-Star Metric
+Social feed/leaderboards, cloud account/sync, nutrition platform, необмежений AI chat,
+професійні спорт-програми, нові предметні модулі всіх сфер життя та web UI.
+Advanced annual, remote AI й challenges можуть повернутися лише за конкретним доказом потреби.
+Шлях Kotlin/Compose/Room/Hilt залишається; зміна мови чи SDK не є продуктовою задачею R01.
 
-Primary north-star metric:
-
-**Weekly Planned Mission Completion Rate**
-
-Definition:
-
-> completed planned training/recovery/todo missions divided by missions the system assigned for the week.
-
-Supporting metrics:
-
-- First Today Order reached.
-- First workout logged.
-- First week completed.
-- Planned workouts completed.
-- Planned workouts missed.
-- Current streak.
-- Recovery-blocked days respected.
-- AI/fallback report viewed after workout.
-- User returns next day after finishing a mission.
-
-## Product Pillars
-
-### 1. Decision Clarity
-
-The user should never wonder what to do next.
-
-Every important screen must bias toward:
-
-- one main recommendation;
-- one primary action;
-- short explanation;
-- visible result.
-
-### 2. System Trust
-
-The system must feel strict but fair.
-
-- Readiness and recovery decisions must be explainable.
-- AI cannot override domain validation.
-- Fallback behavior must feel intentional, not broken.
-- Health Connect and backup behavior must be transparent.
-
-### 3. RPG Motivation
-
-Ranks, XP, quests, streaks, and boss/progression concepts should create momentum.
-
-They should not obscure the real training task.
-
-### 4. Native Premium UI
-
-The visual identity is dark anime sci-fi HUD:
-
-- Kotlin + Jetpack Compose only.
-- Shared tokens and surfaces.
-- Tinted glass / dark metal / controlled glow.
-- No web UI patterns or web dependencies.
-
-### 5. Local-First Reliability
-
-The app should remain valuable:
-
-- offline;
-- without AI;
-- without Health Connect permissions;
-- after backup/export/import;
-- with partial data.
-
-## What We Do Now
-
-Near-term focus:
-
-1. Perfect Today Order.
-2. Build onboarding.
-3. Make workout logging fast.
-4. Make no-AI mode excellent.
-5. Prepare release/privacy/Health Connect docs.
-6. Run closed beta with a small group.
-
-## What We Do Not Do Now
-
-Not now:
-
-- Social feed.
-- Public leaderboards.
-- Web app.
-- React/HTML/CSS/Tailwind prototypes.
-- Complex nutrition tracking beyond useful readiness support.
-- Advanced sport-specific periodization.
-- Full coaching marketplace.
-- Cloud sync/account system.
-- New feature expansion before core loop proof.
-
-If a feature does not improve the first week experience, it waits.
-
-## Beta Strategy
-
-Closed beta target:
-
-- 5-10 users.
-- 7-14 days of use.
-- Focus on first-run clarity, daily return, logging friction, and trust in Today Order.
-
-Beta success questions:
-
-- Did the user understand what to do today?
-- Did the user complete at least one planned mission?
-- Did workout logging feel faster or more motivating than a plain tracker?
-- Did the system explanation feel helpful?
-- Did the user return the next day?
-- Did no-AI mode still feel useful?
-
-Beta exit criteria:
-
-- Onboarding completes without developer help.
-- First Today Order is understandable.
-- First workout can be logged end-to-end.
-- Backup/export does not confuse users.
-- Health Connect unavailable/denied state is not scary.
-- No critical crashes in the core loop.
-
-## Public Release Strategy
-
-Public release needs:
-
-- Privacy policy.
-- Health Connect permission rationale.
-- Store listing.
-- Screenshots checklist.
-- Release build verification.
-- No-AI/release AI-disabled UX.
-- Backup/import/export explanation.
-- Clear disclaimers: not medical advice, not injury diagnosis.
-
-Public release positioning should emphasize:
-
-- daily training decision;
-- RPG motivation;
-- local-first reliability;
-- optional AI analysis;
-- recovery-aware planning.
-
-Avoid overclaiming:
-
-- no medical promises;
-- no guaranteed transformation;
-- no AI coach replacing professional advice.
-
-## Strategic Priorities
-
-### P0: Make One Day Perfect
-
-The user opens the app and knows the day's mission.
-
-### P1: Make One Workout Perfect
-
-The user logs a workout quickly and gets a useful verdict.
-
-### P2: Make One Week Sticky
-
-The user sees streak, completion, recovery, quests, and progress proof.
-
-### P3: Make AI Feel Like a Premium Layer
-
-AI explains and suggests. The system validates and decides.
-
-## Decision Rule
-
-When choosing between features:
-
-1. Does it improve Today Order clarity?
-2. Does it reduce workout logging friction?
-3. Does it improve trust in system decisions?
-4. Does it help beta users complete week one?
-5. Does it preserve architecture and Compose-only UI?
-
-If the answer is no, defer it.
+Нова можливість має назвати користувацьку проблему, момент використання, повторювану користь,
+витрати підтримки, існуючу альтернативу та дешеву перевірку. Якщо користь не підтверджується,
+залишається deferred. Рішення й зміни scope фіксуються у [DECISIONS](docs/remaster/DECISIONS.md).

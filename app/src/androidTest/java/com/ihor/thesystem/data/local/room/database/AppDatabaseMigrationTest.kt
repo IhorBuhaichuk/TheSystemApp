@@ -177,6 +177,104 @@ class AppDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun migratesFrom51To52CreatingUsableWorkoutDraftTables() {
+        val databaseName = "migration-51-to-52-creates-workout-draft"
+        helper.createDatabase(databaseName, 51).close()
+
+        val migrated = helper.runMigrationsAndValidate(
+            databaseName,
+            52,
+            true,
+            *DatabaseMigrations.ALL_MIGRATIONS
+        )
+
+        try {
+            migrated.execSQL(
+                """
+                INSERT INTO `workout_drafts` (
+                    `draftId`, `dateEpochDay`, `scheduleId`, `cycleDay`, `workoutTemplateId`,
+                    `workoutName`, `questId`, `createdAtMillis`, `updatedAtMillis`
+                ) VALUES ('draft-1', 20000, 3, 2, 7, 'Workout A', 42, 100, 200)
+                """.trimIndent()
+            )
+            migrated.execSQL(
+                """
+                INSERT INTO `workout_draft_sets` (
+                    `draftId`, `exerciseId`, `exerciseOrder`, `setOrder`, `inputId`,
+                    `weightInput`, `repsInput`, `isCompleted`
+                ) VALUES ('draft-1', 11, 0, 0, 1, '20', '10', 1)
+                """.trimIndent()
+            )
+
+            migrated.query(
+                "SELECT `weightInput`, `repsInput`, `isCompleted` FROM `workout_draft_sets` WHERE `draftId` = 'draft-1'"
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("20", cursor.getString(0))
+                assertEquals("10", cursor.getString(1))
+                assertEquals(1, cursor.getInt(2))
+            }
+        } finally {
+            migrated.close()
+        }
+    }
+
+    @Test
+    fun migratesFrom52To53PreservingSessionsAndAddingUniqueCompletionIdentity() {
+        val databaseName = "migration-52-to-53-workout-completion"
+        helper.createDatabase(databaseName, 52).apply {
+            execSQL(
+                """
+                INSERT INTO `workout_session_logs` (
+                    `sessionId`, `questId`, `timestamp`, `totalTonnage`, `cycleDay`, `durationMinutes`
+                ) VALUES (7, 42, 1000, 800.0, 2, 45)
+                """.trimIndent()
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(
+            databaseName,
+            APP_DATABASE_VERSION,
+            true,
+            *DatabaseMigrations.ALL_MIGRATIONS
+        )
+
+        try {
+            migrated.query(
+                "SELECT `sessionId`, `completionId` FROM `workout_session_logs` WHERE `sessionId` = 7"
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(7L, cursor.getLong(0))
+                assertTrue(cursor.isNull(1))
+            }
+            migrated.execSQL(
+                """
+                INSERT INTO `workout_session_logs` (
+                    `questId`, `timestamp`, `totalTonnage`, `cycleDay`, `durationMinutes`, `completionId`
+                ) VALUES (42, 2000, 900.0, 2, 45, 'draft-unique')
+                """.trimIndent()
+            )
+
+            var duplicateRejected = false
+            try {
+                migrated.execSQL(
+                    """
+                    INSERT INTO `workout_session_logs` (
+                        `questId`, `timestamp`, `totalTonnage`, `cycleDay`, `durationMinutes`, `completionId`
+                    ) VALUES (42, 3000, 950.0, 2, 45, 'draft-unique')
+                    """.trimIndent()
+                )
+            } catch (_: Exception) {
+                duplicateRejected = true
+            }
+            assertTrue("completionId must be unique after migration", duplicateRejected)
+        } finally {
+            migrated.close()
+        }
+    }
+
     private fun exportedSchemaVersions(): List<Int> {
         val schemaPath = AppDatabase::class.java.name
 

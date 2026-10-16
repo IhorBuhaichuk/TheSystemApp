@@ -7,6 +7,7 @@ import com.ihor.thesystem.domain.util.AnnualProgressionPlanNoteParser
 import com.ihor.thesystem.domain.util.sanitizeForPrompt
 import com.ihor.thesystem.domain.util.Result
 import com.ihor.thesystem.domain.util.AppLogger
+import com.ihor.thesystem.domain.util.TransactionRollbackException
 import com.ihor.thesystem.domain.util.getOrDefault
 import com.ihor.thesystem.domain.model.ExerciseTrackingModeResolver
 import com.ihor.thesystem.domain.model.formatForTrackingMode
@@ -14,7 +15,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import java.time.Instant
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.DurationUnit
 
 class FinalizeSessionUseCase @Inject constructor(
@@ -28,6 +28,7 @@ class FinalizeSessionUseCase @Inject constructor(
     private val getWeightContext: GetPlayerWeightContextUseCase,
     private val getTrainingPhaseContext: GetTrainingPhaseContextUseCase,
     private val questRepository: QuestRepository,
+    private val workoutDraftRepository: WorkoutDraftRepository,
     private val completeQuest: CompleteQuestUseCase,
     private val calculateProgressRank: CalculateProgressRankUseCase,
     private val calculateWorkoutJudgment: CalculateWorkoutJudgmentUseCase,
@@ -36,43 +37,44 @@ class FinalizeSessionUseCase @Inject constructor(
     private val logger: AppLogger
 ) {
     suspend operator fun invoke(
+        completionId: String,
         session: WorkoutSession,
         sets: List<ExerciseSet>,
         plannedRecommendations: List<SetRecommendation> = emptyList()
     ): Result<AiArchitectReport, DomainError> {
-        return try {
-        
-        // 1. Гарантоване локальне збереження в БД
+        // 1. Canonical local commit. The completion key, session, rewards, and draft closure
+        // share one Room transaction; optional report work starts only after this succeeds.
         val localData = try {
             transactionProvider.runInTransaction {
+                require(completionId.isNotBlank()) { "A stable workout completion ID is required" }
                 val activeMainQuest = session.questId
                     .takeIf { it > 0 && it <= Int.MAX_VALUE }
                     ?.let { questRepository.getQuestById(it.toInt()) }
                     ?.takeIf { it.type == DomainQuestType.MAIN }
                 val systemTemplateType = activeMainQuest?.systemTemplateType
-                val sessionId = analyticsRepository.saveFullSessionLog(session, sets)
-                
+                val commit = analyticsRepository.commitSessionOnce(completionId, session, sets)
+
                 val weightContext = getWeightContext()
                 val playerWeight = weightContext.currentWeight
                 val weight6MonthsAgo = weightContext.weightSixMonthsAgo
 
                 val matrix = progressionMatrixRepository.getAllEntries().first()
-                if (systemTemplateType == null) {
-                    updateExerciseRanks(sets, matrix)
-                }
-
                 val calculatedTonnage = sets.filter { it.isCompleted && it.weight > TECHNICAL_LOAD_WEIGHT }
                     .sumOf { it.weight * it.reps }
                 val finalTonnage = session.totalTonnage.takeIf { it > 0.0 } ?: calculatedTonnage
                 val recoveryHours = calculateRecovery(finalTonnage).toDouble(DurationUnit.HOURS)
 
-                if (systemTemplateType == null) {
-                    recalculateGlobalRank()
+                if (commit.wasCreated) {
+                    if (systemTemplateType == null) {
+                        updateExerciseRanks(sets, matrix)
+                        recalculateGlobalRank()
+                    }
+                    completeWorkoutQuestIfPossible(session.questId, sets)
                 }
-                completeWorkoutQuestIfPossible(session.questId, sets)
-                
+                workoutDraftRepository.discardDraft(completionId)
+
                 LocalSessionData(
-                    sessionId = sessionId,
+                    sessionId = commit.sessionId,
                     playerWeight = playerWeight,
                     weight6MonthsAgo = weight6MonthsAgo,
                     matrix = matrix,
@@ -86,138 +88,125 @@ class FinalizeSessionUseCase @Inject constructor(
             return Result.Error(DataError.Local.SQLITE_EXCEPTION)
         }
 
-        // 2. Асинхронний запит до AiArchitectRepository та оновлення матриці
-        val todayDecision = runCatching {
-            decideTodayWorkout(session.localDate(clock))
-        }.onFailure { error ->
-            logger.w("Today decision unavailable for workout judgment: ${error.message}")
-        }.getOrNull()
-        val judgment = calculateWorkoutJudgment(
-            plannedRecommendations = plannedRecommendations.ifEmpty {
-                sets.toPlannedRecommendations(localData.matrix)
-            },
-            actualSets = sets,
-            todayDecision = todayDecision
-        )
-        val completedExerciseIds = sets
-            .filter { it.isCompleted }
-            .map { it.exerciseId }
-            .distinct()
-
-        if (localData.systemTemplateType != null) {
-            return Result.Success(
-                AiArchitectReport(
-                    architectFeedback = MessageText.DynamicString("Тренування записано."),
-                    currentStageStatus = "[ SYSTEM_PROTOCOL ]",
-                    completedExercises = completedExerciseIds,
-                    pendingExercises = emptyList(),
-                    nextWorkoutDirectives = emptyList(),
-                    recoveryWindowHours = localData.recoveryHours,
-                    isFallback = true,
-                    sessionId = localData.sessionId,
-                    judgment = judgment
-                )
-            )
-        }
-
-        val exerciseContexts = generateAiPrompt(
-            sessionTimestamp = session.timestamp,
-            sets = sets,
-            matrix = localData.matrix,
-            playerWeight = localData.playerWeight,
-            weight6MonthsAgo = localData.weight6MonthsAgo
-        )
-        val weightedExerciseIds = sets
-            .filter { it.isCompleted && it.hasRealExternalLoad() }
-            .map { it.exerciseId }
-            .toSet()
-        
-        var aiFeedbackByExercise: Map<Int, String?> = emptyMap()
-        var generalAiFeedback: String? = null
-        val report = try {
-            val chatMsg = sendArchitectAnalysis(exerciseContexts)
-            val weightedRecommendations = chatMsg.recommendations
-                .filter { it.exerciseId in weightedExerciseIds }
-            if (weightedExerciseIds.isNotEmpty() && weightedRecommendations.isEmpty()) {
-                throw IllegalStateException("AI architect returned no actionable weighted workout directives.")
-            }
-            aiFeedbackByExercise = weightedRecommendations.associate { it.exerciseId to it.aiFeedback }
-            generalAiFeedback = chatMsg.aiFeedback
-            
-            // Оновлення цілей у матриці на основі AI-аналізу
-            AiArchitectReport(
-                architectFeedback = chatMsg.text,
-                currentStageStatus = "[ LOGGED ]",
-                completedExercises = completedExerciseIds,
-                pendingExercises = emptyList(),
-                nextWorkoutDirectives = weightedRecommendations.map {
-                    WorkoutDirective(it.exerciseId, it.weight.toDouble(), it.sets, it.reps)
+        // 2. Optional report/enrichment. Any failure after the canonical commit returns a
+        // useful local report with the persisted session ID instead of inviting a retry.
+        var committedLocalReport: AiArchitectReport? = null
+        return try {
+            val todayDecision = runCatching {
+                decideTodayWorkout(session.localDate(clock))
+            }.onFailure { error ->
+                logger.w("Today decision unavailable for workout judgment: ${error.message}")
+            }.getOrNull()
+            val judgment = calculateWorkoutJudgment(
+                plannedRecommendations = plannedRecommendations.ifEmpty {
+                    sets.toPlannedRecommendations(localData.matrix)
                 },
-                recoveryWindowHours = localData.recoveryHours,
-                isFallback = false,
-                sessionId = localData.sessionId,
-                judgment = judgment
+                actualSets = sets,
+                todayDecision = todayDecision
             )
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            logger.e(e, "Architect analysis failed")
-            generateFallbackReport(
+            val completedExerciseIds = sets
+                .filter { it.isCompleted }
+                .map { it.exerciseId }
+                .distinct()
+            val localReport = generateFallbackReport(
                 sets = sets,
                 matrix = localData.matrix,
                 recoveryHours = localData.recoveryHours,
                 sessionId = localData.sessionId,
                 judgment = judgment
             )
-        }
+            committedLocalReport = localReport
 
-        // 3. Валідація та збереження фінальних директив
-        val validationContext = SystemDecisionValidationContext(
-            todayDecision = todayDecision,
-            lastWorkoutFailed = judgment.performanceStatus == WorkoutPerformanceStatus.FAILED ||
-                judgment.progressionDecision == WorkoutProgressionDecision.REDUCE ||
-                judgment.progressionDecision == WorkoutProgressionDecision.DELOAD_RECOMMENDED
-        )
-        val validatedDirectives = when (
-            val validation = validateDirectives(report.nextWorkoutDirectives, localData.matrix, validationContext)
-        ) {
-            is Result.Success -> {
-                logDirectiveAdjustments(report.nextWorkoutDirectives, validation.data)
-                validation.data.validatedDirectives
+            if (localData.systemTemplateType != null) {
+                return Result.Success(
+                    localReport.copy(
+                        architectFeedback = MessageText.DynamicString("Тренування записано."),
+                        currentStageStatus = "[ SYSTEM_PROTOCOL ]",
+                        nextWorkoutDirectives = emptyList()
+                    )
+                )
             }
-            is Result.Error -> {
-                logger.e(message = "Workout directives rejected by validation: ${validation.error.message}")
-                emptyList()
-            }
-        }
 
-        transactionProvider.runInTransaction {
-            if (!report.isFallback) {
+            val exerciseContexts = generateAiPrompt(
+                sessionTimestamp = session.timestamp,
+                sets = sets,
+                matrix = localData.matrix,
+                playerWeight = localData.playerWeight,
+                weight6MonthsAgo = localData.weight6MonthsAgo
+            )
+            val weightedExerciseIds = sets
+                .filter { it.isCompleted && it.hasRealExternalLoad() }
+                .map { it.exerciseId }
+                .toSet()
+            val chatMsg = sendArchitectAnalysis(exerciseContexts)
+            val weightedRecommendations = chatMsg.recommendations
+                .filter { it.exerciseId in weightedExerciseIds }
+            if (weightedExerciseIds.isNotEmpty() && weightedRecommendations.isEmpty()) {
+                throw IllegalStateException("AI architect returned no actionable weighted workout directives.")
+            }
+            val rawDirectives = weightedRecommendations.map {
+                WorkoutDirective(it.exerciseId, it.weight.toDouble(), it.sets, it.reps)
+            }
+            val validationContext = SystemDecisionValidationContext(
+                todayDecision = todayDecision,
+                lastWorkoutFailed = judgment.performanceStatus == WorkoutPerformanceStatus.FAILED ||
+                    judgment.progressionDecision == WorkoutProgressionDecision.REDUCE ||
+                    judgment.progressionDecision == WorkoutProgressionDecision.DELOAD_RECOMMENDED
+            )
+            val validatedDirectives = when (
+                val validation = validateDirectives(rawDirectives, localData.matrix, validationContext)
+            ) {
+                is Result.Success -> {
+                    logDirectiveAdjustments(rawDirectives, validation.data)
+                    validation.data.validatedDirectives
+                }
+                is Result.Error -> {
+                    logger.e(message = "Workout directives rejected by validation: ${validation.error.message}")
+                    emptyList()
+                }
+            }
+
+            transactionProvider.runInTransaction {
+                val aiFeedbackByExercise = weightedRecommendations.associate { it.exerciseId to it.aiFeedback }
                 validatedDirectives.forEach { directive ->
                     progressionMatrixRepository.updateTarget(
                         exerciseId = directive.exerciseId,
                         weight = directive.targetWeight,
                         sets = directive.targetSets,
                         reps = directive.targetReps,
-                        aiFeedback = aiFeedbackByExercise[directive.exerciseId] ?: generalAiFeedback,
+                        aiFeedback = aiFeedbackByExercise[directive.exerciseId] ?: chatMsg.aiFeedback,
                         timestamp = clock.now()
                     )
                 }
+                analyticsRepository.saveDirectives(validatedDirectives)
             }
-            analyticsRepository.saveDirectives(validatedDirectives)
-        }
 
-        Result.Success(
-            report.copy(
-                nextWorkoutDirectives = validatedDirectives,
-                recoveryWindowHours = localData.recoveryHours,
-                judgment = judgment
+            Result.Success(
+                AiArchitectReport(
+                    architectFeedback = chatMsg.text,
+                    currentStageStatus = "[ LOGGED ]",
+                    completedExercises = completedExerciseIds,
+                    pendingExercises = emptyList(),
+                    nextWorkoutDirectives = validatedDirectives,
+                    recoveryWindowHours = localData.recoveryHours,
+                    isFallback = false,
+                    sessionId = localData.sessionId,
+                    judgment = judgment
+                )
             )
-        )
-    } catch (e: Exception) {
-        if (e is CancellationException) throw e
-        logger.e(e, "Unexpected error in FinalizeSessionUseCase")
-        Result.Error(DataError.Local.UNKNOWN)
-    }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            logger.e(e, "Optional workout report enrichment failed after local commit")
+            Result.Success(
+                committedLocalReport ?: generateFallbackReport(
+                    sets = sets,
+                    matrix = localData.matrix,
+                    recoveryHours = localData.recoveryHours,
+                    sessionId = localData.sessionId,
+                    judgment = null
+                )
+            )
+        }
     }
 
     private data class LocalSessionData(
@@ -308,7 +297,10 @@ class FinalizeSessionUseCase @Inject constructor(
             ?: return
 
         questRepository.completeQuestTasksForExercises(activeMainQuest.id, completedExerciseIds)
-        completeQuest(activeMainQuest.id, mode = QuestCompletionMode.TaskUpdate)
+        when (val result = completeQuest(activeMainQuest.id, mode = QuestCompletionMode.TaskUpdate)) {
+            is Result.Success -> Unit
+            is Result.Error -> throw TransactionRollbackException(result.error)
+        }
     }
 
     private fun generateFallbackReport(
@@ -316,7 +308,7 @@ class FinalizeSessionUseCase @Inject constructor(
         matrix: List<ProgressionMatrixEntry>,
         recoveryHours: Double,
         sessionId: Long,
-        judgment: SystemWorkoutJudgment
+        judgment: SystemWorkoutJudgment?
     ): AiArchitectReport {
         val matrixMap = matrix.associateBy { it.exerciseId }
         val fallbackDirectives = sets

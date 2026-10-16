@@ -1,0 +1,669 @@
+{
+  "date": "2026-10-13",
+  "fileKey": "Gjpbz08rE8dVNvQhHp9vHT",
+  "count": 35,
+  "variants": [
+    {
+      "family": "Surface",
+      "name": "Panel, Normal",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-5&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"104\"",
+        "  - button \"24, variable value for radius/large\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "Surface",
+      "name": "Panel, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-8&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Raised",
+      "borderExpected": "Active",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"104\"",
+        "  - button \"24, variable value for radius/large\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/Active System/Border/Active\":",
+        "    - img \"System/Border/Active\":",
+        "    - generic: System/Border/Active",
+        "  - button \"System/Material/Raised System/Material/Raised\":",
+        "    - img \"System/Material/Raised\":",
+        "    - generic: System/Material/Raised",
+        "  - button \"Selection colors System/Border/Active +1\":",
+        "    - img \"System/Border/Active\":"
+      ]
+    },
+    {
+      "family": "Surface",
+      "name": "Plate, Normal",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-11&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"104\"",
+        "  - button \"18, variable value for radius/medium\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "Surface",
+      "name": "Plate, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-14&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Raised",
+      "borderExpected": "Active",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"104\"",
+        "  - button \"18, variable value for radius/medium\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/Active System/Border/Active\":",
+        "    - img \"System/Border/Active\":",
+        "    - generic: System/Border/Active",
+        "  - button \"System/Material/Raised System/Material/Raised\":",
+        "    - img \"System/Material/Raised\":",
+        "    - generic: System/Material/Raised",
+        "  - button \"Selection colors System/Border/Active +1\":",
+        "    - img \"System/Border/Active\":"
+      ]
+    },
+    {
+      "family": "Surface",
+      "name": "Dialog, Normal",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-17&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Dialog",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"104\"",
+        "  - button \"30, variable value for radius/extraLarge\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Dialog System/Material/Dialog\":",
+        "    - img \"System/Material/Dialog\":",
+        "    - generic: System/Material/Dialog"
+      ]
+    },
+    {
+      "family": "Surface",
+      "name": "Dialog, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-20&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Dialog",
+      "borderExpected": "Active",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"104\"",
+        "  - button \"30, variable value for radius/extraLarge\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/Active System/Border/Active\":",
+        "    - img \"System/Border/Active\":",
+        "    - generic: System/Border/Active",
+        "  - button \"System/Material/Dialog System/Material/Dialog\":",
+        "    - img \"System/Material/Dialog\":",
+        "    - generic: System/Material/Dialog",
+        "  - button \"Selection colors System/Border/Active +1\":",
+        "    - img \"System/Border/Active\":"
+      ]
+    },
+    {
+      "family": "Button",
+      "name": "Tonal, Default",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-24&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"52\"",
+        "  - button \"18, variable value for radius/medium\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "Button",
+      "name": "Tonal, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-26&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "ButtonRaised",
+      "borderExpected": "ButtonActive",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"52\"",
+        "  - button \"18, variable value for radius/medium\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/ButtonActive System/Border/ButtonActive\":",
+        "    - img \"System/Border/ButtonActive\":",
+        "    - generic: System/Border/ButtonActive",
+        "  - button \"System/Material/ButtonRaised System/Material/ButtonRaised\":",
+        "    - img \"System/Material/ButtonRaised\":",
+        "    - generic: System/Material/ButtonRaised",
+        "  - button \"Color Style System/Border/ButtonActive\":",
+        "    - img \"System/Border/ButtonActive\":",
+        "    - generic \"System/Border/ButtonActive\""
+      ]
+    },
+    {
+      "family": "Button",
+      "name": "Tonal, Disabled",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-28&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Disabled",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"52\"",
+        "  - button \"18, variable value for radius/medium\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Disabled System/Material/Disabled\":",
+        "    - img \"System/Material/Disabled\":",
+        "    - generic: System/Material/Disabled"
+      ]
+    },
+    {
+      "family": "Button",
+      "name": "Filled, Default",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-30&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "ButtonRaised",
+      "borderExpected": "ButtonActive",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"56\"",
+        "  - button \"18, variable value for radius/medium\":",
+        "  - button \"System/Fill/Filled System/Fill/Filled\":",
+        "    - img \"System/Fill/Filled\"",
+        "    - generic: System/Fill/Filled",
+        "  - button \"System/Border/ButtonActive System/Border/ButtonActive\":",
+        "    - img \"System/Border/ButtonActive\":",
+        "    - generic: System/Border/ButtonActive",
+        "  - button \"System/Material/ButtonRaised System/Material/ButtonRaised\":",
+        "    - img \"System/Material/ButtonRaised\":",
+        "    - generic: System/Material/ButtonRaised",
+        "  - button \"Color Style System/Border/ButtonActive\":",
+        "    - img \"System/Border/ButtonActive\":",
+        "    - generic \"System/Border/ButtonActive\"",
+        "  - button \"Color Style System/Fill/Filled\":",
+        "    - img \"System/Fill/Filled\"",
+        "    - generic \"System/Fill/Filled\""
+      ]
+    },
+    {
+      "family": "Button",
+      "name": "Filled, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-32&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "ButtonRaised",
+      "borderExpected": "ButtonActive",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"56\"",
+        "  - button \"18, variable value for radius/medium\":",
+        "  - button \"System/Fill/Filled System/Fill/Filled\":",
+        "    - img \"System/Fill/Filled\"",
+        "    - generic: System/Fill/Filled",
+        "  - button \"System/Border/ButtonActive System/Border/ButtonActive\":",
+        "    - img \"System/Border/ButtonActive\":",
+        "    - generic: System/Border/ButtonActive",
+        "  - button \"System/Material/ButtonRaised System/Material/ButtonRaised\":",
+        "    - img \"System/Material/ButtonRaised\":",
+        "    - generic: System/Material/ButtonRaised",
+        "  - button \"Color Style System/Border/ButtonActive\":",
+        "    - img \"System/Border/ButtonActive\":",
+        "    - generic \"System/Border/ButtonActive\"",
+        "  - button \"Color Style System/Fill/Filled\":",
+        "    - img \"System/Fill/Filled\"",
+        "    - generic \"System/Fill/Filled\""
+      ]
+    },
+    {
+      "family": "Button",
+      "name": "Filled, Disabled",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-34&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Disabled",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"56\"",
+        "  - button \"18, variable value for radius/medium\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Disabled System/Material/Disabled\":",
+        "    - img \"System/Material/Disabled\":",
+        "    - generic: System/Material/Disabled"
+      ]
+    },
+    {
+      "family": "IconButton",
+      "name": "Default",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-37&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\"",
+        "      - combobox \"Height\"",
+        "  - button \"18, variable value for radius/medium\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "IconButton",
+      "name": "Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-41&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Raised",
+      "borderExpected": "Active",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\"",
+        "      - combobox \"Height\"",
+        "  - button \"18, variable value for radius/medium\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/Active System/Border/Active\":",
+        "    - img \"System/Border/Active\":",
+        "    - generic: System/Border/Active",
+        "  - button \"System/Material/Raised System/Material/Raised\":",
+        "    - img \"System/Material/Raised\":",
+        "    - generic: System/Material/Raised",
+        "  - button \"Color Style System/Border/Active\":",
+        "    - img \"System/Border/Active\":",
+        "    - generic \"System/Border/Active\""
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Progress, Inactive",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-46&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Progress, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-49&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "ProgressRaised",
+      "borderExpected": "ProgressActive",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/ProgressActive System/Border/ProgressActive\":",
+        "    - img \"System/Border/ProgressActive\":",
+        "    - generic: System/Border/ProgressActive",
+        "  - button \"System/Material/ProgressRaised System/Material/ProgressRaised\":",
+        "    - img \"System/Material/ProgressRaised\":",
+        "    - generic: System/Material/ProgressRaised",
+        "  - button \"Selection colors System/Border/ProgressActive +1\":",
+        "    - img \"System/Border/ProgressActive\":"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Recovery, Inactive",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-52&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Recovery, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-55&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "RecoveryRaised",
+      "borderExpected": "RecoveryActive",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/RecoveryActive System/Border/RecoveryActive\":",
+        "    - img \"System/Border/RecoveryActive\":",
+        "    - generic: System/Border/RecoveryActive",
+        "  - button \"System/Material/RecoveryRaised System/Material/RecoveryRaised\":",
+        "    - img \"System/Material/RecoveryRaised\":",
+        "    - generic: System/Material/RecoveryRaised",
+        "  - button \"Selection colors System/Border/RecoveryActive +1\":",
+        "    - img \"System/Border/RecoveryActive\":"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Danger, Inactive",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-58&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Danger, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-61&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "DangerRaised",
+      "borderExpected": "DangerActive",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/DangerActive System/Border/DangerActive\":",
+        "    - img \"System/Border/DangerActive\":",
+        "    - generic: System/Border/DangerActive",
+        "  - button \"System/Material/DangerRaised System/Material/DangerRaised\":",
+        "    - img \"System/Material/DangerRaised\":",
+        "    - generic: System/Material/DangerRaised",
+        "  - button \"Selection colors System/Border/DangerActive +1\":",
+        "    - img \"System/Border/DangerActive\":"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Reward, Inactive",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-64&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Reward, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-67&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "RewardRaised",
+      "borderExpected": "RewardActive",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/RewardActive System/Border/RewardActive\":",
+        "    - img \"System/Border/RewardActive\":",
+        "    - generic: System/Border/RewardActive",
+        "  - button \"System/Material/RewardRaised System/Material/RewardRaised\":",
+        "    - img \"System/Material/RewardRaised\":",
+        "    - generic: System/Material/RewardRaised",
+        "  - button \"Selection colors System/Border/RewardActive +1\":",
+        "    - img \"System/Border/RewardActive\":"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Neutral, Inactive",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-70&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Neutral, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-73&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "NeutralRaised",
+      "borderExpected": "NeutralActive",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/NeutralActive System/Border/NeutralActive\":",
+        "    - img \"System/Border/NeutralActive\":",
+        "    - generic: System/Border/NeutralActive",
+        "  - button \"System/Material/NeutralRaised System/Material/NeutralRaised\":",
+        "    - img \"System/Material/NeutralRaised\":",
+        "    - generic: System/Material/NeutralRaised",
+        "  - button \"Selection colors System/Border/NeutralActive +1\":",
+        "    - img \"System/Border/NeutralActive\":"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Ai, Inactive",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-76&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "StatusChip",
+      "name": "Ai, Active",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-79&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "AiRaised",
+      "borderExpected": "AiActive",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"133\"",
+        "      - combobox \"Vertical resizing\": \"34\"",
+        "  - button \"999, variable value for radius/pill\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/AiActive System/Border/AiActive\":",
+        "    - img \"System/Border/AiActive\":",
+        "    - generic: System/Border/AiActive",
+        "  - button \"System/Material/AiRaised System/Material/AiRaised\":",
+        "    - img \"System/Material/AiRaised\":",
+        "    - generic: System/Material/AiRaised",
+        "  - button \"Selection colors System/Border/AiActive +1\":",
+        "    - img \"System/Border/AiActive\":"
+      ]
+    },
+    {
+      "family": "StatePanel",
+      "name": "Loading",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-103&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"328\"",
+        "      - combobox \"Vertical resizing\": \"118\"",
+        "  - button \"24, variable value for radius/large\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "StatePanel",
+      "name": "Empty",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-107&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "Edge",
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"328\"",
+        "      - combobox \"Vertical resizing\": \"118\"",
+        "  - button \"24, variable value for radius/large\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "    - 'row \"Color Variable color/borderSubtle with value #FFF · 10.5% Toggle visibility Remove\"':",
+        "  - button \"System/Material/Edge System/Material/Edge\":",
+        "    - img \"System/Material/Edge\":",
+        "    - generic: System/Material/Edge"
+      ]
+    },
+    {
+      "family": "StatePanel",
+      "name": "Error",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-111&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": "DangerRaised",
+      "borderExpected": "DangerActive",
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Horizontal resizing\": \"328\"",
+        "      - combobox \"Vertical resizing\": \"118\"",
+        "  - button \"24, variable value for radius/large\":",
+        "    - row \"Linear gradient 100 % Toggle visibility Remove\":",
+        "  - button \"System/Border/DangerActive System/Border/DangerActive\":",
+        "    - img \"System/Border/DangerActive\":",
+        "    - generic: System/Border/DangerActive",
+        "  - button \"System/Material/DangerRaised System/Material/DangerRaised\":",
+        "    - img \"System/Material/DangerRaised\":",
+        "    - generic: System/Material/DangerRaised"
+      ]
+    },
+    {
+      "family": "ProgressBar",
+      "name": "0",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-83&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": null,
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "  - button \"999, variable value for radius/pill\":",
+        "    - 'row \"Color Variable color/overlayMedium with value #FFF · 6.4% Toggle visibility Remove\"':"
+      ]
+    },
+    {
+      "family": "ProgressBar",
+      "name": "62",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-85&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": null,
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "  - button \"999, variable value for radius/pill\":",
+        "    - 'row \"Color Variable color/overlayMedium with value #FFF · 6.4% Toggle visibility Remove\"':"
+      ]
+    },
+    {
+      "family": "ProgressBar",
+      "name": "100",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-87&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": null,
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "  - button \"999, variable value for radius/pill\":",
+        "    - 'row \"Color Variable color/overlayMedium with value #FFF · 6.4% Toggle visibility Remove\"':"
+      ]
+    },
+    {
+      "family": "OutlinedTextField",
+      "name": "Default",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-90&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": null,
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"72\""
+      ]
+    },
+    {
+      "family": "OutlinedTextField",
+      "name": "Focused",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-94&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": null,
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"72\""
+      ]
+    },
+    {
+      "family": "OutlinedTextField",
+      "name": "Error",
+      "url": "https://www.figma.com/design/Gjpbz08rE8dVNvQhHp9vHT/THE-SYSTEM-Remaster?node-id=3-98&t=4alH24Qvcl7vpQxr-0",
+      "effectExpected": null,
+      "borderExpected": null,
+      "repaired": [],
+      "properties": [
+        "      - combobox \"Width\": \"328\"",
+        "      - combobox \"Height\": \"72\""
+      ]
+    }
+  ]
+}

@@ -1,5 +1,13 @@
 # Minimal HUD v2 worklog
 
+> Historical implementation worklog, marked 2026-10-08. Its screenshots and
+> approvals document that iteration, not a newly approved remaster design.
+> Use [DESIGN_WORKFLOW](DESIGN_WORKFLOW.md) and [FIGMA_MAP](FIGMA_MAP.md) for current
+> handoff. Preserve the shipped presentation until its replacement is approved.
+> Native UI, shared tokens, readability, insets and action/data safety still
+> apply. A new direction does not silently remove those constraints or grant
+> approval to change typography, layout or actions.
+
 ## Objective
 
 Bring the real Kotlin + Jetpack Compose UI toward the five approved concepts in
@@ -20,7 +28,7 @@ Read only:
 
 Do not rescan the project unless the architecture or this file is stale.
 
-## Authoritative visual references
+## Historical visual references
 
 - `artifacts/design-concepts/minimal-hud-v2/01-status.png`
 - `artifacts/design-concepts/minimal-hud-v2/02-calendar.png`
@@ -28,8 +36,9 @@ Do not rescan the project unless the architecture or this file is stale.
 - `artifacts/design-concepts/minimal-hud-v2/04-statistics.png`
 - `artifacts/design-concepts/minimal-hud-v2/05-profile.png`
 
-The current screenshots in `artifacts/design-implementation/premium-hud-v1/after/`
-are the implementation baseline, not the target.
+At the time of this worklog, screenshots in
+`artifacts/design-implementation/premium-hud-v1/after/` were the implementation
+baseline, not the target. Verify today's baseline against current code.
 
 ## Locked product constraints
 
@@ -205,7 +214,7 @@ animation behavior; remove or replace only decorative work that is proven unnece
   smoke-check resumed `MainActivity` in about 1.0 s on the Realme, with the physical
   1080 × 2400 size and original 0.9 font scale intact.
 
-## Current checkpoint
+## Historical checkpoint
 
 - Branch: `codex/overnight-premium-hud-polish`
 - Base product commit: `78ccd52`

@@ -10,6 +10,7 @@ import com.ihor.thesystem.data.local.room.relations.SessionWithSets
 import com.ihor.thesystem.domain.model.*
 import com.ihor.thesystem.domain.repository.DailyTonnageStats
 import com.ihor.thesystem.domain.repository.WorkoutAnalyticsRepository
+import com.ihor.thesystem.domain.repository.WorkoutSessionCommit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
@@ -144,6 +145,22 @@ class WorkoutAnalyticsRepositoryImpl @Inject constructor(
         sets: List<ExerciseSet>
     ): Long {
         return dao.saveFullSessionLog(session.toEntity(), sets.map { it.toEntity() })
+    }
+
+    override suspend fun commitSessionOnce(
+        completionId: String,
+        session: WorkoutSession,
+        sets: List<ExerciseSet>
+    ): WorkoutSessionCommit {
+        val commit = dao.commitSessionOnce(
+            completionId = completionId,
+            session = session.toEntity(),
+            sets = sets.map { it.toEntity() }
+        )
+        return WorkoutSessionCommit(
+            sessionId = commit.sessionId,
+            wasCreated = commit.wasCreated
+        )
     }
 
     override suspend fun getAllExercisesMap(): Map<Int, String> {

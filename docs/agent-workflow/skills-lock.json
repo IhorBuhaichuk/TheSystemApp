@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-13",
+  "scope": "repository",
+  "projectSkills": [
+    {
+      "name": "the-system-product-lab",
+      "source": "project-authored"
+    },
+    {
+      "name": "the-system-native-ux",
+      "source": "project-authored"
+    },
+    {
+      "name": "the-system-quality-review",
+      "source": "project-authored"
+    },
+    {
+      "name": "the-system-figma-design",
+      "source": "project-authored"
+    }
+  ],
+  "vendorSkills": [
+    {
+      "name": "edge-to-edge",
+      "repository": "https://github.com/android/skills",
+      "ref": "42dc2270e96032bd860bb94511e440aa00a43125",
+      "sourcePath": "system/edge-to-edge",
+      "license": "Apache-2.0",
+      "modifications": "None. Root LICENSE.txt copied into skill directory.",
+      "files": [
+        {
+          "path": ".agents/skills/edge-to-edge/LICENSE.txt",
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+        },
+        {
+          "path": ".agents/skills/edge-to-edge/SKILL.md",
+          "sha256": "4ca04cb6a5330b96e51410bc815f878b4ca642fba46fe5e1ad724c94e04d6eb8"
+        }
+      ]
+    },
+    {
+      "name": "android-profiler",
+      "repository": "https://github.com/android/skills",
+      "ref": "42dc2270e96032bd860bb94511e440aa00a43125",
+      "sourcePath": "profilers/android-profiler",
+      "license": "Apache-2.0",
+      "modifications": "None. Root LICENSE.txt copied into skill directory.",
+      "files": [
+        {
+          "path": ".agents/skills/android-profiler/analysis/analysis_orchestrator.md",
+          "sha256": "cd70825d9ed6f6dabf999561b5c69971695cd649001721191b5c829fec80035a"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-sql/perfetto_sql.md",
+          "sha256": "e0eadf266207020eb91c4a682e22d48baaa2774fa36b1c260f9c04b222e6786d"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/perfetto_trace_analysis.md",
+          "sha256": "7a017bb1b6be37c96ec6a8eafd9425e1cd2a4001cc5dc1dcf0c9fe4953b6007a"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/references/guiding_principles.md",
+          "sha256": "f7d735f3a34b87fe62cad35f12b564f8c76d6216efce3320a8739ae653bdde90"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/references/hints/domain_hints_template.md",
+          "sha256": "3fef8a7bed88a3e11f33ea538a3cb13643e9c9336a9ed1ee027a839737622aaf"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/references/hints/subsystems/hints_cpu.md",
+          "sha256": "32db6b750fa37595002e3abe42976615adf6d1cc6326e05977946cee6cea6e97"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/references/hints/subsystems/hints_graphics.md",
+          "sha256": "dc7136e9ee20c2c343a8a11a18817378f2e982762334136fe36ebfc0371d64e7"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/references/hints/subsystems/hints_io.md",
+          "sha256": "2f832c34053a9a4c816629efe4a46afb4af1923e0b55b4951bf06891ff81be51"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/references/hints/subsystems/hints_ipc.md",
+          "sha256": "ad593787b03e995043d8a6897ffd9021824b4646b1d417e18524ae1dba2be147"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/references/hints/subsystems/hints_memory.md",
+          "sha256": "127c42e239ffc0ddca9fb8e90185892d5f66e007d1feb14da0ab23c57f72d664"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/references/hints/subsystems/hints_power.md",
+          "sha256": "07fb29dc89f25a7784330b841394699bc16bc93a9431d9a42029fc7d6afa8328"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/references/per_candidate_analysis.md",
+          "sha256": "835fc1eb32badcf0022fe6f988d504cf36a11d91a15a2fa1f5799eb13862f467"
+        },
+        {
+          "path": ".agents/skills/android-profiler/analysis/workflows/perfetto-trace-analysis/references/triage.md",
+          "sha256": "6db01df73f8c7601ff77cdb5b839d6d78187d2add34646d8007119d7923b8b44"
+        },
+        {
+          "path": ".agents/skills/android-profiler/LICENSE.txt",
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+        },
+        {
+          "path": ".agents/skills/android-profiler/recording/recording_orchestrator.md",
+          "sha256": "26a08ecd6f0ed8f80961d46b97db9420699565ea04f81970f74cdc44bf5fc010"
+        },
+        {
+          "path": ".agents/skills/android-profiler/recording/workflows/perfetto-trace-recording/perfetto_trace_recording.md",
+          "sha256": "1525b6f471e0930c9ea202e73b5ce69ddf9b88fa9a28e8934a0bf1cc7e82c718"
+        },
+        {
+          "path": ".agents/skills/android-profiler/recording/workflows/perfetto-trace-recording/references/example-configs/app_jank.pftxt",
+          "sha256": "41bcc23a2300eb8913fc51b4e57578701bbb286cd60b549e3acec6b48da125ca"
+        },
+        {
+          "path": ".agents/skills/android-profiler/recording/workflows/perfetto-trace-recording/references/example-configs/cpu_profile.pftxt",
+          "sha256": "f3185d9d2f73c3123d70f15ef928f130d5a8a221bf5bb8e438a86d1d54707db1"
+        },
+        {
+          "path": ".agents/skills/android-profiler/recording/workflows/perfetto-trace-recording/references/example-configs/java_heap_dump.pftxt",
+          "sha256": "5b47447092cfdf81f780fd695fce7ca7aa70d5330325ae4f2cc67c504877159d"
+        },
+        {
+          "path": ".agents/skills/android-profiler/recording/workflows/perfetto-trace-recording/references/example-configs/long_background.pftxt",
+          "sha256": "87b1aa82a782941b15278678b9bd0a44db2d91165b7062b27dd16a6cf3110b71"
+        },
+        {
+          "path": ".agents/skills/android-profiler/recording/workflows/perfetto-trace-recording/references/example-configs/memory_counters.pftxt",
+          "sha256": "e4298731b59c3a01cdfa5151446d3f3af845491ff8b98694357e09de58fc49df"
+        },
+        {
+          "path": ".agents/skills/android-profiler/recording/workflows/perfetto-trace-recording/references/example-configs/native_heap.pftxt",
+          "sha256": "e67c5ad23119c08ede35468e2b66ee63317ae55b54e4a06c9b0af2c043459be8"
+        },
+        {
+          "path": ".agents/skills/android-profiler/recording/workflows/perfetto-trace-recording/references/example-configs/sched_cpu.pftxt",
+          "sha256": "a37c989c0b3aa5d1d609f138d52c0625b728a2ec140ba8603991f562e614d9e0"
+        },
+        {
+          "path": ".agents/skills/android-profiler/recording/workflows/perfetto-trace-recording/references/trace_config_reference.md",
+          "sha256": "edaeba29593f49a0d789dc29300354372fea2674060c2b64283c9768a8ae2ff1"
+        },
+        {
+          "path": ".agents/skills/android-profiler/references/env_setup.md",
+          "sha256": "28d10c202ccf759cc7c07649968f3a390d5d984d31b9639d6dac0cd8920a6ee9"
+        },
+        {
+          "path": ".agents/skills/android-profiler/references/perfetto/bin/trace_processor",
+          "sha256": "14a2ca3778496888813c4d0ac4898e155dc25732a5e025a6da31dfcd4dfb4457"
+        },
+        {
+          "path": ".agents/skills/android-profiler/references/perfetto/setup.md",
+          "sha256": "a0bd2461f7d24f36a15fb078273e6850c49e820844a1e777427cc7377332b5c0"
+        },
+        {
+          "path": ".agents/skills/android-profiler/references/perfetto/sql.md",
+          "sha256": "ab667eaeba9243884df539fadb43989ad75f5285553fef7af9364740ce00b1a6"
+        },
+        {
+          "path": ".agents/skills/android-profiler/SKILL.md",
+          "sha256": "6385aeb41e96271fa6295ead577fd03e3b21e0be380f8ca6a20fb13d46feff4c"
+        }
+      ]
+    },
+    {
+      "name": "testing-setup",
+      "repository": "https://github.com/android/skills",
+      "ref": "42dc2270e96032bd860bb94511e440aa00a43125",
+      "sourcePath": "testing/testing-setup",
+      "license": "Apache-2.0",
+      "modifications": "None. Root LICENSE.txt copied into skill directory.",
+      "files": [
+        {
+          "path": ".agents/skills/testing-setup/LICENSE.txt",
+          "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
+        },
+        {
+          "path": ".agents/skills/testing-setup/references/android/develop/ui/compose/testing/common-patterns.md",
+          "sha256": "6e382fbf008b8a0b218d6f798b96dc16d31701eae5ef5753e26e7f25ca110471"
+        },
+        {
+          "path": ".agents/skills/testing-setup/references/android/studio/preview/compose-screenshot-testing-with-testsuites.md",
+          "sha256": "4b4ada7a50201bcf9ab90b0d9f00cc2ceb16513d1de7f63c12d634318a2ec20d"
+        },
+        {
+          "path": ".agents/skills/testing-setup/references/android/studio/preview/compose-screenshot-testing.md",
+          "sha256": "4a18a18c1cec8685fdb736c69622e7315f39e1a612570fb4838072a60154bdc6"
+        },
+        {
+          "path": ".agents/skills/testing-setup/references/android/training/dependency-injection/hilt-testing.md",
+          "sha256": "5e774a6ab09c0f469b4712ea8c468402b38dd4a19dce9570bacc49ad9af9c814"
+        },
+        {
+          "path": ".agents/skills/testing-setup/SKILL.md",
+          "sha256": "7a249ae3a4d8d74caaebe31a9bc936afc557ba153b9c0080e3df3b23fd0c0dd2"
+        }
+      ]
+    }
+  ],
+  "requiredFiles": [
+    "AGENTS.md",
+    "GRAPH_REPORT.md",
+    "UI_UX_GUIDELINES.md",
+    "docs/architecture/FEATURE_MAP.md",
+    "docs/product-review/2026-10-08/README.md",
+    "docs/product-review/2026-10-08/01-STACK.md",
+    "docs/product-review/2026-10-08/02-PRODUCT-LOGIC-AUDIT.md",
+    "docs/product-review/2026-10-08/03-FEATURE-VALUE.md",
+    "docs/product-review/2026-10-08/04-POSITIONING-AND-GROWTH.md",
+    "docs/product-review/2026-10-08/05-RECOMMENDATIONS.md",
+    "docs/product-review/2026-10-08/06-EVIDENCE.md",
+    "docs/agent-workflow/README.md",
+    "docs/agent-workflow/CONTEXT_ROUTER.md",
+    "docs/agent-workflow/TEAM_REVIEW.md",
+    "docs/agent-workflow/SESSION_HANDOFF.md",
+    "docs/design/FIGMA_SKILLS.md",
+    ".agents/skills/.gitattributes",
+    "scripts/check-agent-skills.ps1",
+    "scripts/check-agent-skills.cmd"
+  ]
+}

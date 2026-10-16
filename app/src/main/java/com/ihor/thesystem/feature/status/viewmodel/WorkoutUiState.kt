@@ -51,6 +51,11 @@ data class ActiveDayUiModel(
     val dailyTasks: ImmutableList<com.ihor.thesystem.domain.model.Quest>,
     val workoutName: String?,
     val exercises: ImmutableList<ExerciseWorkoutUiModel>,
+    val dateEpochDay: Long = 0L,
+    val scheduleId: Int = 0,
+    val workoutTemplateId: Int? = null,
+    val questId: Long = 0L,
+    val hasSavedDraft: Boolean = false,
     val adjustmentReason: String? = null,
     val matrixEntries: ImmutableList<MatrixEntryUiModel> = persistentListOf(),
     val loggingSummary: WorkoutLoggingSummaryUiModel = WorkoutLoggingSummaryUiModel()

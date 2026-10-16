@@ -53,6 +53,7 @@ import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.SystemUiTestTags
 import com.ihor.thesystem.core.ui.UiState
+import com.ihor.thesystem.core.ui.UiErrorEffect
 import com.ihor.thesystem.core.ui.toSystemSentenceCase
 import com.ihor.thesystem.core.ui.components.SystemAvatarBadge
 import com.ihor.thesystem.core.ui.components.SystemMetricBlock
@@ -87,6 +88,7 @@ fun ProfileScreen(
     val statusData = (statusState as? UiState.Content<StatusUiData>)?.data
 
     RefreshOnResume(statusViewModel::refreshForCurrentDay)
+    UiErrorEffect(statusViewModel.uiEvents)
 
     Box(
         modifier = Modifier

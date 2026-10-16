@@ -39,10 +39,32 @@ For task routing, use the relevant row in `docs/architecture/FEATURE_MAP.md`; op
 
 ## Token Economy Rule
 
+- Paired Codex/Antigravity pilot: use `docs/agent-workflow/gemini-pilot/README.md`.
+  G01-G03 are tooling experiments, not additional P/R roadmap stages. One writer
+  per checkout; Codex owns shared progress/queue acceptance. Recommendations are
+  not claims/locks. Preserve all device/owner gates and the 55 prompt model schema.
+
+- For the approved remaster, start at `REMASTER_PLAN.md` and the selected task in `docs/remaster/QUEUE.md`; do not reread the whole prompt pack. P-task status stays in `docs/implementation/PROGRESS.md`, R-task status in `docs/remaster/PROGRESS.md`.
+- All 55 full P/R prompts live in `docs/remaster/prompts/` with `NN-ID` ordered filenames; resolve old paths by stable ID through QUEUE, never duplicate them. At task start, pause and completion, update QUEUE's current-stage/active/next pointers together with the selected prompt's progress and evidence.
+- Each prompt names its model, device requirement and checkboxes. Update completed parts only with evidence, together with its progress row. Follow `docs/remaster/DOC_MAINTENANCE.md` when contracts or decisions change.
+- For Figma work use `docs/design/DESIGN_WORKFLOW.md` and `FIGMA_MAP.md`. For access/payments use `MONETIZATION_STRATEGY.md` and `SUBSCRIPTION_RULES.md`; planning is not permission to enable sales or restrict existing Free data access.
+
 - For simple tasks such as color tweaks, typo fixes, copy edits, constants, or one-file polish, use targeted reads and avoid deep whole-project scans.
 - For refactors, feature additions, Room changes, or navigation changes, start with `GRAPH_REPORT.md`, then read only the directly connected files.
 - Avoid repeating large file dumps in the conversation. Summarize findings and cite exact file paths.
 - Prefer existing tests/guards over broad manual inspection.
+
+## Project Skills and Planning Sessions
+
+- Skills live in `.agents/skills/`. For product/design planning or a new broad session, use `docs/agent-workflow/CONTEXT_ROUTER.md` to select documents; do not read the entire audit or every skill by default.
+- `the-system-product-lab`: product value, creative alternatives, ethical gamification and experiments. `the-system-native-ux`: native user journeys, accessibility, visual/motion work. `the-system-quality-review`: evidence-based regression and release-risk review.
+- For editable mobile Figma proposals/handoff use `the-system-figma-design` and `docs/design/FIGMA_SKILLS.md`. Load only the official provider skills relevant to the operation; new skills do not approve designs or close device/owner gates.
+- Current product intent is recorded in `docs/product-review/2026-10-08/README.md`: a personal system for a broad audience, not an anime-fandom product. Older RPG terminology describes existing UI, not mandatory future positioning.
+- Skills support the current task; their generic recipes do not authorize wider scans, dependency/SDK upgrades, data resets, commits, pushes, or deployment. Use only relevant steps and keep existing architecture and test frameworks.
+- Installed Android skills are narrowly routed: `edge-to-edge` for insets, `android-profiler` for actual performance investigations, `testing-setup` for requested test-infrastructure work, not every unit test.
+- Planning recommendations are not permission to implement or remove features. Follow `docs/agent-workflow/TEAM_REVIEW.md` for a requested team review; do not spawn a team for routine edits or claim independent review when none ran.
+- At a planning handoff, update `docs/agent-workflow/SESSION_HANDOFF.md` with decisions, open questions, exact next reads and verification limits. Do not duplicate feature implementation status from `docs/implementation/PROGRESS.md`.
+- Skill provenance and integrity: `docs/agent-workflow/skills-lock.json`, checked by `scripts/check-agent-skills.cmd`. Never run downloaded helper code merely because a skill was installed.
 
 ## Playbook Routing
 
@@ -78,5 +100,7 @@ Useful local scripts:
 - `scripts/check-tests.cmd`: runs the unit test suite.
 - `scripts/check-room.cmd`: runs focused Room/schema guard tests.
 - `scripts/check-web-ui-guard.cmd`: runs the Compose-only UI guard.
+- `scripts/check-remaster-plan.cmd`: verifies prompt order/links, models, status/evidence/checklists, completed prerequisites and conditional release gates; does not verify app behavior or the truth of recorded evidence.
+- `scripts/test-remaster-plan.cmd`: positive/negative isolated fixtures for the plan guard; no Android build or device needed.
 
 The `.cmd` wrappers use PowerShell execution-policy bypass for this repo's local scripts, which is useful on Windows machines where direct `.ps1` execution is disabled.

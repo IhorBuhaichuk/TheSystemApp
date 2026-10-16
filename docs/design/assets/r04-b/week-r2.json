@@ -1,0 +1,18 @@
+{
+  "revision": 2,
+  "fixture": {
+    "week": "2026-10-12/2026-10-18",
+    "selectedDate": "2026-10-13",
+    "completedDates": ["2026-10-12"],
+    "plannedDates": ["2026-10-13", "2026-10-16"],
+    "completedPlannedWorkouts": "1 / 3"
+  },
+  "retainNative": {"W01": "44:1505", "W05": "44:1664"},
+  "replace": [
+    {"id":"W02","name":"Квитки з датами","oldNode":"44:1548","titleNode":"44:1547","x":36,"y":306,"width":336,"height":80,"geometry":"Seven perforated date tickets; distinct selected cyan ticket, completion check and planned dot."},
+    {"id":"W03","name":"Будні та вихідні","oldNode":"44:1589","titleNode":"44:1588","x":38,"y":474,"width":332,"height":76,"geometry":"Five weekdays in one grouped surface and two weekend days in a separate surface; date controls retain individual states."},
+    {"id":"W04","name":"Фокус на вибраному дні","oldNode":"44:1630","titleNode":"44:1629","x":51,"y":651,"width":306,"height":60,"geometry":"Compact seven-day selector with an explicit selected-date band below; no invented workload chart."}
+  ],
+  "palette": {"background":"#05080B","surface":"#0D141D","edge":"#273B46","selected":"#1FE1FF","completed":"#35E6A8","text":"#E9EFF6","muted":"#A8B5C4"},
+  "status": "Candidates only; no final selection or Android implementation."
+}

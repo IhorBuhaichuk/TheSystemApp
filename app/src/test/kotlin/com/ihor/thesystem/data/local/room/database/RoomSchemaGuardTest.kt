@@ -75,6 +75,9 @@ class RoomSchemaGuardTest {
             "index_todo_dateEpochDay_parentTodoId_sortOrder",
             "index_weight_log_timestamp",
             "index_workout_exercise_cross_ref_workoutTemplateId_orderIndex",
+            "index_workout_drafts_updatedAtMillis",
+            "index_workout_draft_sets_draftId",
+            "index_workout_session_logs_completionId",
             "index_workout_session_logs_timestamp"
         )
 

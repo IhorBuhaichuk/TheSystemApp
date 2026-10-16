@@ -123,7 +123,7 @@ fun RpgStatusDashboard(
     onOpenCalendar: () -> Unit,
     onOpenWorkoutSettings: () -> Unit,
     onTaskToggled: (TodoUiModel) -> Unit,
-    onAddTask: (Int) -> Unit,
+    onAddTask: () -> Unit,
     onAddMicrotask: (TodoUiModel) -> Unit,
     onTodosReordered: (List<Int>) -> Unit,
     onRemoveTask: (Int) -> Unit
@@ -215,7 +215,7 @@ private fun StatusActionsContent(
     data: StatusUiData,
     onStartWorkout: () -> Unit,
     onTaskToggled: (TodoUiModel) -> Unit,
-    onAddTask: (Int) -> Unit,
+    onAddTask: () -> Unit,
     onAddMicrotask: (TodoUiModel) -> Unit,
     onTodosReordered: (List<Int>) -> Unit,
     onRemoveTask: (Int) -> Unit

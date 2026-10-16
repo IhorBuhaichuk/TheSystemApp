@@ -1,0 +1,38 @@
+[
+  {
+    "id": "W02",
+    "name": "Квитки з датами",
+    "oldNode": "44:1548",
+    "titleNode": "44:1547",
+    "x": 36,
+    "y": 306,
+    "width": 336,
+    "height": 80,
+    "geometry": "Seven perforated date tickets; distinct selected cyan ticket, completion check and planned dot.",
+    "node": "130:136"
+  },
+  {
+    "id": "W03",
+    "name": "Будні та вихідні",
+    "oldNode": "44:1589",
+    "titleNode": "44:1588",
+    "x": 38,
+    "y": 474,
+    "width": 332,
+    "height": 76,
+    "geometry": "Five weekdays in one grouped surface and two weekend days in a separate surface; date controls retain individual states.",
+    "node": "130:180"
+  },
+  {
+    "id": "W04",
+    "name": "Фокус на вибраному дні",
+    "oldNode": "44:1630",
+    "titleNode": "44:1629",
+    "x": 51,
+    "y": 651,
+    "width": 306,
+    "height": 60,
+    "geometry": "Compact seven-day selector with an explicit selected-date band below; no invented workload chart.",
+    "node": "130:206"
+  }
+]

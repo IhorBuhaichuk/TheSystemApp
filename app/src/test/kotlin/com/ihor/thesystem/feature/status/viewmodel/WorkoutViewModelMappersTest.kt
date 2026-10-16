@@ -133,6 +133,44 @@ class WorkoutViewModelMappersTest {
         assertEquals("1/1 вправ", summary.exerciseText)
     }
 
+    @Test
+    fun `draft round trip restores raw inputs completion flags and stable input ids`() {
+        val original = workout(
+            exercise(
+                ActiveSetInput(id = 101L, weight = "42,5", reps = "8", isCompleted = true),
+                ActiveSetInput(id = 102L, weight = "", reps = "", isCompleted = false)
+            )
+        )
+        val draft = original.toWorkoutDraft(
+            id = "stable-draft-id",
+            createdAtMillis = 10L,
+            updatedAtMillis = 20L
+        )
+
+        val restored = original.copy(
+            exercises = persistentListOf(exercise(ActiveSetInput(id = 999L)))
+        ).restoreDraft(draft)
+
+        assertEquals("stable-draft-id", draft.id)
+        assertEquals(listOf(101L, 102L), restored.exercises.single().sets.map { it.id })
+        assertEquals(listOf("42,5", ""), restored.exercises.single().sets.map { it.weight })
+        assertEquals(listOf(true, false), restored.exercises.single().sets.map { it.isCompleted })
+    }
+
+    @Test
+    fun `draft from a changed plan is not restored`() {
+        val original = workout(exercise(ActiveSetInput(id = 101L, weight = "42", reps = "8")))
+        val draft = original.toWorkoutDraft("draft", 10L, 20L)
+        val changedPlan = original.copy(
+            workoutTemplateId = 99,
+            exercises = persistentListOf(exercise(ActiveSetInput(id = 999L)))
+        )
+
+        val result = changedPlan.restoreDraft(draft)
+
+        assertEquals(999L, result.exercises.single().sets.single().id)
+    }
+
     private fun decision(
         type: TodayTrainingDecisionType,
         reason: String = "readiness"
@@ -164,6 +202,10 @@ class WorkoutViewModelMappersTest {
             dayNumber = 1,
             dailyTasks = persistentListOf(),
             workoutName = "Workout A",
+            dateEpochDay = 20_000L,
+            scheduleId = 3,
+            workoutTemplateId = 7,
+            questId = 42L,
             exercises = persistentListOf(*exercises)
         )
 

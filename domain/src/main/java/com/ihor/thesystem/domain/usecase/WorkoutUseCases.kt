@@ -27,6 +27,9 @@ data class WorkoutUseCases @Inject constructor(
     val decideTodayWorkout: DecideTodayWorkoutUseCase,
     val getEquipmentProfile: GetEquipmentProfileUseCase,
     val saveEquipmentProfile: SaveEquipmentProfileUseCase,
+    val observeWorkoutDraft: ObserveWorkoutDraftUseCase,
+    val saveWorkoutDraft: SaveWorkoutDraftUseCase,
+    val discardWorkoutDraft: DiscardWorkoutDraftUseCase,
     private val getSelectedViewingDate: GetSelectedViewingDateUseCase,
     val selectToday: SelectTodayUseCase,
     val selectDate: SelectViewingDateUseCase

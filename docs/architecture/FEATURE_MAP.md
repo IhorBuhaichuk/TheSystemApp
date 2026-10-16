@@ -1,10 +1,17 @@
 # Feature And Data Flow Map
 
-Перевірено 2026-09-18/19, код `184c0044718e22b97d01cee20f0da707a355c8bc`.
+Перевірено 2026-09-20, `36d6c480da90438c1b5adaf363de7cfb6986f9d8` + верифіковані P02-P03 working diffs.
 Ця карта деталізує [GRAPH_REPORT](../../GRAPH_REPORT.md), а не замінює код.
 Проблеми мають ID з [PROJECT_AUDIT](../../PROJECT_AUDIT.md).
 
 ## Легенда
+
+Scoped2026-10-15 audit: [R05 controls/data flow](../design/R05_DATA_FLOW.md),17 screen
+states and DF01-DF10. Use its aliases for new setup/partial/session-only contracts.
+Current wiring fixes: `A/feature/status/ui/RpgTodoBlock.kt` parameterless add ->
+StatusViewModel.onAddTaskTap(0); `A/core/ui/UiErrorEffect.kt` consumes ShowError in
+Status/Profile/WorkoutDialogHost while STARTED. Persistent critical failure state is
+still R09. No schema/domain change from this audit; P02/P03 data work is preserved.
 
 - `A` = `app/src/main/java/com/ihor/thesystem/`
 - `D` = `domain/src/main/java/com/ihor/thesystem/domain/`
@@ -31,6 +38,8 @@ flowchart TD
   R["Readiness entries or neutral fallback"] --> DEC
   DEC --> S
   S -->|"primary action: navigate"| CY["Cycle: workout dialog"]
+  CY --> WD["Durable workout draft"]
+  WD --> CY
   CY --> FIN["FinalizeSession"]
   FIN --> LOG["Session logs + sets"]
   FIN --> XP["Quest completion + XP + rank"]
@@ -55,7 +64,7 @@ CalendarCycle day override і тренувальний Schedule є різним�
 | Status | player/XP, Today Order, quests, todos, рекомендація, режими | Реалізовано; decision warnings не повністю відображені |
 | Today decision | recovery debt, readiness, calendar OFF/recovery, deload, no-excuse, training | Rule-based domain; не медична модель і не AI-прогноз |
 | Cycle/System | редагування днів, вправи, picker, active workout | Реалізовано; тут виконується workout |
-| Workout | inputs за tracking mode, completed flags, finish report | Draft in-memory; проблемні edit/finish paths, AUD-01..03 |
+| Workout | inputs за tracking mode, completed flags, durable draft, idempotent finish report | Draft переживає resume/rotate/process recreation; один draft completion ID створює один session/reward |
 | Equipment | profile, allowed equipment, exercise substitution | Підключено до onboarding та recommendations |
 | Exercise catalog | assets, переклади, versioned technique metadata | Каталог не дорівнює готовій програмі |
 | Calendar | місяць/дата, денний summary, todos, cycle settings | Окремий day-type overlay; потрібні cross-feature тести |
@@ -81,18 +90,20 @@ CalendarCycle day override і тренувальний Schedule є різним�
 | Calendar overlay | calendar_cycle_config, calendar_cycle_day | CalendarSettings, daily summary, Today decision |
 | Readiness/nutrition | readiness_entries, nutrition_entries | decision/statistics; UI writes ще не завершено |
 | Квести | quest, quest_task, quest_log | GenerateDailyQuests, CompleteQuest, rollover, status/stats |
-| Виконання | workout_session_logs, exercise_set_logs | FinalizeSession, set editors, statistics, AI context |
+| Виконання | workout_session_logs, exercise_set_logs | FinalizeSession commit-or-return-existing за unique completionId, set editors, statistics, AI context |
+| Чернетка тренування | workout_drafts, workout_draft_sets | WorkoutDraftRepository, WorkoutViewModel; не є session log і не дає XP |
 | Навантаження | progression_matrix, reference_matrix, protocol_template, workout_directives | recommendations, finalization, validated AI, annual planner |
 | Денний список | todo | status/calendar та daily summaries |
 | AI history | chat_message_table | Architect repository/VM |
 | Setup/metrics/backup status | SharedPreferences | onboarding, beta recorder, BackupRepositoryImpl |
-| Тимчасовий стан | StateFlow/in-memory | selected date, dialogs, workout edits; не durable log |
+| Тимчасовий стан | StateFlow/in-memory | selected date і dialogs; workout edits мають durable Room snapshot |
 
 ```mermaid
 flowchart LR
   ES["exercise_sets"] -->|"FK sessionId / CASCADE"| WS["workout_sessions"]
   ESL["exercise_set_logs"] -->|"FK sessionId / CASCADE"| WSL["workout_session_logs"]
   CCD["calendar_cycle_day"] -->|"FK cycleId / CASCADE"| CCC["calendar_cycle_config"]
+  WDS["workout_draft_sets"] -->|"FK draftId / CASCADE"| WD["workout_drafts"]
   ESL -. "logical exerciseId" .-> EX["exercises"]
   PM["progression_matrix"] -. "logical exerciseId" .-> EX
   QT["quest_task"] -. "logical questId" .-> Q["quest"]
@@ -102,7 +113,7 @@ flowchart LR
   CROSS -. "logical IDs" .-> WT["workout_templates"]
 ```
 
-Це вибрані зв'язки, не повний ERD. Суцільні стрілки перелічують **усі три** FK schema51.
+Це вибрані зв'язки, не повний ERD. Суцільні стрілки перелічують **усі чотири** FK schema53.
 Пунктирні зв'язки підтримує код. `@Relation` сам по собі FK не створює.
 
 ## Критичні послідовності
@@ -141,22 +152,24 @@ sequenceDiagram
   participant AI as AI or local fallback
   participant Gate as ValidateDirectives
   UI->>VM: edit / complete sets
-  Note over VM: Draft currently in memory only
+  VM->>DB: atomic draft snapshot (no XP/logs)
+  DB-->>VM: restore only for same date and stable plan identity
   UI->>VM: finish
-  VM->>UC: new session + valid sets + recommendations
-  UC->>DB: save logs, progress, complete quest/XP
-  DB-->>UC: committed
+  VM->>UC: stable draft completionId + session + sets
+  UC->>DB: commit-or-return session; if new, progress + quest/XP; close draft
+  DB-->>UC: committed sessionId + created/existing
   UC->>AI: report suggestions
   AI-->>UC: response or fallback
   UC->>Gate: validate against system context
   Gate-->>UC: allowed directives
   UC->>DB: save allowed directives/targets when applicable
-  UC-->>VM: report or error
+  UC-->>VM: AI report or committed local report
   VM-->>UI: report dialog
 ```
 
-Дві транзакційні фази не є однією атомарною операцією. Error після першого commit не означає,
-що workout не збережено. XP idempotency окремого quest не забезпечує session idempotency.
+Canonical completion і optional enrichment навмисно є різними фазами. Unique `completionId` захищає
+session/sets на рівні Room; side effects і draft close виконуються лише в canonical transaction.
+Збій AI/directives після commit повертає локальний report із persisted session ID, а не помилку повтору.
 
 ### Daily state and AI
 
@@ -170,6 +183,11 @@ AnnualProgressionPlan має окремий локальний Generate/Save flo
 
 ## Маршрути задач
 
+Для UX/Figma/Compose remaster використовуй [UX_CONTRACT](../design/UX_CONTRACT.md) та
+[ACTION_INVENTORY](../design/ACTION_INVENTORY.md): R02, 2026-10-12, точковий static UI read
+цього HEAD + local diff. Там поточні callbacks і planned states окремо, відкриті UX-R02-G01..G06.
+Це не оновлення audited revision усієї карти або доказ виправлення цих gaps.
+
 Спочатку відкрий 2-4 entry files з потрібного рядка. Розширюй читання лише за залежностями.
 Тести вже існують, якщо явно не позначено «додати»; скорочені test names шукай під `T`.
 
@@ -181,7 +199,7 @@ AnnualProgressionPlan має окремий локальний Generate/Save flo
 | Текст/CTA не відповідає рішенню | `A/feature/status/viewmodel/TodayOrderUiMapper.kt`; `A/feature/status/ui/RpgTodayOrderBlock.kt`; `A/feature/status/ui/StatusScreen.kt` | `T/feature/status/viewmodel/TodayOrderUiMapperTest.kt`; route UI test |
 | Неправильний день/опівніч | `D/usecase/SyncTodayStateUseCase.kt`; `D/usecase/FinalizeDayUseCase.kt`; `D/usecase/ResolveTrainingCycleDayUseCase.kt` | однойменні тести в `T/domain/usecase/`; timezone/concurrency cases |
 | REST, але є workout quest | `D/usecase/GenerateDailyQuestsUseCase.kt`; `D/usecase/DecideTodayWorkoutUseCase.kt`; `A/feature/status/viewmodel/WorkoutViewModel.kt` | GenerateDailyQuests + decision tests; додати OFF cross-flow case |
-| Втрата/дублі workout sets | `A/feature/status/viewmodel/WorkoutViewModel.kt`; `D/usecase/FinalizeSessionUseCase.kt`; `A/data/local/room/dao/WorkoutAnalyticsDao.kt` | WorkoutViewModelMappersTest; додати lifecycle/idempotency Room tests |
+| Втрата/дублі workout sets | `A/feature/status/viewmodel/WorkoutViewModel.kt`; `D/model/WorkoutDraft.kt`; `D/repository/WorkoutDraftRepository.kt`; `A/data/local/room/dao/WorkoutDraftDao.kt`; `D/usecase/FinalizeSessionUseCase.kt`; `A/data/local/room/dao/WorkoutAnalyticsDao.kt` | WorkoutViewModelMappersTest; WorkoutDraftCompatibilityTest; FinalizeSessionUseCaseFallbackTest; `I/data/repository_impl/WorkoutDraftRepositoryImplTest.kt`; `WorkoutFinishIdempotencyIntegrationTest.kt` |
 | Редагування однієї вправи | `D/usecase/LogWorkoutSetsUseCase.kt`; `D/usecase/StatisticsUseCases.kt`; `D/repository/WorkoutAnalyticsRepository.kt`; `A/data/local/room/dao/WorkoutAnalyticsDao.kt`; `A/data/repository_impl/ProgressionMatrixRepositoryImpl.kt` | explicit `sessionId + exerciseId`; `T/domain/usecase/LogWorkoutSetsUseCaseTest.kt`; `T/data/repository_impl/ProgressionMatrixRepositoryImplTest.kt`; `I/data/local/room/WorkoutAnalyticsEditIntegrationTest.kt` |
 | XP/ранг/серія | `D/usecase/CompleteQuestUseCase.kt`; `D/model/PlayerProgressionPolicy.kt`; `D/usecase/RecalculateGlobalRankUseCase.kt` | однойменні tests у `T/domain/`; completed quest regeneration |
 | Вправи/обладнання | `D/usecase/EquipmentProfileUseCases.kt`; `D/usecase/GenerateDailyQuestsUseCase.kt`; `A/feature/exercise_search/viewmodel/ExerciseSearchViewModel.kt` | EquipmentProfileUseCasesTest; ExerciseSearchViewModelTest |

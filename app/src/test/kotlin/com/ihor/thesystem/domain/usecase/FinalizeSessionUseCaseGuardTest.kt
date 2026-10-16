@@ -54,7 +54,7 @@ class FinalizeSessionUseCaseGuardTest {
     fun `ai session directives are validated before matrix persistence`() {
         val source = sourceFile().readText()
 
-        val validationIndex = source.indexOf("validateDirectives(report.nextWorkoutDirectives")
+        val validationIndex = source.indexOf("validateDirectives(rawDirectives")
         val updateTargetIndex = source.indexOf("progressionMatrixRepository.updateTarget")
 
         assertTrue(
@@ -65,6 +65,37 @@ class FinalizeSessionUseCaseGuardTest {
             "Validated AI directive persistence must be transactional.",
             source.indexOf("transactionProvider.runInTransaction", validationIndex) in validationIndex until updateTargetIndex
         )
+    }
+
+    @Test
+    fun `canonical finish uses durable completion identity and closes draft transactionally`() {
+        val source = sourceFile().readText()
+
+        val transactionIndex = source.indexOf("transactionProvider.runInTransaction")
+        val commitIndex = source.indexOf("commitSessionOnce(completionId, session, sets)")
+        val createdGateIndex = source.indexOf("if (commit.wasCreated)")
+        val draftCloseIndex = source.indexOf("workoutDraftRepository.discardDraft(completionId)")
+        val localDataIndex = source.indexOf("LocalSessionData(")
+
+        assertTrue("Canonical finish must use the stable completion ID.", commitIndex > transactionIndex)
+        assertTrue("Canonical side effects must run only for a newly created session.", createdGateIndex > commitIndex)
+        assertTrue(
+            "Draft closure must share the canonical Room transaction.",
+            draftCloseIndex > createdGateIndex && draftCloseIndex < localDataIndex
+        )
+    }
+
+    @Test
+    fun `optional report failure cannot turn a committed session into an error`() {
+        val source = sourceFile().readText()
+
+        val optionalStageIndex = source.indexOf("Optional report/enrichment")
+        val optionalFailureIndex = source.indexOf("Optional workout report enrichment failed after local commit")
+        val fallbackSuccessIndex = source.indexOf("Result.Success(", optionalFailureIndex)
+
+        assertTrue(optionalStageIndex >= 0)
+        assertTrue(optionalFailureIndex > optionalStageIndex)
+        assertTrue("Post-commit failures must return a local success report.", fallbackSuccessIndex > optionalFailureIndex)
     }
 
     @Test

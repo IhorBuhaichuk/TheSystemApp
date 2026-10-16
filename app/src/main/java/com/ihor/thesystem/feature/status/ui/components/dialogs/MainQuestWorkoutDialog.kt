@@ -36,6 +36,7 @@ import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.components.SystemButton
 import com.ihor.thesystem.core.ui.components.SystemDialogScaffold
 import com.ihor.thesystem.core.ui.components.SystemStatusChip
+import com.ihor.thesystem.core.ui.components.SystemGhostButton
 import com.ihor.thesystem.core.ui.components.TechSurfaceRole
 import com.ihor.thesystem.core.ui.components.systemPlateShape
 import com.ihor.thesystem.core.ui.components.techSurface
@@ -47,35 +48,46 @@ import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 @Composable
 fun MainQuestWorkoutDialog(
     data: ActiveDayUiModel?,
+    isFinishing: Boolean,
     onSetWeightChanged: (Int, Long, String) -> Unit,
     onSetRepsChanged: (Int, Long, String) -> Unit,
     onSetFocusLost: (Int, Long) -> Unit,
     onSetCompletionChanged: (Int, Long, Boolean) -> Unit,
     onAddSet: (Int, String) -> Unit,
     onOpenSetup: (MatrixEntryUiModel) -> Unit,
+    onDiscardDraft: () -> Unit,
     onFinishWorkout: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val colors = SystemTheme.colors
 
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!isFinishing) onDismiss() },
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         val summary = data?.loggingSummary
         SystemDialogScaffold(
             title = "Тренування",
-            onDismiss = onDismiss,
+            onDismiss = { if (!isFinishing) onDismiss() },
             accent = colors.accentPrimary,
             bottomBar = summary?.let {
                 {
+                    if (data.hasSavedDraft) {
+                        SystemGhostButton(
+                            text = "Видалити",
+                            onClick = onDiscardDraft,
+                            enabled = !isFinishing,
+                            accent = colors.accentError,
+                            modifier = Modifier.weight(0.36f)
+                        )
+                    }
                     SystemButton(
-                        text = it.finishCtaText,
+                        text = if (isFinishing) "Зберігаємо..." else it.finishCtaText,
                         onClick = onFinishWorkout,
-                        enabled = it.canFinish,
-                        glow = it.canFinish,
-                        icon = Icons.Filled.CheckCircle,
-                        modifier = Modifier.fillMaxWidth()
+                        enabled = it.canFinish && !isFinishing,
+                        glow = it.canFinish && !isFinishing,
+                        icon = if (isFinishing) null else Icons.Filled.CheckCircle,
+                        modifier = if (data.hasSavedDraft) Modifier.weight(0.64f) else Modifier.fillMaxWidth()
                     )
                 }
             }

@@ -78,5 +78,6 @@ abstract class DatabaseModule {
         @Provides @Singleton fun provideReadinessDao(db: AppDatabase)         = db.readinessDao()
         @Provides @Singleton fun provideEquipmentProfileDao(db: AppDatabase)  = db.equipmentProfileDao()
         @Provides @Singleton fun provideNutritionDao(db: AppDatabase)         = db.nutritionDao()
+        @Provides @Singleton fun provideWorkoutDraftDao(db: AppDatabase)      = db.workoutDraftDao()
     }
 }

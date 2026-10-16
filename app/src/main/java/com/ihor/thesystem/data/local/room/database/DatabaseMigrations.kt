@@ -698,6 +698,56 @@ object DatabaseMigrations {
         }
     }
 
+    val MIGRATION_51_52 = object : Migration(51, 52) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `workout_drafts` (
+                    `draftId` TEXT NOT NULL,
+                    `dateEpochDay` INTEGER NOT NULL,
+                    `scheduleId` INTEGER NOT NULL,
+                    `cycleDay` INTEGER NOT NULL,
+                    `workoutTemplateId` INTEGER,
+                    `workoutName` TEXT,
+                    `questId` INTEGER NOT NULL,
+                    `createdAtMillis` INTEGER NOT NULL,
+                    `updatedAtMillis` INTEGER NOT NULL,
+                    PRIMARY KEY(`draftId`)
+                )
+                """.trimIndent()
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_drafts_dateEpochDay` ON `workout_drafts` (`dateEpochDay`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_drafts_updatedAtMillis` ON `workout_drafts` (`updatedAtMillis`)")
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `workout_draft_sets` (
+                    `draftId` TEXT NOT NULL,
+                    `exerciseId` INTEGER NOT NULL,
+                    `exerciseOrder` INTEGER NOT NULL,
+                    `setOrder` INTEGER NOT NULL,
+                    `inputId` INTEGER NOT NULL,
+                    `weightInput` TEXT NOT NULL,
+                    `repsInput` TEXT NOT NULL,
+                    `isCompleted` INTEGER NOT NULL,
+                    PRIMARY KEY(`draftId`, `exerciseOrder`, `setOrder`),
+                    FOREIGN KEY(`draftId`) REFERENCES `workout_drafts`(`draftId`) ON UPDATE NO ACTION ON DELETE CASCADE
+                )
+                """.trimIndent()
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_workout_draft_sets_draftId` ON `workout_draft_sets` (`draftId`)")
+        }
+    }
+
+    val MIGRATION_52_53 = object : Migration(52, 53) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `workout_session_logs` ADD COLUMN `completionId` TEXT")
+            db.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS `index_workout_session_logs_completionId` " +
+                    "ON `workout_session_logs` (`completionId`)"
+            )
+        }
+    }
+
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7,
         MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12,
@@ -708,6 +758,7 @@ object DatabaseMigrations {
         MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36, MIGRATION_36_37,
         MIGRATION_37_38, MIGRATION_38_39, MIGRATION_39_40, MIGRATION_40_41, MIGRATION_41_42,
         MIGRATION_42_43, MIGRATION_43_44, MIGRATION_44_45, MIGRATION_45_46, MIGRATION_46_47,
-        MIGRATION_47_48, MIGRATION_48_49, MIGRATION_49_50, MIGRATION_50_51
+        MIGRATION_47_48, MIGRATION_48_49, MIGRATION_49_50, MIGRATION_50_51, MIGRATION_51_52,
+        MIGRATION_52_53
     )
 }

@@ -25,11 +25,16 @@ Read `GRAPH_REPORT.md` before refactoring or adding features.
 
 ## Important Docs
 
+- [REMASTER_PLAN.md](REMASTER_PLAN.md): current starting point and phased strategy.
+- [docs/remaster/QUEUE.md](docs/remaster/QUEUE.md): canonical P/R dependencies; linked progress and evidence.
 - `GRAPH_REPORT.md`: architecture map.
 - `AGENTS.md`: project rules for AI agents.
 - `UI_UX_GUIDELINES.md`: native Compose aesthetic guide.
-- `PRODUCT_STRATEGY.md`: product positioning and strategy.
-- `MVP_DEFINITION.md`: MVP and release criteria.
+- `PRODUCT_STRATEGY.md`: broad-audience personal-system strategy, reconciled in R01.
+- `MVP_DEFINITION.md`: approved minimum Free scope and release criteria; gates live in QUEUE.
+- [docs/remaster/FEATURE_SCOPE.md](docs/remaster/FEATURE_SCOPE.md): F01-F53 scope proposal and explicit owner-approval status.
+- [docs/design/UX_CONTRACT.md](docs/design/UX_CONTRACT.md): current and planned user journeys, states and hierarchy proposals.
+- [docs/design/ACTION_INVENTORY.md](docs/design/ACTION_INVENTORY.md): route/event/owner mapping and open UI gaps for the remaster.
 - `PRIVACY_POLICY.md`: privacy and data handling.
 - `STORE_LISTING.md`: Play Store draft.
 - `docs/HEALTH_CONNECT_RATIONALE.md`: Health Connect permission rationale.
@@ -42,6 +47,8 @@ Read `GRAPH_REPORT.md` before refactoring or adding features.
 - `scripts/check-room.cmd`: run Room/schema checks.
 - `scripts/check-doc-only.cmd`: verify documentation-only changes.
 - `scripts/check-web-ui-guard.cmd`: guard against web UI code in this native Android project.
+- `scripts/check-remaster-plan.cmd`: validate prompt links, dependencies and evidence/status consistency.
+- `scripts/test-remaster-plan.cmd`: exercise the plan guard with valid and deliberately invalid fixtures.
 
 ## Safety Scope
 

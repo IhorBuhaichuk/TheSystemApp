@@ -1,0 +1,668 @@
+{
+  "fileKey": "Gjpbz08rE8dVNvQhHp9vHT",
+  "page": "190:210",
+  "scenes": [
+    {
+      "key": "N02",
+      "width": 360,
+      "height": 640,
+      "id": "198:193",
+      "body": "198:199",
+      "primary": "198:206",
+      "field": "198:245",
+      "x": 1200,
+      "y": 0
+    },
+    {
+      "key": "G3",
+      "width": 360,
+      "height": 640,
+      "id": "198:252",
+      "x": 1640,
+      "y": 0,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "198:261",
+      "slot": "198:283",
+      "header": "198:254",
+      "primary": "198:287"
+    },
+    {
+      "key": "E2",
+      "width": 360,
+      "height": 640,
+      "id": "198:291",
+      "x": 2080,
+      "y": 0,
+      "canvasHeight": 738,
+      "primaryY": 662,
+      "body": "198:300",
+      "slot": "198:333",
+      "header": "198:293",
+      "primary": "198:337"
+    },
+    {
+      "key": "X0",
+      "width": 360,
+      "height": 640,
+      "id": "198:340",
+      "x": 2520,
+      "y": 0,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "198:349",
+      "slot": "198:366",
+      "header": "198:342",
+      "primary": "198:370"
+    },
+    {
+      "key": "C0",
+      "width": 360,
+      "height": 640,
+      "id": "198:373",
+      "x": 2960,
+      "y": 0,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "198:382",
+      "slot": "198:399",
+      "header": "198:375",
+      "primary": "198:403"
+    },
+    {
+      "key": "PLAN",
+      "width": 360,
+      "height": 640,
+      "id": "202:76",
+      "x": 3400,
+      "y": 0,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "202:85",
+      "slot": "202:108",
+      "header": "202:78",
+      "primary": "202:112"
+    },
+    {
+      "key": "W0",
+      "width": 360,
+      "height": 640,
+      "id": "202:115",
+      "x": 3840,
+      "y": 0,
+      "canvasHeight": 650,
+      "primaryY": 574,
+      "body": "202:124",
+      "slot": "202:159",
+      "header": "202:117",
+      "primary": "202:163",
+      "scroll": "Vertical"
+    },
+    {
+      "key": "WV",
+      "width": 360,
+      "height": 640,
+      "id": "202:166",
+      "x": 4280,
+      "y": 0,
+      "canvasHeight": 650,
+      "primaryY": 574,
+      "body": "202:175",
+      "slot": "202:210",
+      "header": "202:168",
+      "primary": "202:214",
+      "scroll": "Vertical"
+    },
+    {
+      "key": "W1",
+      "width": 360,
+      "height": 640,
+      "id": "202:217",
+      "x": 4720,
+      "y": 0,
+      "canvasHeight": 650,
+      "primaryY": 574,
+      "body": "202:226",
+      "slot": "202:262",
+      "header": "202:219",
+      "primary": "202:266",
+      "scroll": "Vertical"
+    },
+    {
+      "key": "W2",
+      "width": 360,
+      "height": 640,
+      "id": "202:271",
+      "x": 5160,
+      "y": 0,
+      "canvasHeight": 650,
+      "primaryY": 574,
+      "body": "202:280",
+      "slot": "202:317",
+      "header": "202:273",
+      "primary": "202:321",
+      "scroll": "Vertical"
+    },
+    {
+      "key": "W3",
+      "width": 360,
+      "height": 640,
+      "id": "202:324",
+      "x": 5600,
+      "y": 0,
+      "canvasHeight": 650,
+      "primaryY": 574,
+      "body": "202:333",
+      "slot": "202:371",
+      "header": "202:326",
+      "primary": "202:375",
+      "scroll": "Vertical"
+    },
+    {
+      "key": "WS",
+      "width": 360,
+      "height": 640,
+      "id": "202:378",
+      "x": 6040,
+      "y": 0,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "202:384",
+      "slot": "202:388",
+      "header": "202:380",
+      "primary": "202:392"
+    },
+    {
+      "key": "RP",
+      "width": 360,
+      "height": 640,
+      "id": "202:396",
+      "x": 6480,
+      "y": 0,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "202:405",
+      "slot": "202:424",
+      "header": "202:398",
+      "primary": "202:428"
+    },
+    {
+      "key": "WK",
+      "width": 360,
+      "height": 640,
+      "id": "203:91",
+      "x": 6920,
+      "y": 0,
+      "canvasHeight": 640,
+      "primaryY": 348,
+      "body": "203:100",
+      "slot": "203:112",
+      "header": "203:93",
+      "primary": "203:130"
+    },
+    {
+      "key": "WE",
+      "width": 360,
+      "height": 640,
+      "id": "203:133",
+      "x": 7360,
+      "y": 0,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "203:142",
+      "slot": "203:146",
+      "header": "203:135",
+      "primary": "203:150"
+    },
+    {
+      "key": "RP1",
+      "width": 360,
+      "height": 640,
+      "id": "203:156",
+      "x": 7800,
+      "y": 0,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "203:165",
+      "slot": "203:184",
+      "header": "203:158",
+      "primary": "203:188"
+    },
+    {
+      "key": "WS1",
+      "width": 360,
+      "height": 640,
+      "id": "203:191",
+      "x": 8240,
+      "y": 0,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "203:197",
+      "slot": "203:201",
+      "header": "203:193",
+      "primary": "203:205"
+    },
+    {
+      "key": "N00",
+      "width": 360,
+      "height": 640,
+      "id": "203:219",
+      "x": 1200,
+      "y": 900,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "203:225",
+      "slot": "203:228",
+      "header": "203:221",
+      "primary": "203:232",
+      "field": "203:236"
+    },
+    {
+      "key": "N01",
+      "width": 360,
+      "height": 640,
+      "id": "203:243",
+      "x": 1640,
+      "y": 900,
+      "canvasHeight": 640,
+      "primaryY": 348,
+      "body": "203:249",
+      "slot": "203:252",
+      "header": "203:245",
+      "primary": "203:289",
+      "field": "203:292"
+    },
+    {
+      "key": "N03",
+      "width": 360,
+      "height": 640,
+      "id": "203:304",
+      "x": 2080,
+      "y": 900,
+      "canvasHeight": 640,
+      "primaryY": 564,
+      "body": "203:310",
+      "slot": "203:315",
+      "header": "203:306",
+      "primary": "203:319",
+      "field": "203:322"
+    },
+    {
+      "key": "N00",
+      "width": 390,
+      "height": 844,
+      "id": "205:135",
+      "x": 1200,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "205:141",
+      "slot": "203:346",
+      "header": "205:137",
+      "primary": "205:143",
+      "field": "205:142",
+      "supersededId": "203:337"
+    },
+    {
+      "key": "N01",
+      "width": 390,
+      "height": 844,
+      "id": "203:361",
+      "x": 1670,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 552,
+      "body": "203:367",
+      "slot": "203:370",
+      "header": "203:363",
+      "primary": "203:407",
+      "field": "203:410"
+    },
+    {
+      "key": "N02",
+      "width": 390,
+      "height": 844,
+      "id": "203:422",
+      "x": 2140,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:428",
+      "slot": "203:431",
+      "header": "203:424",
+      "primary": "203:435",
+      "field": "203:438"
+    },
+    {
+      "key": "G3",
+      "width": 390,
+      "height": 844,
+      "id": "203:445",
+      "x": 2610,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:454",
+      "slot": "203:476",
+      "header": "203:447",
+      "primary": "203:480"
+    },
+    {
+      "key": "E2",
+      "width": 390,
+      "height": 844,
+      "id": "203:483",
+      "x": 3080,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:492",
+      "slot": "203:525",
+      "header": "203:485",
+      "primary": "203:529"
+    },
+    {
+      "key": "X0",
+      "width": 390,
+      "height": 844,
+      "id": "203:532",
+      "x": 3550,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:541",
+      "slot": "203:558",
+      "header": "203:534",
+      "primary": "203:562"
+    },
+    {
+      "key": "C0",
+      "width": 390,
+      "height": 844,
+      "id": "203:565",
+      "x": 4020,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:574",
+      "slot": "203:591",
+      "header": "203:567",
+      "primary": "203:595"
+    },
+    {
+      "key": "PLAN",
+      "width": 390,
+      "height": 844,
+      "id": "203:598",
+      "x": 4490,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:607",
+      "slot": "203:630",
+      "header": "203:600",
+      "primary": "203:634"
+    },
+    {
+      "key": "W0",
+      "width": 390,
+      "height": 844,
+      "id": "203:637",
+      "x": 4960,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:646",
+      "slot": "203:681",
+      "header": "203:639",
+      "primary": "203:685"
+    },
+    {
+      "key": "WK",
+      "width": 390,
+      "height": 844,
+      "id": "203:689",
+      "x": 5430,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 552,
+      "body": "203:698",
+      "slot": "203:710",
+      "header": "203:691",
+      "primary": "203:728"
+    },
+    {
+      "key": "WV",
+      "width": 390,
+      "height": 844,
+      "id": "203:731",
+      "x": 5900,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:740",
+      "slot": "203:775",
+      "header": "203:733",
+      "primary": "203:779"
+    },
+    {
+      "key": "W1",
+      "width": 390,
+      "height": 844,
+      "id": "203:783",
+      "x": 6370,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:792",
+      "slot": "203:828",
+      "header": "203:785",
+      "primary": "203:832"
+    },
+    {
+      "key": "WS1",
+      "width": 390,
+      "height": 844,
+      "id": "203:835",
+      "x": 6840,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:841",
+      "slot": "203:845",
+      "header": "203:837",
+      "primary": "203:849"
+    },
+    {
+      "key": "RP1",
+      "width": 390,
+      "height": 844,
+      "id": "203:853",
+      "x": 7310,
+      "y": 1900,
+      "canvasHeight": 844,
+      "primaryY": 768,
+      "body": "203:862",
+      "slot": "203:881",
+      "header": "203:855",
+      "primary": "203:885"
+    }
+  ],
+  "edges": [
+    {
+      "from": "198:206",
+      "to": "198:252",
+      "trigger": "On click"
+    },
+    {
+      "from": "198:287",
+      "to": "198:291",
+      "trigger": "On click"
+    },
+    {
+      "from": "198:337",
+      "to": "198:340",
+      "trigger": "On click"
+    },
+    {
+      "from": "198:370",
+      "to": "198:373",
+      "trigger": "On click"
+    },
+    {
+      "from": "198:403",
+      "to": "39:683",
+      "trigger": "On click"
+    },
+    {
+      "from": "135:137",
+      "to": "202:76",
+      "trigger": "On click"
+    },
+    {
+      "from": "202:112",
+      "to": "202:115",
+      "trigger": "On click"
+    },
+    {
+      "from": "202:135",
+      "to": "202:217",
+      "trigger": "On click"
+    },
+    {
+      "from": "202:131",
+      "to": "203:91",
+      "trigger": "On click"
+    },
+    {
+      "from": "203:130",
+      "to": "202:166",
+      "trigger": "On click"
+    },
+    {
+      "from": "202:266",
+      "to": "203:191",
+      "trigger": "On click"
+    },
+    {
+      "from": "203:191",
+      "to": "203:156",
+      "trigger": "After delay",
+      "delayMs": 800
+    },
+    {
+      "from": "203:188",
+      "to": "39:683",
+      "trigger": "On click"
+    },
+    {
+      "from": "203:150",
+      "to": "203:191",
+      "trigger": "On click"
+    },
+    {
+      "from": "198:258",
+      "action": "Back",
+      "trigger": "On click"
+    },
+    {
+      "from": "198:297",
+      "action": "Back",
+      "trigger": "On click"
+    },
+    {
+      "from": "198:346",
+      "action": "Back",
+      "trigger": "On click"
+    },
+    {
+      "from": "198:379",
+      "action": "Back",
+      "trigger": "On click"
+    },
+    {
+      "from": "202:82",
+      "action": "Back",
+      "trigger": "On click"
+    },
+    {
+      "from": "202:121",
+      "action": "Back",
+      "trigger": "On click"
+    },
+    {
+      "from": "202:186",
+      "to": "202:217",
+      "trigger": "On click"
+    },
+    {
+      "from": "203:236",
+      "to": "203:243",
+      "trigger": "On click"
+    },
+    {
+      "from": "203:289",
+      "to": "198:193",
+      "trigger": "On click"
+    },
+    {
+      "from": "203:319",
+      "to": "203:243",
+      "trigger": "On click"
+    },
+    {
+      "from": "205:142",
+      "to": "203:361",
+      "trigger": "On click"
+    },
+    {
+      "from": "203:407",
+      "to": "203:422",
+      "trigger": "On click"
+    }
+  ],
+  "checkpoint": {
+    "date": "2026-10-14",
+    "status": "in_progress",
+    "nativeScenes": 34,
+    "verifiedViewport": "360x640",
+    "verifiedPath": [
+      "N00",
+      "N01",
+      "N02",
+      "G3",
+      "E2",
+      "X0",
+      "C0",
+      "STATUS",
+      "PLAN",
+      "W0",
+      "WK",
+      "WV",
+      "W1",
+      "WS1",
+      "RP1",
+      "STATUS"
+    ],
+    "fixture": {
+      "completedSets": 1,
+      "totalSets": 15,
+      "exercisesWithCompletedSets": 1,
+      "totalExercises": 5
+    },
+    "normalViewportReactions": "entered only; not Present verified",
+    "pending": [
+      "specific owner design revision details",
+      "390 full reactions/walkthrough",
+      "alternate choices/day types",
+      "draft/conflict/discard",
+      "add/edit/toggle-back",
+      "failure branches",
+      "analysis action",
+      "todo interactions",
+      "shared binding/target audit",
+      "final owner approval"
+    ],
+    "ownerFeedback": "Design revisions requested; specific changes awaited. R04 Status remains approved."
+  }
+}

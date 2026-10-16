@@ -1,0 +1,4 @@
+interface:
+  display_name: "THE SYSTEM Product Lab"
+  short_description: "Product value and useful creative hypotheses"
+  default_prompt: "Use $the-system-product-lab to review the relevant product documents and propose prioritized options without changing app code."

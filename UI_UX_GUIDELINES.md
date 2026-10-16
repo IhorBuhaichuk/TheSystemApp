@@ -10,7 +10,9 @@ This file is an aesthetic guide only. It does not authorize web UI code.
 
 ## Core Mood
 
-- Dark anime sci-fi HUD with RPG progression energy.
+- Audience clarification (2026-10-08): Solo Leveling inspires the personal-system concept, not a requirement to know anime. The product must be understandable to a broad audience; use plain language and restrained, optional gamification in new proposals.
+- Dark sci-fi HUD with subtle progression energy. Existing RPG labels are implementation context, not a requirement to preserve fandom terminology in future approved redesigns.
+- This clarification does not authorize changing current screens, navigation, text, or mechanics during a surface-only polish pass.
 - Premium dark techno-metal and tinted glass, not flat plastic.
 - Neon accents should feel like controlled instrument light, not full-screen bloom.
 - The player should feel like they are operating a personal leveling system: precise, tactical, sharp, and alive.
@@ -102,5 +104,10 @@ Use `SystemTheme.motion` or existing animation conventions.
 - Profile: identity, settings, backup/export, personal system controls.
 
 ## Implementation Reminder
+
+Approved remaster design work follows `docs/design/DESIGN_WORKFLOW.md` and `FIGMA_MAP.md`.
+Figma nodes are editable design artifacts, not web prototypes. Structural changes require the selected
+frame/action-inventory approval; surface-only tasks still preserve layout. Do not truncate critical
+copy to meet a mockup's fixed height. Free/Pro states follow MONETIZATION_STRATEGY/SUBSCRIPTION_RULES.
 
 All UI must be native Kotlin with Jetpack Compose. If a visual idea sounds like CSS, Tailwind, React, Framer Motion, or a web component library, translate the intent into existing Compose tokens and primitives instead.

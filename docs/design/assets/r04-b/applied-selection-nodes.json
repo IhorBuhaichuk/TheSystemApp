@@ -1,0 +1,180 @@
+[
+  {
+    "role": "metadata390",
+    "node": "176:154"
+  },
+  {
+    "role": "week390",
+    "node": "192:102",
+    "previousNode": "177:154",
+    "revision": "D28: same W02 source without WeeklyCompletedCount; dates restored and visually verified"
+  },
+  {
+    "role": "tasks390",
+    "node": "178:154"
+  },
+  {
+    "role": "checkbox",
+    "node": "179:154",
+    "done": true,
+    "border": "39:1151",
+    "tick": "39:1152",
+    "x": 32,
+    "y": 608
+  },
+  {
+    "role": "checkbox",
+    "node": "180:154",
+    "done": true,
+    "border": "39:1161",
+    "tick": "39:1162",
+    "x": 32,
+    "y": 670
+  },
+  {
+    "role": "checkbox",
+    "node": "181:154",
+    "done": false,
+    "border": "39:1171",
+    "x": 32,
+    "y": 732
+  },
+  {
+    "role": "checkbox",
+    "node": "182:154",
+    "done": false,
+    "border": "39:1180",
+    "x": 32,
+    "y": 794
+  },
+  {
+    "role": "metadata360",
+    "node": "183:154"
+  },
+  {
+    "role": "week360",
+    "node": "183:168"
+  },
+  {
+    "role": "tasks360",
+    "node": "184:154"
+  },
+  {
+    "role": "checkbox",
+    "node": "185:154",
+    "done": true,
+    "border": "39:750",
+    "tick": "39:751",
+    "x": 32,
+    "y": 608
+  },
+  {
+    "role": "checkbox",
+    "node": "185:158",
+    "done": true,
+    "border": "39:760",
+    "tick": "39:761",
+    "x": 32,
+    "y": 670
+  },
+  {
+    "role": "checkbox",
+    "node": "185:162",
+    "done": false,
+    "border": "39:770",
+    "x": 32,
+    "y": 732
+  },
+  {
+    "role": "checkbox",
+    "node": "185:165",
+    "done": false,
+    "border": "39:779",
+    "x": 32,
+    "y": 794
+  },
+  {
+    "role": "navigation",
+    "node": "186:154",
+    "group": "39:1067",
+    "oldNode": "39:1068",
+    "choice": "NAV-STATUS05"
+  },
+  {
+    "role": "navigation",
+    "node": "186:159",
+    "group": "39:1070",
+    "oldNode": "39:1071",
+    "choice": "NAV-CALENDAR01"
+  },
+  {
+    "role": "navigation",
+    "node": "186:166",
+    "group": "39:1073",
+    "oldNode": "39:1074",
+    "choice": "NAV-SYSTEM01"
+  },
+  {
+    "role": "navigation",
+    "node": "186:171",
+    "group": "39:1076",
+    "oldNode": "39:1077",
+    "choice": "NAV-STATS05"
+  },
+  {
+    "role": "navigation",
+    "node": "186:182",
+    "group": "39:1079",
+    "oldNodes": [
+      "39:1081",
+      "39:1080"
+    ],
+    "choice": "NAV-PROFILE04"
+  },
+  {
+    "role": "navigation",
+    "node": "187:166",
+    "group": "39:799",
+    "oldNodes": [
+      "39:800"
+    ],
+    "choice": "NAV-STATUS05"
+  },
+  {
+    "role": "navigation",
+    "node": "187:171",
+    "group": "39:802",
+    "oldNodes": [
+      "39:803"
+    ],
+    "choice": "NAV-CALENDAR01"
+  },
+  {
+    "role": "navigation",
+    "node": "187:178",
+    "group": "39:805",
+    "oldNodes": [
+      "39:806"
+    ],
+    "choice": "NAV-SYSTEM01"
+  },
+  {
+    "role": "navigation",
+    "node": "187:183",
+    "group": "39:808",
+    "oldNodes": [
+      "39:809"
+    ],
+    "choice": "NAV-STATS05"
+  },
+  {
+    "role": "navigation",
+    "node": "187:194",
+    "group": "39:811",
+    "oldNodes": [
+      "39:813",
+      "39:812"
+    ],
+    "choice": "NAV-PROFILE04"
+  }
+]

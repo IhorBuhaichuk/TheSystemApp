@@ -1,0 +1,4 @@
+interface:
+  display_name: "THE SYSTEM Quality Review"
+  short_description: "Evidence-led regression and data-safety review"
+  default_prompt: "Use $the-system-quality-review for a read-only review of the selected changes, returning prioritized findings and verification gaps."

@@ -12,6 +12,12 @@ abstract class WorkoutAnalyticsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertSessionLog(session: WorkoutSessionLogEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    protected abstract suspend fun insertSessionLogOnce(session: WorkoutSessionLogEntity): Long
+
+    @Query("SELECT sessionId FROM workout_session_logs WHERE completionId = :completionId LIMIT 1")
+    protected abstract suspend fun getSessionIdByCompletionId(completionId: String): Long?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertSetLogs(sets: List<ExerciseSetLogEntity>)
 
@@ -53,6 +59,42 @@ abstract class WorkoutAnalyticsDao {
         val setsWithId = sets.map { it.copy(sessionId = sessionId) }
         insertSetLogs(setsWithId)
         return sessionId
+    }
+
+    @Transaction
+    open suspend fun commitSessionOnce(
+        completionId: String,
+        session: WorkoutSessionLogEntity,
+        sets: List<ExerciseSetLogEntity>
+    ): SessionCommitRow {
+        require(completionId.isNotBlank()) { "A stable completionId is required" }
+
+        getSessionIdByCompletionId(completionId)?.let { existingSessionId ->
+            return SessionCommitRow(existingSessionId, wasCreated = false)
+        }
+
+        val insertedSessionId = insertSessionLogOnce(
+            session.copy(
+                sessionId = 0L,
+                completionId = completionId
+            )
+        )
+        if (insertedSessionId == -1L) {
+            val existingSessionId = checkNotNull(getSessionIdByCompletionId(completionId)) {
+                "Workout completion conflict did not resolve to a persisted session"
+            }
+            return SessionCommitRow(existingSessionId, wasCreated = false)
+        }
+
+        insertSetLogs(
+            sets.map {
+                it.copy(
+                    setId = 0L,
+                    sessionId = insertedSessionId
+                )
+            }
+        )
+        return SessionCommitRow(insertedSessionId, wasCreated = true)
     }
 
     @Transaction
@@ -248,4 +290,9 @@ data class ExerciseWeightHistoryWithId(
 data class ExerciseWeightHistory(
     val weight: Double,
     val timestamp: Long
+)
+
+data class SessionCommitRow(
+    val sessionId: Long,
+    val wasCreated: Boolean
 )

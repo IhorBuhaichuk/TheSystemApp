@@ -36,7 +36,9 @@ internal object BackupImportPolicy {
         "todo",
         "readiness_entries",
         "equipment_profile",
-        "nutrition_entries"
+        "nutrition_entries",
+        "workout_drafts",
+        "workout_draft_sets"
     )
 
     fun validateTables(payload: BackupPayload) {

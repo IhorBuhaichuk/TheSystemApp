@@ -73,7 +73,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 internal fun TodoBlock(
     todos: List<TodoUiModel>,
     onTaskToggled: (TodoUiModel) -> Unit,
-    onAddTask: (Int) -> Unit,
+    onAddTask: () -> Unit,
     onAddMicrotask: (TodoUiModel) -> Unit,
     onTodosReordered: (List<Int>) -> Unit,
     onRemoveTask: (Int) -> Unit
@@ -113,7 +113,7 @@ internal fun TodoBlock(
                 ),
                 maxLines = 1
             )
-            TodoAddButton(onClick = { onAddTask(0) })
+            TodoAddButton(onClick = onAddTask)
         }
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -153,7 +153,7 @@ internal fun TodoBlock(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                 }
-                TodoAddTaskRow(onClick = { onAddTask(visibleTodos.size) })
+                TodoAddTaskRow(onClick = onAddTask)
             }
         }
     }

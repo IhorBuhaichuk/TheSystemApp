@@ -1,0 +1,4 @@
+android-profiler/** -text
+edge-to-edge/** -text
+testing-setup/** -text
+the-system-*/** text eol=lf

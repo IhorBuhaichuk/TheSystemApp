@@ -2,6 +2,7 @@ package com.ihor.thesystem.feature.status.viewmodel
 
 import com.ihor.thesystem.domain.model.ActiveSetInput
 import com.ihor.thesystem.domain.model.ExerciseTrackingMode
+import com.ihor.thesystem.domain.model.WorkoutDraftCompatibility
 import com.ihor.thesystem.presentation.common.model.MatrixEntryUiModel
 
 sealed class StatusDialogState {
@@ -15,6 +16,13 @@ sealed class StatusDialogState {
     data class AddTask(val questId: Int)                             : StatusDialogState()
     data class AddMicrotask(val parentTodoId: Int, val parentTitle: String) : StatusDialogState()
     data object MainQuestWorkout                                          : StatusDialogState()
+    data class WorkoutDraftConflict(
+        val draftId: String,
+        val workoutName: String?,
+        val dateEpochDay: Long,
+        val reason: WorkoutDraftCompatibility
+    ) : StatusDialogState()
+    data class ConfirmDiscardWorkoutDraft(val draftId: String)             : StatusDialogState()
     data object WorkoutScheduleSettings                                   : StatusDialogState()
     data class SetupMatrix(val entry: MatrixEntryUiModel, val startWeight: String, val targetWeight: String, val showWorkoutAfter: Boolean = false) : StatusDialogState()
     data class LogWorkoutSets(val entry: MatrixEntryUiModel, val sets: List<ActiveSetInput>, val existingLogs: List<com.ihor.thesystem.domain.model.ExerciseSet> = emptyList(), val trackingMode: ExerciseTrackingMode = ExerciseTrackingMode.WEIGHT_REPS, val showWorkoutAfter: Boolean = false) : StatusDialogState()

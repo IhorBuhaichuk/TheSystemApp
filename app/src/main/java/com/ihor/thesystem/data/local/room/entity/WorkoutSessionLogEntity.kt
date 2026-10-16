@@ -8,7 +8,8 @@ import androidx.room.PrimaryKey
     tableName = "workout_session_logs",
     indices = [
         Index("questId"),
-        Index("timestamp")
+        Index("timestamp"),
+        Index(value = ["completionId"], unique = true)
     ]
 )
 data class WorkoutSessionLogEntity(
@@ -18,5 +19,6 @@ data class WorkoutSessionLogEntity(
     val timestamp: Long,
     val totalTonnage: Double,
     val cycleDay: Int,
-    val durationMinutes: Int = 0
+    val durationMinutes: Int = 0,
+    val completionId: String? = null
 )

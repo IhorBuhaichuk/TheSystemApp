@@ -1,0 +1,4 @@
+interface:
+  display_name: "THE SYSTEM Mobile Figma Design"
+  short_description: "Editable mobile concepts with preserved native actions"
+  default_prompt: "Use $the-system-figma-design to create or review the selected mobile Figma proposal against shared tokens, action parity and actual render evidence."

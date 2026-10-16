@@ -1,6 +1,10 @@
 # Execution Rules For P01-P28
 
 Ці правила доповнюють AGENTS.md тільки для цього пакета задач. Прочитай їх перед одним обраним prompt.
+Для ремастеру також перевір додаткові prerequisites у [QUEUE](../remaster/QUEUE.md). Оновлюй checklist виконаних частин у prompt разом із PROGRESS/evidence; не відмічай неперевірене.
+Повні P/R prompts тепер у єдиній папці `docs/remaster/prompts/`, з NN-ID префіксом.
+QUEUE містить блок «Де ми зараз»: оновлюй етап, активний ID та next pointers на старті,
+паузі й завершенні. Старі шляхи шукай за незмінним ID, не відновлюй дублікати.
 Репозиторій: `C:/Users/gesha/AndroidStudioProjects/TheSystem-master`.
 
 ## Контекст і економія

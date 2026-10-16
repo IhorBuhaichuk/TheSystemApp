@@ -1,6 +1,13 @@
 # THE SYSTEM: LEVEL UP - prompts to 10/10
 
-This is a sequential execution package for Codex. Run one prompt per task, review the result, commit it, and only then start the next prompt. Do not run prompts that touch the same files in parallel.
+> Historical / superseded execution package, marked 2026-10-08. Do not execute this
+> sequence or use its model, pricing or feature proposals as current approval.
+> Start at [REMASTER_PLAN](../REMASTER_PLAN.md) and the canonical [QUEUE](remaster/QUEUE.md).
+> Shadow Clone and other old proposals are not commitments. Commits/pushes require
+> a separate user request. The body below is retained as historical context.
+
+The original package described a sequential workflow. Its order and instructions
+are superseded by the current queue and AGENTS.md.
 
 ## Model routing
 

@@ -1,0 +1,207 @@
+{
+  "slots": [
+    {
+      "id": "125:136-layers-panel-row",
+      "text": "NAV-PROFILE05-r2"
+    },
+    {
+      "id": "44:1265-layers-panel-row",
+      "text": "NAV-PROFILE04-manage_accounts"
+    },
+    {
+      "id": "124:136-layers-panel-row",
+      "text": "NAV-PROFILE03-r2"
+    },
+    {
+      "id": "123:136-layers-panel-row",
+      "text": "NAV-PROFILE02-r2"
+    },
+    {
+      "id": "44:1224-layers-panel-row",
+      "text": "NAV-PROFILE01-person"
+    },
+    {
+      "id": "44:1214-layers-panel-row",
+      "text": "NAV-STATS05-query_stats"
+    },
+    {
+      "id": "122:136-layers-panel-row",
+      "text": "NAV-STATS04-r2"
+    },
+    {
+      "id": "121:136-layers-panel-row",
+      "text": "NAV-STATS03-r2"
+    },
+    {
+      "id": "120:136-layers-panel-row",
+      "text": "NAV-STATS02-r2"
+    },
+    {
+      "id": "44:1156-layers-panel-row",
+      "text": "NAV-STATS01-bar_chart"
+    },
+    {
+      "id": "119:136-layers-panel-row",
+      "text": "NAV-SYSTEM05-r2"
+    },
+    {
+      "id": "118:136-layers-panel-row",
+      "text": "NAV-SYSTEM04-r2"
+    },
+    {
+      "id": "117:136-layers-panel-row",
+      "text": "NAV-SYSTEM03-r2"
+    },
+    {
+      "id": "116:136-layers-panel-row",
+      "text": "NAV-SYSTEM02-r2"
+    },
+    {
+      "id": "115:136-layers-panel-row",
+      "text": "NAV-SYSTEM01-r2"
+    },
+    {
+      "id": "44:1100-layers-panel-row",
+      "text": "NAV-CALENDAR05-view_week"
+    },
+    {
+      "id": "44:1091-layers-panel-row",
+      "text": "NAV-CALENDAR04-event"
+    },
+    {
+      "id": "44:1082-layers-panel-row",
+      "text": "NAV-CALENDAR03-date_range"
+    },
+    {
+      "id": "44:1073-layers-panel-row",
+      "text": "NAV-CALENDAR02-calendar_today"
+    },
+    {
+      "id": "44:1064-layers-panel-row",
+      "text": "NAV-CALENDAR01-calendar_month"
+    },
+    {
+      "id": "114:136-layers-panel-row",
+      "text": "NAV-STATUS05-r2"
+    },
+    {
+      "id": "44:1045-layers-panel-row",
+      "text": "NAV-STATUS04-explore"
+    },
+    {
+      "id": "113:136-layers-panel-row",
+      "text": "NAV-STATUS03-r2"
+    },
+    {
+      "id": "112:136-layers-panel-row",
+      "text": "NAV-STATUS02-r2"
+    },
+    {
+      "id": "111:136-layers-panel-row",
+      "text": "NAV-STATUS01-r2"
+    },
+    {
+      "id": "110:136-layers-panel-row",
+      "text": "CHECK05-r2"
+    },
+    {
+      "id": "44:1000-layers-panel-row",
+      "text": "CHECK04-radio_button_checked"
+    },
+    {
+      "id": "105:136-layers-panel-row",
+      "text": "XP05-r2"
+    },
+    {
+      "id": "44:900-layers-panel-row",
+      "text": "XP04-trending_up"
+    },
+    {
+      "id": "104:136-layers-panel-row",
+      "text": "XP03-r2"
+    },
+    {
+      "id": "103:136-layers-panel-row",
+      "text": "XP02-r2"
+    },
+    {
+      "id": "102:136-layers-panel-row",
+      "text": "XP01-r2"
+    },
+    {
+      "id": "101:136-layers-panel-row",
+      "text": "EX05-r2"
+    },
+    {
+      "id": "100:136-layers-panel-row",
+      "text": "EX04-r2"
+    },
+    {
+      "id": "99:136-layers-panel-row",
+      "text": "EX03-r2"
+    },
+    {
+      "id": "98:136-layers-panel-row",
+      "text": "EX02-r2"
+    },
+    {
+      "id": "44:823-layers-panel-row",
+      "text": "EX01-fitness_center"
+    },
+    {
+      "id": "97:136-layers-panel-row",
+      "text": "TIME05-r2"
+    },
+    {
+      "id": "44:804-layers-panel-row",
+      "text": "TIME04-watch"
+    },
+    {
+      "id": "96:136-layers-panel-row",
+      "text": "TIME03-r2"
+    },
+    {
+      "id": "95:136-layers-panel-row",
+      "text": "TIME02-r2"
+    },
+    {
+      "id": "94:136-layers-panel-row",
+      "text": "TIME01-r2"
+    },
+    {
+      "id": "44:993-layers-panel-row",
+      "text": "CHECK03-done_all"
+    },
+    {
+      "id": "44:986-layers-panel-row",
+      "text": "CHECK02-check_circle"
+    },
+    {
+      "id": "44:979-layers-panel-row",
+      "text": "CHECK01-check_box"
+    },
+    {
+      "id": "109:136-layers-panel-row",
+      "text": "TASK05-r2"
+    },
+    {
+      "id": "108:136-layers-panel-row",
+      "text": "TASK04-r2"
+    },
+    {
+      "id": "107:136-layers-panel-row",
+      "text": "TASK03-r2"
+    },
+    {
+      "id": "44:926-layers-panel-row",
+      "text": "TASK02-task_alt"
+    },
+    {
+      "id": "127:136-layers-panel-row",
+      "text": "TASK01-r2"
+    }
+  ],
+  "preservedCount": 18,
+  "missingKeeps": [],
+  "missingReplacements": []
+}

@@ -1,5 +1,9 @@
 # Промпти реалізації THE SYSTEM: LEVEL UP
 
+**Оновлено маршрутизацію 2026-10-08:** поточний загальний план [REMASTER_PLAN](REMASTER_PLAN.md),
+усі P/R tasks і залежності в [QUEUE](docs/remaster/QUEUE.md). Історичний фідбек нижче не є новим аудитом.
+P01/P02 вже виконані; P03 має device gate. У кожному prompt тепер є актуальна модель і checklist.
+
 Підготовлено 2026-09-19 за [PROJECT_AUDIT](PROJECT_AUDIT.md), [DEVELOPMENT_ROADMAP](DEVELOPMENT_ROADMAP.md)
 і [картою функцій](docs/architecture/FEATURE_MAP.md). **Це готовий пакет завдань, а не вже виконані виправлення.**
 
@@ -100,7 +104,7 @@ beta з конкретними сценаріями, а потім виправ�
 
 1. Працюй у цьому самому saved project. Обери один prompt, за замовчуванням P01.
 2. Перед відправкою обери рекомендовану модель і Reasoning у доступному model selector.
-3. Напиши коротко: `Виконай тільки P01 із docs/implementation/prompts/01-safe-history-edits.md.`
+3. Напиши коротко: `Виконай тільки P01 із docs/remaster/prompts/01-P01-safe-history-edits.md.`
 4. Файл уже містить entry paths, прив'язку до AUD-ID/roadmap, acceptance і checks. Не вставляй весь аудит.
 5. Дочекайся результату й перевір статус у [PROGRESS](docs/implementation/PROGRESS.md). Потім запускай наступний.
 6. P06 незалежний: можна спочатку швидко виправити lint. Решта має явно вказані dependencies.
@@ -113,13 +117,13 @@ beta з конкретними сценаріями, а потім виправ�
 
 ## Моделі та витрати
 
-- **GPT-5.6 Luna / Medium:** вузькі зрозумілі правки й документація.
-- **GPT-5.6 Terra / High:** більшість багатофайлових задач із відомими межами.
-- **GPT-5.6 Sol / High:** data integrity, transactions, concurrency, performance investigation і незалежний аудит.
+- **GPT-6 Luna / Medium:** вузькі зрозумілі правки й документація.
+- **GPT-6.1 Sol / Medium:** пов'язані UI-файли з готовим контрактом.
+- **GPT-6.1 Sol / High:** data integrity, transactions, concurrency, performance investigation і незалежний аудит.
 - **GPT-6 Astra:** не потрібна за замовчуванням; резерв для конкретного складного blocker, якщо дешевший шлях уже виявився недостатнім.
 
 Це моя інженерна маршрутизація, не benchmark саме твого repo. Офіційна документація позиціює
-Luna для cost-sensitive задач, Terra як баланс ціни/можливостей, Sol для складної професійної роботи.
+Luna для cost-sensitive задач; конкретну поточну маршрутизацію див. [MODEL_ROUTING](docs/remaster/MODEL_ROUTING.md).
 [Джерело: OpenAI models](https://developers.openai.com/api/docs/models).
 Вищий reasoning дає моделі більше простору на обдумування й може збільшити витрати;
 я не рекомендую Max для кожної дрібної зміни. [Джерело: reasoning guidance](https://developers.openai.com/api/docs/guides/reasoning).
@@ -148,34 +152,34 @@ Luna для cost-sensitive задач, Terra як баланс ціни/можл
 
 | ID | Готовий промпт | Модель / Reasoning | Пристрій |
 | --- | --- | --- | --- |
-| P01 | [Безпечне редагування історії](docs/implementation/prompts/01-safe-history-edits.md) | Sol / High | Android |
-| P02 | [Збереження незавершеного тренування](docs/implementation/prompts/02-durable-workout-draft.md) | Sol / High | Android |
-| P03 | [Одноразове завершення й надійний звіт](docs/implementation/prompts/03-idempotent-workout-finish.md) | Sol / High | Android |
-| P04 | [Безпечний backup і відновлення](docs/implementation/prompts/04-atomic-backup-restore.md) | Sol / High | Android |
-| P05 | [Узгоджений запуск, seed і відновлений профіль](docs/implementation/prompts/05-startup-restore-state.md) | Sol / High | Android |
-| P06 | [Lint і правильна локалізація форматування](docs/implementation/prompts/06-lint-and-locale.md) | Luna / Medium | Android на фініші |
-| P07 | [Готовий перший план після onboarding](docs/implementation/prompts/07-usable-onboarding.md) | Terra / High | Android |
-| P08 | [Чесні пояснення Today Order](docs/implementation/prompts/08-honest-today-order.md) | Terra / High | Android на фініші |
-| P09 | [Короткий check-in і актуальність сигналів](docs/implementation/prompts/09-checkin-and-reactivity.md) | Terra / High | Android |
-| P10 | [Узгоджені REST, квести та нагороди](docs/implementation/prompts/10-rest-quests-and-rewards.md) | Sol / High | Android |
-| P11 | [Опівніч, часові пояси та паралельні оновлення](docs/implementation/prompts/11-daily-rollover-concurrency.md) | Sol / High | Android на фініші |
-| P12 | [Правдивий прогрес і повнота історії](docs/implementation/prompts/12-truthful-progress-history.md) | Terra / High | Android |
-| P13 | [Збереження вибору вправи при поверненні](docs/implementation/prompts/13-picker-save-lifecycle.md) | Luna / Medium | Android |
-| P14 | [Атомарне збереження річних планів](docs/implementation/prompts/14-atomic-annual-plans.md) | Terra / High | Android |
-| P15 | [Завершена інтеграція Health Connect](docs/implementation/prompts/15-health-connect-complete.md) | Terra / High | Android |
-| P16 | [Перевірений AI gatekeeper і корисний локальний режим](docs/implementation/prompts/16-ai-validation-local-mode.md) | Terra / High | Android |
-| P17 | [Коректні локальні beta metrics](docs/implementation/prompts/17-beta-metrics-integrity.md) | Terra / High | Android на фініші |
-| P18 | [Справжні UI-сценарії всього застосунку](docs/implementation/prompts/18-real-app-ui-journeys.md) | Sol / High | Android |
-| P19 | [HUD polish, доступність і зрозумілі тексти](docs/implementation/prompts/19-hud-accessibility-localization.md) | Terra / High | Android |
-| P20 | [Вимірювана швидкість запуску й плавність](docs/implementation/prompts/20-measured-performance.md) | Sol / High | Realme |
-| P21 | [Зменшення складності без великого переписування](docs/implementation/prompts/21-bounded-architecture-cleanup.md) | Terra / High | Android на фініші |
-| P22 | [Надійні quality gates і підтримуваний build](docs/implementation/prompts/22-ci-and-build-tooling.md) | Terra / High | CI emulator |
-| P23 | [Приватність, права на assets і чесні обіцянки](docs/implementation/prompts/23-privacy-assets-release-copy.md) | Luna / Medium | Не для документів/аналізу |
-| P24 | [Кандидат релізу, Android16 і16KB](docs/implementation/prompts/24-platform-release-candidate.md) | Terra / High | Android + API/16KB |
-| P25 | [Зрозумілий план beta для власника](docs/implementation/prompts/25-beta-study-and-owner-checklist.md) | Luna / Medium | Не для документів/аналізу |
-| P26 | [Незалежний GO/NO-GO перед beta](docs/implementation/prompts/26-independent-beta-audit.md) | Sol / High | Android |
-| P27 | [Робота зі справжнім beta-фідбеком](docs/implementation/prompts/27-beta-feedback-iteration.md) | Terra / Medium | Не для документів/аналізу |
-| P28 | [Фінальна готовність до публічного запуску](docs/implementation/prompts/28-public-release-readiness.md) | Sol / High | Android + API/16KB |
+| P01 | [Безпечне редагування історії](docs/remaster/prompts/01-P01-safe-history-edits.md) | GPT-6.1 Sol / High | Android |
+| P02 | [Збереження незавершеного тренування](docs/remaster/prompts/02-P02-durable-workout-draft.md) | GPT-6.1 Sol / High | Android |
+| P03 | [Одноразове завершення й надійний звіт](docs/remaster/prompts/09-P03-idempotent-workout-finish.md) | GPT-6.1 Sol / High | Android |
+| P04 | [Безпечний backup і відновлення](docs/remaster/prompts/10-P04-atomic-backup-restore.md) | GPT-6.1 Sol / High | Android |
+| P05 | [Узгоджений запуск, seed і відновлений профіль](docs/remaster/prompts/11-P05-startup-restore-state.md) | GPT-6.1 Sol / High | Android |
+| P06 | [Lint і правильна локалізація форматування](docs/remaster/prompts/12-P06-lint-and-locale.md) | GPT-6 Luna / Medium | Android на фініші |
+| P07 | [Готовий перший план після onboarding](docs/remaster/prompts/13-P07-usable-onboarding.md) | GPT-6.1 Sol / High | Android |
+| P08 | [Чесні пояснення Today Order](docs/remaster/prompts/14-P08-honest-today-order.md) | GPT-6.1 Sol / High | Android на фініші |
+| P09 | [Короткий check-in і актуальність сигналів](docs/remaster/prompts/15-P09-checkin-and-reactivity.md) | GPT-6.1 Sol / High | Android |
+| P10 | [Узгоджені REST, квести та нагороди](docs/remaster/prompts/17-P10-rest-quests-and-rewards.md) | GPT-6.1 Sol / High | Android |
+| P11 | [Опівніч, часові пояси та паралельні оновлення](docs/remaster/prompts/18-P11-daily-rollover-concurrency.md) | GPT-6.1 Sol / High | Android на фініші |
+| P12 | [Правдивий прогрес і повнота історії](docs/remaster/prompts/19-P12-truthful-progress-history.md) | GPT-6.1 Sol / High | Android |
+| P13 | [Збереження вибору вправи при поверненні](docs/remaster/prompts/20-P13-picker-save-lifecycle.md) | GPT-6 Luna / Medium | Android |
+| P14 | [Атомарне збереження річних планів](docs/remaster/prompts/21-P14-atomic-annual-plans.md) | GPT-6.1 Sol / High | Android |
+| P15 | [Завершена інтеграція Health Connect](docs/remaster/prompts/22-P15-health-connect-complete.md) | GPT-6.1 Sol / High | Android |
+| P16 | [Перевірений AI gatekeeper і корисний локальний режим](docs/remaster/prompts/23-P16-ai-validation-local-mode.md) | GPT-6.1 Sol / High | Android |
+| P17 | [Коректні локальні beta metrics](docs/remaster/prompts/24-P17-beta-metrics-integrity.md) | GPT-6.1 Sol / High | Android на фініші |
+| P18 | [Справжні UI-сценарії всього застосунку](docs/remaster/prompts/34-P18-real-app-ui-journeys.md) | GPT-6.1 Sol / High | Android |
+| P19 | [HUD polish, доступність і зрозумілі тексти](docs/remaster/prompts/35-P19-hud-accessibility-localization.md) | GPT-6.1 Sol / High | Android |
+| P20 | [Вимірювана швидкість запуску й плавність](docs/remaster/prompts/37-P20-measured-performance.md) | GPT-6.1 Sol / High | Realme |
+| P21 | [Зменшення складності без великого переписування](docs/remaster/prompts/38-P21-bounded-architecture-cleanup.md) | GPT-6.1 Sol / High | Android на фініші |
+| P22 | [Надійні quality gates і підтримуваний build](docs/remaster/prompts/39-P22-ci-and-build-tooling.md) | GPT-6.1 Sol / High | CI emulator |
+| P23 | [Приватність, права на assets і чесні обіцянки](docs/remaster/prompts/40-P23-privacy-assets-release-copy.md) | GPT-6 Luna / Medium | Не для документів/аналізу |
+| P24 | [Кандидат релізу, Android16 і16KB](docs/remaster/prompts/41-P24-platform-release-candidate.md) | GPT-6.1 Sol / High | Android + API/16KB |
+| P25 | [Зрозумілий план beta для власника](docs/remaster/prompts/42-P25-beta-study-and-owner-checklist.md) | GPT-6 Luna / Medium | Не для документів/аналізу |
+| P26 | [Незалежний GO/NO-GO перед beta](docs/remaster/prompts/43-P26-independent-beta-audit.md) | GPT-6.1 Sol / High | Android |
+| P27 | [Робота зі справжнім beta-фідбеком](docs/remaster/prompts/45-P27-beta-feedback-iteration.md) | GPT-6.1 Sol / Medium | Не для документів/аналізу |
+| P28 | [Фінальна готовність до публічного запуску](docs/remaster/prompts/55-P28-public-release-readiness.md) | GPT-6.1 Sol / High | Android + API/16KB |
 
 ## Етапи
 
@@ -186,16 +190,20 @@ Luna для cost-sensitive задач, Terra як баланс ціни/можл
 - **P28:** public-readiness за актуальними доказами й правилами, не автоматичний publish.
 
 Повнота: [COVERAGE](docs/implementation/COVERAGE.md). Статуси: [PROGRESS](docs/implementation/PROGRESS.md).
-Жоден пункт ще не виконано в межах створення цього пакета; існуючий audit не оголошено виправленим.
+Створення пакета не є виправленням. Фактичний прогрес P01/P02/P03 див. PROGRESS та evidence, не історичний вступ.
 
 ## Початок
 
-**Модель: GPT-5.6 Sol. Reasoning: High.**
-**Телефон: потрібен на етапі Room integration; для початку читання/коду можна без нього.**
+**Модель: GPT-6.1 Sol. Reasoning: High.**
+**Телефон: не потрібний для R05 prototype; для закриття P03 потрібен Android device/emulator.**
+
+R01-R04 завершені; R05 in_progress, макети v2 схвалені/D30.
+Data flow і missing contracts: docs/design/R05_DATA_FLOW.md. Єдина55-step черга
+в QUEUE включає R27 до consumers. Поточні pointers читаємо звідти, не зі старих прикладів.
 
 ```text
-Виконай тільки P01 із файла
-C:/Users/gesha/AndroidStudioProjects/TheSystem-master/docs/implementation/prompts/01-safe-history-edits.md.
-Прочитай повний файл і referenced EXECUTION_RULES, виконай acceptance/tests,
-онови тільки його progress/evidence. Не переходь до P02, не коміть, не пуш і не мердж.
+Виконай наступний промпт за docs/remaster/QUEUE.md.
+Прочитай поточний файл і його точковий контекст; збережи прийняті D29/D30.
+Онови його progress/evidence/checklist і QUEUE. Не запускай решту пакета,
+не коміть, не пуш і не мердж.
 ```

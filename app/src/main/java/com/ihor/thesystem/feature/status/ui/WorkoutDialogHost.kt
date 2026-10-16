@@ -3,8 +3,13 @@ package com.ihor.thesystem.feature.status.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ihor.thesystem.core.ui.UiErrorEffect
 import com.ihor.thesystem.feature.status.ui.components.dialogs.MainQuestWorkoutDialog
+import com.ihor.thesystem.feature.status.ui.components.dialogs.ConfirmDiscardWorkoutDraftDialog
+import com.ihor.thesystem.feature.status.ui.components.dialogs.WorkoutDraftConflictDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.WorkoutReportDialog
 import com.ihor.thesystem.feature.status.ui.components.dialogs.WorkoutScheduleSettingsScreen
 import com.ihor.thesystem.feature.status.viewmodel.ActiveDayUiModel
@@ -22,6 +27,8 @@ fun WorkoutDialogHost(
     onOpenWorkoutAnalysis: (Long) -> Unit = {}
 ) {
     val context = LocalContext.current
+    UiErrorEffect(workoutViewModel.uiEvents)
+    val isFinishing by workoutViewModel.isFinishing.collectAsStateWithLifecycle()
     val healthPermissionLauncher = rememberLauncherForActivityResult(
         contract = HealthConnectPermissions.requestContract()
     ) {
@@ -59,6 +66,7 @@ fun WorkoutDialogHost(
     when (dialogState) {
         is StatusDialogState.MainQuestWorkout -> MainQuestWorkoutDialog(
             data = activeDayWorkout,
+            isFinishing = isFinishing,
             onSetWeightChanged = { exerciseId, setId, weight ->
                 workoutViewModel.onSetWeightChanged(exerciseId, setId, weight)
             },
@@ -71,8 +79,30 @@ fun WorkoutDialogHost(
             },
             onAddSet = { exerciseId, weight -> workoutViewModel.onAddWorkoutSet(exerciseId, weight) },
             onOpenSetup = { workoutViewModel.onOpenSetup(it, fromWorkout = true) },
+            onDiscardDraft = { workoutViewModel.onRequestDiscardWorkoutDraft() },
             onFinishWorkout = { workoutViewModel.onFinishWorkout() },
             onDismiss = { workoutViewModel.onDismissDialog() }
+        )
+        is StatusDialogState.WorkoutDraftConflict -> WorkoutDraftConflictDialog(
+            workoutName = dialogState.workoutName,
+            dateEpochDay = dialogState.dateEpochDay,
+            reason = dialogState.reason,
+            onKeep = { workoutViewModel.onKeepWorkoutDraft() },
+            onDiscardAndContinue = {
+                workoutViewModel.onConfirmDiscardWorkoutDraft(
+                    draftId = dialogState.draftId,
+                    openCurrentWorkout = true
+                )
+            }
+        )
+        is StatusDialogState.ConfirmDiscardWorkoutDraft -> ConfirmDiscardWorkoutDraftDialog(
+            onCancel = { workoutViewModel.onOpenMainWorkout() },
+            onConfirm = {
+                workoutViewModel.onConfirmDiscardWorkoutDraft(
+                    draftId = dialogState.draftId,
+                    openCurrentWorkout = true
+                )
+            }
         )
         is StatusDialogState.SetupMatrix -> {
             com.ihor.thesystem.feature.statistics.ui.dialogs.SetupMatrixDialog(

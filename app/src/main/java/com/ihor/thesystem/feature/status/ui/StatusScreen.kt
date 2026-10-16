@@ -34,6 +34,7 @@ import com.ihor.thesystem.core.theme.SystemScreenPadding
 import com.ihor.thesystem.core.theme.SystemTheme
 import com.ihor.thesystem.core.ui.UiState
 import com.ihor.thesystem.core.ui.UiText
+import com.ihor.thesystem.core.ui.UiErrorEffect
 import com.ihor.thesystem.core.ui.RefreshOnResume
 import com.ihor.thesystem.core.ui.components.DarkGlassCard
 import com.ihor.thesystem.core.ui.components.SystemButton
@@ -63,6 +64,7 @@ fun StatusScreen(
     var levelUpEvent by remember { mutableStateOf<StatusOneOffEvent.ShowLevelUp?>(null) }
 
     RefreshOnResume(statusViewModel::refreshForCurrentDay)
+    UiErrorEffect(statusViewModel.uiEvents)
 
     LaunchedEffect(Unit) {
         statusViewModel.events.collect { event ->
@@ -94,7 +96,7 @@ fun StatusScreen(
                     },
                     onOpenWorkoutSettings = { navController.navigate(Routes.Cycle) },
                     onTaskToggled = { todo -> statusViewModel.onTodoToggled(todo) },
-                    onAddTask = { questId -> statusViewModel.onAddTaskTap(questId) },
+                    onAddTask = { statusViewModel.onAddTaskTap(0) },
                     onAddMicrotask = { todo -> statusViewModel.onAddMicrotaskTap(todo) },
                     onTodosReordered = { orderedIds -> statusViewModel.onTodosReordered(orderedIds) },
                     onRemoveTask = { todoId -> statusViewModel.onRemoveTodo(todoId) }

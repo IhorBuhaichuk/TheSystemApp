@@ -1,6 +1,7 @@
 # Implementation Progress
 
-Пакет створено 2026-09-19; реалізація ще не розпочата. Не трактувати цей список як evidence виправлень.
+Пакет створено 2026-09-19; поточний стан: P01/P02 done, P03 implemented_needs_device. Докази в linked evidence.
+Оркестрація ремастеру й додаткові R-залежності: [QUEUE](../remaster/QUEUE.md). Статуси P залишаються тільки тут.
 Порядок/правила: [index](../../IMPLEMENTATION_PROMPTS.md), [EXECUTION_RULES](EXECUTION_RULES.md).
 Перед task читати тільки свій рядок і dependencies. Оновлювати тільки власний рядок.
 Evidence файл створюється під час виконання, його відсутність зараз очікувана.
@@ -8,8 +9,8 @@ Evidence файл створюється під час виконання, йо�
 | ID | Scope | Статус | Dependencies | Evidence / blocker |
 | --- | --- | --- | --- | --- |
 | P01 | Безпечне редагування історії | done | - | [Evidence](evidence/P01.md): explicit session/exercise edit, JVM + Room guards + Realme API 35 Room test |
-| P02 | Збереження незавершеного тренування | pending | P01 | Ще не виконувався |
-| P03 | Одноразове завершення й надійний звіт | pending | P02 | Ще не виконувався |
+| P02 | Збереження незавершеного тренування | done | P01 | [Evidence](evidence/P02.md): Room 52 draft, lifecycle/process restore, discard/finish cleanup verified on Realme API 35 |
+| P03 | Одноразове завершення й надійний звіт | implemented_needs_device | P02 | [Evidence](evidence/P03.md): Room 53 completion uniqueness, one canonical reward/draft-close transaction, local post-commit report; JVM/compile gates green, real-Room run очікує пристрій |
 | P04 | Безпечний backup і відновлення | pending | P01, P02, P03 | Ще не виконувався |
 | P05 | Узгоджений запуск, seed і відновлений профіль | pending | P04 | Ще не виконувався |
 | P06 | Lint і правильна локалізація форматування | pending | - | Ще не виконувався |

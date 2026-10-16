@@ -20,6 +20,12 @@ import com.ihor.thesystem.domain.model.QuestTask
 import com.ihor.thesystem.domain.model.TodayTrainingDecision
 import com.ihor.thesystem.domain.model.TodayTrainingDecisionType
 import com.ihor.thesystem.domain.model.WorkoutSession
+import com.ihor.thesystem.domain.model.WorkoutDraft
+import com.ihor.thesystem.domain.model.WorkoutDraftCompatibility
+import com.ihor.thesystem.domain.model.WorkoutDraftExercise
+import com.ihor.thesystem.domain.model.WorkoutDraftPlan
+import com.ihor.thesystem.domain.model.WorkoutDraftSet
+import com.ihor.thesystem.domain.model.compatibilityWith
 import com.ihor.thesystem.domain.model.toActiveSetInput
 import com.ihor.thesystem.domain.model.toExerciseSetOrNull
 import com.ihor.thesystem.domain.usecase.GetExerciseReferenceUseCase
@@ -46,6 +52,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import timber.log.Timber
+import java.util.UUID
 import javax.inject.Inject
 import com.ihor.thesystem.domain.model.BackupPayload
 
@@ -81,8 +88,24 @@ class WorkoutViewModel @Inject constructor(
     private var pendingBackupImport: BackupPayload? = null
 
     private val _currentLogSets = MutableStateFlow<List<ActiveSetInput>>(emptyList())
-    private val _userEdits = MutableStateFlow<Map<Int, List<ActiveSetInput>>>(emptyMap())
+    private val _localWorkoutDraft = MutableStateFlow<WorkoutDraft?>(null)
     private val _selectedCycleDayOverride = MutableStateFlow<Int?>(null)
+    private var draftSaveJob: Job? = null
+    private val _isFinishing = MutableStateFlow(false)
+    val isFinishing: StateFlow<Boolean> = _isFinishing.asStateFlow()
+
+    private data class DraftStoreState(
+        val loaded: Boolean = false,
+        val draft: WorkoutDraft? = null
+    )
+
+    private val draftStoreState = useCases.observeWorkoutDraft()
+        .map { DraftStoreState(loaded = true, draft = it) }
+        .catch { error ->
+            Timber.e(error, "Failed to observe workout draft")
+            emit(DraftStoreState(loaded = true))
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, DraftStoreState())
 
     private val cycleDay: Flow<Int> = combine(
         useCases.selectedDate.filterNotNull(),
@@ -104,7 +127,6 @@ class WorkoutViewModel @Inject constructor(
     }
         .distinctUntilChanged()
         .onEach { selectedDay ->
-            _userEdits.value = emptyMap()
             _settingsUiState.update { it.copy(selectedDay = selectedDay) }
         }
 
@@ -140,8 +162,11 @@ class WorkoutViewModel @Inject constructor(
             replay = 1
         )
 
-    private val displayedWorkoutFlow: Flow<ActiveDayUiModel?> = displayedCycleDay
-        .flatMapLatest { day ->
+    private val displayedWorkoutFlow: Flow<ActiveDayUiModel?> = combine(
+        displayedCycleDay,
+        useCases.selectedDate.filterNotNull()
+    ) { day, selectedDate -> day to selectedDate }
+        .flatMapLatest { (day, selectedDate) ->
             useCases.getSchedulesForDays(listOf(day))
                 .flatMapLatest { schedules ->
                     val schedule = schedules.firstOrNull() ?: return@flatMapLatest flowOf(null)
@@ -240,6 +265,10 @@ class WorkoutViewModel @Inject constructor(
                             dailyTasks = listOfNotNull(activeWorkoutQuest).toImmutableList(),
                             workoutName = schedule.workoutTemplateName,
                             exercises = exercisesWithRecs,
+                            dateEpochDay = selectedDate.toEpochDay(),
+                            scheduleId = schedule.id,
+                            workoutTemplateId = schedule.workoutTemplateId,
+                            questId = activeWorkoutQuest?.id?.toLong() ?: 0L,
                             adjustmentReason = if (activeWorkoutQuest != null) {
                                 todayDecision?.toWorkoutAdjustmentReason()
                             } else {
@@ -259,16 +288,23 @@ class WorkoutViewModel @Inject constructor(
     val activeWorkoutState: StateFlow<ActiveDayUiModel?> = combine(
         displayedWorkoutFlow,
         progressionMatrixFlow,
-        _userEdits
-    ) { workout, matrixEntries, edits ->
-        workout?.copy(
-            exercises = workout.exercises.map { ex ->
-                edits[ex.exerciseId]?.let { editedSets ->
-                    ex.copy(sets = editedSets.toImmutableList())
-                } ?: ex
-            }.toImmutableList(),
-            matrixEntries = matrixEntries.map { it.toMatrixEntryUiModel() }.toImmutableList()
-        )?.withLoggingSummary()
+        draftStoreState,
+        _localWorkoutDraft
+    ) { workout, matrixEntries, storedDraft, localDraft ->
+        if (workout == null) return@combine null
+
+        val compatibleDraft = localDraft
+            ?.takeIf { it.compatibilityWith(workout.toWorkoutDraftPlan()) == WorkoutDraftCompatibility.COMPATIBLE }
+            ?: storedDraft.draft
+                ?.takeIf { it.compatibilityWith(workout.toWorkoutDraftPlan()) == WorkoutDraftCompatibility.COMPATIBLE }
+
+        workout
+            .restoreDraft(compatibleDraft)
+            .copy(
+                hasSavedDraft = compatibleDraft != null,
+                matrixEntries = matrixEntries.map { it.toMatrixEntryUiModel() }.toImmutableList()
+            )
+            .withLoggingSummary()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), null)
 
     fun onSetWeightChanged(exerciseId: Int, setId: Long, weight: String) {
@@ -280,19 +316,24 @@ class WorkoutViewModel @Inject constructor(
     }
 
     private fun updateSetEdit(exerciseId: Int, setId: Long, transform: (ActiveSetInput) -> ActiveSetInput) {
+        if (_isFinishing.value) return
         val currentWorkout = activeWorkoutState.value ?: return
         val exercise = currentWorkout.exercises.find { it.exerciseId == exerciseId } ?: return
-        val currentSets = _userEdits.value[exerciseId] ?: exercise.sets
-        
-        val newSets = currentSets.map { 
+        val newSets = exercise.sets.map {
             if (it.id == setId) transform(it) else it 
         }
-        _userEdits.update { it + (exerciseId to newSets) }
+        saveDraftSnapshot(
+            currentWorkout.copy(
+                exercises = currentWorkout.exercises.map { item ->
+                    if (item.exerciseId == exerciseId) item.copy(sets = newSets.toImmutableList()) else item
+                }.toImmutableList()
+            )
+        )
     }
 
     fun onSetFocusLost(exerciseId: Int, setId: Long) {
-        // Sets are persisted when the workout is finished. This keeps workout completion
-        // as the single source of truth for logs, XP, statistics, and analysis.
+        if (_isFinishing.value) return
+        _localWorkoutDraft.value?.let(::enqueueDraftSave)
     }
 
     fun onSetCompleted(exerciseId: Int, setId: Long) {
@@ -304,11 +345,50 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onAddWorkoutSet(exerciseId: Int, weight: String) {
+        if (_isFinishing.value) return
         val currentWorkout = activeWorkoutState.value ?: return
         val exercise = currentWorkout.exercises.find { it.exerciseId == exerciseId } ?: return
-        val currentSets = _userEdits.value[exerciseId] ?: exercise.sets
-        _userEdits.update {
-            it + (exerciseId to (currentSets + ActiveSetInput(weight = weight)))
+        val newSets = exercise.sets + ActiveSetInput(weight = weight)
+        saveDraftSnapshot(
+            currentWorkout.copy(
+                exercises = currentWorkout.exercises.map { item ->
+                    if (item.exerciseId == exerciseId) item.copy(sets = newSets.toImmutableList()) else item
+                }.toImmutableList()
+            )
+        )
+    }
+
+    private fun saveDraftSnapshot(workout: ActiveDayUiModel) {
+        val previousDraft = _localWorkoutDraft.value
+            ?.takeIf { it.compatibilityWith(workout.toWorkoutDraftPlan()) == WorkoutDraftCompatibility.COMPATIBLE }
+            ?: draftStoreState.value.draft
+                ?.takeIf { it.compatibilityWith(workout.toWorkoutDraftPlan()) == WorkoutDraftCompatibility.COMPATIBLE }
+        val now = clock.now()
+        val draft = workout.toWorkoutDraft(
+            id = previousDraft?.id ?: UUID.randomUUID().toString(),
+            createdAtMillis = previousDraft?.createdAtMillis ?: now,
+            updatedAtMillis = now
+        )
+
+        _localWorkoutDraft.value = draft
+        enqueueDraftSave(draft)
+    }
+
+    private fun enqueueDraftSave(draft: WorkoutDraft) {
+        val previousSave = draftSaveJob
+        draftSaveJob = viewModelScope.launch(dispatchers.io) {
+            previousSave?.join()
+            try {
+                useCases.saveWorkoutDraft(draft)
+            } catch (error: Exception) {
+                if (error is CancellationException) throw error
+                Timber.e(error, "Failed to persist workout draft")
+                _uiEvents.emit(
+                    UiEvent.ShowError(
+                        UiText.DynamicString("Не вдалося зберегти чернетку тренування. Введені дані лишаються на екрані.")
+                    )
+                )
+            }
         }
     }
 
@@ -316,54 +396,87 @@ class WorkoutViewModel @Inject constructor(
         val currentWorkout = activeWorkoutState.value ?: return
         val summary = currentWorkout.loggingSummary
         val questId = currentWorkout.dailyTasks.firstOrNull()?.id?.toLong() ?: 0L
-        
-        viewModelScope.launch {
-            if (!summary.canFinish) {
+        val existingDraft = _localWorkoutDraft.value
+            ?.takeIf { it.compatibilityWith(currentWorkout.toWorkoutDraftPlan()) == WorkoutDraftCompatibility.COMPATIBLE }
+            ?: draftStoreState.value.draft
+                ?.takeIf { it.compatibilityWith(currentWorkout.toWorkoutDraftPlan()) == WorkoutDraftCompatibility.COMPATIBLE }
+
+        if (!summary.canFinish) {
+            viewModelScope.launch {
                 _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_no_completed_exercises)))
-                return@launch
             }
+            return
+        }
+        if (!_isFinishing.compareAndSet(expect = false, update = true)) return
 
-            val allSessionSets = currentWorkout.exercises.flatMap { exercise ->
-                exercise.sets.mapNotNull { setInput ->
-                    setInput.toExerciseSetOrNull(
-                        exerciseId = exercise.exerciseId,
-                        trackingMode = exercise.trackingMode
-                    )?.copy(isCompleted = setInput.isCompleted)
+        val now = clock.now()
+        val completionDraft = currentWorkout.toWorkoutDraft(
+            id = existingDraft?.id ?: UUID.randomUUID().toString(),
+            createdAtMillis = existingDraft?.createdAtMillis ?: now,
+            updatedAtMillis = now
+        )
+
+        viewModelScope.launch {
+            try {
+                draftSaveJob?.join()
+                useCases.saveWorkoutDraft(completionDraft)
+                _localWorkoutDraft.value = completionDraft
+
+                val allSessionSets = currentWorkout.exercises.flatMap { exercise ->
+                    exercise.sets.mapNotNull { setInput ->
+                        setInput.toExerciseSetOrNull(
+                            exerciseId = exercise.exerciseId,
+                            trackingMode = exercise.trackingMode
+                        )?.copy(isCompleted = setInput.isCompleted)
+                    }
                 }
-            }
-            val completedSessionSets = allSessionSets.filter { it.isCompleted }
-            val plannedRecommendations = currentWorkout.exercises.map { exercise ->
-                SetRecommendation(
-                    weight = exercise.recommendedWeight ?: 0.0,
-                    reps = exercise.recommendedReps ?: 10,
-                    sets = exercise.recommendedSets ?: exercise.sets.size.coerceAtLeast(1),
-                    isProgression = false,
-                    exerciseId = exercise.exerciseId
+                val completedSessionSets = allSessionSets.filter { it.isCompleted }
+                val plannedRecommendations = currentWorkout.exercises.map { exercise ->
+                    SetRecommendation(
+                        weight = exercise.recommendedWeight ?: 0.0,
+                        reps = exercise.recommendedReps ?: 10,
+                        sets = exercise.recommendedSets ?: exercise.sets.size.coerceAtLeast(1),
+                        isProgression = false,
+                        exerciseId = exercise.exerciseId
+                    )
+                }
+                val weightedExerciseIds = currentWorkout.exercises
+                    .filter { it.trackingMode.usesWeightInput }
+                    .map { it.exerciseId }
+                    .toSet()
+
+                val session = WorkoutSession(
+                    questId = questId,
+                    timestamp = clock.now(),
+                    totalTonnage = completedSessionSets
+                        .filter { it.exerciseId in weightedExerciseIds }
+                        .sumOf { it.weight * it.reps },
+                    cycleDay = currentWorkout.dayNumber
                 )
-            }
-            val weightedExerciseIds = currentWorkout.exercises
-                .filter { it.trackingMode.usesWeightInput }
-                .map { it.exerciseId }
-                .toSet()
 
-            val session = WorkoutSession(
-                questId = questId,
-                timestamp = clock.now(),
-                totalTonnage = completedSessionSets
-                    .filter { it.exerciseId in weightedExerciseIds }
-                    .sumOf { it.weight * it.reps },
-                cycleDay = currentWorkout.dayNumber
-            )
-
-            _dialogState.value = StatusDialogState.None // Close workout dialog show loading?
-            
-            when (val result = useCases.finalizeSession(session, allSessionSets, plannedRecommendations)) {
-                is Result.Success -> {
-                    _dialogState.value = StatusDialogState.WorkoutReport(result.data)
+                when (
+                    val result = useCases.finalizeSession(
+                        completionId = completionDraft.id,
+                        session = session,
+                        sets = allSessionSets,
+                        plannedRecommendations = plannedRecommendations
+                    )
+                ) {
+                    is Result.Success -> {
+                        _localWorkoutDraft.value = null
+                        _dialogState.value = StatusDialogState.WorkoutReport(result.data)
+                    }
+                    is Result.Error -> {
+                        _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+                    }
                 }
-                is Result.Error -> {
-                    _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
-                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                Timber.e(error, "Workout finish failed before canonical completion")
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+            } finally {
+                _isFinishing.value = false
             }
         }
     }
@@ -424,7 +537,52 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onOpenMainWorkout() {
-        _dialogState.value = StatusDialogState.MainQuestWorkout
+        viewModelScope.launch {
+            val currentWorkout = activeWorkoutState.filterNotNull().first()
+            val storedDraft = draftStoreState.filter { it.loaded }.first().draft
+            val draft = _localWorkoutDraft.value ?: storedDraft
+            val compatibility = draft?.compatibilityWith(currentWorkout.toWorkoutDraftPlan())
+
+            if (draft != null && compatibility != WorkoutDraftCompatibility.COMPATIBLE) {
+                _dialogState.value = StatusDialogState.WorkoutDraftConflict(
+                    draftId = draft.id,
+                    workoutName = draft.workoutName,
+                    dateEpochDay = draft.dateEpochDay,
+                    reason = requireNotNull(compatibility)
+                )
+            } else {
+                _dialogState.value = StatusDialogState.MainQuestWorkout
+            }
+        }
+    }
+
+    fun onRequestDiscardWorkoutDraft() {
+        if (_isFinishing.value) return
+        val draftId = _localWorkoutDraft.value?.id ?: draftStoreState.value.draft?.id ?: return
+        _dialogState.value = StatusDialogState.ConfirmDiscardWorkoutDraft(draftId)
+    }
+
+    fun onKeepWorkoutDraft() {
+        _dialogState.value = StatusDialogState.None
+    }
+
+    fun onConfirmDiscardWorkoutDraft(draftId: String, openCurrentWorkout: Boolean) {
+        if (_isFinishing.value) return
+        _localWorkoutDraft.update { draft -> draft?.takeUnless { it.id == draftId } }
+        _dialogState.value = StatusDialogState.None
+        viewModelScope.launch(dispatchers.io) {
+            draftSaveJob?.join()
+            try {
+                useCases.discardWorkoutDraft(draftId)
+                if (openCurrentWorkout) {
+                    _dialogState.value = StatusDialogState.MainQuestWorkout
+                }
+            } catch (error: Exception) {
+                if (error is CancellationException) throw error
+                Timber.e(error, "Failed to discard workout draft")
+                _uiEvents.emit(UiEvent.ShowError(UiText.StringResource(R.string.error_operation_failed)))
+            }
+        }
     }
 
     fun onCycleDaySelected(day: Int) {
@@ -435,7 +593,6 @@ class WorkoutViewModel @Inject constructor(
     fun refreshForCurrentDay() {
         useCases.selectToday()
         _selectedCycleDayOverride.value = null
-        _userEdits.value = emptyMap()
         if (_dialogState.value is StatusDialogState.WorkoutScheduleSettings) {
             loadSettingsForDay(_settingsUiState.value.selectedDay)
         }
@@ -876,6 +1033,7 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onOpenSetup(entry: MatrixEntryUiModel, fromWorkout: Boolean = false) {
+        if (_isFinishing.value) return
         _dialogState.value = StatusDialogState.SetupMatrix(
             entry = entry,
             startWeight = entry.startWeight.toString(),
@@ -939,9 +1097,70 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun onDismissDialog() {
+        if (_isFinishing.value) return
         _dialogState.value = StatusDialogState.None
     }
 
+}
+
+fun ActiveDayUiModel.toWorkoutDraftPlan(): WorkoutDraftPlan = WorkoutDraftPlan(
+    dateEpochDay = dateEpochDay,
+    scheduleId = scheduleId,
+    cycleDay = dayNumber,
+    workoutTemplateId = workoutTemplateId,
+    exerciseIds = exercises.map { it.exerciseId }
+)
+
+fun ActiveDayUiModel.toWorkoutDraft(
+    id: String,
+    createdAtMillis: Long,
+    updatedAtMillis: Long
+): WorkoutDraft = WorkoutDraft(
+    id = id,
+    dateEpochDay = dateEpochDay,
+    scheduleId = scheduleId,
+    cycleDay = dayNumber,
+    workoutTemplateId = workoutTemplateId,
+    workoutName = workoutName,
+    questId = questId,
+    exercises = exercises.map { exercise ->
+        WorkoutDraftExercise(
+            exerciseId = exercise.exerciseId,
+            sets = exercise.sets.map { set ->
+                WorkoutDraftSet(
+                    inputId = set.id,
+                    weightInput = set.weight,
+                    repsInput = set.reps,
+                    isCompleted = set.isCompleted
+                )
+            }
+        )
+    },
+    createdAtMillis = createdAtMillis,
+    updatedAtMillis = updatedAtMillis
+)
+
+fun ActiveDayUiModel.restoreDraft(draft: WorkoutDraft?): ActiveDayUiModel {
+    if (draft == null || draft.compatibilityWith(toWorkoutDraftPlan()) != WorkoutDraftCompatibility.COMPATIBLE) {
+        return this
+    }
+    val setsByExerciseId = draft.exercises.associate { exercise ->
+        exercise.exerciseId to exercise.sets.map { set ->
+            ActiveSetInput(
+                id = set.inputId,
+                weight = set.weightInput,
+                reps = set.repsInput,
+                isCompleted = set.isCompleted
+            )
+        }.toImmutableList()
+    }
+    return copy(
+        exercises = exercises.map { exercise ->
+            setsByExerciseId[exercise.exerciseId]
+                ?.let { exercise.copy(sets = it) }
+                ?: exercise
+        }.toImmutableList()
+    )
 }
 
 fun ActiveDayUiModel.withLoggingSummary(): ActiveDayUiModel =

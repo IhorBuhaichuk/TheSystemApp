@@ -1,9 +1,14 @@
 # Architecture Entry Map
 
-THE SYSTEM: LEVEL UP. Перевірено 2026-09-18/19 за кодом ревізії
-`184c0044718e22b97d01cee20f0da707a355c8bc`. Це карта реалізації, не специфікація бажаного продукту.
+THE SYSTEM: LEVEL UP. Перевірено 2026-09-20 за `36d6c480da90438c1b5adaf363de7cfb6986f9d8`
+та верифікованими P02-P03 working diffs. Це карта реалізації, не специфікація бажаного продукту.
 
 ## Як читати
+
+Scoped update2026-10-15: [R05_DATA_FLOW](docs/design/R05_DATA_FLOW.md) maps accepted
+setup/session controls to actual producers/consumers and pending owners. Current fixes:
+parameterless standalone todo add; shared UiErrorEffect in Status/Profile/WorkoutDialogHost.
+New onboarding/adjustment persistence is planned P07/R27, not already implemented.
 
 1. Прочитай цю карту, потім потрібний рядок у [FEATURE_MAP](docs/architecture/FEATURE_MAP.md).
 2. Відкрий лише відповідний playbook, use case, repository/DAO, ViewModel/UI та тести.
@@ -26,7 +31,7 @@ flowchart LR
   UI[":app / feature: Compose + ViewModel"] --> D[":domain: models, use cases, contracts"]
   DATA[":app / data: implementations"] --> D
   UI -. "Hilt bindings" .-> DATA
-  DATA --> ROOM["Room 51"]
+  DATA --> ROOM["Room 53"]
   DATA --> PREF["SharedPreferences"]
   DATA --> EXT["Health Connect / optional Gemini"]
   BP[":baselineprofile: test-only"] -. "targets" .-> UI
@@ -82,7 +87,8 @@ ExercisePicker перевикористовується для циклу й р�
 | День | `SyncTodayStateUseCase.kt`, `FinalizeDayUseCase.kt`, `GenerateDailyQuestsUseCase.kt` | foreground + worker, clock, quests |
 | Today Order | `DecideTodayWorkoutUseCase.kt`, `CalculateReadinessUseCase.kt`, `CalculateRecoveryDebtUseCase.kt` | schedule + calendar override + readiness/HC + history |
 | Навантаження | `CalculateRecommendedSetUseCase.kt`, `AdjustWorkoutRecommendationUseCase.kt` | equipment, history, matrix, decision |
-| Finish | `FinalizeSessionUseCase.kt`, `CompleteQuestUseCase.kt` | log/progression/XP commit; потім report і AI validation |
+| Workout draft | `WorkoutDraftUseCases.kt` | raw inputs/flags у Room; date + schedule/template/exercises визначають сумісність, без XP/logs |
+| Finish | `FinalizeSessionUseCase.kt`, `CompleteQuestUseCase.kt` | draft ID -> unique completion ID; один canonical log/progression/XP/draft-close commit; потім optional report/AI validation |
 | Edit sets | `StatisticsUseCases.kt`, `LogWorkoutSetsUseCase.kt` | edit вимагає explicit sessionId + exerciseId; Room замінює тільки target sets і перераховує session tonnage |
 | Statistics | `GetStatisticsDataUseCase.kt`, `GetAnnualProgressionDetailsUseCase.kt` | bounded logs, weights, plans, quests |
 | AI | `SendArchitectAnalysisUseCase.kt`, `ApplyAiRecommendationsUseCase.kt`, `ValidateDirectivesUseCase.kt` | AI пропонує, domain допускає зміни |
@@ -91,31 +97,34 @@ ExercisePicker перевикористовується для циклу й р�
 
 ## Persistence
 
-`A/data/local/room/database/AppDatabase.kt`: `the_system_db`, schema **51**, exportSchema=true.
+`A/data/local/room/database/AppDatabase.kt`: `the_system_db`, schema **53**, exportSchema=true.
 Міграції: `DatabaseMigrations.kt`; підтримуваний pre-release floor **48**.
-Еталон: `app/schemas/com.ihor.thesystem.data.local.room.database.AppDatabase/51.json`.
+Еталон: `app/schemas/com.ihor.thesystem.data.local.room.database.AppDatabase/53.json`.
 
-28 таблиць:
+30 таблиць:
 - Профіль: `player`, `weight_log`, `equipment_profile`, `nutrition_entries`.
 - Система: `system_config`, `calendar_cycle_config`, `calendar_cycle_day`, `readiness_entries`, `todo`.
 - Каталог/розклад: `exercises`, `daily_task_template`, `workout_templates`, `workout_exercise_cross_ref`, `schedule`, `schedule_task_cross_ref`.
-- Виконання: `workout_sessions`, `exercise_sets`, `workout_session_logs`, `exercise_set_logs`, `workout_directives`, `exercise_milestones`.
+- Виконання: `workout_sessions`, `exercise_sets`, `workout_session_logs`, `exercise_set_logs`, `workout_directives`, `exercise_milestones`, `workout_drafts`, `workout_draft_sets`.
 - Прогрес/квести: `progression_matrix`, `reference_matrix`, `protocol_template`, `quest`, `quest_task`, `quest_log`.
 - AI: `chat_message_table`.
 
-Фактичні FK з CASCADE тільки три: `exercise_sets -> workout_sessions`,
-`exercise_set_logs -> workout_session_logs`, `calendar_cycle_day -> calendar_cycle_config`.
+Фактичні FK з CASCADE тільки чотири: `exercise_sets -> workout_sessions`,
+`exercise_set_logs -> workout_session_logs`, `calendar_cycle_day -> calendar_cycle_config`,
+`workout_draft_sets -> workout_drafts`.
 Інші зв'язки через ID/Room relations логічні, не гарантії SQLite.
+`workout_session_logs.completionId` nullable для legacy/manual logs і має unique index для canonical finish.
+`WorkoutAnalyticsRepository.commitSessionOnce` повертає created/existing session без дублювання sets.
 Поточний finish/statistics flow використовує `*_logs`; паралельні `workout_sessions/exercise_sets`
 не видаляти без перевірки всіх читачів, backup та schema.
 
 DAO у `A/data/local/room/dao/`: Player, WeightLog, EquipmentProfile, Nutrition,
-SystemConfig, CalendarCycle, Readiness, Todo, Workout, Schedule, WorkoutAnalytics,
+SystemConfig, CalendarCycle, Readiness, Todo, Workout, Schedule, WorkoutAnalytics, WorkoutDraft,
 ProtocolTemplate, ProgressionMatrix, Quest, QuestLog, Chat (суфікс `Dao.kt`).
 Contracts: `D/repository/`; implementations: `A/data/repository_impl/`.
 
 Поза Room: onboarding completion, beta events, backup timestamps у SharedPreferences;
-selected date та незавершені workout edits зараз у пам'яті.
+selected date та dialogs лишаються у пам'яті. Незавершені workout inputs/flags зберігаються в Room 53.
 Android backup виключає DB, але не ці preferences: відомий restore gap, не бажана архітектура.
 
 ## Зовнішні сервіси й UI
@@ -130,6 +139,10 @@ UI: `A/core/theme/SystemTokens.kt`, `Theme.kt`, `Color.kt`, `Dimensions.kt`, `Ty
 `SystemDialogComponents.kt`; `A/presentation/common/components/RpgStatusBackdrop.kt`.
 Ефекти тільки через shared tokens/primitives, native Compose. Правила: `UI_UX_GUIDELINES.md`.
 
+UX маршрути/дії: [UX_CONTRACT](docs/design/UX_CONTRACT.md), [ACTION_INVENTORY](docs/design/ACTION_INVENTORY.md).
+R02 static UI contracts, 2026-10-12: history editor entry/date reset/error consumers мають відкриті gaps;
+не вважати domain edit proof перевіреним UI entry. Read only relevant action/source; runtime gates окремо.
+
 ## Перевірки
 
 | Зміна | Мінімальна перевірка |
@@ -143,16 +156,19 @@ UI: `A/core/theme/SystemTokens.kt`, `Theme.kt`, `Color.kt`, `Dimensions.kt`, `Ty
 
 CI: `.github/workflows/android-ci.yml`, один Linux job, без connected UI/migration tests.
 JDK17, Gradle9.3.1, AGP9.1.1, Kotlin2.1.0; min26/target36/compile36.
-Domain unit tests зараз у `T/domain/`, не окремому `:domain:test` suite.
+Domain unit tests є у `T/domain/` та окремому `:domain:test` suite для чистих domain-контрактів.
 
 ## Відомі ризики
 
 Не вважай проблеми виправленими через наявність документації:
-- AUD-01 закрито P01: evidence `docs/implementation/evidence/P01.md`; AUD-02: resume очищає workout draft.
-- AUD-03/04: finish без стійкої idempotency; backup merge/restore не узгоджений.
+- AUD-01 закрито P01; AUD-02 закрито P02; AUD-03 реалізовано P03, device gate відкладено: evidence у `docs/implementation/evidence/`.
+- AUD-04: backup merge/restore не узгоджений.
 - AUD-05/06: onboarding не дає schedule; neutral readiness прихований за впевненим текстом.
 - AUD-07/08/09: REST/quest розходження, lint error, відсутній HC rationale entry.
 
 Докази й наступні файли: [audit](PROJECT_AUDIT.md), [roadmap](DEVELOPMENT_ROADMAP.md).
 Playbooks: `docs/playbooks/BUGFIX.md`, `NEW_FEATURE.md`, `ROOM_CHANGE.md`, `UI_POLISH.md`.
 Пакет адресних задач за аудитом: [IMPLEMENTATION_PROMPTS](IMPLEMENTATION_PROMPTS.md); читати лише обраний prompt, не весь пакет.
+
+Поточна оркестрація ремастеру: [REMASTER_PLAN](REMASTER_PLAN.md), [QUEUE](docs/remaster/QUEUE.md).
+Figma та subscription contracts є планами в `docs/design/` і `SUBSCRIPTION_RULES.md`, не новими реалізованими модулями.

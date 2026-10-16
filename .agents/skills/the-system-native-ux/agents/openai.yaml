@@ -1,0 +1,4 @@
+interface:
+  display_name: "THE SYSTEM Native UX"
+  short_description: "Clear native journeys and restrained Compose design"
+  default_prompt: "Use $the-system-native-ux to review the selected Android journey against project tokens, accessibility and preserved actions."

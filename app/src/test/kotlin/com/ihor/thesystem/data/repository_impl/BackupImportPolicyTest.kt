@@ -24,6 +24,8 @@ class BackupImportPolicyTest {
         assertTrue("readiness history must survive explicit JSON backup", "readiness_entries" in tables)
         assertTrue("nutrition entries must survive explicit JSON backup", "nutrition_entries" in tables)
         assertTrue("equipment profile must survive explicit JSON backup", "equipment_profile" in tables)
+        assertTrue("workout draft header must survive explicit JSON backup", "workout_drafts" in tables)
+        assertTrue("workout draft inputs must survive explicit JSON backup", "workout_draft_sets" in tables)
     }
 
     @Test

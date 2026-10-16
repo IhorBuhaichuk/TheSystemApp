@@ -16,6 +16,11 @@ data class DailyTonnageStats(
     val totalTonnage: Double
 )
 
+data class WorkoutSessionCommit(
+    val sessionId: Long,
+    val wasCreated: Boolean
+)
+
 interface WorkoutAnalyticsRepository {
     suspend fun saveSessionWithSets(session: WorkoutSession, sets: List<ExerciseSet>): Long
     suspend fun saveDirectives(directives: List<WorkoutDirective>)
@@ -50,6 +55,11 @@ interface WorkoutAnalyticsRepository {
 
     // Методи для роботи з сесіями (Business logic move)
     suspend fun saveFullSessionLog(session: WorkoutSession, sets: List<ExerciseSet>): Long
+    suspend fun commitSessionOnce(
+        completionId: String,
+        session: WorkoutSession,
+        sets: List<ExerciseSet>
+    ): WorkoutSessionCommit
 
     /**
      * Повертає мапу вправ: ID -> Назва.
